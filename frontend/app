@@ -1,0 +1,191 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+let apiKey = localStorage.getItem('hive_api_key') || '';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050b1a);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(15, 10, 15);
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('threeCanvas') });
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+const ambientLight = new THREE.AmbientLight(0x404060);
+scene.add(ambientLight);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+dirLight.position.set(5, 10, 7);
+scene.add(dirLight);
+
+const gridHelper = new THREE.GridHelper(30, 20, 0x88aaff, 0x335588);
+gridHelper.position.y = -1;
+scene.add(gridHelper);
+
+const ringGeometry = new THREE.TorusGeometry(1.5, 0.05, 32, 100);
+const ringMaterial = new THREE.MeshStandardMaterial({ color: 0x33ff99, emissive: 0x33ff99 });
+const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+ring.position.y = 0.5;
+scene.add(ring);
+
+const particleCount = 500;
+const particlesGeometry = new THREE.BufferGeometry();
+const positions = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+    positions[i*3] = (Math.random() - 0.5) * 40;
+    positions[i*3+1] = (Math.random() - 0.5) * 10 + 2;
+    positions[i*3+2] = (Math.random() - 0.5) * 40;
+}
+particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+const particlesMaterial = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.1 });
+const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+scene.add(particles);
+
+const agentMeshes = [];
+
+document.getElementById('setAuth').addEventListener('click', () => {
+    apiKey = document.getElementById('apiKey').value;
+    localStorage.setItem('hive_api_key', apiKey);
+    alert('API key set');
+});
+
+async function apiFetch(url, options = {}) {
+    const headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+    try {
+        const res = await fetch(url, { ...options, headers });
+        if (res.status === 401) {
+            console.error('Auth failed - check API key');
+            return null;
+        }
+        return await res.json();
+    } catch(e) {
+        console.error('Fetch error:', e);
+        return null;
+    }
+}
+
+async function fetchBoard() {
+    const data = await apiFetch('/v1/board');
+    if (!data) return;
+    document.getElementById('resonance').innerHTML = `Resonance: ${data.resonance?.rho?.toFixed(3) || '--'}`;
+    document.getElementById('agents').innerHTML = `Agents: ${data.agent_count || '--'}`;
+    document.getElementById('phase').innerHTML = `Phase: ${data.phase_name || '--'} (${data.phase || '--'})`;
+    const scale = 1 + (data.resonance?.rho || 0) * 2;
+    ring.scale.set(scale, scale, scale);
+    ringMaterial.color.setHex(data.resonance?.doubling_active ? 0xffaa44 : 0x33ff99);
+}
+
+async function fetchAgents() {
+    const data = await apiFetch('/v1/agents');
+    if (!data || !data.agents) return;
+    agentMeshes.forEach(mesh => scene.remove(mesh));
+    agentMeshes.length = 0;
+    data.agents.forEach((agent, idx) => {
+        const angle = (idx / data.agents.length) * Math.PI * 2;
+        const radius = 5;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        const sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.4, 16, 16),
+            new THREE.MeshStandardMaterial({ color: 0x66aaff })
+        );
+        sphere.position.set(x, 0.5, z);
+        scene.add(sphere);
+        agentMeshes.push(sphere);
+    });
+}
+
+document.getElementById('sendCmd').addEventListener('click', async () => {
+    const input = document.getElementById('cmdInput');
+    const cmd = input.value.trim();
+    if (!cmd) return;
+    input.value = '';
+    const output = document.getElementById('cmdOutput');
+    output.innerHTML = `> ${cmd}<br>${output.innerHTML}`;
+
+    if (cmd.startsWith('!spawn')) {
+        const parts = cmd.split(' ');
+        const name = parts[1];
+        if (name) {
+            const res = await apiFetch(`/v1/agent/spawn`, {
+                method: 'POST',
+                body: JSON.stringify({ name, description: '' })
+            });
+            if (res) {
+                fetchAgents();
+                output.innerHTML = `> Spawned: ${name}<br>${output.innerHTML}`;
+            } else {
+                output.innerHTML = `> Error spawning<br>${output.innerHTML}`;
+            }
+        }
+    } else if (cmd.startsWith('!status')) {
+        await fetchBoard();
+        output.innerHTML = `> Status updated<br>${output.innerHTML}`;
+    } else if (cmd.startsWith('!help')) {
+        output.innerHTML = `> Commands: !spawn NAME, !status, !chat "message"<br>${output.innerHTML}`;
+    } else if (cmd.startsWith('!chat')) {
+        const msg = cmd.substring(6).trim();
+        if (msg) {
+            const res = await apiFetch('/v1/llm/chat', {
+                method: 'POST',
+                body: JSON.stringify({ prompt: msg, system: 'You are Kai El.' })
+            });
+            if (res) {
+                output.innerHTML = `> AI: ${res.response}<br>${output.innerHTML}`;
+            } else {
+                output.innerHTML = `> Error<br>${output.innerHTML}`;
+            }
+        }
+    }
+});
+
+let ws = null;
+let wsReconnectDelay = 1000;
+
+function connectWebSocket() {
+    if (ws) return;
+    const wsUrl = `ws://${window.location.host}/ws?token=${encodeURIComponent(apiKey)}`;
+    ws = new WebSocket(wsUrl);
+    ws.onopen = () => { console.log('WebSocket connected'); wsReconnectDelay = 1000; };
+    ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'ping') {
+            ws.send(JSON.stringify({ type: 'pong' }));
+        }
+    };
+    ws.onclose = () => {
+        console.log('WebSocket closed, reconnecting...');
+        ws = null;
+        setTimeout(connectWebSocket, wsReconnectDelay);
+        wsReconnectDelay = Math.min(wsReconnectDelay * 2, 30000);
+    };
+    ws.onerror = (err) => { console.error('WebSocket error:', err); };
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    ring.rotation.y += 0.01;
+    ring.rotation.x = Math.sin(Date.now() * 0.002) * 0.2;
+    particles.rotation.y += 0.002;
+    controls.update();
+    renderer.render(scene, camera);
+}
+animate();
+
+setInterval(() => { fetchBoard(); fetchAgents(); }, 3000);
+fetchBoard();
+fetchAgents();
+if (apiKey) connectWebSocket();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
