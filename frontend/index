@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Hive</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div id="info">
+        <h2>SOVEREIGN HIVE</h2>
+        <div id="resonance">Resonance: --</div>
+        <div id="agents">Agents: --</div>
+        <div id="phase">Phase: --</div>
+    </div>
+    <div id="command">
+        <input type="text" id="cmdInput" placeholder="!help, !status, !spawn AgentX">
+        <button id="sendCmd">Send</button>
+        <div id="cmdOutput"></div>
+    </div>
+    <div id="auth-panel">
+        <input type="password" id="apiKey" placeholder="API Key">
+        <button id="setAuth">Set Auth</button>
+    </div>
+    <canvas id="threeCanvas"></canvas>
+    <script type="module" src="/static/app.js"></script>
+</body>
+</html>
