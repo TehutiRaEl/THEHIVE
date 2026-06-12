@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    command: serve
+    networks:
+      - hive_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '${OLLAMA_CPU_LIMIT:-2}'
+          memory: ${OLLAMA_MEM_LIMIT:-8G}
+        reservations:
+          cpus: '${OLLAMA_CPU_RESERVE:-1}'
+          memory: ${OLLAMA_MEM_RESERVE:-4G}
+
+  backend:
+    build: .
+    container_name: jasper-hive
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3:8b}
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - JASPER_API_KEY=${JASPER_API_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - DB_PATH=/app/data/jasper_memory.db
+      - CHROMA_PATH=/app/data/chroma_db
+      - HIVE_PHASE=${HIVE_PHASE:-0}
+      - ENABLE_GUILDS=${ENABLE_GUILDS:-constitutional,audit,treasury}
+      - SECRETS_PATH=/app/data/.secrets
+    volumes:
+      - jasper_data:/app/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - hive_network
+    healthcheck:
+      test: ["CMD", "python", "scripts/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '${BACKEND_CPU_LIMIT:-2}'
+          memory: ${BACKEND_MEM_LIMIT:-8G}
+        reservations:
+          cpus: '${BACKEND_CPU_RESERVE:-1}'
+          memory: ${BACKEND_MEM_RESERVE:-4G}
+
+volumes:
+  ollama_data:
+  jasper_data:
+
+networks:
+  hive_network:
+    driver: bridge

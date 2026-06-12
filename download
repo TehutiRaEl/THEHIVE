@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+.env
+.venv
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+chroma_db/
+
+# Secrets
+.secrets/
+*.key
+*.pem
+
+# Logs
+*.log
+jasper_audit.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+
+# Backups
+backups/
+
+# Test coverage
+.coverage
+htmlcov/
