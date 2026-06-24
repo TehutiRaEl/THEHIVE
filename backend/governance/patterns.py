@@ -4,7 +4,7 @@ Governance Patterns — Sovereign Hive v11.0
 """
 
 import random
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 GOVERNANCE_PATTERNS = [
     {
@@ -146,27 +146,103 @@ class GovernancePatterns:
         return None
 
     @staticmethod
+    def get_by_name(name: str) -> Optional[Dict]:
+        """Get a pattern by name (case-insensitive partial match)."""
+        name_lower = name.lower()
+        for p in GOVERNANCE_PATTERNS:
+            if name_lower in p["name"].lower():
+                return p
+        return None
+
+    @staticmethod
     def recommend(context: str = "", n: int = 3) -> List[Dict]:
         """
         Recommend patterns based on context.
         Simple recommendation: random weighted by success rate.
         """
-        # Simple relevance scoring (expand with embeddings)
         scores = []
+        context_lower = context.lower()
+
         for p in GOVERNANCE_PATTERNS:
             score = p["successRate"]
+
             # Boost certain patterns based on context keywords
-            context_lower = context.lower()
             if "funding" in context_lower and "quadratic" in p["name"].lower():
                 score += 0.15
             if "market" in context_lower and "futarchy" in p["name"].lower():
                 score += 0.15
             if "democracy" in context_lower and "liquid" in p["name"].lower():
                 score += 0.10
+            if "random" in context_lower and "sortition" in p["name"].lower():
+                score += 0.10
+            if "organization" in context_lower and "holacracy" in p["name"].lower():
+                score += 0.10
+            if "community" in context_lower and "sociocracy" in p["name"].lower():
+                score += 0.10
+            if "open source" in context_lower and "bdfL" in p["name"].lower():
+                score += 0.10
+
             scores.append((p, score))
 
-        # Sort by score and return top n
         scores.sort(key=lambda x: -x[1])
         return [p for p, _ in scores[:n]]
+
+    @staticmethod
+    def get_success_rate(pattern_id: str) -> float:
+        """Get success rate for a pattern."""
+        p = GovernancePatterns.get_by_id(pattern_id)
+        return p["successRate"] if p else 0.0
+
+    @staticmethod
+    def get_complexity(pattern_id: str) -> int:
+        """Get complexity score for a pattern."""
+        p = GovernancePatterns.get_by_id(pattern_id)
+        return p["complexityScore"] if p else 0
+
+    @staticmethod
+    def get_applicable_patterns(agent_count: int, context: str = "") -> List[Dict]:
+        """Get patterns applicable to a given agent count and context."""
+        applicable = []
+        for p in GOVERNANCE_PATTERNS:
+            app = p.get("applicability", {})
+            min_a = app.get("minAgents", 1)
+            max_a = app.get("maxAgents", None)
+
+            if agent_count >= min_a and (max_a is None or agent_count <= max_a):
+                applicable.append(p)
+
+        # Sort by success rate
+        applicable.sort(key=lambda x: -x["successRate"])
+        return applicable
+
+    @staticmethod
+    def compare_patterns(pattern_id1: str, pattern_id2: str) -> Dict:
+        """Compare two patterns side by side."""
+        p1 = GovernancePatterns.get_by_id(pattern_id1)
+        p2 = GovernancePatterns.get_by_id(pattern_id2)
+
+        if not p1 or not p2:
+            return {"error": "One or both patterns not found"}
+
+        return {
+            "pattern1": {
+                "name": p1["name"],
+                "successRate": p1["successRate"],
+                "complexity": p1["complexityScore"],
+                "pros": p1["pros"],
+                "cons": p1["cons"]
+            },
+            "pattern2": {
+                "name": p2["name"],
+                "successRate": p2["successRate"],
+                "complexity": p2["complexityScore"],
+                "pros": p2["pros"],
+                "cons": p2["cons"]
+            },
+            "comparison": {
+                "higher_success": p1["name"] if p1["successRate"] > p2["successRate"] else p2["name"],
+                "lower_complexity": p1["name"] if p1["complexityScore"] < p2["complexityScore"] else p2["name"]
+            }
+        }
 
 patterns = GovernancePatterns()
