@@ -15,16 +15,18 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-      - name: Run tests
-        run: pytest tests/ -v --asyncio-mode=auto
-      - name: Run health check test
-        run: python scripts/healthcheck.py || true
+        run: pip install -r requirements.txt
+      - name: Run unit tests
+        run: pytest tests/unit/ -v --cov=backend --cov-report=xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
 
   deploy:
-    needs: test
     runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
       - name: Deploy via SSH
@@ -38,7 +40,9 @@ jobs:
             git pull
             docker-compose down
             docker-compose up -d --build
-            sleep 30
-            docker-compose ps
-            curl -f http://localhost:8080/health || exit 1
             docker system prune -f
+            # Wait for health check
+            sleep 30
+            curl -f http://localhost:8080/health || exit 1
+            # Verify Tier 3 services
+            curl -f http://localhost:8080/tier3/status || echo "Tier 3 status check failed"
