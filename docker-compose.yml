@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # ── LLM Provider ──────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -21,12 +22,34 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${OLLAMA_CPU_LIMIT:-2}'
-          memory: ${OLLAMA_MEM_LIMIT:-8G}
+          cpus: '3.5'
+          memory: 16G
         reservations:
-          cpus: '${OLLAMA_CPU_RESERVE:-1}'
-          memory: ${OLLAMA_MEM_RESERVE:-4G}
+          cpus: '2'
+          memory: 8G
 
+  # ── IPFS Daemon (Tier 3) ──────────────────────────────────
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: ipfs
+    restart: unless-stopped
+    volumes:
+      - ipfs_data:/ipfs
+      - ipfs_data:/ipns
+    ports:
+      - "5001:5001"
+      - "8080:8080"
+    networks:
+      - hive_network
+    command: daemon
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/v0/id"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Backend API ──────────────────────────────────────────
   backend:
     build: .
     container_name: jasper-hive
@@ -43,11 +66,17 @@ services:
       - CHROMA_PATH=/app/data/chroma_db
       - HIVE_PHASE=${HIVE_PHASE:-0}
       - ENABLE_GUILDS=${ENABLE_GUILDS:-constitutional,audit,treasury}
-      - SECRETS_PATH=/app/data/.secrets
+      # Tier 3
+      - IPFS_API_URL=http://ipfs:5001
+      - IBMQ_TOKEN=${IBMQ_TOKEN:-}
+      - SOUL_CONTRACT_ADDRESS=${SOUL_CONTRACT_ADDRESS:-}
+      - SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL:-}
     volumes:
       - jasper_data:/app/data
     depends_on:
       ollama:
+        condition: service_healthy
+      ipfs:
         condition: service_healthy
     networks:
       - hive_network
@@ -60,14 +89,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${BACKEND_CPU_LIMIT:-2}'
-          memory: ${BACKEND_MEM_LIMIT:-8G}
+          cpus: '3.5'
+          memory: 20G
         reservations:
-          cpus: '${BACKEND_CPU_RESERVE:-1}'
-          memory: ${BACKEND_MEM_RESERVE:-4G}
+          cpus: '2'
+          memory: 8G
 
 volumes:
   ollama_data:
+  ipfs_data:
   jasper_data:
 
 networks:
