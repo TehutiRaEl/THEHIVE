@@ -6,7 +6,7 @@ TITLE X: All matter, thought, law = vibration.
 
 import math
 import sqlite3
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from backend.core.db import get_db
 from backend.core.hdc import hdc
@@ -17,6 +17,9 @@ class FrequencyGuild:
     Provides healing frequencies, task resonance, and audio params.
     TITLE X: All matter, thought, law = vibration.
     """
+
+    SCHUMANN_BASELINE = 7.83
+
     HEALING_MAP = {
         "anxiety": (528.0, "DNA repair / transformation"),
         "fear": (396.0, "Liberation from guilt and fear"),
@@ -31,7 +34,26 @@ class FrequencyGuild:
         "default": (7.83, "Schumann baseline"),
     }
 
-    SCHUMANN_BASELINE = 7.83
+    def __init__(self):
+        self._ensure_table()
+
+    def _ensure_table(self):
+        """Ensure frequency_map table exists."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS frequency_map (
+                char TEXT PRIMARY KEY,
+                numeric_val INTEGER,
+                sound_hz REAL,
+                note_name TEXT,
+                color_hex TEXT,
+                emotional_tag TEXT,
+                solfeggio_hz REAL,
+                source TEXT
+            )
+        """)
+        conn.commit()
 
     def letter(self, char: str) -> Dict:
         """Get frequency data for a single letter."""
@@ -77,6 +99,7 @@ class FrequencyGuild:
             "harmonic_score": round(hs, 4),
             "dominant_emotion": max(set(emos), key=emos.count) if emos else "unknown",
             "color_palette": list(set(colors[:5])),
+            "synth_params": self._synth_params(avg),
         }
 
     def heal(self, state: str) -> Dict:
@@ -92,6 +115,7 @@ class FrequencyGuild:
             "healing_hz": hz,
             "description": desc,
             "schumann_ratio": round(hz / self.SCHUMANN_BASELINE, 2),
+            "synth_params": self._synth_params(hz),
             "basis": "TITLE X Art.3 — Resonance as Right"
         }
 
@@ -99,7 +123,10 @@ class FrequencyGuild:
         """Compute an agent's resonant frequency from genome + ELO."""
         conn = get_db()
         c = conn.cursor()
-        c.execute("SELECT spirituality, mysticism, oracle_sensitivity, energy FROM agent_genome WHERE agent_name=?", (name,))
+        c.execute("""
+            SELECT spirituality, mysticism, oracle_sensitivity, energy
+            FROM agent_genome WHERE agent_name=?
+        """, (name,))
         g = c.fetchone()
         c.execute("SELECT rating FROM elo_rating WHERE agent_name=?", (name,))
         e = c.fetchone()
@@ -120,9 +147,79 @@ class FrequencyGuild:
         """Get full frequency spectrum."""
         conn = get_db()
         c = conn.cursor()
-        c.execute("SELECT char,sound_hz,emotional_tag,color_hex FROM frequency_map ORDER BY sound_hz")
+        c.execute("""
+            SELECT char, sound_hz, emotional_tag, color_hex
+            FROM frequency_map ORDER BY sound_hz
+        """)
         rows = c.fetchall()
         conn.close()
-        return [{"char": r[0], "hz": r[1], "emotion": r[2], "color": r[3]} for r in rows]
+        return [
+            {"char": r[0], "hz": r[1], "emotion": r[2], "color": r[3]}
+            for r in rows
+        ]
+
+    def _synth_params(self, hz: float) -> Dict:
+        """Generate synthesizer parameters for a frequency."""
+        return {
+            "base_frequency_hz": hz,
+            "waveform": "sine",
+            "duration_seconds": 60,
+            "amplitude": 0.7,
+            "overtones": [hz * 2, hz * 3, hz / 2],
+            "schumann_blend_hz": self.SCHUMANN_BASELINE,
+        }
+
+    def word_frequency(self, word: str) -> Dict:
+        """Alias for word() — compatibility with existing code."""
+        return self.word(word)
+
+    def letter_frequency(self, char: str) -> Dict:
+        """Alias for letter() — compatibility with existing code."""
+        return self.letter(char)
+
+    def emotional_frequency(self, emotion: str) -> Dict:
+        """Alias for heal() — compatibility with existing code."""
+        return self.heal(emotion)
+
+    def resonance_between(self, concept1: str, concept2: str) -> float:
+        """Compute resonance between two concepts via HD vectors."""
+        v1 = hdc.encode_sequence(concept1.split())
+        v2 = hdc.encode_sequence(concept2.split())
+        return round(hdc.similarity(v1, v2), 4)
+
+    def concept_to_hz(self, concept: str) -> float:
+        """Map a concept to a frequency using HD vector similarity."""
+        v = hdc.encode_sequence(concept.split())
+        # Use Schumann as base, modulate by HD similarity
+        base = self.SCHUMANN_BASELINE
+        modulation = 1 + 0.5 * v[0]  # Use first dimension as modulation
+        return round(base * modulation, 2)
+
+    def get_frequency_table(self) -> Dict[str, float]:
+        """Get full frequency table mapping characters to Hz."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT char, sound_hz FROM frequency_map")
+        rows = c.fetchall()
+        conn.close()
+        return {r[0]: r[1] for r in rows}
+
+    def get_emotional_spectrum(self) -> Dict[str, Tuple[float, str]]:
+        """Get healing frequency map."""
+        return self.HEALING_MAP
+
+    def heal_agent(self, agent_name: str, emotional_state: str) -> Dict:
+        """Heal an agent by adjusting their frequency."""
+        hz, desc = self.HEALING_MAP.get(emotional_state.lower(), self.HEALING_MAP["default"])
+        current = self.agent_hz(agent_name)
+        healed = (current + hz) / 2  # Blend towards healing frequency
+        return {
+            "agent": agent_name,
+            "emotional_state": emotional_state,
+            "healing_hz": hz,
+            "current_hz": current,
+            "healed_hz": round(healed, 2),
+            "description": desc,
+        }
 
 frequency_guild = FrequencyGuild()
