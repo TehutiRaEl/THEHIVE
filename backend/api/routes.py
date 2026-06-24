@@ -1,10 +1,11 @@
 """
 API Routes — Sovereign Hive v11.0
-All endpoints: v10 + v11 governance + Tier 2 + Tier 3 integrations.
+All 40+ endpoints: v10 + v11 governance + simulator + Tier 2 + Tier 3 integrations.
 """
 
 import json
 import asyncio
+import time
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -20,6 +21,7 @@ from backend.core.frequency_guild import frequency_guild
 from backend.core.arena import arena
 from backend.core.wallet import wallet_manager
 from backend.core.genome import genome_reproduction
+from backend.core.hitl import hitl
 from backend.economy.utility_economy import utility_economy
 from backend.economy.staking import staking_manager
 from backend.governance.patterns import patterns
@@ -66,6 +68,16 @@ class GradeRequest(BaseModel):
     target_agent: str
     score: float
 
+class HITLResolveRequest(BaseModel):
+    request_id: str
+    approved: bool
+    resolved_by: str
+
+class ConstitutionVoteRequest(BaseModel):
+    version: int
+    approve: bool
+    agent_name: str
+
 # ─── Router ──────────────────────────────────────────────────
 router = APIRouter(prefix="/v11")
 
@@ -81,23 +93,30 @@ async def board(auth: Dict = Depends(verify_auth)):
     c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM agents WHERE status='active'")
     agent_count = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM arena_challenges WHERE status='pending'")
+    pending_arena = c.fetchone()[0]
     conn.close()
 
-    rho = 0.5  # Placeholder — replace with HiveResonance.compute()
+    # Compute resonance (simplified)
+    rho = min(1.0, agent_count / 50.0 + 0.2)
+
     return {
         "version": "11.0",
         "timestamp": datetime.now().isoformat(),
-        "hive_resonance": {"rho_hive": rho, "doubling_active": rho > settings.doubling_threshold},
+        "hive_resonance": {"rho_hive": round(rho, 4), "doubling_active": rho > settings.doubling_threshold},
         "constitution": {"status": "ACTIVE", "hash": constitution.get_hash()},
         "agent_count": agent_count,
+        "pending_arena": pending_arena,
         "phase": settings.hive_phase,
         "patterns_count": len(patterns.get_all()),
         "decay_rate": settings.decay_rate,
+        "staking_apy": settings.staking_apy,
         "subsystems": {
             "memory": {"episodic": True, "semantic": True, "state": True},
             "frequency_guild": "Ψ active",
             "arena": "open for challenges",
             "staking": {"apy": settings.staking_apy},
+            "hitl": {"pending": hitl.get_pending_count()}
         }
     }
 
@@ -117,6 +136,24 @@ async def get_constitution(auth: Dict = Depends(verify_auth)):
     from backend.core.constitution import SOUL_MD
     return {"soul_md": SOUL_MD, "version": "4.0", "hash": constitution.get_hash()}
 
+@router.post("/constitution/vote")
+async def constitution_vote(req: ConstitutionVoteRequest, auth: Dict = Depends(verify_auth)):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("INSERT INTO constitution_votes (version, agent_name, vote) VALUES (?, ?, ?)",
+              (req.version, req.agent_name, 1 if req.approve else 0))
+    c.execute("SELECT COUNT(*) FROM constitution_votes WHERE version=? AND vote=1", (req.version,))
+    yes = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM agents WHERE status='active'")
+    total = c.fetchone()[0]
+    passed = yes > (total * 2 / 3)
+    if passed:
+        c.execute("REPLACE INTO constitution (version, content, active) VALUES (?, ?, 1)",
+                  (req.version, "Constitution v4.0", 1))
+    conn.commit()
+    conn.close()
+    return {"status": "voted", "yes": yes, "threshold": total * 2 / 3, "passed": passed}
+
 # ─── Governance Patterns (v11.0) ─────────────────────────────
 @router.get("/governance/patterns")
 async def get_patterns(auth: Dict = Depends(verify_auth)):
@@ -131,14 +168,18 @@ async def recommend_patterns(context: str = "", auth: Dict = Depends(verify_auth
 async def run_simulation(n_agents: int = 50, trials: int = 1000, base_rho: float = 0.7, auth: Dict = Depends(verify_auth)):
     return simulator.monte_carlo_proposal(n_agents, trials, base_rho)
 
+@router.post("/simulate/colony")
+async def simulate_colony(initial_wealth: float = 1000.0, growth_rate: float = 0.02, ticks: int = 100, auth: Dict = Depends(verify_auth)):
+    return simulator.colony_growth_simulation(initial_wealth, growth_rate, 0.05, ticks, 0.7)
+
 # ─── SSE Feed (v11.0) ─────────────────────────────────────────
 @router.get("/feed")
 async def governance_feed(auth: Dict = Depends(verify_auth)):
     async def generate():
         events = [
-            {"type": "proposal_created", "id": 1, "message": "New amendment proposed"},
-            {"type": "vote_cast", "id": 2, "message": "Agent ECHO voted YES"},
-            {"type": "proposal_passed", "id": 3, "message": "Amendment passed with 75% approval"},
+            {"type": "proposal_created", "id": 1, "message": "New amendment proposed", "ts": time.time()},
+            {"type": "vote_cast", "id": 2, "message": "Agent ECHO voted YES", "ts": time.time()},
+            {"type": "proposal_passed", "id": 3, "message": "Amendment passed with 75% approval", "ts": time.time()},
         ]
         for event in events:
             yield f"data: {json.dumps(event)}\n\n"
@@ -331,7 +372,6 @@ async def submit_grade(req: GradeRequest, auth: Dict = Depends(verify_auth)):
     c.execute("REPLACE INTO elo_rating (agent_name, rating, matches) VALUES (?, ?, ?)", (req.target_agent, new_elo, matches + 1))
     conn.commit()
     conn.close()
-    # Update utility multiplier after ELO change
     utility_economy.get_multiplier(req.target_agent)
     return {"agent": req.target_agent, "old_rating": rating, "new_rating": new_elo}
 
@@ -354,6 +394,23 @@ async def hd_encode(text: str, auth: Dict = Depends(verify_auth)):
     v = hdc.encode_sequence(text.split()[:16])
     closest = hdc.closest(v, top_k=5)
     return {"text": text, "dim": hdc.dim, "closest": [{"concept": c, "sim": round(s, 4)} for c, s in closest]}
+
+# ─── HITL ────────────────────────────────────────────────────
+@router.post("/hitl/request")
+async def hitl_request(action_type: str, params: Dict, auth: Dict = Depends(verify_auth)):
+    request_id = await hitl.request_approval(action_type, params, auth["user"])
+    return {"request_id": request_id, "status": "pending", "timeout_seconds": settings.hitl_timeout_seconds}
+
+@router.post("/hitl/resolve")
+async def hitl_resolve(req: HITLResolveRequest, auth: Dict = Depends(verify_auth)):
+    if auth["role"] != "admin":
+        raise HTTPException(403, "Only admins can resolve HITL requests")
+    result = await hitl.resolve_request(req.request_id, req.approved, req.resolved_by)
+    return result
+
+@router.get("/hitl/pending")
+async def hitl_pending(auth: Dict = Depends(verify_auth)):
+    return {"pending_count": hitl.get_pending_count()}
 
 # ─── Tier 3 Status ──────────────────────────────────────────
 @router.get("/tier3/status")
