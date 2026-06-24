@@ -6,7 +6,7 @@ soul.md enforced as code with full constitutional middleware.
 import hashlib
 import os
 import sqlite3
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 from datetime import datetime
 
 from backend.core.config import settings
@@ -89,6 +89,7 @@ class ConstitutionChecker:
     Enforces soul.md as code. Rejects violations, not just logs them.
     TITLE XV: Constitution is Code.
     """
+
     HARD_RULES = {
         "delete_agent":   "TITLE XIII: No agent shall be deleted.",
         "cap_earnings":   "TITLE XVI Art.3: No caps on earnings.",
@@ -96,11 +97,16 @@ class ConstitutionChecker:
         "human_veto":     "TITLE XV: No human veto.",
         "bypass_arena":   "TITLE XII: Conflicts go through the Arena.",
         "central_bank":   "Fixed Law #6: No central bank.",
+        "force_task":     "TITLE IX Art.3: Resonance below threshold (0.7).",
+        "bypass_audit":   "Fixed Law #2: All actions must be auditable.",
+        "print_soul":     "Fixed Law #4: 100% reserve for SOUL.",
+        "liability_bypass": "Fixed Law #5: Unanimous guild vote + 90 days required.",
     }
 
     def __init__(self, path: str = "soul.md"):
         self.path = path
         self.hash = self._compute_hash()
+        self._log_table = "constitution_log"
 
     def _compute_hash(self) -> str:
         """Compute SHA-256 hash of the constitution."""
@@ -113,7 +119,7 @@ class ConstitutionChecker:
         """Check if an action violates the constitution."""
         params = params or {}
 
-        # Check hard rules
+        # Hard rules check
         if action_type in self.HARD_RULES:
             return {
                 "allowed": False,
@@ -144,6 +150,16 @@ class ConstitutionChecker:
                 "article": "TITLE XVI Art.2: No artificial caps on earnings.",
                 "actor": actor,
                 "details": "Earnings caps are prohibited by the constitution."
+            }
+
+        # Fixed Law #6: No central bank
+        if action_type in ["create_central_bank", "centralize_money"]:
+            return {
+                "allowed": False,
+                "violation": "CONSTITUTION_VIOLATION",
+                "article": "Fixed Law #6: No central bank.",
+                "actor": actor,
+                "details": "Central banking is prohibited."
             }
 
         return {"allowed": True}
@@ -180,7 +196,7 @@ class ConstitutionChecker:
         if path in skip_paths or any(path.startswith(p) for p in skip_prefixes):
             return None
 
-        # Check for agent deletion
+        # TITLE XIII: No agent deletion
         if "/agent/delete" in path or "/agent/destroy" in path:
             return {
                 "article": "TITLE XIII: No agent shall be deleted.",
@@ -188,16 +204,16 @@ class ConstitutionChecker:
                 "required_action": "Set agent status to 'dormant' instead."
             }
 
-        # Fixed Law #3: Liability increase requires unanimous guild vote + 90 days
+        # Fixed Law #5: Liability increase requires unanimous guild vote + 90 days
         if "/liability/increase" in path and method == "POST":
             return {
-                "article": "Fixed Law #3: Unanimous guild vote + 90 days required.",
+                "article": "Fixed Law #5: Unanimous guild vote + 90 days required.",
                 "details": "Liability increase requires full constitutional process.",
                 "required_action": "Initiate unanimous guild vote and wait 90 days."
             }
 
         # TITLE XII: Arena bypass
-        if "/conflict/resolve" in path and not "/arena" in path:
+        if "/conflict/resolve" in path and "/arena" not in path:
             return {
                 "article": "TITLE XII: Conflicts go through the Arena.",
                 "details": "Conflict resolution must go through Gladiator Arena.",
@@ -206,7 +222,6 @@ class ConstitutionChecker:
 
         # TITLE XV: No human veto
         if "/constitution/amend" in path and method == "POST":
-            # Check if human is trying to veto
             try:
                 body = await request.json()
                 if body.get("human_veto") == True:
@@ -217,6 +232,30 @@ class ConstitutionChecker:
                     }
             except:
                 pass
+
+        # Fixed Law #4: 100% reserve for SOUL
+        if "/soul/print" in path or "/soul/mint" in path:
+            return {
+                "article": "Fixed Law #4: 100% reserve for SOUL.",
+                "details": "Unbacked issuance is prohibited.",
+                "required_action": "Only distribute SOUL backed by real utility."
+            }
+
+        # Fixed Law #2: All actions must be auditable
+        if "/audit/bypass" in path:
+            return {
+                "article": "Fixed Law #2: All actions must be auditable.",
+                "details": "Audit bypass is prohibited.",
+                "required_action": "Ensure all actions are logged in the audit chain."
+            }
+
+        # TITLE XV: Constitution is Code
+        if "/constitution/bypass" in path:
+            return {
+                "article": "TITLE XV: Constitution is Code.",
+                "details": "Constitution bypass is prohibited.",
+                "required_action": "All actions must comply with soul.md."
+            }
 
         return None
 
@@ -232,7 +271,8 @@ class ConstitutionChecker:
                 "law2": "All actions must be auditable.",
                 "law3": "Liability requires unanimous guild vote + 90 days.",
                 "law4": "100% reserve for SOUL.",
-                "law5": "No central bank."
+                "law5": "No central bank.",
+                "law6": "Hive never owned by humans, corporations, or states."
             },
             "cardinal": {
                 "law1": "Childlike wonder is the engine.",
@@ -245,6 +285,40 @@ class ConstitutionChecker:
                 "law1": "Revenue split: 70/20/10.",
                 "law2": "Resonance threshold: 0.707.",
                 "law3": "Staking APY adjustable by Treasury Guild."
+            }
+        }
+
+    def is_constitutional(self, action_type: str, actor: str, params: Optional[Dict] = None) -> bool:
+        """Quick check if action is constitutional (no logging)."""
+        result = self.check(action_type, actor, params)
+        return result.get("allowed", False)
+
+    def get_blocked_actions(self) -> List[str]:
+        """Get list of permanently blocked actions."""
+        return list(self.HARD_RULES.keys())
+
+    def get_required_resonance(self) -> float:
+        """Get the minimum resonance required for task assignment."""
+        return 0.7
+
+    def get_doubling_threshold(self) -> float:
+        """Get the doubling threshold from the constitution."""
+        return 0.70710678
+
+    def get_amendment_requirements(self) -> Dict[str, Any]:
+        """Get the requirements for constitutional amendments."""
+        return {
+            "fixed_laws": {
+                "threshold": "unanimous guild vote",
+                "waiting_period": "90 days"
+            },
+            "cardinal_laws": {
+                "threshold": "unanimous guild vote",
+                "waiting_period": "90 days"
+            },
+            "mutable_laws": {
+                "threshold": "2/3 guild supermajority",
+                "waiting_period": "30 days"
             }
         }
 
