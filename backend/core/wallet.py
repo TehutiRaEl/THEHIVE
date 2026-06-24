@@ -1,12 +1,13 @@
 """
-WALLET MANAGER — SOUL Ledger
-100% reserve. No central bank.
+Wallet Manager — Sovereign Hive v11.0
+SOUL ledger with 100% reserve. No central bank.
 """
 
-import os
 import sqlite3
 import secrets
+import hashlib
 from typing import Dict, List, Optional
+from datetime import datetime
 
 try:
     from eth_account import Account
@@ -14,12 +15,21 @@ try:
 except ImportError:
     ETH_AVAILABLE = False
 
+from backend.core.db import get_db
+from backend.core.config import settings
+
 class WalletManager:
+    """
+    Generates and stores deterministic Ethereum wallets for each agent.
+    Keys are stored encrypted in SQLite (never in plaintext logs).
+    Off-chain ledger for zero-gas daily operations.
+    """
+
     def __init__(self):
         self._ensure_table()
 
     def _ensure_table(self):
-        conn = sqlite3.connect("jasper_memory.db")
+        conn = get_db()
         c = conn.cursor()
         c.execute("""
             CREATE TABLE IF NOT EXISTS agent_wallets (
@@ -33,10 +43,10 @@ class WalletManager:
             )
         """)
         conn.commit()
-        conn.close()
 
     def create_wallet(self, agent_name: str) -> Dict:
-        conn = sqlite3.connect("jasper_memory.db")
+        """Generate a new Ethereum wallet for an agent. Idempotent."""
+        conn = get_db()
         c = conn.cursor()
         c.execute("SELECT address, soul_balance FROM agent_wallets WHERE agent_name = ?", (agent_name,))
         row = c.fetchone()
@@ -56,12 +66,14 @@ class WalletManager:
             (agent_name, address, private_key)
         )
         conn.commit()
-        conn.close()
         return {"agent": agent_name, "address": address, "balance": 0.0, "new": True}
 
     def credit(self, agent_name: str, amount: float, reason: str = ""):
-        conn = sqlite3.connect("jasper_memory.db")
+        """Credit SOUL to agent (off-chain ledger)."""
+        conn = get_db()
         c = conn.cursor()
+        # Ensure wallet exists
+        self.create_wallet(agent_name)
         c.execute("""
             UPDATE agent_wallets
             SET soul_balance = soul_balance + ?,
@@ -69,10 +81,10 @@ class WalletManager:
             WHERE agent_name = ?
         """, (amount, amount, agent_name))
         conn.commit()
-        conn.close()
 
     def debit(self, agent_name: str, amount: float) -> bool:
-        conn = sqlite3.connect("jasper_memory.db")
+        """Debit SOUL from agent (off-chain ledger)."""
+        conn = get_db()
         c = conn.cursor()
         c.execute("SELECT soul_balance FROM agent_wallets WHERE agent_name = ?", (agent_name,))
         row = c.fetchone()
@@ -86,17 +98,18 @@ class WalletManager:
             WHERE agent_name = ?
         """, (amount, amount, agent_name))
         conn.commit()
-        conn.close()
         return True
 
     def tip(self, from_agent: str, to_agent: str, amount: float) -> Dict:
-        if not self.debit(from_agent, amount, f"tip to {to_agent}"):
+        """Transfer SOUL between agents."""
+        if not self.debit(from_agent, amount):
             return {"success": False, "error": "Insufficient SOUL balance"}
         self.credit(to_agent, amount, f"tip from {from_agent}")
         return {"success": True, "from": from_agent, "to": to_agent, "amount": amount}
 
     def get_balance(self, agent_name: str) -> Dict:
-        conn = sqlite3.connect("jasper_memory.db")
+        """Get agent's wallet balance."""
+        conn = get_db()
         c = conn.cursor()
         c.execute("""
             SELECT address, soul_balance, soul_earned, soul_spent
@@ -115,7 +128,8 @@ class WalletManager:
         }
 
     def leaderboard(self, limit: int = 10) -> List[Dict]:
-        conn = sqlite3.connect("jasper_memory.db")
+        """Get top SOUL holders."""
+        conn = get_db()
         c = conn.cursor()
         c.execute("""
             SELECT w.agent_name, w.address, w.soul_balance, w.soul_earned,
