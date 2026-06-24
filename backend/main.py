@@ -47,6 +47,9 @@ async def lifespan(app: FastAPI):
     # Log constitution status
     logger.info(f"Constitution: {constitution.get_hash()[:16]}...")
 
+    # Log active guilds
+    logger.info(f"Active Guilds: {', '.join(settings.enable_guilds)}")
+
     yield
 
     # Shutdown
