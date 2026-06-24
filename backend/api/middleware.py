@@ -15,6 +15,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.core.config import settings
 from backend.core.constitution import constitution
+from backend.core.db import get_db
 
 logger = logging.getLogger("jasper.middleware")
 
@@ -24,6 +25,7 @@ class RateLimiter:
     Sliding window rate limiter per user/IP.
     Cleanup runs every 10 minutes to prevent memory leaks.
     """
+
     def __init__(self, requests_per_window: int, window_seconds: int):
         self.requests_per_window = requests_per_window
         self.window_seconds = window_seconds
@@ -37,7 +39,6 @@ class RateLimiter:
         window_start = now - self.window_seconds
 
         with self._lock:
-            # Cleanup stale buckets every 10 minutes
             if now - self._last_cleanup > 600:
                 self._cleanup_old_buckets(now)
                 self._last_cleanup = now
@@ -66,13 +67,12 @@ rate_limiter = RateLimiter(settings.rate_limit_requests, settings.rate_limit_win
 # ─── Rate Limit Middleware ─────────────────────────────────────
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """FastAPI middleware for rate limiting."""
+
     async def dispatch(self, request: Request, call_next):
-        # Skip health and docs
         if request.url.path in ["/health", "/docs", "/openapi.json", "/"]:
             return await call_next(request)
 
         client_id = request.client.host if request.client else "unknown"
-        # Use API key if present for better identification
         api_key = request.headers.get("X-API-Key")
         if api_key:
             client_id = f"key_{api_key[:8]}"
@@ -92,6 +92,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 # ─── Request Logging Middleware ──────────────────────────────
 class LoggingMiddleware(BaseHTTPMiddleware):
     """Log all requests with timing information."""
+
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()
         client_ip = request.client.host if request.client else "unknown"
@@ -110,9 +111,12 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 # ─── Constitution Middleware ──────────────────────────────────
 class ConstitutionMiddleware(BaseHTTPMiddleware):
     """Enforce soul.md on all requests."""
+
     async def dispatch(self, request: Request, call_next):
-        # Skip health and docs
         if request.url.path in ["/health", "/docs", "/openapi.json", "/", "/favicon.ico"]:
+            return await call_next(request)
+
+        if request.url.path.startswith("/ui/") or request.url.path.startswith("/static/"):
             return await call_next(request)
 
         violation = await constitution.check_request(request)
@@ -127,4 +131,34 @@ class ConstitutionMiddleware(BaseHTTPMiddleware):
                     "required_action": violation.get("required_action", "Review soul.md")
                 }
             )
+
         return await call_next(request)
+
+# ─── Security Headers Middleware ─────────────────────────────
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add security headers to all responses."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
+
+# ─── Request ID Middleware ────────────────────────────────────
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    """Add a unique request ID to every request."""
+
+    async def dispatch(self, request: Request, call_next):
+        request_id = request.headers.get("X-Request-ID")
+        if not request_id:
+            import uuid
+            request_id = str(uuid.uuid4())[:8]
+
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+
+# ─── CORSMiddleware is imported and configured in main.py ────
+# ─── All middleware are applied in main.py ────────────────────
