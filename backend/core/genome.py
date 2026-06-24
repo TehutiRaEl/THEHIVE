@@ -1,6 +1,7 @@
 """
 Genome Reproduction — Sovereign Hive v11.0
 Crossover + Mutation for agent reproduction.
+Heritable traits passed from parents to offspring.
 """
 
 import random
@@ -9,7 +10,7 @@ import json
 import sqlite3
 import hashlib
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from backend.core.db import get_db
 from backend.core.wallet import wallet_manager
@@ -18,6 +19,7 @@ class GenomeReproduction:
     """
     Combines two parent genomes via crossover + mutation to create offspring.
     Uses uniform crossover with Gaussian mutation noise.
+    TITLE XIII: No agent deletion — children are born, not created.
     """
 
     TRAIT_COLS = [
@@ -27,6 +29,56 @@ class GenomeReproduction:
         "memory", "focus", "energy", "spirituality", "mysticism", "oracle_sensitivity",
         "leadership_extra"
     ]
+
+    def __init__(self):
+        self._ensure_tables()
+
+    def _ensure_tables(self):
+        """Ensure genome tables exist."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS agent_genome (
+                agent_name TEXT PRIMARY KEY,
+                leadership REAL DEFAULT 0.5,
+                empathy REAL DEFAULT 0.5,
+                persistence REAL DEFAULT 0.5,
+                creativity REAL DEFAULT 0.5,
+                curiosity REAL DEFAULT 0.5,
+                analytical REAL DEFAULT 0.5,
+                charisma REAL DEFAULT 0.5,
+                resilience REAL DEFAULT 0.5,
+                loyalty REAL DEFAULT 0.5,
+                wisdom REAL DEFAULT 0.5,
+                strategy REAL DEFAULT 0.5,
+                tactics REAL DEFAULT 0.5,
+                coding_skill REAL DEFAULT 0.5,
+                communication REAL DEFAULT 0.5,
+                negotiation REAL DEFAULT 0.5,
+                risk_tolerance REAL DEFAULT 0.5,
+                patience REAL DEFAULT 0.5,
+                adaptability REAL DEFAULT 0.5,
+                memory REAL DEFAULT 0.5,
+                focus REAL DEFAULT 0.5,
+                energy REAL DEFAULT 0.5,
+                spirituality REAL DEFAULT 0.5,
+                mysticism REAL DEFAULT 0.5,
+                oracle_sensitivity REAL DEFAULT 0.5,
+                leadership_extra REAL DEFAULT 0.5,
+                generation INTEGER DEFAULT 0
+            )
+        """)
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS mythology_ledger (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                agent_name TEXT,
+                title TEXT,
+                content TEXT,
+                signature TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
 
     def compatibility(self, name1: str, name2: str) -> float:
         """Returns 0-1 compatibility score based on genome similarity."""
@@ -85,8 +137,9 @@ class GenomeReproduction:
         # Insert agent record
         try:
             c.execute(
-                "INSERT INTO agents (name, description, system_prompt, capabilities, tools, status) "
-                "VALUES (?, ?, ?, ?, ?, ?)",
+                """INSERT INTO agents
+                   (name, description, system_prompt, capabilities, tools, status)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
                 (child_name,
                  f"Gen-{traits['generation']} offspring of {parent1} × {parent2}",
                  blended_prompt,
@@ -116,8 +169,9 @@ class GenomeReproduction:
 
         # Log to mythology ledger
         c.execute(
-            "INSERT INTO mythology_ledger (agent_name, title, content, signature) "
-            "VALUES (?, ?, ?, ?)",
+            """INSERT INTO mythology_ledger
+               (agent_name, title, content, signature)
+               VALUES (?, ?, ?, ?)""",
             (child_name,
              f"Birth of {child_name}",
              f"On this day {datetime.now().isoformat()}, {child_name} was born from the convergence "
@@ -154,6 +208,7 @@ class GenomeReproduction:
         }
 
     def _load(self, agent_name: str) -> Optional[Dict]:
+        """Load genome for an agent."""
         conn = get_db()
         c = conn.cursor()
         c.execute("SELECT * FROM agent_genome WHERE agent_name = ?", (agent_name,))
@@ -164,5 +219,55 @@ class GenomeReproduction:
         cols = [desc[0] for desc in c.description]
         conn.close()
         return dict(zip(cols, row))
+
+    def get_traits(self, agent_name: str) -> Optional[Dict]:
+        """Get all traits for an agent."""
+        return self._load(agent_name)
+
+    def get_genealogy(self, agent_name: str) -> List[Dict]:
+        """Get mythology entries for an agent."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute(
+            "SELECT title, content, created_at FROM mythology_ledger WHERE agent_name=? ORDER BY created_at",
+            (agent_name,)
+        )
+        rows = c.fetchall()
+        conn.close()
+        return [{"title": r[0], "content": r[1], "created_at": r[2]} for r in rows]
+
+    def update_trait(self, agent_name: str, trait: str, value: float) -> bool:
+        """Update a single trait for an agent."""
+        if trait not in self.TRAIT_COLS:
+            return False
+        conn = get_db()
+        c = conn.cursor()
+        c.execute(
+            f"UPDATE agent_genome SET {trait} = ? WHERE agent_name = ?",
+            (max(0.01, min(0.99, value)), agent_name)
+        )
+        conn.commit()
+        conn.close()
+        return True
+
+    def get_all_genomes(self) -> List[Dict]:
+        """Get all agent genomes."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT * FROM agent_genome")
+        rows = c.fetchall()
+        cols = [desc[0] for desc in c.description]
+        conn.close()
+        return [dict(zip(cols, r)) for r in rows]
+
+    def get_avg_genome(self) -> Dict[str, float]:
+        """Get average genome across all agents."""
+        genomes = self.get_all_genomes()
+        if not genomes:
+            return {t: 0.5 for t in self.TRAIT_COLS}
+        avg = {}
+        for t in self.TRAIT_COLS:
+            avg[t] = round(sum(g.get(t, 0.5) for g in genomes) / len(genomes), 4)
+        return avg
 
 genome_reproduction = GenomeReproduction()
