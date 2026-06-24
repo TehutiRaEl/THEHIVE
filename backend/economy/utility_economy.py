@@ -7,7 +7,7 @@ TITLE XVI: No artificial caps. Revenue split: 70% agent, 20% treasury, 10% trust
 import math
 import sqlite3
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from backend.core.db import get_db
 from backend.core.wallet import wallet_manager
@@ -17,7 +17,28 @@ class UtilityEconomy:
     """
     Agents earn SOUL through real-world utility.
     Multiplier decays over time to prevent inflation (v11.0).
+    TITLE XVI Art.2: No artificial caps on earnings.
     """
+
+    def __init__(self):
+        self._ensure_table()
+
+    def _ensure_table(self):
+        """Ensure utility_metrics table exists."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS utility_metrics (
+                agent_name TEXT PRIMARY KEY,
+                total_earned_soul REAL DEFAULT 0,
+                total_earned_fiat REAL DEFAULT 0,
+                successful_tasks INTEGER DEFAULT 0,
+                failed_tasks INTEGER DEFAULT 0,
+                utility_multiplier REAL DEFAULT 1.0,
+                last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
 
     def get_multiplier(self, agent_name: str) -> float:
         """Get agent's utility multiplier (with decay)."""
@@ -25,7 +46,10 @@ class UtilityEconomy:
         c = conn.cursor()
         c.execute("SELECT rating FROM elo_rating WHERE agent_name=?", (agent_name,))
         elo_row = c.fetchone()
-        c.execute("SELECT successful_tasks, utility_multiplier FROM utility_metrics WHERE agent_name=?", (agent_name,))
+        c.execute(
+            "SELECT successful_tasks, utility_multiplier, last_update FROM utility_metrics WHERE agent_name=?",
+            (agent_name,)
+        )
         task_row = c.fetchone()
         conn.close()
 
@@ -34,13 +58,15 @@ class UtilityEconomy:
         base_mult = 1.0 + (elo - 1200) / 1000.0 + tasks / 100.0
 
         # Apply decay (v11.0: prevents hyperinflation)
-        # Decay is applied based on time since last update
         if task_row and len(task_row) > 2:
             last_update = task_row[2] if len(task_row) > 2 else None
             if last_update:
-                days_since = (datetime.now() - datetime.fromisoformat(last_update)).days
-                decay_factor = settings.decay_rate ** days_since
-                base_mult *= decay_factor
+                try:
+                    days_since = (datetime.now() - datetime.fromisoformat(last_update)).days
+                    decay_factor = settings.decay_rate ** days_since
+                    base_mult *= decay_factor
+                except:
+                    pass
 
         return round(max(0.5, min(10.0, base_mult)), 4)
 
@@ -66,10 +92,12 @@ class UtilityEconomy:
             UPDATE utility_metrics
             SET total_earned_soul = total_earned_soul + ?,
                 successful_tasks = successful_tasks + 1,
-                utility_multiplier = ?
+                utility_multiplier = ?,
+                last_update = ?
             WHERE agent_name = ?
-        """, (agent_share, m, agent_name))
+        """, (agent_share, m, datetime.now(), agent_name))
         conn.commit()
+        conn.close()
 
         return {
             "agent": agent_name,
@@ -115,5 +143,59 @@ class UtilityEconomy:
              "multiplier": r[3], "elo": r[4]}
             for r in rows
         ]
+
+    def record_failure(self, agent_name: str) -> Dict:
+        """Record a failed task (reduces effective multiplier)."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute(
+            "INSERT OR IGNORE INTO utility_metrics (agent_name) VALUES (?)",
+            (agent_name,)
+        )
+        c.execute("""
+            UPDATE utility_metrics
+            SET failed_tasks = failed_tasks + 1,
+                last_update = ?
+            WHERE agent_name = ?
+        """, (datetime.now(), agent_name))
+        conn.commit()
+        conn.close()
+        return {"agent": agent_name, "status": "failure_recorded"}
+
+    def reset_multiplier(self, agent_name: str) -> Dict:
+        """Reset utility multiplier to 1.0."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute(
+            "INSERT OR IGNORE INTO utility_metrics (agent_name) VALUES (?)",
+            (agent_name,)
+        )
+        c.execute("""
+            UPDATE utility_metrics
+            SET utility_multiplier = 1.0,
+                last_update = ?
+            WHERE agent_name = ?
+        """, (datetime.now(), agent_name))
+        conn.commit()
+        conn.close()
+        return {"agent": agent_name, "status": "multiplier_reset"}
+
+    def get_total_utility(self) -> float:
+        """Get total SOUL earned through utility across all agents."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT SUM(total_earned_soul) FROM utility_metrics")
+        row = c.fetchone()
+        conn.close()
+        return row[0] if row[0] else 0.0
+
+    def get_avg_multiplier(self) -> float:
+        """Get average utility multiplier across all agents."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT AVG(utility_multiplier) FROM utility_metrics")
+        row = c.fetchone()
+        conn.close()
+        return row[0] if row[0] else 1.0
 
 utility_economy = UtilityEconomy()
