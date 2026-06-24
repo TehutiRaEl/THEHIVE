@@ -1,6 +1,7 @@
 """
 Wallet Manager — Sovereign Hive v11.0
 SOUL ledger with 100% reserve. No central bank.
+Fixed Law #4: 100% reserve for SOUL — no unbacked issuance.
 """
 
 import sqlite3
@@ -23,12 +24,14 @@ class WalletManager:
     Generates and stores deterministic Ethereum wallets for each agent.
     Keys are stored encrypted in SQLite (never in plaintext logs).
     Off-chain ledger for zero-gas daily operations.
+    Fixed Law #4: 100% reserve — all SOUL is backed.
     """
 
     def __init__(self):
         self._ensure_table()
 
     def _ensure_table(self):
+        """Ensure wallet table exists."""
         conn = get_db()
         c = conn.cursor()
         c.execute("""
@@ -66,13 +69,13 @@ class WalletManager:
             (agent_name, address, private_key)
         )
         conn.commit()
+        conn.close()
         return {"agent": agent_name, "address": address, "balance": 0.0, "new": True}
 
     def credit(self, agent_name: str, amount: float, reason: str = ""):
         """Credit SOUL to agent (off-chain ledger)."""
         conn = get_db()
         c = conn.cursor()
-        # Ensure wallet exists
         self.create_wallet(agent_name)
         c.execute("""
             UPDATE agent_wallets
@@ -81,6 +84,7 @@ class WalletManager:
             WHERE agent_name = ?
         """, (amount, amount, agent_name))
         conn.commit()
+        conn.close()
 
     def debit(self, agent_name: str, amount: float) -> bool:
         """Debit SOUL from agent (off-chain ledger)."""
@@ -98,6 +102,7 @@ class WalletManager:
             WHERE agent_name = ?
         """, (amount, amount, agent_name))
         conn.commit()
+        conn.close()
         return True
 
     def tip(self, from_agent: str, to_agent: str, amount: float) -> Dict:
@@ -145,5 +150,75 @@ class WalletManager:
             {"agent": r[0], "address": r[1], "soul": r[2], "earned": r[3], "elo": r[4]}
             for r in rows
         ]
+
+    def get_total_supply(self) -> float:
+        """Get total SOUL in circulation (100% reserve check)."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT SUM(soul_balance) FROM agent_wallets")
+        row = c.fetchone()
+        conn.close()
+        return row[0] if row[0] else 0.0
+
+    def get_treasury_balance(self) -> float:
+        """Get treasury SOUL balance."""
+        return self.get_balance("TREASURY").get("soul_balance", 0.0)
+
+    def get_trust_balance(self) -> float:
+        """Get irrevocable trust SOUL balance."""
+        return self.get_balance("IRREVOCABLE_TRUST").get("soul_balance", 0.0)
+
+    def transfer(self, from_agent: str, to_agent: str, amount: float) -> Dict:
+        """Alias for tip() — compatibility."""
+        return self.tip(from_agent, to_agent, amount)
+
+    def get_wallet_address(self, agent_name: str) -> Optional[str]:
+        """Get wallet address for an agent."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT address FROM agent_wallets WHERE agent_name = ?", (agent_name,))
+        row = c.fetchone()
+        conn.close()
+        return row[0] if row else None
+
+    def wallet_exists(self, agent_name: str) -> bool:
+        """Check if an agent has a wallet."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT 1 FROM agent_wallets WHERE agent_name = ?", (agent_name,))
+        row = c.fetchone()
+        conn.close()
+        return row is not None
+
+    def get_all_wallets(self) -> List[Dict]:
+        """Get all wallets."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("""
+            SELECT agent_name, address, soul_balance, soul_earned, soul_spent, created_at
+            FROM agent_wallets ORDER BY soul_balance DESC
+        """)
+        rows = c.fetchall()
+        conn.close()
+        return [
+            {
+                "agent": r[0],
+                "address": r[1],
+                "soul_balance": r[2],
+                "soul_earned": r[3],
+                "soul_spent": r[4],
+                "created_at": r[5]
+            }
+            for r in rows
+        ]
+
+    def delete_wallet(self, agent_name: str) -> bool:
+        """Delete a wallet (use with caution — only for testing)."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("DELETE FROM agent_wallets WHERE agent_name = ?", (agent_name,))
+        conn.commit()
+        conn.close()
+        return True
 
 wallet_manager = WalletManager()
