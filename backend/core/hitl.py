@@ -6,9 +6,10 @@ High-stakes actions require human approval with auto-expiry.
 import time
 import uuid
 import asyncio
+import json
 import sqlite3
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Any
 
 from backend.core.db import get_db
 from backend.core.config import settings
@@ -17,6 +18,7 @@ class HumanInTheLoop:
     """
     Escalation mechanism for high-stakes operations.
     Requests auto-expire after Config.hitl_timeout_seconds.
+    TITLE XV: Constitution is Code — human veto is prohibited.
     """
 
     def __init__(self):
@@ -25,6 +27,7 @@ class HumanInTheLoop:
         self._ensure_table()
 
     def _ensure_table(self):
+        """Ensure hitl_requests table exists."""
         conn = get_db()
         c = conn.cursor()
         c.execute("""
@@ -59,12 +62,14 @@ class HumanInTheLoop:
         conn = get_db()
         c = conn.cursor()
         c.execute(
-            "INSERT INTO hitl_requests (id, action_type, params, status, requested_by, requested_at) VALUES (?, ?, ?, 'pending', ?, ?)",
+            """INSERT INTO hitl_requests
+               (id, action_type, params, status, requested_by, requested_at)
+               VALUES (?, ?, ?, 'pending', ?, ?)""",
             (request_id, action_type, json.dumps(params), requested_by, datetime.now())
         )
         conn.commit()
+        conn.close()
 
-        # Start auto-expiry task
         asyncio.create_task(self._auto_expire(request_id))
 
         return request_id
@@ -78,8 +83,12 @@ class HumanInTheLoop:
 
         conn = get_db()
         c = conn.cursor()
-        c.execute("UPDATE hitl_requests SET status='expired', resolved_at=? WHERE id=?", (datetime.now(), request_id))
+        c.execute(
+            "UPDATE hitl_requests SET status='expired', resolved_at=? WHERE id=?",
+            (datetime.now(), request_id)
+        )
         conn.commit()
+        conn.close()
 
     async def resolve_request(self, request_id: str, approved: bool, resolved_by: str) -> Dict:
         """Resolve a pending HITL request."""
@@ -96,10 +105,13 @@ class HumanInTheLoop:
         conn = get_db()
         c = conn.cursor()
         c.execute(
-            "UPDATE hitl_requests SET status=?, resolved_at=?, approved=? WHERE id=?",
+            """UPDATE hitl_requests
+               SET status=?, resolved_at=?, approved=?
+               WHERE id=?""",
             ("resolved" if approved else "rejected", datetime.now(), approved, request_id)
         )
         conn.commit()
+        conn.close()
 
         return {
             "request_id": request_id,
@@ -117,11 +129,71 @@ class HumanInTheLoop:
         conn = get_db()
         c = conn.cursor()
         if status:
-            c.execute("SELECT * FROM hitl_requests WHERE status=? ORDER BY requested_at DESC", (status,))
+            c.execute(
+                "SELECT * FROM hitl_requests WHERE status=? ORDER BY requested_at DESC",
+                (status,)
+            )
         else:
             c.execute("SELECT * FROM hitl_requests ORDER BY requested_at DESC")
         rows = c.fetchall()
         conn.close()
         return [dict(row) for row in rows]
+
+    def get_request(self, request_id: str) -> Optional[Dict]:
+        """Get a specific HITL request by ID."""
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT * FROM hitl_requests WHERE id=?", (request_id,))
+        row = c.fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def is_pending(self, request_id: str) -> bool:
+        """Check if a request is still pending."""
+        return self.pending_requests.get(request_id, {}).get("status") == "pending"
+
+    def is_expired(self, request_id: str) -> bool:
+        """Check if a request has expired."""
+        return self.pending_requests.get(request_id, {}).get("status") == "expired"
+
+    def is_resolved(self, request_id: str) -> bool:
+        """Check if a request has been resolved."""
+        return self.pending_requests.get(request_id, {}).get("status") in ["approved", "rejected"]
+
+    def get_all_pending(self) -> List[Dict]:
+        """Get all pending requests."""
+        return [r for r in self.pending_requests.values() if r.get("status") == "pending"]
+
+    def get_all_expired(self) -> List[Dict]:
+        """Get all expired requests."""
+        return [r for r in self.pending_requests.values() if r.get("status") == "expired"]
+
+    def get_all_resolved(self) -> List[Dict]:
+        """Get all resolved requests."""
+        return [r for r in self.pending_requests.values() if r.get("status") in ["approved", "rejected"]]
+
+    async def cancel_request(self, request_id: str) -> Dict:
+        """Cancel a pending request."""
+        async with self._lock:
+            if request_id not in self.pending_requests:
+                raise ValueError(f"Request {request_id} not found")
+            if self.pending_requests[request_id]["status"] != "pending":
+                raise ValueError(f"Request {request_id} is already {self.pending_requests[request_id]['status']}")
+            self.pending_requests[request_id]["status"] = "cancelled"
+
+        conn = get_db()
+        c = conn.cursor()
+        c.execute(
+            "UPDATE hitl_requests SET status='cancelled', resolved_at=? WHERE id=?",
+            (datetime.now(), request_id)
+        )
+        conn.commit()
+        conn.close()
+
+        return {
+            "request_id": request_id,
+            "status": "cancelled",
+            "message": "Request cancelled by user"
+        }
 
 hitl = HumanInTheLoop()
