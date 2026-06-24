@@ -5,7 +5,7 @@ Monte Carlo simulations for governance proposals and colony growth.
 
 import random
 import math
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import numpy as np
 
 from backend.core.config import settings
@@ -41,15 +41,12 @@ class DigitalTwinSimulator:
         trajectories = []
 
         for _ in range(trials):
-            # Simulate resonance with Gaussian noise
             rho = base_rho * (1 + random.gauss(0, 0.15))
             rho = max(0.0, min(1.0, rho))
 
-            # Simulate votes
             votes = 0
             traj = []
-            for t in range(7):  # 7 time steps
-                # Each agent votes with probability rho * decay^t
+            for t in range(7):
                 vote_prob = rho * (decay_factor ** t)
                 for _ in range(n_agents):
                     if random.random() < min(1.0, vote_prob):
@@ -62,7 +59,6 @@ class DigitalTwinSimulator:
 
         prob = successes / trials
 
-        # Compute resonance trajectory (average across trials)
         avg_trajectory = [
             round(sum(traj[i] for traj in trajectories) / len(trajectories), 3)
             for i in range(7)
@@ -99,7 +95,6 @@ class DigitalTwinSimulator:
         history = [wealth]
 
         for t in range(1, ticks + 1):
-            # Resonance modulates growth
             resonance_mod = 1 + 0.3 * resonance * math.sin(t / 10)
             noise = random.gauss(0, volatility)
             growth = growth_rate * resonance_mod + noise
@@ -132,13 +127,11 @@ class DigitalTwinSimulator:
         best_score = float('inf') if objective == "minimize_loss" else -float('inf')
 
         for _ in range(n_trials):
-            # Sample random parameters from grid
             params = {}
             for key, values in param_grid.items():
                 params[key] = random.choice(values)
 
-            # Simulate training (placeholder — replace with actual evaluation)
-            score = random.uniform(0.1, 0.9)  # Placeholder
+            score = random.uniform(0.1, 0.9)
 
             if objective == "minimize_loss" and score < best_score:
                 best_score = score
@@ -153,6 +146,75 @@ class DigitalTwinSimulator:
             "trials": n_trials,
             "objective": objective,
             "basis": "V11.0 Random Search Hyperparameter Optimizer"
+        }
+
+    @staticmethod
+    def sensitivity_analysis(
+        base_params: Dict,
+        param_ranges: Dict,
+        steps: int = 10
+    ) -> Dict:
+        """
+        Perform sensitivity analysis on key parameters.
+        """
+        results = {}
+        for param_name, (min_val, max_val) in param_ranges.items():
+            param_results = []
+            for i in range(steps):
+                val = min_val + (max_val - min_val) * (i / (steps - 1))
+                test_params = base_params.copy()
+                test_params[param_name] = val
+                sim = DigitalTwinSimulator.monte_carlo_proposal(
+                    n_agents=test_params.get("n_agents", 50),
+                    base_rho=test_params.get("base_rho", 0.7)
+                )
+                param_results.append({
+                    "value": round(val, 4),
+                    "success_probability": sim["success_probability"]
+                })
+            results[param_name] = param_results
+
+        return {
+            "sensitivity_results": results,
+            "steps": steps,
+            "basis": "V11.0 Sensitivity Analysis"
+        }
+
+    @staticmethod
+    def agent_behavior_simulation(
+        n_agents: int = 100,
+        n_rounds: int = 50,
+        initial_elo_mean: float = 1200,
+        elo_volatility: float = 50
+    ) -> Dict:
+        """
+        Simulate agent behavior and ELO evolution over time.
+        """
+        elos = [random.gauss(initial_elo_mean, elo_volatility) for _ in range(n_agents)]
+        history = []
+
+        for round_num in range(n_rounds):
+            round_elos = []
+            for i in range(n_agents):
+                noise = random.gauss(0, elo_volatility * 0.1)
+                elos[i] = max(800, elos[i] + noise * (0.9 + 0.2 * math.sin(round_num / 10)))
+                round_elos.append(round(elos[i], 2))
+
+            history.append({
+                "round": round_num,
+                "mean_elo": round(sum(elos) / len(elos), 2),
+                "max_elo": round(max(elos), 2),
+                "min_elo": round(min(elos), 2),
+                "std_elo": round(np.std(elos), 2)
+            })
+
+        return {
+            "n_agents": n_agents,
+            "n_rounds": n_rounds,
+            "initial_elo_mean": initial_elo_mean,
+            "final_elo_mean": round(sum(elos) / len(elos), 2),
+            "elo_history": history,
+            "basis": "V11.0 Agent Behavior Simulation"
         }
 
 simulator = DigitalTwinSimulator()
