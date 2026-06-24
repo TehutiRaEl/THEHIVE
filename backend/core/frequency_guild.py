@@ -1,16 +1,22 @@
 """
-FREQUENCY GUILD Ψ — Letter/Word/Healing Frequencies
+Frequency Guild Ψ — Sovereign Hive v11.0
+Letter/Word/Healing Frequencies with Schumann baseline.
 TITLE X: All matter, thought, law = vibration.
 """
 
 import math
 import sqlite3
 from typing import Dict, List, Optional
-import numpy as np
 
-from .hdc import hdc
+from backend.core.db import get_db
+from backend.core.hdc import hdc
 
 class FrequencyGuild:
+    """
+    Maps letters, words, emotions → Hz.
+    Provides healing frequencies, task resonance, and audio params.
+    TITLE X: All matter, thought, law = vibration.
+    """
     HEALING_MAP = {
         "anxiety": (528.0, "DNA repair / transformation"),
         "fear": (396.0, "Liberation from guilt and fear"),
@@ -25,28 +31,33 @@ class FrequencyGuild:
         "default": (7.83, "Schumann baseline"),
     }
 
+    SCHUMANN_BASELINE = 7.83
+
     def letter(self, char: str) -> Dict:
-        conn = sqlite3.connect("jasper_memory.db")
+        """Get frequency data for a single letter."""
+        conn = get_db()
         c = conn.cursor()
         c.execute("SELECT * FROM frequency_map WHERE char=?", (char.upper(),))
         r = c.fetchone()
-        cols = [d[0] for d in c.description] if r else []
         conn.close()
         if not r:
             return {"error": f"No data for '{char}'"}
-        d = dict(zip(cols, r))
+        d = dict(r)
+        # Add HD resonance
+        emotion = d.get("emotional_tag", "SILENCE").upper()
         d["hd_resonance"] = round(abs(hdc.similarity(
-            hdc.get(d.get("emotional_tag", "SILENCE").upper()),
+            hdc.get(emotion if emotion else "SILENCE"),
             hdc.get("HARMONY")
         )), 4)
         return d
 
     def word(self, word: str) -> Dict:
-        conn = sqlite3.connect("jasper_memory.db")
+        """Compute the vibrational frequency of a word from its letters."""
+        conn = get_db()
         c = conn.cursor()
         freqs, colors, emos = [], [], []
         for ch in word.upper():
-            c.execute("SELECT sound_hz,color_hex,emotional_tag FROM frequency_map WHERE char=?", (ch,))
+            c.execute("SELECT sound_hz, color_hex, emotional_tag FROM frequency_map WHERE char=?", (ch,))
             r = c.fetchone()
             if r:
                 freqs.append(r[0])
@@ -56,7 +67,7 @@ class FrequencyGuild:
         if not freqs:
             return {"error": "No frequency data"}
         avg = sum(freqs) / len(freqs)
-        sr = avg / 7.83
+        sr = avg / self.SCHUMANN_BASELINE
         hs = 1 - abs((sr % 1) - 0.5) * 2
         return {
             "word": word,
@@ -69,6 +80,7 @@ class FrequencyGuild:
         }
 
     def heal(self, state: str) -> Dict:
+        """Get healing frequency for an emotional state."""
         sl = state.lower()
         hz, desc = self.HEALING_MAP.get("default")
         for k in self.HEALING_MAP:
@@ -79,30 +91,34 @@ class FrequencyGuild:
             "emotional_state": state,
             "healing_hz": hz,
             "description": desc,
-            "schumann_ratio": round(hz / 7.83, 2),
+            "schumann_ratio": round(hz / self.SCHUMANN_BASELINE, 2),
+            "basis": "TITLE X Art.3 — Resonance as Right"
         }
 
     def agent_hz(self, name: str) -> float:
-        conn = sqlite3.connect("jasper_memory.db")
+        """Compute an agent's resonant frequency from genome + ELO."""
+        conn = get_db()
         c = conn.cursor()
-        c.execute("SELECT spirituality,mysticism,oracle_sensitivity,energy FROM agent_genome WHERE agent_name=?", (name,))
+        c.execute("SELECT spirituality, mysticism, oracle_sensitivity, energy FROM agent_genome WHERE agent_name=?", (name,))
         g = c.fetchone()
         c.execute("SELECT rating FROM elo_rating WHERE agent_name=?", (name,))
         e = c.fetchone()
         conn.close()
         if not g:
-            return 7.83
+            return self.SCHUMANN_BASELINE
         score = ((g[0] + g[1] + g[2] + g[3]) / 4) * (((e[0] if e else 1200)) / 1200)
-        return round(7.83 * max(1, int(score * 55)), 2)
+        return round(self.SCHUMANN_BASELINE * max(1, int(score * 55)), 2)
 
     def task_resonance(self, agent: str, task_hz: float) -> float:
+        """Compute resonance score for agent-task pairing. Must be ≥ 0.7."""
         ahz = self.agent_hz(agent)
         if not task_hz:
             return 1.0
         return round(min(ahz, task_hz) / max(ahz, task_hz), 4)
 
     def spectrum(self) -> List[Dict]:
-        conn = sqlite3.connect("jasper_memory.db")
+        """Get full frequency spectrum."""
+        conn = get_db()
         c = conn.cursor()
         c.execute("SELECT char,sound_hz,emotional_tag,color_hex FROM frequency_map ORDER BY sound_hz")
         rows = c.fetchall()
