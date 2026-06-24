@@ -1,3 +1,6 @@
+# Sovereign Hive — Dockerfile
+# Multi-stage build for production deployment
+
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
@@ -35,4 +38,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python scripts/healthcheck.py
 
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8080", "--lifespan", "on"]
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8080"]
