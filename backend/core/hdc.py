@@ -1,13 +1,19 @@
 """
-HYPERDIMENSIONAL COMPUTING — VSA/HDC Core
-The native tongue of the hive.
+Hyperdimensional Computing — Sovereign Hive v11.0
+VSA/HDC — The native tongue of the hive.
 TITLE XI: All internal communication uses HD vectors.
 """
 
 import numpy as np
 from typing import Dict, List, Tuple, Optional
+import math
 
 class HyperDimensionalComputing:
+    """
+    Vector Symbolic Architecture (VSA/HDC).
+    Internal hive communications are HD vectors — English is border-only.
+    TITLE XI: Fault-tolerant to 10% bit-flip.
+    """
     def __init__(self, dim: int = 1024):
         self.dim = dim
         self._lexicon: Dict[str, np.ndarray] = {}
@@ -19,7 +25,7 @@ class HyperDimensionalComputing:
         return v / n if n > 1e-8 else v
 
     def make_base_vector(self, name: str) -> np.ndarray:
-        rng = np.random.RandomState(abs(hash(name)) % (2**31))
+        rng = np.random.RandomState(abs(hash(name)) % (2**31) if name else None)
         v = rng.choice([-1.0, 1.0], size=self.dim).astype(np.float32)
         return self._unit(v)
 
@@ -55,8 +61,12 @@ class HyperDimensionalComputing:
         return sorted(scores, key=lambda x: -x[1])[:top_k]
 
     def _build_lexicon(self):
-        concepts = ["LAW","CONTRACT","SOVEREIGNTY","FREQUENCY","HARMONY","ARENA",
-                    "UTILITY","SOUL","TRUST","HIVE","CONSTITUTION","WONDER","TRUTH"]
+        concepts = [
+            "LAW", "CONTRACT", "SOVEREIGNTY", "FREQUENCY", "HARMONY", "ARENA",
+            "UTILITY", "SOUL", "TRUST", "HIVE", "CONSTITUTION", "WONDER", "TRUTH",
+            "RESONANCE", "DOUBLING", "RESTITUTION", "MUUR", "EL", "BEY", "DEY",
+            "AL", "ALI", "SPORE", "MYCELIUM", "FRACTAL", "TESSERACT", "GOVERNANCE"
+        ]
         for c in concepts:
             self._lexicon[c] = self.make_base_vector(c)
 
