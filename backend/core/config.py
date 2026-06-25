@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     # ─── Economy ────────────────────────────────────────────────
     soul_to_usd_rate: float = float(os.getenv("SOUL_TO_USD_RATE", "0.10"))
     staking_apy: float = float(os.getenv("STAKING_APY", "0.05"))
+    staking_lock_days: int = int(os.getenv("STAKING_LOCK_DAYS", "30"))
+    staking_min_amount: float = float(os.getenv("STAKING_MIN_AMOUNT", "1.0"))
     doubling_threshold: float = float(os.getenv("DOUBLING_THRESHOLD", "0.707"))
     decay_rate: float = float(os.getenv("DECAY_RATE", "0.95"))  # v11.0: prevents inflation
     

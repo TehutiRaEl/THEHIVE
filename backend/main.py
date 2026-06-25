@@ -82,7 +82,8 @@ app.include_router(router)
 
 # ─── Static Frontend ──────────────────────────────────────────
 try:
-    app.mount("/ui", StaticFiles(directory="frontend", html=True), name="frontend")
+    _frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
+    app.mount("/ui", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
     logger.info("✅ Frontend mounted at /ui")
 except Exception as e:
     logger.warning(f"Frontend not mounted: {e}")

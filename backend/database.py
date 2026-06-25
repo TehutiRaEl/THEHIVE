@@ -6,7 +6,7 @@ import sqlite3
 import re
 from datetime import datetime
 from typing import List, Dict, Optional
-from backend.config import settings
+from backend.core.config import settings
 
 DB_PATH = settings.db_path
 

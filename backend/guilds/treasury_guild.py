@@ -1,6 +1,6 @@
 """Treasury Guild — manages SOUL economy and revenue splits."""
 from typing import Dict
-from backend.config import settings
+from backend.core.config import settings
 
 
 class TreasuryGuild:

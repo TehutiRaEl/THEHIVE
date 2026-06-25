@@ -140,12 +140,14 @@ class ArenaProjectionEngine:
                   challenger: str, challenged: str,
                   challenger_elo: int = 1200, challenged_elo: int = 1200,
                   challenger_hz: float = 432.0, challenged_hz: float = 528.0,
-                  ticks: int = self.DEFAULT_TICKS,
+                  ticks: int = None,
                   frame_callback = None) -> Dict:
         """
         Full projection run.
         frame_callback: async fn(frame_dict) called per tick for WebSocket streaming.
         """
+        if ticks is None:
+            ticks = self.DEFAULT_TICKS
         cp = self._params_from_agent(challenger, challenger_elo, challenger_hz)
         dp = self._params_from_agent(challenged, challenged_elo, challenged_hz)
 

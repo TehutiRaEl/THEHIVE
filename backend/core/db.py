@@ -17,12 +17,18 @@ class Database:
     
     @classmethod
     def get_conn(cls):
-        """Get thread-local database connection."""
-        if not hasattr(cls._local, 'conn') or cls._local.conn is None:
-            cls._local.conn = sqlite3.connect(settings.db_path, check_same_thread=False)
-            cls._local.conn.row_factory = sqlite3.Row
-            cls._local.conn.execute("PRAGMA journal_mode=WAL")
-            cls._local.conn.execute("PRAGMA synchronous=NORMAL")
+        """Get thread-local database connection, reconnecting if closed."""
+        conn = getattr(cls._local, 'conn', None)
+        if conn is not None:
+            try:
+                conn.execute("SELECT 1")
+                return conn
+            except Exception:
+                cls._local.conn = None
+        cls._local.conn = sqlite3.connect(settings.db_path, check_same_thread=False)
+        cls._local.conn.row_factory = sqlite3.Row
+        cls._local.conn.execute("PRAGMA journal_mode=WAL")
+        cls._local.conn.execute("PRAGMA synchronous=NORMAL")
         return cls._local.conn
     
     @classmethod
@@ -422,6 +428,17 @@ def init_db():
             trend TEXT,
             backend TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # ─── API Key Rotation ──────────────────────────────────────
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS api_key_rotation (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key_hash TEXT NOT NULL,
+            is_active BOOLEAN DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP
         )
     """)
 

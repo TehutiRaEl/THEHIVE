@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime
 from typing import Dict, Optional
 from backend.database import Database, init_db_sync
-from backend.config import settings
+from backend.core.config import settings
 
 
 class AuditChain:

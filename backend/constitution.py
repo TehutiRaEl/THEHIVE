@@ -6,7 +6,7 @@ import hashlib
 import os
 import re
 from typing import Dict, Optional, Any
-from backend.config import settings
+from backend.core.config import settings
 
 
 SOUL_MD_PATH = "soul.md"

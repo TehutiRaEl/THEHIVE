@@ -12,6 +12,7 @@ from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
 
 from backend.core.config import settings
+from backend.core.db import get_db, close_db
 
 # ─── Security Schemas ──────────────────────────────────────────
 security_jwt = HTTPBearer(auto_error=False)
@@ -94,16 +95,16 @@ async def verify_auth(
             """)
             for row in c.fetchall():
                 if secrets.compare_digest(api_key, row[0]):
-                    conn.close()
                     return {
                         "authenticated": True,
                         "method": "api_key_rotated",
                         "user": "system",
                         "role": "admin"
                     }
-            conn.close()
-        except:
+        except Exception:
             pass
+        finally:
+            close_db()
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
