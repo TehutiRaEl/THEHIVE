@@ -274,7 +274,8 @@ class Database:
     async def get_violation_count(self, hours: int = 24) -> int:
         async with aiosqlite.connect(self.path) as conn:
             async with conn.execute(
-                "SELECT COUNT(*) FROM constitution_log WHERE timestamp > datetime('now', '-{} hours')".format(hours)
+                "SELECT COUNT(*) FROM constitution_log WHERE timestamp > datetime('now', ? || ' hours')",
+                (f"-{int(hours)}",)
             ) as cursor:
                 row = await cursor.fetchone()
                 return row[0]

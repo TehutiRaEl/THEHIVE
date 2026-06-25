@@ -24,9 +24,10 @@ class TestShamirSSS:
     def test_threshold_failure(self):
         secret = 123456
         shares = sss.split(secret, n=5, t=3)
-        # With only 2 shares, should fail
-        with pytest.raises(Exception):
-            sss.reconstruct(shares[:2])
+        # With fewer than threshold shares, reconstruction returns wrong value
+        # (Lagrange interpolation completes but is incorrect - no exception raised)
+        result = sss.reconstruct(shares[:2])
+        assert result != secret
 
 class TestGuildKeyManager:
     def test_create_guild_key(self):

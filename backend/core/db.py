@@ -508,6 +508,16 @@ def init_db():
     for pid, name, data in patterns:
         c.execute("INSERT OR IGNORE INTO governance_patterns (pattern_id, name, data) VALUES (?, ?, ?)", (pid, name, data))
 
+    # ─── Indexes ────────────────────────────────────────────────
+    c.execute("CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_episodic_agent ON episodic_memory(agent_name, created_at DESC)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_arena_status ON arena_challenges(status)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_arena_challenger ON arena_challenges(challenger)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_pubsub_channel ON pubsub_messages(channel_id, created_at DESC)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_staking_agent ON staking_positions(agent_name)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_constitution_log_time ON constitution_log(timestamp)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_hitl_status ON hitl_requests(status)")
+
     conn.commit()
     conn.close()
 
