@@ -2,7 +2,7 @@
 import sqlite3
 from datetime import datetime
 from typing import List, Dict
-from backend.config import settings
+from backend.core.config import settings
 
 
 class EpisodicMemory:
