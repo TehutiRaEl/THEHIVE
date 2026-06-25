@@ -1,0 +1,30 @@
+{
+  "name": "thehive",
+  "version": "1.0.0",
+  "description": "**Version:** 1.1 (Phase 0‑2)   **Status:** Germinating → Mycelium   **Purpose:** To grow from a single spore into a self‑sustaining, self‑governing digital civilisation that generates real‑world value, tokenised assets, and constitutional governance.",
+  "main": "server.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TehutiRaEl/THEHIVE.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TehutiRaEl/THEHIVE/issues"
+  },
+  "homepage": "https://github.com/TehutiRaEl/THEHIVE#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "fs-extra": "^11.3.5"
+  }
+}

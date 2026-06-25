@@ -1,0 +1,3 @@
+[submodule "memory-base"]
+	path = memory-base
+	url = https://github.com/TehutiRaEl/build-your-own-x.git
