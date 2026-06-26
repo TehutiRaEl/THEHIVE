@@ -1,0 +1,42 @@
+name: Receive Constitution Update
+
+on:
+  repository_dispatch:
+    types: [constitution_update]
+
+jobs:
+  sync:
+    name: Pull soul.md from Queen and verify hash
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download canonical soul.md from Queen
+        run: |
+          curl -fsSL \
+            "https://raw.githubusercontent.com/TehutiRaEl/sovereign-hive-meta/main/soul.md" \
+            -o soul.md
+
+      - name: Verify hash matches dispatch payload
+        run: |
+          expected="${{ github.event.client_payload.soul_md_hash }}"
+          actual=$(sha256sum soul.md | cut -d' ' -f1)
+          if [ "$expected" != "$actual" ]; then
+            echo "Hash mismatch! Expected $expected, got $actual"
+            exit 1
+          fi
+          echo "Hash verified: $actual"
+
+      - name: Commit updated soul.md if changed
+        run: |
+          git config user.name "Sovereign Hive Bot"
+          git config user.email "bot@sovereignhive.io"
+          git add soul.md
+          git diff --staged --quiet && echo "soul.md unchanged" || \
+            git commit -m "chore: sync soul.md from Queen (hash: ${{ github.event.client_payload.soul_md_hash }})"
+
+      - name: Push changes
+        run: git push origin main
+        continue-on-error: true

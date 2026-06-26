@@ -1,0 +1,45 @@
+name: Hive Health Monitor
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  health:
+    name: Poll colony health endpoints
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          chmod +x /usr/local/bin/yq
+
+      - name: Poll THEHIVE
+        continue-on-error: true
+        env:
+          THEHIVE_URL: ${{ secrets.THEHIVE_URL }}
+        run: |
+          url="${THEHIVE_URL:-}/colony/health"
+          status=$(curl -sf --max-time 10 "$url" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status','unknown'))" 2>/dev/null || echo "unreachable")
+          echo "THEHIVE: $status"
+          echo "THEHIVE_STATUS=$status" >> $GITHUB_ENV
+
+      - name: Poll automatisch
+        continue-on-error: true
+        env:
+          AUTOMATISCH_URL: ${{ secrets.AUTOMATISCH_URL }}
+        run: |
+          url="${AUTOMATISCH_URL:-}/healthcheck"
+          code=$(curl -so /dev/null -w "%{http_code}" --max-time 10 "$url" 2>/dev/null || echo "000")
+          status=$([ "$code" = "200" ] && echo "healthy" || echo "unreachable ($code)")
+          echo "automatisch: $status"
+
+      - name: Summary
+        run: |
+          echo "## Hive Health — $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "| Colony | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| THEHIVE | ${{ env.THEHIVE_STATUS || 'unknown' }} |" >> $GITHUB_STEP_SUMMARY
