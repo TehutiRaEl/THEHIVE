@@ -1,34 +1,26 @@
 name: Deploy to Oracle Cloud
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
     branches: [main]
+    types: [completed]
   workflow_dispatch:
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Run unit tests
-        run: pytest tests/unit/ -v --cov=backend --cov-report=xml
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
+jobs:
   deploy:
+    name: Deploy
     runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main'
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -36,13 +28,15 @@ jobs:
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
+            set -e
             cd ~/sovereign-hive
             git pull
             docker-compose down
             docker-compose up -d --build
-            docker system prune -f
-            # Wait for health check
+            # Remove only dangling images — not all unused ones
+            docker image prune -f
+            # Wait for startup, then verify health
             sleep 30
-            curl -f http://localhost:8080/health || exit 1
-            # Verify Tier 3 services
-            curl -f http://localhost:8080/tier3/status || echo "Tier 3 status check failed"
+            curl -f http://localhost:8080/v11/health || exit 1
+            # Tier 3 status is best-effort
+            curl -sf http://localhost:8080/tier3/status || echo "⚠️  Tier 3 status check skipped"

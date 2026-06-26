@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+env:
+  # Acknowledge Node 24 forced runtime for all JS actions (checkout, setup-python, etc.)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  test:
+    name: Test (Python ${{ env.PYTHON_VERSION }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: pytest tests/unit/ -v --cov=backend --cov-report=xml --cov-report=term-missing
+
+      - name: Run integration tests
+        run: pytest tests/integration/ -v
+        continue-on-error: true  # integration tests may need external services
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
