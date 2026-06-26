@@ -4,6 +4,9 @@ on:
   repository_dispatch:
     types: [constitution_update]
 
+permissions:
+  contents: write
+
 jobs:
   sync:
     name: Pull soul.md from Queen and verify hash
@@ -16,7 +19,7 @@ jobs:
       - name: Download canonical soul.md from Queen
         run: |
           curl -fsSL \
-            "https://raw.githubusercontent.com/TehutiRaEl/sovereign-hive-meta/main/soul.md" \
+            "https://raw.githubusercontent.com/TehutiRaEl/-sovereign-hive-meta/main/soul.md" \
             -o soul.md
 
       - name: Verify hash matches dispatch payload
@@ -39,4 +42,3 @@ jobs:
 
       - name: Push changes
         run: git push origin main
-        continue-on-error: true
