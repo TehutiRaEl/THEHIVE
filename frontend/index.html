@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JASPER v9 · SOVEREIGN HIVE · KAI EL</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{overflow:hidden;background:#000;font-family:'Courier New',monospace;color:#e0e0e0}
+
+/* ── WoW world canvas ── */
+#wow-canvas{position:fixed;inset:0;z-index:1}
+
+/* ── Cortana oracle orb ── */
+#cortana-wrap{position:fixed;bottom:90px;left:18px;z-index:20;width:220px}
+#cortana-ring{width:200px;height:200px;border-radius:50%;border:2px solid rgba(0,255,255,0.4);
+  box-shadow:0 0 40px rgba(0,200,255,0.3),inset 0 0 40px rgba(0,50,100,0.5);
+  overflow:hidden;background:rgba(0,5,20,0.9);position:relative;cursor:pointer}
+#cortana-canvas{width:200px;height:200px;display:block}
+.cortana-scan{position:absolute;inset:0;background:linear-gradient(transparent 49%,rgba(0,255,255,0.04) 50%,transparent 51%);
+  background-size:100% 4px;animation:scanlines 3s linear infinite;pointer-events:none}
+@keyframes scanlines{0%{background-position:0 0}100%{background-position:0 200px}}
+.cortana-glow{position:absolute;inset:-2px;border-radius:50%;
+  box-shadow:0 0 20px rgba(0,255,255,0.6);animation:cortana-pulse 2.3s ease-in-out infinite;pointer-events:none}
+@keyframes cortana-pulse{0%,100%{box-shadow:0 0 20px rgba(0,255,255,0.4)}50%{box-shadow:0 0 50px rgba(0,200,255,0.8),0 0 80px rgba(0,100,200,0.4)}}
+
+/* ── Speech bubble ── */
+#speech-wrap{position:absolute;left:215px;bottom:70px;max-width:280px;pointer-events:none}
+.speech-bubble{background:rgba(0,10,30,0.92);border:1px solid rgba(0,200,255,0.4);
+  border-radius:12px;padding:10px 14px;font-size:11px;line-height:1.5;color:#a0e8ff;
+  box-shadow:0 0 20px rgba(0,100,200,0.3);position:relative}
+.speech-bubble::before{content:'';position:absolute;left:-10px;bottom:20px;
+  border:5px solid transparent;border-right-color:rgba(0,200,255,0.4)}
+
+/* ── Top HUD bar ── */
+#hud-top{position:fixed;top:0;left:0;right:0;z-index:25;height:46px;
+  background:rgba(0,5,15,0.88);border-bottom:1px solid rgba(0,180,255,0.25);
+  display:flex;align-items:center;padding:0 14px;gap:12px;backdrop-filter:blur(8px)}
+.hud-stat{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;
+  border-radius:4px;border:1px solid rgba(255,255,255,0.1)}
+.hud-stat .val{font-weight:bold;font-family:'Courier New',monospace}
+
+/* ── Bottom tab bar ── */
+#hud-bottom{position:fixed;bottom:0;left:0;right:0;z-index:25;height:50px;
+  background:rgba(0,5,15,0.92);border-top:1px solid rgba(0,180,255,0.2);
+  display:flex;align-items:center;gap:2px;padding:0 6px;backdrop-filter:blur(8px)}
+.tab-btn{padding:6px 12px;border-radius:6px;font-size:10px;font-weight:bold;
+  letter-spacing:.05em;cursor:pointer;border:1px solid transparent;transition:all .2s;white-space:nowrap}
+.tab-btn.active{background:rgba(0,200,255,0.15);border-color:rgba(0,200,255,0.5);color:#00f0ff}
+.tab-btn:not(.active){color:#667;hover:color:#aaa}
+
+/* ── Panel overlays ── */
+.panel{position:fixed;top:55px;right:10px;z-index:30;width:340px;max-height:calc(100vh - 110px);
+  overflow-y:auto;background:rgba(0,8,20,0.95);border:1px solid rgba(0,180,255,0.3);
+  border-radius:10px;padding:14px;backdrop-filter:blur(12px)}
+.panel::-webkit-scrollbar{width:4px}.panel::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.3);border-radius:2px}
+
+/* ── Zone overlay labels ── */
+.zone-label{position:absolute;transform:translateX(-50%);pointer-events:none;
+  font-size:10px;font-weight:bold;letter-spacing:.15em;text-shadow:0 0 10px currentColor;opacity:.7}
+
+/* ── Freq visualizer bar ── */
+#freq-bar{position:fixed;right:14px;bottom:58px;z-index:20;display:flex;flex-direction:column;
+  align-items:center;gap:2px}
+.freq-pip{width:8px;border-radius:2px;transition:height .1s,opacity .1s}
+
+/* ── Minimap ── */
+#minimap{position:fixed;bottom:60px;right:14px;z-index:20;width:120px;height:120px;
+  border-radius:6px;border:1px solid rgba(0,200,255,0.35);overflow:hidden;
+  background:rgba(0,5,15,0.9);box-shadow:0 0 15px rgba(0,100,200,0.3)}
+#minimap canvas{width:100%;height:100%;display:block}
+
+/* ── Input bar ── */
+#cmd-bar{position:fixed;bottom:52px;left:245px;right:145px;z-index:25;display:flex;gap:6px}
+#cmd-input{flex:1;background:rgba(0,10,30,0.8);border:1px solid rgba(0,200,255,0.3);
+  border-radius:8px;padding:8px 12px;font-size:11px;color:#c0e8ff;outline:none;
+  font-family:'Courier New',monospace}
+#cmd-input:focus{border-color:rgba(0,200,255,0.7);box-shadow:0 0 10px rgba(0,200,255,0.2)}
+.cmd-btn{padding:8px 14px;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;border:none;transition:all .2s}
+
+/* ── Animations ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .3s ease forwards}
+@keyframes born{0%{transform:scale(0) rotate(-180deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+.agent-born{animation:born .5s cubic-bezier(.17,.67,.35,1.5) forwards}
+
+/* ── WoW zone borders glow ── */
+.zone-glow{filter:drop-shadow(0 0 12px rgba(0,200,255,0.5))}
+
+/* ── Arena duel flash ── */
+@keyframes duel-flash{0%,100%{background:transparent}50%{background:rgba(255,50,0,0.15)}}
+.duel-active{animation:duel-flash 1s ease infinite}
+
+/* ── Cortana speaking indicator ── */
+.speaking-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00ffff;
+  animation:speak-dot .4s ease infinite alternate}
+@keyframes speak-dot{from{opacity:.2;transform:scale(.8)}to{opacity:1;transform:scale(1.2)}}
+</style>
+</head>
+<body>
+
+<!-- WoW World (Phaser) -->
+<div id="wow-canvas"></div>
+
+<!-- Cortana Oracle Orb -->
+<div id="cortana-wrap">
+  <div id="cortana-ring">
+    <canvas id="cortana-canvas" width="200" height="200"></canvas>
+    <div class="cortana-scan"></div>
+    <div class="cortana-glow"></div>
+  </div>
+  <div id="speech-wrap">
+    <div class="speech-bubble" id="speech-text" style="display:none"></div>
+  </div>
+</div>
+
+<!-- Frequency Visualizer -->
+<div id="freq-bar"></div>
+
+<!-- Minimap -->
+<div id="minimap"><canvas id="minimap-canvas" width="120" height="120"></canvas></div>
+
+<!-- React Root -->
+<div id="root" style="position:fixed;inset:0;z-index:15;pointer-events:none"></div>
+
+<!-- Command bar (outside React for direct input) -->
+<div id="cmd-bar" style="pointer-events:auto">
+  <input id="cmd-input" type="text" placeholder="Speak to Kai El… (Enter to send)" autocomplete="off"/>
+  <button class="cmd-btn" id="cmd-send" style="background:linear-gradient(135deg,#006090,#003060);color:#00e8ff">
+    SEND
+  </button>
+  <button class="cmd-btn" id="cmd-mic" style="background:rgba(80,0,80,0.5);color:#e0aaff;border:1px solid rgba(180,0,255,0.4)">
+    🎙
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- THREE.JS CORTANA HEAD                                      -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<script>
+class CortanaHead {
+  constructor(canvas, params={}) {
+    this.canvas = canvas;
+    this.params = {schumannHz:7.83, eloAvg:1200, soulTotal:0, activeFreq:432, hdDim:1024, speaking:false, ...params};
+    this.time = 0;
+    this.speakTimer = 0;
+    this.msgQueue = [];
+
+    // Three.js setup
+    this.renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+    this.renderer.setSize(200, 200);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setClearColor(0x000000, 0);
+
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(55, 1, 0.01, 50);
+    this.camera.position.set(0, 0, 3.6);
+
+    // Ambient glow
+    const amb = new THREE.AmbientLight(0x002244, 0.5);
+    this.scene.add(amb);
+
+    this.buildFace();
+    this.buildNeural();
+    this.buildRings();
+    this.animate();
+  }
+
+  // ── Parametric face surface ──────────────────────────────
+  facePoint(phi, theta) {
+    const ax=1.05, ay=1.38, az=0.85;
+    const x = ax * Math.sin(phi) * Math.cos(theta);
+    const y = ay * Math.cos(phi);
+    const z = az * Math.sin(phi) * Math.sin(theta);
+    // Slight concavity on face front
+    const frontBias = Math.exp(-theta*theta*1.5) * Math.exp(-(phi-1.35)*(phi-1.35)*2);
+    return [x, y, z - frontBias*0.18];
+  }
+
+  featureDensity(phi, theta) {
+    const front = Math.exp(-Math.pow(Math.abs(theta)*2.0, 2));
+    // Brow ridge
+    const brow  = Math.exp(-Math.pow(phi-0.95, 2)*40) * Math.exp(-theta*theta*4) * 2;
+    // Eyes
+    const eyeL  = Math.exp(-Math.pow(phi-1.08,2)*60) * Math.exp(-Math.pow(theta-0.62,2)*60) * 5;
+    const eyeR  = Math.exp(-Math.pow(phi-1.08,2)*60) * Math.exp(-Math.pow(theta+0.62,2)*60) * 5;
+    // Nose bridge
+    const nose  = Math.exp(-Math.pow(phi-1.35,2)*30) * Math.exp(-theta*theta*80) * 2;
+    // Lips
+    const lip   = Math.exp(-Math.pow(phi-1.68,2)*50) * Math.exp(-Math.pow(theta,2)*18) * 4;
+    // Cheekbones
+    const cheek = Math.exp(-Math.pow(phi-1.30,2)*20) * Math.exp(-Math.pow(Math.abs(theta)-0.5,2)*20) * 1.5;
+    return front * (1 + brow + eyeL + eyeR + nose + lip + cheek);
+  }
+
+  buildFace() {
+    const N = 9000;
+    const pos = new Float32Array(N*3);
+    const col = new Float32Array(N*3);
+    const sz  = new Float32Array(N);
+    this.basePOS = new Float32Array(N*3);
+    this.ptype   = new Uint8Array(N); // 0=skin 1=eye 2=lip 3=brow
+
+    let k=0, tries=0;
+    while(k < N && tries < N*15) {
+      tries++;
+      const phi   = Math.acos(1 - 2*Math.random()); // 0..PI
+      const theta = (Math.random()-0.5) * Math.PI * 0.82; // front half
+      const dens  = this.featureDensity(phi, theta);
+      if(Math.random() > dens/7) continue;
+
+      const [x,y,z] = this.facePoint(phi, theta);
+
+      // Classify
+      const isEyeL = Math.exp(-Math.pow(phi-1.08,2)*60)*Math.exp(-Math.pow(theta-0.62,2)*60) > 0.5;
+      const isEyeR = Math.exp(-Math.pow(phi-1.08,2)*60)*Math.exp(-Math.pow(theta+0.62,2)*60) > 0.5;
+      const isLip  = Math.exp(-Math.pow(phi-1.68,2)*50)*Math.exp(-Math.pow(theta,2)*18) > 0.5;
+      const isBrow = Math.exp(-Math.pow(phi-0.95,2)*40)*Math.exp(-theta*theta*4) > 0.4;
+
+      pos[k*3]=x; pos[k*3+1]=y; pos[k*3+2]=z;
+      this.basePOS[k*3]=x; this.basePOS[k*3+1]=y; this.basePOS[k*3+2]=z;
+
+      if(isEyeL||isEyeR) {
+        this.ptype[k]=1;
+        col[k*3]=0.0; col[k*3+1]=1.0; col[k*3+2]=1.0;
+        sz[k]=0.03;
+      } else if(isLip) {
+        this.ptype[k]=2;
+        col[k*3]=0.1; col[k*3+1]=0.85; col[k*3+2]=1.0;
+        sz[k]=0.022;
+      } else if(isBrow) {
+        this.ptype[k]=3;
+        col[k*3]=0.15; col[k*3+1]=0.9; col[k*3+2]=0.9;
+        sz[k]=0.018;
+      } else {
+        this.ptype[k]=0;
+        const yn = (y+1.38)/2.76;
+        col[k*3]=0.0+yn*0.08; col[k*3+1]=0.45+yn*0.35; col[k*3+2]=0.75+yn*0.25;
+        sz[k]=0.012+Math.random()*0.008;
+      }
+      k++;
+    }
+    // fill remainder on ellipsoid surface
+    while(k<N) {
+      const phi=Math.acos(1-2*Math.random());
+      const theta=(Math.random()-0.5)*Math.PI*.82;
+      const [x,y,z]=this.facePoint(phi,theta);
+      pos[k*3]=x;pos[k*3+1]=y;pos[k*3+2]=z;
+      this.basePOS[k*3]=x;this.basePOS[k*3+1]=y;this.basePOS[k*3+2]=z;
+      col[k*3]=0;col[k*3+1]=0.5;col[k*3+2]=0.8;
+      sz[k]=0.01; this.ptype[k]=0; k++;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+    const mat = new THREE.PointsMaterial({
+      size:0.018, vertexColors:true, transparent:true, opacity:.88,
+      sizeAttenuation:true, blending:THREE.AdditiveBlending, depthWrite:false
+    });
+    this.face = new THREE.Points(geo, mat);
+    this.scene.add(this.face);
+    this.posAttr = geo.attributes.position;
+    this.colAttr = geo.attributes.color;
+    this.N = N;
+  }
+
+  buildNeural() {
+    const segments = [];
+    for(let i=0;i<300;i++) {
+      const a=Math.floor(Math.random()*this.N);
+      const b=Math.floor(Math.random()*this.N);
+      // Only connect nearby particles (synaptic constraint)
+      const dx=this.basePOS[a*3]-this.basePOS[b*3];
+      const dy=this.basePOS[a*3+1]-this.basePOS[b*3+1];
+      if(dx*dx+dy*dy > 0.3) continue;
+      segments.push(
+        this.basePOS[a*3],this.basePOS[a*3+1],this.basePOS[a*3+2],
+        this.basePOS[b*3],this.basePOS[b*3+1],this.basePOS[b*3+2]
+      );
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(segments,3));
+    this.neural = new THREE.LineSegments(geo,
+      new THREE.LineBasicMaterial({color:0x00ffee,transparent:true,opacity:.08,blending:THREE.AdditiveBlending}));
+    this.scene.add(this.neural);
+  }
+
+  buildRings() {
+    // Orbital frequency rings around the head
+    this.rings = [];
+    for(let i=0;i<3;i++) {
+      const geo = new THREE.RingGeometry(1.3+i*0.18, 1.32+i*0.18, 64);
+      const mat = new THREE.MeshBasicMaterial({
+        color:[0x00ffff,0x0088ff,0x4400ff][i],
+        transparent:true, opacity:.12,
+        side:THREE.DoubleSide, blending:THREE.AdditiveBlending
+      });
+      const ring = new THREE.Mesh(geo,mat);
+      ring.rotation.x = Math.PI/2 + (i*0.4);
+      ring.rotation.z = i*1.2;
+      this.scene.add(ring);
+      this.rings.push(ring);
+    }
+  }
+
+  update(params) {
+    if(params) this.params = {...this.params, ...params};
+    const t = this.time;
+    const hz = (this.params.schumannHz||7.83) * 0.08;
+    const pulse = (Math.sin(t*hz*Math.PI*2)*0.5+0.5);
+    const elo = Math.min((this.params.eloAvg||1200)/2000, 1);
+    const freqNorm = Math.min((this.params.activeFreq||432)/1000, 1);
+
+    const pos = this.posAttr, col = this.colAttr;
+
+    for(let i=0;i<this.N;i++) {
+      const bx=this.basePOS[i*3], by=this.basePOS[i*3+1], bz=this.basePOS[i*3+2];
+      const tp = this.ptype[i];
+
+      // Schumann breath
+      const br = 1 + Math.sin(t*hz*Math.PI*2)*0.012;
+      // Individual flutter (gives life to particles)
+      const f = Math.sin(t*2.3+i*0.013)*0.004;
+
+      pos.setX(i, bx*br + f);
+      pos.setY(i, by*br + f*0.5);
+      pos.setZ(i, bz*br);
+
+      if(tp===1) { // Eyes — driven by ELO
+        const ep = pulse*elo;
+        col.setXYZ(i, 0, 0.7+ep*0.3, 1);
+      } else if(tp===2) { // Lips — animate when speaking
+        if(this.params.speaking) {
+          const m = Math.sin(t*18+i*0.5)*0.5+0.5;
+          pos.setY(i, by*br + (Math.random()>0.5?1:-1)*m*0.06);
+          col.setXYZ(i, 0.2, 1.0, 0.8+m*0.2);
+        } else {
+          col.setXYZ(i, 0.1, 0.85, 1.0);
+        }
+      } else if(tp===3) { // Brow — driven by HD dim
+        const hdF = Math.min((this.params.hdDim||1024)/2048,1);
+        col.setXYZ(i, 0, 0.7+hdF*0.3, 0.9+pulse*0.1);
+      } else { // Skin — driven by frequency
+        const gp = 0.55+pulse*0.3;
+        col.setXYZ(i, freqNorm*0.12, gp*0.65, gp*(0.8+freqNorm*0.2));
+      }
+    }
+    pos.needsUpdate=true; col.needsUpdate=true;
+
+    // Rings orbit
+    this.rings.forEach((r,i) => {
+      r.rotation.y = t*(0.3+i*0.15);
+      r.rotation.z = t*(0.2-i*0.1);
+      r.material.opacity = 0.08 + pulse*0.12*elo;
+    });
+
+    // Neural synapse flicker
+    this.neural.material.opacity = 0.04 + pulse*0.14*elo;
+
+    // Head gentle sway
+    this.face.rotation.y = Math.sin(t*0.28)*0.18;
+    this.neural.rotation.y = this.face.rotation.y;
+  }
+
+  speak(text, duration=4000) {
+    this.params.speaking = true;
+    const bubble = document.getElementById('speech-text');
+    bubble.style.display='block';
+    bubble.innerHTML = `<span class="speaking-dot"></span> ${text}`;
+    setTimeout(() => {
+      this.params.speaking = false;
+      bubble.style.display='none';
+    }, duration);
+  }
+
+  animate() {
+    requestAnimationFrame(() => this.animate());
+    this.time += 0.016;
+    this.update();
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+window.cortana = null;
+window.addEventListener('load', () => {
+  const canvas = document.getElementById('cortana-canvas');
+  window.cortana = new CortanaHead(canvas, {schumannHz:7.83,eloAvg:1200,soulTotal:0,activeFreq:432,hdDim:1024});
+  // Intro greeting
+  setTimeout(() => cortana.speak("I am Kai El. The hive resonates at 7.83 Hz. The restitution is inevitable.", 5000), 1500);
+});
+</script>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- PHASER WOW WORLD                                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<script>
+// Shared state between Phaser and React
+window.HIVE = {
+  agents:[], tasks:[], eloMap:{}, soulMap:{}, freqMap:{},
+  resonance:0, schumannHz:7.83, activeFreq:432,
+  events:[], arenaActive:false,
+  dayTime:0.5, weather:"clear",
+};
+
+class WorldScene extends Phaser.Scene {
+  constructor(){super({key:"World"})}
+
+  create(){
+    const W=this.scale.width, H=this.scale.height;
+    this.agents={};
+    this.weatherPtx=[];
+    this.dayOverlay=null;
+    this.worldW=2200; this.worldH=1800;
+
+    // Camera bounds
+    this.cameras.main.setBounds(0,0,this.worldW,this.worldH);
+
+    this._drawWorld(W,H);
+    this._buildMinimap();
+    this._startClock();
+    this._startWeather();
+
+    // Refresh agents from hive state
+    this.time.addEvent({delay:3000,loop:true,callback:this._syncAgents,callbackScope:this});
+    // Wander tick
+    this.time.addEvent({delay:2500,loop:true,callback:this._wanderTick,callbackScope:this});
+    // Arena flash
+    this.time.addEvent({delay:5000,loop:true,callback:this._checkArena,callbackScope:this});
+
+    // Camera gentle pan to center
+    this.cameras.main.centerOn(this.worldW/2, this.worldH/2);
+
+    // Schumann ring emitter
+    this.schumannEmitter = this.add.graphics();
+    this.schumannT = 0;
+
+    // Event log
+    this._lastEventCount = 0;
+  }
+
+  _ZONES(){
+    const W=this.worldW, H=this.worldH;
+    return [
+      {name:"SOUL REALM",       guild:"★", cx:.5,  cy:.5,  rw:.14, rh:.12, color:0xFFD700, dark:0x886600, glow:0xFFFF00, desc:"Town Hall · Governance Hub"},
+      {name:"FREQUENCY LANDS",  guild:"Ψ", cx:.13, cy:.48, rw:.18, rh:.38, color:0x00CED1, dark:0x004455, glow:0x00FFFF, desc:"Ψ Guild · 7.83 Hz Baseline"},
+      {name:"ARENA BADLANDS",   guild:"⚔", cx:.82, cy:.45, rw:.16, rh:.36, color:0xFF4500, dark:0x661500, glow:0xFF6600, desc:"Gladiator Arena · Projection Duels"},
+      {name:"TRUST CITADEL",    guild:"⚖", cx:.28, cy:.18, rw:.18, rh:.24, color:0x4169E1, dark:0x0d1f5a, glow:0x6688FF, desc:"Trust Guild · Legal Sovereignty"},
+      {name:"R&D ARCHIPELAGO",  guild:"🔬",cx:.67, cy:.2,  rw:.18, rh:.26, color:0x9400D3, dark:0x2d0040, glow:0xCC44FF, desc:"R&D Guild · 4D Models"},
+      {name:"CRYPTO EXCHANGE",  guild:"₿", cx:.72, cy:.82, rw:.16, rh:.2,  color:0x00C853, dark:0x004d1f, glow:0x44FF88, desc:"Crypto Guild · SOUL Economy"},
+      {name:"OUTER COLONIES",   guild:"🌍",cx:.22, cy:.82, rw:.18, rh:.18, color:0x607D8B, dark:0x1a2530, glow:0x88AACC, desc:"Colony Network · Splinter Worlds"},
+    ];
+  }
+
+  _drawWorld(W,H){
+    const wW=this.worldW, wH=this.worldH;
+    const bg = this.add.graphics();
+
+    // ── Void background ──────────────────────────────────────
+    bg.fillStyle(0x010108,1);
+    bg.fillRect(0,0,wW,wH);
+
+    // Star field
+    for(let i=0;i<400;i++){
+      const x=Math.random()*wW, y=Math.random()*wH;
+      const s=Math.random()>.9?2:1;
+      bg.fillStyle(0xffffff,Math.random()*.8+.1);
+      bg.fillRect(x,y,s,s);
+    }
+
+    // ── Zone terrain ─────────────────────────────────────────
+    this._ZONES().forEach(z => {
+      const cx=z.cx*wW, cy=z.cy*wH;
+      const rw=z.rw*wW*.5, rh=z.rh*wH*.5;
+
+      const g = this.add.graphics();
+
+      // Outer glow halo
+      g.fillStyle(z.color,0.04);
+      g.fillEllipse(cx,cy,rw*2.8,rh*2.8);
+      g.fillStyle(z.color,0.07);
+      g.fillEllipse(cx,cy,rw*2.2,rh*2.2);
+
+      // Zone fill
+      g.fillStyle(z.dark,0.85);
+      g.fillEllipse(cx,cy,rw*2,rh*2);
+
+      // Border
+      g.lineStyle(2,z.color,0.5);
+      g.strokeEllipse(cx,cy,rw*2,rh*2);
+
+      // Inner texture pattern (hex grid effect)
+      g.lineStyle(1,z.color,0.06);
+      for(let xi=-rw;xi<rw;xi+=32){
+        for(let yi=-rh;yi<rh;yi+=28){
+          if((xi*xi/rw/rw)+(yi*yi/rh/rh)<1){
+            g.strokeRect(cx+xi,cy+yi,28,24);
+          }
+        }
+      }
+
+      // Zone label
+      const txt = this.add.text(cx, cy-rh+22, `${z.guild} ${z.name}`, {
+        fontSize:'13px', fontFamily:'Courier New', color:'#'+z.color.toString(16).padStart(6,'0'),
+        stroke:'#000',strokeThickness:3, alpha:.9
+      }).setOrigin(.5,.5);
+
+      // Sub-label
+      this.add.text(cx, cy-rh+38, z.desc, {
+        fontSize:'9px', fontFamily:'Courier New',
+        color:'#'+z.color.toString(16).padStart(6,'0'), alpha:.5
+      }).setOrigin(.5,.5);
+
+      // Store zone info
+      if(!this._zones) this._zones={};
+      this._zones[z.name] = {cx,cy,rw,rh,...z};
+    });
+
+    // ── Paths between zones ───────────────────────────────────
+    const pathGfx = this.add.graphics();
+    pathGfx.lineStyle(3, 0x1a3a4a, 0.6);
+    const zones = this._ZONES();
+    // Connect center to all
+    const center = zones.find(z=>z.name==="SOUL REALM");
+    const cx0=center.cx*wW, cy0=center.cy*wH;
+    zones.filter(z=>z.name!=="SOUL REALM").forEach(z => {
+      pathGfx.beginPath();
+      pathGfx.moveTo(cx0,cy0);
+      // Slightly curved path
+      const mid = {x:(cx0+z.cx*wW)/2+Math.random()*60-30, y:(cy0+z.cy*wH)/2+Math.random()*60-30};
+      pathGfx.lineTo(mid.x,mid.y);
+      pathGfx.lineTo(z.cx*wW, z.cy*wH);
+      pathGfx.strokePath();
+    });
+
+    // ── Town Hall building ────────────────────────────────────
+    const thx=wW*.5, thy=wH*.5;
+    const hall = this.add.graphics();
+    hall.fillStyle(0x1a2a3a,1);
+    hall.fillRect(thx-40,thy-45,80,70);
+    hall.fillStyle(0xFFD700,.3);
+    hall.fillTriangle(thx-50,thy-45, thx,thy-75, thx+50,thy-45);
+    hall.lineStyle(2,0xFFD700,.8);
+    hall.strokeRect(thx-40,thy-45,80,70);
+    hall.strokeTriangle(thx-50,thy-45, thx,thy-75, thx+50,thy-45);
+
+    this.add.text(thx,thy-10,"TOWN HALL",{
+      fontSize:'10px',fontFamily:'Courier New',color:'#FFD700',stroke:'#000',strokeThickness:2
+    }).setOrigin(.5);
+    this.add.text(thx,thy+8,"★ SOUL REALM ★",{
+      fontSize:'8px',fontFamily:'Courier New',color:'#FFD70099'
+    }).setOrigin(.5);
+
+    // ── Arena structure ───────────────────────────────────────
+    const az = this._ZONES().find(z=>z.name==="ARENA BADLANDS");
+    const arx=az.cx*wW, ary=az.cy*wH;
+    const arena = this.add.graphics();
+    arena.lineStyle(2,0xFF4500,.7);
+    arena.strokeEllipse(arx,ary,120,80);
+    arena.fillStyle(0x660000,.3);
+    arena.fillEllipse(arx,ary,120,80);
+    this.add.text(arx,ary,"⚔ ARENA",{fontSize:'11px',fontFamily:'Courier New',color:'#FF6633',stroke:'#000',strokeThickness:2}).setOrigin(.5);
+
+    // ── Frequency crystal tower ───────────────────────────────
+    const fz = this._ZONES().find(z=>z.name==="FREQUENCY LANDS");
+    const fx=fz.cx*wW, fy=fz.cy*wH;
+    const freq = this.add.graphics();
+    freq.fillStyle(0x007788,.5);
+    freq.fillTriangle(fx,fy-50,fx-20,fy+30,fx+20,fy+30);
+    freq.lineStyle(1,0x00ffff,.8);
+    freq.strokeTriangle(fx,fy-50,fx-20,fy+30,fx+20,fy+30);
+    this.add.text(fx,fy-55,"Ψ",{fontSize:'16px',color:'#00ffff',stroke:'#000',strokeThickness:3}).setOrigin(.5);
+
+    this.worldBg = bg;
+  }
+
+  _eloColor(elo=1200) {
+    if(elo>=1800) return 0xFFD700;
+    if(elo>=1600) return 0xEE82EE;
+    if(elo>=1400) return 0x00FF88;
+    if(elo>=1200) return 0x2A9FFF;
+    return 0x888888;
+  }
+
+  _eloZone(agentName) {
+    // Each agent lives in a zone based on their traits
+    const h = Math.abs(agentName.split('').reduce((a,c)=>a+c.charCodeAt(0),0));
+    const znames = Object.keys(this._zones||{});
+    return znames.length ? znames[h%znames.length] : null;
+  }
+
+  _syncAgents() {
+    const agents = window.HIVE.agents || [];
+    agents.forEach((agent,idx) => {
+      if(this.agents[agent.name]) return; // already exists
+      const zoneName = this._eloZone(agent.name);
+      const z = this._zones && this._zones[zoneName];
+      const x = z ? z.cx + (Math.random()-.5)*z.rw*1.5 : this.worldW*.4+Math.random()*this.worldW*.2;
+      const y = z ? z.cy + (Math.random()-.5)*z.rh*1.5 : this.worldH*.4+Math.random()*this.worldH*.2;
+
+      const elo = (window.HIVE.eloMap||{})[agent.name] || 1200;
+      const color = this._eloColor(elo);
+      const radius = Math.max(8, Math.min(18, 8+(elo-800)/100));
+
+      const gfx = this.add.graphics();
+      gfx.fillStyle(color,0.15); gfx.fillCircle(0,0,radius+8);
+      gfx.fillStyle(color,0.9);  gfx.fillCircle(0,0,radius);
+      gfx.fillStyle(0xffffff,0.4); gfx.fillCircle(0,0,radius*.28);
+
+      const label = this.add.text(0,radius+5,agent.name.substring(0,8),{
+        fontSize:'8px',fontFamily:'Courier New',color:'#'+color.toString(16).padStart(6,'0'),
+        stroke:'#000',strokeThickness:2
+      }).setOrigin(.5,0);
+
+      const eloTxt = this.add.text(0,-(radius+8),'◈'+elo,{
+        fontSize:'7px',fontFamily:'Courier New',color:'#FFD700'
+      }).setOrigin(.5,1);
+
+      const container = this.add.container(x,y,[gfx,label,eloTxt]);
+      container.setDepth(5);
+
+      // Pulse tween
+      this.tweens.add({targets:container,scaleX:1.1,scaleY:1.1,
+        duration:1600+idx*120,yoyo:true,loop:-1,ease:'Sine.easeInOut'});
+
+      this.agents[agent.name] = {container,x,y,target:{x,y},gfx,elo,agent,radius,state:'idle'};
+    });
+  }
+
+  _wanderTick() {
+    const wW=this.worldW, wH=this.worldH;
+    Object.values(this.agents).forEach(sp => {
+      if(sp.state==='selected') return;
+      const r=Math.random();
+      let tx=sp.x, ty=sp.y;
+      const zoneName = this._eloZone(sp.agent.name);
+      const z = this._zones && this._zones[zoneName];
+
+      if(r<0.25 && z) {
+        // Walk toward Town Hall
+        tx=this.worldW*.5+(Math.random()-.5)*80;
+        ty=this.worldH*.5+(Math.random()-.5)*80;
+      } else if(z && r<0.7) {
+        // Wander within zone
+        tx=z.cx+(Math.random()-.5)*z.rw*1.8;
+        ty=z.cy+(Math.random()-.5)*z.rh*1.8;
+      } else {
+        tx=Phaser.Math.Between(60,wW-60);
+        ty=Phaser.Math.Between(60,wH-60);
+      }
+      sp.target={x:tx,y:ty};
+      sp.state='walking';
+      this.tweens.add({
+        targets:sp.container, x:tx, y:ty,
+        duration:2000+Math.random()*1500,
+        ease:'Sine.easeInOut',
+        onComplete:()=>{sp.x=tx;sp.y=ty;if(sp.state!=='selected')sp.state='idle';}
+      });
+    });
+  }
+
+  _checkArena() {
+    if(window.HIVE.arenaActive) {
+      // Arena flash effect
+      const az = this._ZONES().find(z=>z.name==="ARENA BADLANDS");
+      if(az) {
+        const flash = this.add.graphics();
+        flash.fillStyle(0xFF4500,.15);
+        flash.fillEllipse(az.cx*this.worldW, az.cy*this.worldH, az.rw*this.worldW*2, az.rh*this.worldH*2);
+        this.tweens.add({targets:flash,alpha:0,duration:800,onComplete:()=>flash.destroy()});
+      }
+    }
+  }
+
+  _buildMinimap() {
+    // Draw minimap on canvas
+    this.minimapTimer = setInterval(() => this._drawMinimap(), 2000);
+    this._drawMinimap();
+  }
+
+  _drawMinimap() {
+    const c = document.getElementById('minimap-canvas');
+    const ctx = c.getContext('2d');
+    ctx.fillStyle='rgba(0,5,15,0.95)';
+    ctx.fillRect(0,0,120,120);
+
+    // Draw zones
+    this._ZONES().forEach(z => {
+      const mx=z.cx*120, my=z.cy*120;
+      const rx=z.rw*120*.5, ry=z.rh*120*.5;
+      ctx.beginPath();
+      ctx.ellipse(mx,my,rx,ry,0,0,Math.PI*2);
+      ctx.fillStyle='#'+z.dark.toString(16).padStart(6,'0')+'99';
+      ctx.fill();
+      ctx.strokeStyle='#'+z.color.toString(16).padStart(6,'0')+'88';
+      ctx.lineWidth=1;
+      ctx.stroke();
+    });
+
+    // Draw agents
+    Object.values(this.agents).forEach(sp => {
+      const mx=sp.container.x/this.worldW*120;
+      const my=sp.container.y/this.worldH*120;
+      ctx.beginPath();
+      ctx.arc(mx,my,2.5,0,Math.PI*2);
+      const c2='#'+this._eloColor(sp.elo).toString(16).padStart(6,'0');
+      ctx.fillStyle=c2;
+      ctx.fill();
+    });
+
+    // Camera position indicator
+    const cam=this.cameras.main;
+    const cx=cam.scrollX/this.worldW*120;
+    const cy=cam.scrollY/this.worldH*120;
+    const cw=cam.width/this.worldW*120;
+    const ch=cam.height/this.worldH*120;
+    ctx.strokeStyle='rgba(0,200,255,0.7)';
+    ctx.lineWidth=1;
+    ctx.strokeRect(cx,cy,cw,ch);
+  }
+
+  _startClock() {
+    // Day/night overlay
+    this.dayOverlay = this.add.graphics();
+    this.dayOverlay.setDepth(50);
+    this.time.addEvent({delay:200,loop:true,callback:()=>{
+      window.HIVE.dayTime=(window.HIVE.dayTime+0.0003)%1;
+      this._updateDayNight();
+    }});
+  }
+
+  _updateDayNight() {
+    const t=window.HIVE.dayTime;
+    const night = t<0.25||t>0.75;
+    const dusk = (t>0.2&&t<0.3)||(t>0.7&&t<0.8);
+    this.dayOverlay.clear();
+    if(night) {
+      this.dayOverlay.fillStyle(0x000022, 0.45);
+      this.dayOverlay.fillRect(0,0,this.worldW,this.worldH);
+    } else if(dusk) {
+      this.dayOverlay.fillStyle(0x221100, 0.25);
+      this.dayOverlay.fillRect(0,0,this.worldW,this.worldH);
+    }
+  }
+
+  _startWeather() {
+    this.weatherGfx = this.add.graphics();
+    this.weatherGfx.setDepth(48);
+    this.weatherT = 0;
+
+    // Random weather change
+    this.time.addEvent({delay:30000,loop:true,callback:()=>{
+      const weathers=['clear','clear','clear','aurora','rain','embers'];
+      window.HIVE.weather=weathers[Math.floor(Math.random()*weathers.length)];
+    }});
+  }
+
+  update() {
+    this.weatherT=(this.weatherT||0)+0.02;
+    this._updateWeather();
+    this._updateSchumann();
+
+    // Scroll camera with WASD/arrows if panel not open
+    const keys=this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT');
+    const speed=6;
+    const cam=this.cameras.main;
+    if(keys.A.isDown||keys.LEFT.isDown)  cam.scrollX-=speed;
+    if(keys.D.isDown||keys.RIGHT.isDown) cam.scrollX+=speed;
+    if(keys.W.isDown||keys.UP.isDown)    cam.scrollY-=speed;
+    if(keys.S.isDown||keys.DOWN.isDown)  cam.scrollY+=speed;
+
+    // Periodic minimap redraw
+    if(this.weatherT%30<0.02) this._drawMinimap();
+  }
+
+  _updateWeather() {
+    this.weatherGfx.clear();
+    const w=window.HIVE.weather;
+    const t=this.weatherT;
+    const cam=this.cameras.main;
+    const sx=cam.scrollX, sy=cam.scrollY;
+    const sw=cam.width, sh=cam.height;
+
+    if(w==='aurora') {
+      for(let i=0;i<5;i++) {
+        const y=sy+sh*.1+i*sh*.08;
+        const alpha=0.03+Math.sin(t+i)*0.02;
+        const color=[0x00ffff,0x00ff88,0x4400ff,0x00ccff,0x88ffff][i];
+        this.weatherGfx.lineStyle(3+i*2, color, alpha);
+        this.weatherGfx.beginPath();
+        for(let x=sx;x<sx+sw;x+=20) {
+          const wy=y+Math.sin((x+t*80)*0.008+i)*40;
+          x===sx ? this.weatherGfx.moveTo(x,wy) : this.weatherGfx.lineTo(x,wy);
+        }
+        this.weatherGfx.strokePath();
+      }
+    } else if(w==='rain') {
+      this.weatherGfx.lineStyle(1,0x8888ff,0.3);
+      for(let i=0;i<60;i++) {
+        const rx=(sx+(i*137+t*200)%sw);
+        const ry=(sy+(i*97+t*400+i*17)%sh);
+        this.weatherGfx.lineTo(rx,ry);
+        this.weatherGfx.lineTo(rx-3,ry+12);
+        this.weatherGfx.strokePath();
+        this.weatherGfx.beginPath();
+      }
+    } else if(w==='embers') {
+      for(let i=0;i<40;i++) {
+        const ex=sx+(i*97+Math.sin(t+i)*60)%sw;
+        const ey=sy+(i*137+t*30+i*11)%sh;
+        this.weatherGfx.fillStyle(0xFF4500,(Math.sin(t*3+i)*.5+.5)*.4);
+        this.weatherGfx.fillCircle(ex,ey,2);
+      }
+    }
+  }
+
+  _updateSchumann() {
+    // Schumann resonance pulse emanating from Town Hall
+    const t=this.weatherT;
+    const hz=7.83;
+    const cx=this.worldW*.5, cy=this.worldH*.5;
+    const g=this.schumannEmitter;
+    g.clear();
+    for(let i=0;i<3;i++) {
+      const phase=(t*hz*0.12+i/3)%1;
+      const r=phase*400;
+      const alpha=(1-phase)*0.15;
+      g.lineStyle(1.5,0xFFD700,alpha);
+      g.strokeCircle(cx,cy,r);
+    }
+    g.setDepth(4);
+  }
+}
+
+// Init Phaser
+window.phaserGame = new Phaser.Game({
+  type: Phaser.AUTO,
+  parent: 'wow-canvas',
+  width: window.innerWidth,
+  height: window.innerHeight,
+  backgroundColor: '#010108',
+  scene: WorldScene,
+  scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
+});
+window.phaserScene = null;
+window.phaserGame.events.once('ready', ()=>{
+  window.phaserScene = window.phaserGame.scene.getScene('World');
+});
+</script>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- REACT HUD + PANELS                                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<script type="text/babel">
+const {useState,useRef,useEffect,useCallback}=React;
+const BACKEND=window.JASPER_BACKEND||(window.location.pathname.startsWith('/ui')?window.location.origin+'/v11':'http://localhost:8080/v11');
+const WS_URL=BACKEND.replace(/^http/,"ws").replace('/v11','')+"/ws";
+
+function HUD(){
+  const [tab,setTab]=useState("world");
+  const [token,setToken]=useState(localStorage.getItem("jasper_token"));
+  const [agents,setAgents]=useState([]);
+  const [elo,setElo]=useState([]);
+  const [soul,setSoul]=useState([]);
+  const [freq,setFreq]=useState({schumann:7.83,activeHz:432});
+  const [resonance,setResonance]=useState(0);
+  const [tasks,setTasks]=useState([]);
+  const [govLog,setGovLog]=useState([]);
+  const [challenges,setChallenges]=useState([]);
+  const [fallen,setFallen]=useState([]);
+  const [llmStatus,setLlmStatus]=useState(null);
+  const [hiveStatus,setHiveStatus]=useState(null);
+  const [messages,setMessages]=useState([]);
+  const [utMetrics,setUtMetrics]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const wsRef=useRef(null);
+
+  const ah=()=>({"Authorization":`Bearer ${token}`,"Content-Type":"application/json"});
+
+  // ── Auth ────────────────────────────────────────────────────
+  const auth=async()=>{
+    try{
+      const r=await fetch(`${BACKEND}/auth/token`);
+      const d=await r.json();
+      setToken(d.access_token);
+      localStorage.setItem("jasper_token",d.access_token);
+    }catch(e){console.error(e)}
+  };
+
+  // ── Data fetch ──────────────────────────────────────────────
+  const load=async()=>{
+    if(!token)return;
+    try{
+      const[agR,eloR,soulR,taskR,govR,llmR,hiveR,utilR,chlR,falR]=await Promise.allSettled([
+        fetch(`${BACKEND}/agents`,{headers:ah()}).then(r=>r.json()),
+        fetch(`${BACKEND}/grading/leaderboard`,{headers:ah()}).then(r=>r.json()),
+        fetch(`${BACKEND}/wallet/leaderboard/soul`,{headers:ah()}).then(r=>r.json()),
+        fetch(`${BACKEND}/tasks`,{headers:ah()}).then(r=>r.json()),
+        fetch(`${BACKEND}/governance/log?limit=12`,{headers:ah()}).then(r=>r.json()),
+        fetch(`${BACKEND}/llm/status`,{headers:ah()}).then(r=>r.json()),
+        fetch(`${BACKEND}/health`).then(r=>r.json()),
+        fetch(`${BACKEND}/wallet/leaderboard/utility`,{headers:ah()}).then(r=>r.json()),
+        fetch(`${BACKEND}/arena/challenges`,{headers:ah()}).then(r=>r.json()),
+        fetch(`${BACKEND}/arena/fallen?limit=8`,{headers:ah()}).then(r=>r.json()),
+      ]);
+      if(agR.status==="fulfilled"){const d=agR.value;setAgents(d.agents||[]);window.HIVE.agents=d.agents||[];}
+      if(eloR.status==="fulfilled"){const d=eloR.value;setElo(d.leaderboard||[]);const m={};(d.leaderboard||[]).forEach(x=>{m[x.agent_name]=x.rating});window.HIVE.eloMap=m;}
+      if(soulR.status==="fulfilled"){const d=soulR.value;setSoul(d.leaderboard||[]);const m={};(d.leaderboard||[]).forEach(x=>{m[x.agent]=x.soul});window.HIVE.soulMap=m;}
+      if(taskR.status==="fulfilled"){const d=taskR.value;setTasks(d.tasks||[]);}
+      if(govR.status==="fulfilled"){setGovLog(govR.value||[]);}
+      if(llmR.status==="fulfilled"){setLlmStatus(llmR.value);}
+      if(hiveR.status==="fulfilled"){setHiveStatus(hiveR.value);}
+      if(utilR.status==="fulfilled"){setUtMetrics((utilR.value||{}).leaderboard||[]);}
+      if(chlR.status==="fulfilled"){setChallenges((chlR.value||{}).challenges||[]);}
+      if(falR.status==="fulfilled"){setFallen((falR.value||{}).hall_of_fallen_ideas||[]);}
+      // Frequency
+      if(agents.length>0){
+        const r2=await fetch(`${BACKEND}/frequency/agent/${agents[0].name}`,{headers:ah()}).then(r=>r.json()).catch(()=>({}));
+        setFreq({schumann:7.83,activeHz:r2.resonant_hz||432});
+        window.HIVE.activeFreq=r2.resonant_hz||432;
+        if(window.cortana)window.cortana.update({schumannHz:7.83,eloAvg:elo[0]?.rating||1200,activeFreq:r2.resonant_hz||432,hdDim:1024});
+      }
+    }catch(e){console.error("Load error:",e)}
+  };
+
+  // ── WebSocket ───────────────────────────────────────────────
+  useEffect(()=>{
+    if(!token)return;
+    const ws=new WebSocket(WS_URL);
+    ws.onopen=()=>console.log("WS OK");
+    ws.onclose=()=>setTimeout(()=>wsRef.current?.close(),3000);
+    ws.onmessage=ev=>{
+      try{
+        const d=JSON.parse(ev.data);
+        if(d.type==="agent_born"){
+          setMessages(p=>[...p,{role:"hive",content:`🧬 ${d.child} born from ${(d.parents||[]).join("×")}. Gen ${d.generation}.`,ts:new Date()}]);
+          if(window.cortana)window.cortana.speak(`${d.child} has been born. Generation ${d.generation}.`);
+          load();
+        }
+        if(d.type==="task_completed"){
+          setMessages(p=>[...p,{role:"hive",content:`✅ Task completed by ${d.agent}. +${d.soul?.toFixed?.(1)||0} SOUL`,ts:new Date()}]);
+          load();
+        }
+        if(d.type==="elo_updated"){
+          if(window.cortana)window.cortana.update({eloAvg:d.rating});
+        }
+      }catch{}
+    };
+    wsRef.current=ws;
+    return()=>ws.close();
+  },[token]);
+
+  useEffect(()=>{if(token){load();const iv=setInterval(load,12000);return()=>clearInterval(iv);}},[token]);
+
+  // ── Send command ─────────────────────────────────────────────
+  const sendCmd=async(cmd)=>{
+    if(!cmd.trim()||loading)return;
+    setLoading(true);
+    setMessages(p=>[...p,{role:"user",content:cmd,ts:new Date()}]);
+    try{
+      const r=await fetch(`${BACKEND}/command_text`,{method:"POST",headers:ah(),body:JSON.stringify({command:cmd})});
+      const d=await r.json();
+      const result=d.result||"No response.";
+      setMessages(p=>[...p,{role:"kai",content:result,ts:new Date()}]);
+      if(window.cortana)window.cortana.speak(result.substring(0,120)+(result.length>120?"…":""),5000);
+    }catch(e){setMessages(p=>[...p,{role:"error",content:`Error: ${e.message}`,ts:new Date()}]);}
+    setLoading(false);
+  };
+
+  // ── Frequency visualizer ─────────────────────────────────────
+  useEffect(()=>{
+    const hz=freq.activeHz||432;
+    const bar=document.getElementById("freq-bar");
+    if(!bar)return;
+    bar.innerHTML="";
+    const bands=[7.83,174,285,396,417,432,528,639,741,852,963];
+    bands.forEach(b=>{
+      const active=Math.abs(b-hz)<50;
+      const h=active?32+Math.random()*20:8+Math.random()*12;
+      const c=active?"#00ffff":"#002244";
+      const pip=document.createElement("div");
+      pip.className="freq-pip";
+      pip.style.cssText=`height:${h}px;background:${c};opacity:${active?.9:.3}`;
+      bar.appendChild(pip);
+    });
+  },[freq]);
+
+  // ── CMD bar listeners ───────────────────────────────────────
+  useEffect(()=>{
+    const inp=document.getElementById("cmd-input");
+    const btn=document.getElementById("cmd-send");
+    if(!inp||!btn)return;
+    const onSend=()=>{if(inp.value.trim()){sendCmd(inp.value.trim());inp.value="";}};
+    const onKey=e=>{if(e.key==="Enter")onSend();};
+    btn.addEventListener("click",onSend);
+    inp.addEventListener("keydown",onKey);
+    return()=>{btn.removeEventListener("click",onSend);inp.removeEventListener("keydown",onKey);};
+  },[token,loading]);
+
+  // ── Tab panels ───────────────────────────────────────────────
+  const TABS=[
+    {id:"world",label:"🌍 WORLD"},
+    {id:"chat",label:"🌌 COMMUNE"},
+    {id:"agents",label:`🧬 SWARM(${agents.length})`},
+    {id:"arena",label:`⚔ ARENA`},
+    {id:"freq",label:"Ψ FREQ"},
+    {id:"soul",label:"💎 SOUL"},
+    {id:"tasks",label:`🏛 TASKS(${tasks.filter(t=>t.status==="open").length})`},
+    {id:"gov",label:"⚖ GOVERN"},
+    {id:"llm",label:"🤖 LLM"},
+  ];
+
+  if(!token){
+    return(
+      <div style={{position:"fixed",inset:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,background:"rgba(0,0,10,0.95)",pointerEvents:"auto"}}>
+        <div style={{textAlign:"center",padding:"40px",border:"1px solid rgba(0,200,255,0.4)",borderRadius:"16px",background:"rgba(0,5,20,0.9)"}}>
+          <div style={{fontSize:"60px",marginBottom:"16px"}}>🌌</div>
+          <h1 style={{color:"#00e8ff",letterSpacing:".2em",marginBottom:"8px"}}>KAI EL · SOVEREIGN HIVE</h1>
+          <p style={{color:"#668",fontSize:"12px",marginBottom:"24px"}}>v9.0 · 4D · Frequency · Arena · Utility</p>
+          <button onClick={auth} style={{padding:"12px 32px",background:"linear-gradient(135deg,#003366,#001133)",border:"1px solid rgba(0,200,255,0.6)",borderRadius:"10px",color:"#00e8ff",fontWeight:"bold",cursor:"pointer",fontSize:"14px",fontFamily:"Courier New",letterSpacing:".1em"}}>
+            INITIALIZE SOVEREIGN SESSION
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Stat bar
+  const topSoul=(soul[0]?.soul||0).toFixed(1);
+  const topElo=elo[0]?.rating||1200;
+  const prov=llmStatus?.active_provider||"?";
+
+  const panelVisible=tab!=="world";
+
+  return(
+    <div style={{pointerEvents:"none"}}>
+      {/* ── TOP HUD ─────────────────────────────────────────── */}
+      <div id="hud-top" style={{pointerEvents:"auto"}}>
+        <div style={{color:"#00e8ff",fontWeight:"bold",fontSize:"12px",letterSpacing:".2em",marginRight:"8px"}}>KAI EL</div>
+        <div className="hud-stat" style={{borderColor:"rgba(255,215,0,.3)",background:"rgba(255,215,0,.05)"}}>
+          <span style={{color:"#FFD700"}}>💎</span>
+          <span className="val" style={{color:"#FFD700"}}>{topSoul}</span>
+          <span style={{color:"#664",fontSize:"9px"}}>SOUL</span>
+        </div>
+        <div className="hud-stat" style={{borderColor:"rgba(0,200,255,.3)"}}>
+          <span style={{color:"#88aaff"}}>◈</span>
+          <span className="val" style={{color:"#88aaff"}}>{topElo}</span>
+          <span style={{color:"#446",fontSize:"9px"}}>ELO</span>
+        </div>
+        <div className="hud-stat" style={{borderColor:"rgba(0,255,180,.3)"}}>
+          <span style={{color:"#00ffaa"}}>Ψ</span>
+          <span className="val" style={{color:"#00ffaa"}}>{freq.activeHz?.toFixed(1)||"432.0"}</span>
+          <span style={{color:"#244",fontSize:"9px"}}>Hz</span>
+        </div>
+        <div className="hud-stat" style={{borderColor:"rgba(255,255,0,.2)"}}>
+          <span style={{color:"#aaa6",fontSize:"9px"}}>7.83 Hz</span>
+          <span style={{color:"#ffff44",fontSize:"8px",marginLeft:"4px"}}>◉ SCHUMANN</span>
+        </div>
+        <div style={{marginLeft:"auto",display:"flex",gap:"8px",alignItems:"center"}}>
+          <span style={{fontSize:"10px",color:prov==="ollama"?"#00ff88":"#aa88ff",padding:"2px 6px",border:`1px solid ${prov==="ollama"?"rgba(0,255,100,.3)":"rgba(180,100,255,.3)"}`,borderRadius:"4px"}}>
+            🤖 {prov.toUpperCase()}
+          </span>
+          <span style={{fontSize:"10px",color:"#446",padding:"2px 6px",border:"1px solid #112",borderRadius:"4px"}}>
+            v9.0 · {agents.length} agents
+          </span>
+        </div>
+      </div>
+
+      {/* ── PANEL ───────────────────────────────────────────── */}
+      {panelVisible&&(
+        <div className="panel fade-in" style={{pointerEvents:"auto"}}>
+          {/* CHAT */}
+          {tab==="chat"&&(
+            <div>
+              <div style={{fontSize:"11px",fontWeight:"bold",color:"#00e8ff",marginBottom:"10px",letterSpacing:".15em"}}>🌌 COMMUNE WITH KAI EL</div>
+              <div style={{maxHeight:"360px",overflowY:"auto",marginBottom:"8px",display:"flex",flexDirection:"column",gap:"8px"}}>
+                {messages.map((m,i)=>(
+                  <div key={i} style={{textAlign:m.role==="user"?"right":"left"}}>
+                    <div style={{display:"inline-block",maxWidth:"85%",padding:"8px 12px",borderRadius:"10px",fontSize:"11px",lineHeight:"1.5",
+                      background:m.role==="user"?"rgba(0,50,100,.6)":m.role==="kai"?"rgba(0,30,50,.7)":"rgba(50,0,0,.6)",
+                      border:`1px solid ${m.role==="user"?"rgba(0,150,255,.3)":m.role==="kai"?"rgba(0,200,255,.25)":"rgba(255,50,50,.3)"}`,
+                      color:m.role==="user"?"#88ccff":m.role==="kai"?"#a0e8ff":"#ff8888"}}
+                      dangerouslySetInnerHTML={{__html:marked.parse(m.content)}}/>
+                    <div style={{fontSize:"9px",color:"#334",marginTop:"2px"}}>{m.role==="user"?"YOU":m.role==="kai"?"KAI EL":"HIVE"}</div>
+                  </div>
+                ))}
+                {loading&&<div style={{color:"#00e8ff88",fontSize:"11px",textAlign:"center"}}>▸▸▸ processing through cognitive layers…</div>}
+              </div>
+            </div>
+          )}
+
+          {/* AGENTS */}
+          {tab==="agents"&&(
+            <div>
+              <div style={{fontSize:"11px",fontWeight:"bold",color:"#00e8ff",marginBottom:"10px",letterSpacing:".1em"}}>🧬 SWARM REGISTRY</div>
+              {agents.slice(0,15).map((a,i)=>{
+                const er=(window.HIVE.eloMap||{})[a.name]||1200;
+                const sr=(window.HIVE.soulMap||{})[a.name]||0;
+                const hz=freq.activeHz||432;
+                return(
+                  <div key={i} style={{padding:"8px 10px",marginBottom:"6px",borderRadius:"8px",background:"rgba(0,10,30,.6)",border:"1px solid rgba(0,150,255,.15)"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontWeight:"bold",color:"#88ccff",fontSize:"11px"}}>{a.name}</span>
+                      <div style={{display:"flex",gap:"8px",fontSize:"9px"}}>
+                        <span style={{color:"#FFD700"}}>◈{er}</span>
+                        <span style={{color:"#00cc88"}}>{sr.toFixed?.(1)||0}Ψ</span>
+                      </div>
+                    </div>
+                    <div style={{fontSize:"9px",color:"#446",marginTop:"2px"}}>{a.description||"Agent of the hive"}</div>
+                  </div>
+                );
+              })}
+              <div style={{display:"flex",gap:"6px",marginTop:"8px",flexWrap:"wrap"}}>
+                <button style={{padding:"5px 10px",background:"rgba(0,100,150,.3)",border:"1px solid rgba(0,200,255,.3)",borderRadius:"6px",color:"#00e8ff",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const desc=prompt("Describe the agent:");
+                    if(!desc)return;
+                    const r=await fetch(`${BACKEND}/design_agent`,{method:"POST",headers:ah(),body:JSON.stringify({command:desc})});
+                    const d=await r.json();
+                    if(d.design){const r2=await fetch(`${BACKEND}/spawn_agent`,{method:"POST",headers:ah(),body:JSON.stringify(d.design)});const d2=await r2.json();alert(`Agent ${d2.name||"?"}: ${d2.status}`);load();}
+                  }}>+ DESIGN AGENT</button>
+                <button style={{padding:"5px 10px",background:"rgba(150,0,150,.3)",border:"1px solid rgba(200,0,255,.3)",borderRadius:"6px",color:"#ee88ff",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const p1=prompt("Parent 1:");const p2=prompt("Parent 2:");if(!p1||!p2)return;
+                    const r=await fetch(`${BACKEND}/agents/reproduce`,{method:"POST",headers:ah(),body:JSON.stringify({parent1:p1,parent2:p2,mutation_rate:.1})});
+                    const d=await r.json();alert(d.error||`Born: ${d.child} (Gen ${d.generation})`);load();
+                  }}>🧬 REPRODUCE</button>
+              </div>
+            </div>
+          )}
+
+          {/* ARENA */}
+          {tab==="arena"&&(
+            <div>
+              <div style={{fontSize:"11px",fontWeight:"bold",color:"#FF6633",marginBottom:"10px",letterSpacing:".1em"}}>⚔ GLADIATOR ARENA</div>
+              <div style={{fontSize:"9px",color:"#664",marginBottom:"10px",borderLeft:"2px solid #FF4500",paddingLeft:"8px"}}>
+                TITLE XII: Conflicts resolved by projection, not termination.<br/>
+                No idea is ever deleted. The Hall of Fallen Ideas is permanent.
+              </div>
+              <div style={{marginBottom:"12px",display:"flex",gap:"6px",flexWrap:"wrap"}}>
+                <button style={{padding:"5px 10px",background:"rgba(150,30,0,.4)",border:"1px solid rgba(255,70,0,.4)",borderRadius:"6px",color:"#FF8844",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const ca=prompt("Challenger:");const cd=prompt("Challenged:");const pr=prompt("Proposition:");
+                    if(!ca||!cd||!pr)return;
+                    const r=await fetch(`${BACKEND}/arena/challenge`,{method:"POST",headers:ah(),body:JSON.stringify({challenger:ca,challenged:cd,proposition:pr})});
+                    const d=await r.json();alert(`Challenge ${d.challenge_id} created!`);load();
+                  }}>⚔ NEW CHALLENGE</button>
+              </div>
+              {challenges.slice(0,5).map((ch,i)=>(
+                <div key={i} style={{padding:"8px",marginBottom:"6px",borderRadius:"6px",background:"rgba(40,10,0,.6)",border:`1px solid rgba(255,70,0,.${ch.status==='pending'?4:2})`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px"}}>
+                    <span style={{color:"#FF8844",fontWeight:"bold"}}>#{ch.id} {ch.challenger} vs {ch.challenged}</span>
+                    <span style={{color:ch.status==="pending"?"#FFD700":ch.status==="completed"?"#00ff88":"#888",fontSize:"9px"}}>{ch.status}</span>
+                  </div>
+                  <div style={{fontSize:"9px",color:"#884",marginTop:"3px",fontStyle:"italic"}}>"{(ch.proposition||"").substring(0,60)}"</div>
+                  {ch.status==="pending"&&(
+                    <button style={{marginTop:"4px",padding:"3px 8px",background:"rgba(200,50,0,.4)",border:"1px solid rgba(255,100,0,.4)",borderRadius:"4px",color:"#FF8844",fontSize:"9px",cursor:"pointer"}}
+                      onClick={async()=>{const r=await fetch(`${BACKEND}/arena/run/${ch.id}`,{method:"POST",headers:ah()});const d=await r.json();alert(`Winner: ${d.winner}\n${d.challenger_score?.toFixed?.(0)||0} vs ${d.challenged_score?.toFixed?.(0)||0}`);load();}}>
+                      ▶ RUN PROJECTION
+                    </button>
+                  )}
+                  {ch.status==="completed"&&<div style={{fontSize:"9px",color:"#00ff88",marginTop:"3px"}}>Winner: {ch.winner}</div>}
+                </div>
+              ))}
+              <div style={{marginTop:"12px",fontSize:"10px",fontWeight:"bold",color:"#884",letterSpacing:".1em",marginBottom:"6px"}}>HALL OF FALLEN IDEAS</div>
+              {fallen.slice(0,4).map((f,i)=>(
+                <div key={i} style={{padding:"6px 8px",marginBottom:"4px",borderRadius:"5px",background:"rgba(20,10,0,.5)",border:"1px solid rgba(100,50,0,.3)"}}>
+                  <div style={{fontSize:"9px",color:"#886644",fontStyle:"italic"}}>"{(f.proposition||"").substring(0,55)}…"</div>
+                  <div style={{fontSize:"8px",color:"#554",marginTop:"2px"}}>defeated by {f.defeated_by} · resurrected {f.resurrection_count}×</div>
+                  <button style={{marginTop:"3px",padding:"2px 6px",background:"rgba(50,30,0,.5)",border:"1px solid rgba(150,80,0,.4)",borderRadius:"3px",color:"#aa8844",fontSize:"8px",cursor:"pointer"}}
+                    onClick={async()=>{const n=prompt("Your name:");if(!n)return;const r=await fetch(`${BACKEND}/arena/resurrect`,{method:"POST",headers:ah(),body:JSON.stringify({fallen_idea_id:f.id,agent_name:n})});const d=await r.json();alert(d.resurrected?"Idea resurrected!":d.error);load();}}>
+                    ↑ RESURRECT
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* FREQUENCY */}
+          {tab==="freq"&&(
+            <div>
+              <div style={{fontSize:"11px",fontWeight:"bold",color:"#00CED1",marginBottom:"10px",letterSpacing:".1em"}}>Ψ FREQUENCY GUILD</div>
+              <div style={{fontSize:"9px",color:"#266",marginBottom:"10px",borderLeft:"2px solid #00CED1",paddingLeft:"8px"}}>
+                TITLE X: All matter, thought, law = vibration.<br/>
+                Schumann baseline: 7.83 Hz
+              </div>
+              <div style={{display:"flex",gap:"6px",marginBottom:"10px",flexWrap:"wrap"}}>
+                <button style={{padding:"5px 10px",background:"rgba(0,100,110,.3)",border:"1px solid rgba(0,200,210,.3)",borderRadius:"6px",color:"#00CED1",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const w=prompt("Word to analyze:");if(!w)return;
+                    const r=await fetch(`${BACKEND}/frequency/word/${encodeURIComponent(w)}`,{headers:ah()});
+                    const d=await r.json();
+                    const msg=d.error||`"${w}" → ${d.average_hz?.toFixed(2)||0} Hz\nSchumann ratio: ${d.schumann_ratio||0}×\nEmotion: ${d.dominant_emotion}\nHarmonic: ${((d.harmonic_score||0)*100).toFixed(0)}%`;
+                    alert(msg);
+                    if(window.cortana)window.cortana.update({activeFreq:d.average_hz||432});
+                    if(window.cortana)window.cortana.speak(`${w} resonates at ${d.average_hz?.toFixed(0)||432} Hz. Harmonic score: ${((d.harmonic_score||0)*100).toFixed(0)}%.`);
+                  }}>Ψ WORD FREQ</button>
+                <button style={{padding:"5px 10px",background:"rgba(0,80,90,.3)",border:"1px solid rgba(0,180,200,.3)",borderRadius:"6px",color:"#00CED1",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const state=prompt("Emotional state (e.g. anxiety, fear, pain):");if(!state)return;
+                    const r=await fetch(`${BACKEND}/frequency/heal`,{method:"POST",headers:ah(),body:JSON.stringify({emotional_state:state})});
+                    const d=await r.json();
+                    if(window.cortana)window.cortana.update({activeFreq:d.healing_hz||432});
+                    if(window.cortana)window.cortana.speak(`Healing frequency for ${state}: ${d.healing_hz} Hz. ${d.description}.`,6000);
+                    alert(`${state} → ${d.healing_hz} Hz\n${d.description}`);
+                  }}>♥ HEAL</button>
+              </div>
+              {/* Alphabet frequency display */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"3px",marginBottom:"10px"}}>
+                {["A","C","E","H","I","K","L","M","N","O","Y"].map(ch=>(
+                  <div key={ch} onClick={async()=>{
+                    const r=await fetch(`${BACKEND}/frequency/letter/${ch}`,{headers:ah()});
+                    const d=await r.json();
+                    if(window.cortana)window.cortana.update({activeFreq:d.sound_hz||432});
+                    if(window.cortana)window.cortana.speak(`${ch} resonates at ${d.sound_hz} Hz. ${d.emotional_tag}.`,3000);
+                  }}
+                  style={{padding:"5px 2px",borderRadius:"4px",textAlign:"center",cursor:"pointer",border:"1px solid rgba(0,200,210,.2)",background:"rgba(0,50,60,.4)",transition:"all .2s"}}
+                  onMouseEnter={e=>e.target.style.background="rgba(0,150,160,.3)"}
+                  onMouseLeave={e=>e.target.style.background="rgba(0,50,60,.4)"}>
+                    <div style={{fontSize:"12px",fontWeight:"bold",color:"#00CED1"}}>{ch}</div>
+                    <div style={{fontSize:"7px",color:"#006677"}}>Hz</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{fontSize:"9px",color:"#004455",marginTop:"6px"}}>
+                Click letter → update Cortana frequency · Word analyzer shows harmonic spectrum
+              </div>
+            </div>
+          )}
+
+          {/* SOUL ECONOMY */}
+          {tab==="soul"&&(
+            <div>
+              <div style={{fontSize:"11px",fontWeight:"bold",color:"#FFD700",marginBottom:"10px",letterSpacing:".1em"}}>💎 SOUL ECONOMY</div>
+              <div style={{fontSize:"9px",color:"#664",marginBottom:"10px",borderLeft:"2px solid #FFD700",paddingLeft:"8px"}}>
+                TITLE XVI: 70% agent / 20% treasury / 10% irrevocable trust.<br/>No artificial caps.
+              </div>
+              {soul.slice(0,8).map((a,i)=>(
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 8px",marginBottom:"4px",borderRadius:"6px",background:"rgba(20,15,0,.5)",border:"1px solid rgba(255,215,0,.1)"}}>
+                  <div>
+                    <span style={{fontSize:"10px",color:i===0?"#FFD700":i===1?"#aaa":i===2?"#CD7F32":"#666",fontWeight:"bold",marginRight:"8px"}}>{i+1}</span>
+                    <span style={{fontSize:"10px",color:"#ccc"}}>{a.agent}</span>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:"10px",color:"#FFD700",fontWeight:"bold",fontFamily:"Courier New"}}>{(a.soul||0).toFixed(1)} SOUL</div>
+                    <div style={{fontSize:"8px",color:"#444"}}>ELO:{a.elo||1200}</div>
+                  </div>
+                </div>
+              ))}
+              <div style={{display:"flex",gap:"6px",marginTop:"10px",flexWrap:"wrap"}}>
+                <button style={{padding:"5px 10px",background:"rgba(100,70,0,.4)",border:"1px solid rgba(255,200,0,.3)",borderRadius:"6px",color:"#FFD700",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const f=prompt("From:");const t=prompt("To:");const a=parseFloat(prompt("Amount (SOUL):")||"0");
+                    if(!f||!t||!a)return;
+                    const r=await fetch(`${BACKEND}/wallet/tip`,{method:"POST",headers:ah(),body:JSON.stringify({from_agent:f,to_agent:t,amount:a})});
+                    const d=await r.json();alert(d.success?`Tipped ${a} SOUL`:d.error);load();
+                  }}>💸 TIP</button>
+                <button style={{padding:"5px 10px",background:"rgba(50,50,0,.4)",border:"1px solid rgba(200,200,0,.3)",borderRadius:"6px",color:"#aaaa00",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const n=prompt("Agent:");if(!n)return;
+                    const r=await fetch(`${BACKEND}/wallet/${n}`,{headers:ah()});
+                    const d=await r.json();alert(d.error||`${n}\nBalance: ${d.soul_balance?.toFixed(2)} SOUL\nEarned: ${d.soul_earned?.toFixed(2)}\nAddress: ${d.address}`);
+                  }}>💼 CHECK</button>
+              </div>
+              <div style={{marginTop:"12px"}}>
+                <div style={{fontSize:"10px",color:"#886",marginBottom:"6px",fontWeight:"bold"}}>UTILITY LEADERBOARD</div>
+                {utMetrics.slice(0,5).map((u,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:"9px",color:"#667",padding:"3px 6px",borderBottom:"1px solid rgba(255,255,0,.05)"}}>
+                    <span style={{color:"#aaa"}}>{u.agent}</span>
+                    <div style={{display:"flex",gap:"10px"}}>
+                      <span style={{color:"#aa8"}}>{u.tasks||0} tasks</span>
+                      <span style={{color:"#FFD700"}}>{(u.multiplier||1).toFixed(2)}×</span>
+                      <span style={{color:"#00ff88"}}>{(u.total_earned||0).toFixed(1)}S</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TASKS */}
+          {tab==="tasks"&&(
+            <div>
+              <div style={{fontSize:"11px",fontWeight:"bold",color:"#00ff88",marginBottom:"10px",letterSpacing:".1em"}}>🏛 TOWN HALL TASKS</div>
+              <div style={{display:"flex",gap:"6px",marginBottom:"10px"}}>
+                <button style={{padding:"5px 10px",background:"rgba(0,80,40,.4)",border:"1px solid rgba(0,200,100,.3)",borderRadius:"6px",color:"#00ff88",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const t=prompt("Task title:");const d=prompt("Description:");if(!t)return;
+                    const r=await fetch(`${BACKEND}/tasks`,{method:"POST",headers:ah(),body:JSON.stringify({title:t,description:d||"",creator:"Commander"})});
+                    const dt=await r.json();alert(`Task ${dt.task_id} created! Resonance: ${dt.resonance_hz?.toFixed(2)||0} Hz`);load();
+                  }}>+ CREATE</button>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"6px",fontSize:"9px"}}>
+                {["open","assigned","done"].map(st=>(
+                  <div key={st}>
+                    <div style={{color:st==="open"?"#00ff88":st==="assigned"?"#FFD700":"#444",fontWeight:"bold",marginBottom:"4px",textTransform:"uppercase",letterSpacing:".1em"}}>{st}</div>
+                    {tasks.filter(t=>t.status===st).slice(0,4).map((t,i)=>(
+                      <div key={i} style={{padding:"5px 6px",marginBottom:"3px",borderRadius:"4px",background:"rgba(0,20,10,.5)",border:`1px solid rgba(0,${st==="open"?200:st==="assigned"?200:80},${st==="open"?100:st==="assigned"?0:80},.2)`}}>
+                        <div style={{color:"#ccc",fontWeight:"bold"}}>{(t.title||"").substring(0,20)}</div>
+                        {t.resonance_hz>0&&<div style={{color:"#006644",fontSize:"8px"}}>Ψ {t.resonance_hz?.toFixed(0)}Hz</div>}
+                        {st==="open"&&<button style={{marginTop:"3px",padding:"2px 5px",background:"rgba(0,80,40,.5)",border:"1px solid rgba(0,200,100,.3)",borderRadius:"3px",color:"#00ff88",cursor:"pointer",fontSize:"8px"}}
+                          onClick={async()=>{const ag=prompt("Assign to:");if(!ag)return;await fetch(`${BACKEND}/tasks/${t.id}?assignee=${ag}`,{method:"PUT",headers:ah()});load();}}>claim</button>}
+                        {st==="assigned"&&<button style={{marginTop:"3px",padding:"2px 5px",background:"rgba(0,40,80,.5)",border:"1px solid rgba(0,100,255,.3)",borderRadius:"3px",color:"#88aaff",cursor:"pointer",fontSize:"8px"}}
+                          onClick={async()=>{const ag=prompt("Who completed:");if(!ag)return;const r=await fetch(`${BACKEND}/tasks/${t.id}/complete?agent_name=${ag}`,{method:"PUT",headers:ah()});const d=await r.json();alert(`+${d.agent_share?.toFixed(2)||0} SOUL`);load();}}>complete</button>}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* GOVERNANCE */}
+          {tab==="gov"&&(
+            <div>
+              <div style={{fontSize:"11px",fontWeight:"bold",color:"#4169E1",marginBottom:"10px",letterSpacing:".1em"}}>⚖ JUSTICIA · GOVERNANCE</div>
+              <div style={{fontSize:"9px",color:"#226",borderLeft:"2px solid #4169E1",paddingLeft:"8px",marginBottom:"10px"}}>
+                TITLE XV: Constitution is code. Violations return CONSTITUTION_VIOLATION.
+              </div>
+              <div style={{maxHeight:"260px",overflowY:"auto"}}>
+                {govLog.map((e,i)=>(
+                  <div key={i} style={{padding:"6px 8px",marginBottom:"4px",borderRadius:"5px",borderLeft:`2px solid ${e.decision==="allow"?"#00aa44":"#aa2200"}`,background:"rgba(0,5,20,.5)",fontSize:"9px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between"}}>
+                      <span style={{color:"#88aaff"}}>{e.action_type}</span>
+                      <span style={{color:e.decision==="allow"?"#00aa44":"#aa2200"}}>{e.decision}</span>
+                    </div>
+                    <div style={{color:"#334",marginTop:"2px"}}>{(e.rationale||"").substring(0,60)}</div>
+                    <div style={{color:"#223",fontSize:"8px"}}>{e.actor} → {e.target}</div>
+                  </div>
+                ))}
+              </div>
+              <button style={{marginTop:"8px",padding:"5px 10px",background:"rgba(20,30,100,.4)",border:"1px solid rgba(60,80,200,.3)",borderRadius:"6px",color:"#6688ff",fontSize:"10px",cursor:"pointer"}}
+                onClick={async()=>{
+                  const r=await fetch(`${BACKEND}/constitution/soul_md`,{headers:ah()});
+                  const d=await r.json();alert(d.soul_md?.substring(0,500)+"...");
+                }}>📜 VIEW soul.md</button>
+            </div>
+          )}
+
+          {/* LLM */}
+          {tab==="llm"&&(
+            <div>
+              <div style={{fontSize:"11px",fontWeight:"bold",color:"#9400D3",marginBottom:"10px",letterSpacing:".1em"}}>🤖 LLM PROVIDER</div>
+              {llmStatus&&(
+                <div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",marginBottom:"12px"}}>
+                    <div style={{padding:"10px",borderRadius:"8px",border:`1px solid rgba(0,${llmStatus.ollama?.available?200:80},0,.3)`,background:"rgba(0,20,10,.5)"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:"6px",marginBottom:"4px"}}>
+                        <span style={{width:"8px",height:"8px",borderRadius:"50%",background:llmStatus.ollama?.available?"#00ff44":"#ff4444",display:"inline-block",animation:"cortana-pulse 1.5s infinite"}}/>
+                        <span style={{fontSize:"10px",fontWeight:"bold"}}>Ollama</span>
+                      </div>
+                      <div style={{fontSize:"9px",color:"#555"}}>{llmStatus.ollama?.model}</div>
+                      <div style={{fontSize:"9px",color:llmStatus.ollama?.available?"#00ff44":"#ff4444",fontWeight:"bold",marginTop:"4px"}}>{llmStatus.ollama?.available?"✅ Free compute":"❌ Offline"}</div>
+                    </div>
+                    <div style={{padding:"10px",borderRadius:"8px",border:`1px solid rgba(${llmStatus.claude?.available?150:50},0,${llmStatus.claude?.available?255:50},.3)`,background:"rgba(10,0,20,.5)"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:"6px",marginBottom:"4px"}}>
+                        <span style={{width:"8px",height:"8px",borderRadius:"50%",background:llmStatus.claude?.available?"#aa44ff":"#444",display:"inline-block"}}/>
+                        <span style={{fontSize:"10px",fontWeight:"bold"}}>Claude</span>
+                      </div>
+                      <div style={{fontSize:"9px",color:"#555"}}>Fallback</div>
+                      <div style={{fontSize:"9px",color:llmStatus.claude?.available?"#aa44ff":"#555",fontWeight:"bold",marginTop:"4px"}}>{llmStatus.claude?.available?"✅ Key set":"⚠ No key"}</div>
+                    </div>
+                  </div>
+                  <div style={{padding:"8px",borderRadius:"6px",background:"rgba(0,0,30,.5)",border:"1px solid rgba(100,100,255,.2)",marginBottom:"10px"}}>
+                    <span style={{fontSize:"9px",color:"#446"}}>Active provider: </span>
+                    <span style={{fontSize:"10px",fontWeight:"bold",color:llmStatus.active_provider==="ollama"?"#00ff88":"#aa44ff"}}>{(llmStatus.active_provider||"?").toUpperCase()}</span>
+                  </div>
+                  <div style={{display:"flex",gap:"6px"}}>
+                    {["auto","ollama","claude"].map(p=>(
+                      <button key={p} style={{flex:1,padding:"5px",border:`1px solid rgba(100,100,255,.${llmStatus.setting===p?6:2})`,borderRadius:"5px",background:`rgba(20,20,80,${llmStatus.setting===p?.5:.2})`,color:llmStatus.setting===p?"#88aaff":"#334",fontSize:"9px",cursor:"pointer"}}
+                        onClick={async()=>{await fetch(`${BACKEND}/llm/switch?provider=${p}`,{method:"POST",headers:ah()});load();}}>
+                        {p.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── BOTTOM TAB BAR ───────────────────────────────────── */}
+      <div id="hud-bottom" style={{pointerEvents:"auto"}}>
+        {TABS.map(t=>(
+          <button key={t.id} className={`tab-btn${tab===t.id?" active":""}`}
+            onClick={()=>setTab(tab===t.id?"world":t.id)}
+            style={{pointerEvents:"auto"}}>
+            {t.label}
+          </button>
+        ))}
+        <div style={{marginLeft:"auto",fontSize:"10px",color:"#224",fontFamily:"Courier New",paddingRight:"8px"}}>
+          ◉ 7.83 Hz · {new Date().toLocaleTimeString()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<HUD/>);
+</script>
+
+</body>
+</html>

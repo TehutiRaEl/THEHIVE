@@ -4,8 +4,10 @@ All 40+ endpoints: v10 + v11 governance + simulator + Tier 2 + Tier 3 integratio
 """
 
 import json
+import uuid
 import asyncio
 import time
+import httpx
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -605,6 +607,79 @@ async def hitl_pending(auth: Dict = Depends(verify_auth)):
 @router.get("/hitl/requests")
 async def hitl_requests(status: Optional[str] = None, auth: Dict = Depends(verify_auth)):
     return {"requests": hitl.get_requests(status)}
+
+# ─── UI: OpenAI-compatible chat proxy (routes to Ollama) ──────
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatCompletionRequest(BaseModel):
+    model: str = ""
+    messages: List[ChatMessage]
+    stream: bool = False
+    max_tokens: int = 2000
+    temperature: float = 0.7
+
+@router.post("/chat/completions")
+async def chat_completions(req: ChatCompletionRequest):
+    """OpenAI-compatible endpoint — proxies to the configured Ollama instance."""
+    model = req.model or settings.ollama_model
+    ollama_msgs = [{"role": m.role, "content": m.content} for m in req.messages]
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.post(
+                f"{settings.ollama_base_url}/api/chat",
+                json={"model": model, "messages": ollama_msgs, "stream": False},
+            )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"Ollama error {resp.status_code}: {resp.text[:300]}")
+        data = resp.json()
+        content = data.get("message", {}).get("content", "")
+    except HTTPException:
+        raise
+    except httpx.ConnectError:
+        raise HTTPException(status_code=503, detail="Ollama not reachable. Is it running? (ollama serve)")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {
+        "id": f"chatcmpl-{uuid.uuid4().hex[:8]}",
+        "object": "chat.completion",
+        "model": model,
+        "choices": [{
+            "index": 0,
+            "message": {"role": "assistant", "content": content},
+            "finish_reason": "stop",
+        }],
+        "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+    }
+
+# ─── UI: web search proxy (DuckDuckGo HTML scrape) ─────────────
+@router.get("/search")
+async def web_search(q: str, n: int = 6):
+    """Lightweight web search via DuckDuckGo HTML — returns titles, URLs, snippets."""
+    if not q:
+        raise HTTPException(status_code=400, detail="q is required")
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            resp = await client.get(
+                "https://html.duckduckgo.com/html/",
+                params={"q": q},
+                headers={"User-Agent": "Mozilla/5.0 (compatible; SovereignHive/11.0)"},
+            )
+        import re
+        results = []
+        # extract result blocks from DDG HTML
+        blocks = re.findall(r'class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>.*?class="result__snippet"[^>]*>(.*?)</span>', resp.text, re.S)
+        for url, title, snip in blocks[:n]:
+            results.append({
+                "url": re.sub(r"<[^>]+>", "", url).strip(),
+                "title": re.sub(r"<[^>]+>", "", title).strip(),
+                "snippet": re.sub(r"<[^>]+>", "", snip).strip(),
+            })
+        return {"q": q, "results": results, "engine": "duckduckgo"}
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Search failed: {e}")
 
 # ─── Tier 3 Status ──────────────────────────────────────────
 @router.get("/tier3/status")
