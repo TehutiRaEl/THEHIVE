@@ -1,0 +1,85 @@
+# Sovereign Hive — Colony Manifest
+# This file is the authoritative registry of all hive colonies.
+# The Queen (sovereign-hive-meta) is the single source of truth.
+
+queen:
+  repo: TehutiRaEl/sovereign-hive-meta
+  soul_md_hash: ""   # updated automatically by constitution-sync workflow
+
+colonies:
+  - name: THEHIVE
+    role: core
+    repo: TehutiRaEl/THEHIVE
+    base_url: "${THEHIVE_URL:-http://localhost:8080}"
+    health_path: /colony/health
+    info_path: /colony/info
+    events_path: /colony/events
+    branch: main
+    guilds: [constitutional, audit, treasury, frequency, arena]
+    description: "Core governance engine, agent population, SOUL ledger, Gladiator Arena"
+
+  - name: aether
+    role: revenue
+    repo: TehutiRaEl/aether
+    base_url: "${AETHER_URL:-https://aether.vercel.app}"
+    health_path: /api/colony/health
+    info_path: /api/colony/info
+    events_path: /api/colony/events
+    branch: main
+    guilds: [treasury, commerce]
+    description: "License authority, revenue splitting, SOUL settlement, cross-colony orchestration"
+
+  - name: automatisch
+    role: automation
+    repo: TehutiRaEl/automatisch
+    base_url: "${AUTOMATISCH_URL:-http://localhost:3001}"
+    health_path: /healthcheck
+    branch: main
+    guilds: [workflow]
+    description: "Hive automation bus — cross-colony event routing, webhook triggers"
+
+  - name: kimi-gateway
+    role: llm
+    repo: TehutiRaEl/Kimi-K2
+    base_url: "${KIMI_GATEWAY_URL:-http://localhost:8181}"
+    health_path: /health
+    info_path: /info
+    branch: main
+    guilds: []
+    description: "Free LLM gateway — waterfalls through Kimi, SiliconFlow, DeepSeek, Groq, OpenRouter"
+
+  - name: academy-books
+    role: knowledge
+    repo: TehutiRaEl/free-programming-books
+    base_url: "https://raw.githubusercontent.com/TehutiRaEl/free-programming-books/main"
+    health_path: ""
+    branch: main
+    guilds: [academy]
+    description: "Programming knowledge corpus — RAG source for agent training (390K+ star resource)"
+
+  - name: academy-camp
+    role: curriculum
+    repo: TehutiRaEl/freeCodeCamp
+    base_url: "https://raw.githubusercontent.com/TehutiRaEl/freeCodeCamp/main"
+    health_path: ""
+    branch: main
+    guilds: [academy]
+    description: "Full CS/math curriculum — agent tasks and training missions"
+
+  - name: outer-colony-a
+    role: unknown
+    repo: TehutiRaEl/NAR2
+    base_url: ""
+    health_path: ""
+    branch: main
+    guilds: []
+    description: "Private colony — role TBD pending repo access"
+
+  - name: outer-colony-b
+    role: unknown
+    repo: TehutiRaEl/4DBRAIN
+    base_url: ""
+    health_path: ""
+    branch: main
+    guilds: []
+    description: "Private colony — role TBD pending repo access"

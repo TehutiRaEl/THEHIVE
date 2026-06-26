@@ -1,0 +1,14 @@
+{
+  "name": "sovereign-hive-llm-gateway",
+  "version": "1.0.0",
+  "description": "Free LLM waterfall gateway for the Sovereign Hive — zero dependencies, pure Node.js",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "AGPL-3.0"
+}

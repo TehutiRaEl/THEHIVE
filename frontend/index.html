@@ -408,7 +408,34 @@ window.HIVE = {
   resonance:0, schumannHz:7.83, activeFreq:432,
   events:[], arenaActive:false,
   dayTime:0.5, weather:"clear",
+  colonyZones:[],        // dynamically loaded from /colony/manifest
+  colonyHealth:{},       // id → {status, soul_md_hash}
 };
+
+// Load colony manifest and health at startup
+(async function loadColonyManifest(){
+  try{
+    const base = window.JASPER_BACKEND||(window.location.pathname.startsWith('/ui')?window.location.origin+'/v11':'http://localhost:8080/v11');
+    const r = await fetch(base+'/colony/manifest',{signal:AbortSignal.timeout(5000)});
+    if(!r.ok) return;
+    const d = await r.json();
+    // Map colony roles to Phaser zone color palettes
+    const roleColors = {
+      core:{color:0xFFD700,dark:0x886600}, revenue:{color:0xE8B4FF,dark:0x2d0a3a},
+      automation:{color:0x00FFAA,dark:0x00241a}, llm:{color:0xFF9944,dark:0x331500},
+      knowledge:{color:0x88CCFF,dark:0x0a1a2d}, curriculum:{color:0x66BBFF,dark:0x081828},
+      unknown:{color:0x607D8B,dark:0x1a2530},
+    };
+    // Health-check each colony
+    (d.colonies||[]).forEach(async col=>{
+      if(!col.base_url||!col.health_path) return;
+      try{
+        const hr=await fetch(col.base_url+col.health_path,{signal:AbortSignal.timeout(4000)});
+        window.HIVE.colonyHealth[col.name]= hr.ok ? await hr.json() : {status:'unreachable'};
+      }catch{window.HIVE.colonyHealth[col.name]={status:'offline'};}
+    });
+  }catch(e){console.warn('Colony manifest unavailable:',e.message);}
+})();
 
 class WorldScene extends Phaser.Scene {
   constructor(){super({key:"World"})}
@@ -448,15 +475,24 @@ class WorldScene extends Phaser.Scene {
 
   _ZONES(){
     const W=this.worldW, H=this.worldH;
-    return [
+    // Static core zones + dynamically registered colony zones (from /colony/manifest)
+    const core = [
       {name:"SOUL REALM",       guild:"★", cx:.5,  cy:.5,  rw:.14, rh:.12, color:0xFFD700, dark:0x886600, glow:0xFFFF00, desc:"Town Hall · Governance Hub"},
       {name:"FREQUENCY LANDS",  guild:"Ψ", cx:.13, cy:.48, rw:.18, rh:.38, color:0x00CED1, dark:0x004455, glow:0x00FFFF, desc:"Ψ Guild · 7.83 Hz Baseline"},
       {name:"ARENA BADLANDS",   guild:"⚔", cx:.82, cy:.45, rw:.16, rh:.36, color:0xFF4500, dark:0x661500, glow:0xFF6600, desc:"Gladiator Arena · Projection Duels"},
       {name:"TRUST CITADEL",    guild:"⚖", cx:.28, cy:.18, rw:.18, rh:.24, color:0x4169E1, dark:0x0d1f5a, glow:0x6688FF, desc:"Trust Guild · Legal Sovereignty"},
       {name:"R&D ARCHIPELAGO",  guild:"🔬",cx:.67, cy:.2,  rw:.18, rh:.26, color:0x9400D3, dark:0x2d0040, glow:0xCC44FF, desc:"R&D Guild · 4D Models"},
       {name:"CRYPTO EXCHANGE",  guild:"₿", cx:.72, cy:.82, rw:.16, rh:.2,  color:0x00C853, dark:0x004d1f, glow:0x44FF88, desc:"Crypto Guild · SOUL Economy"},
-      {name:"OUTER COLONIES",   guild:"🌍",cx:.22, cy:.82, rw:.18, rh:.18, color:0x607D8B, dark:0x1a2530, glow:0x88AACC, desc:"Colony Network · Splinter Worlds"},
+      // Colony zones
+      {name:"AETHER CITADEL",   guild:"⚙", cx:.22, cy:.82, rw:.16, rh:.16, color:0xE8B4FF, dark:0x2d0a3a, glow:0xFF88FF, desc:"Revenue Colony · License Authority · aether"},
+      {name:"AUTOMATISCH NEXUS",guild:"🕸", cx:.38, cy:.88, rw:.14, rh:.12, color:0x00FFAA, dark:0x00241a, glow:0x44FFCC, desc:"Automation Colony · Hive Bus · Workflow"},
+      {name:"KIMI ORACLE",      guild:"🧠", cx:.55, cy:.88, rw:.14, rh:.12, color:0xFF9944, dark:0x331500, glow:0xFFCC44, desc:"LLM Gateway · Free Models · Kimi-K2"},
+      {name:"ACADEMY DISTRICT", guild:"📚", cx:.72, cy:.88, rw:.16, rh:.14, color:0x88CCFF, dark:0x0a1a2d, glow:0xAADDFF, desc:"Knowledge Colony · Free Books · freeCodeCamp"},
+      {name:"OUTER COLONIES",   guild:"🌍", cx:.88, cy:.75, rw:.12, rh:.18, color:0x607D8B, dark:0x1a2530, glow:0x88AACC, desc:"NAR2 · 4DBRAIN · Unknown Colonies"},
     ];
+    // Merge with any dynamically loaded colony zones
+    const dynamic = (window.HIVE.colonyZones||[]).filter(z=>!core.find(c=>c.name===z.name));
+    return [...core, ...dynamic];
   }
 
   _drawWorld(W,H){
@@ -1015,6 +1051,7 @@ function HUD(){
     {id:"tasks",label:`🏛 TASKS(${tasks.filter(t=>t.status==="open").length})`},
     {id:"gov",label:"⚖ GOVERN"},
     {id:"llm",label:"🤖 LLM"},
+    {id:"hive",label:"🐝 HIVE"},
   ];
 
   if(!token){
@@ -1382,6 +1419,62 @@ function HUD(){
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          {/* HIVE — Multi-Colony Dashboard */}
+          {tab==="hive"&&(
+            <div>
+              <div style={{fontSize:"11px",fontWeight:"bold",color:"#FFD700",marginBottom:"10px",letterSpacing:".1em"}}>🐝 SOVEREIGN HIVE — COLONY NETWORK</div>
+              <div style={{fontSize:"9px",color:"#664",marginBottom:"10px",borderLeft:"2px solid #FFD700",paddingLeft:"8px"}}>
+                Queen: github.com/TehutiRaEl/sovereign-hive-meta<br/>
+                All colonies share soul.md · SOUL economy · Free LLM pool
+              </div>
+              {[
+                {name:"THEHIVE",role:"core",icon:"🏛",color:"#FFD700",desc:"Core Colony — Governance · Agents · Arena"},
+                {name:"aether",role:"revenue",icon:"⚙",color:"#E8B4FF",desc:"Revenue Colony — License · SOUL settlement"},
+                {name:"automatisch",role:"automation",icon:"🕸",color:"#00FFAA",desc:"Hive Bus — Cross-colony event routing"},
+                {name:"kimi-gateway",role:"llm",icon:"🧠",color:"#FF9944",desc:"LLM Gateway — Free model waterfall"},
+                {name:"academy-books",role:"knowledge",icon:"📚",color:"#88CCFF",desc:"Academy A — free-programming-books RAG"},
+                {name:"academy-camp",role:"curriculum",icon:"🎓",color:"#66BBFF",desc:"Academy B — freeCodeCamp curriculum"},
+                {name:"outer-colony-a",role:"unknown",icon:"🌍",color:"#607D8B",desc:"NAR2 — Private · Role TBD"},
+                {name:"outer-colony-b",role:"unknown",icon:"🌍",color:"#607D8B",desc:"4DBRAIN — Private · Role TBD"},
+              ].map((col,i)=>{
+                const health=window.HIVE.colonyHealth[col.name];
+                const st=health?.status||"unknown";
+                const stColor=st==="healthy"?"#00ff88":st==="offline"||st==="unreachable"?"#ff4444":"#888";
+                return(
+                  <div key={i} style={{padding:"8px 10px",marginBottom:"5px",borderRadius:"8px",
+                    background:"rgba(0,10,25,.6)",border:`1px solid ${col.color}22`}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
+                        <span style={{fontSize:"14px"}}>{col.icon}</span>
+                        <span style={{fontWeight:"bold",color:col.color,fontSize:"10px"}}>{col.name}</span>
+                        <span style={{fontSize:"8px",color:"#446",padding:"1px 4px",border:"1px solid #223",borderRadius:"3px"}}>{col.role}</span>
+                      </div>
+                      <span style={{fontSize:"9px",color:stColor,fontWeight:"bold"}}>{st}</span>
+                    </div>
+                    <div style={{fontSize:"8px",color:"#446",marginTop:"3px"}}>{col.desc}</div>
+                    {health?.soul_md_hash&&<div style={{fontSize:"7px",color:"#224",marginTop:"2px",fontFamily:"monospace"}}>constitution: {health.soul_md_hash.slice(0,16)}…</div>}
+                  </div>
+                );
+              })}
+              <div style={{display:"flex",gap:"6px",marginTop:"10px",flexWrap:"wrap"}}>
+                <button style={{padding:"5px 10px",background:"rgba(255,200,0,.1)",border:"1px solid rgba(255,200,0,.3)",borderRadius:"6px",color:"#FFD700",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const r=await fetch(`${BACKEND}/llm/providers`).catch(()=>null);
+                    if(!r)return;
+                    const d=await r.json();
+                    const lines=(d.providers||[]).map(p=>`${p.healthy?"✅":"❌"} ${p.id} · ${p.model} · key:${p.has_key?"yes":"no"}`).join("\n");
+                    alert("LLM Provider Status:\n\n"+lines);
+                  }}>🧠 LLM STATUS</button>
+                <button style={{padding:"5px 10px",background:"rgba(0,200,100,.1)",border:"1px solid rgba(0,200,100,.3)",borderRadius:"6px",color:"#00ff88",fontSize:"10px",cursor:"pointer"}}
+                  onClick={async()=>{
+                    const r=await fetch(`${BACKEND}/colony/info`).catch(()=>null);
+                    if(!r)return;
+                    const d=await r.json();
+                    alert(`Colony: ${d.name}\nRole: ${d.role}\nPhase: ${d.phase}\nConstitution: ${d.soul_md_hash?.slice(0,16)}…`);
+                  }}>⬡ COLONY INFO</button>
+              </div>
             </div>
           )}
         </div>

@@ -622,30 +622,32 @@ class ChatCompletionRequest(BaseModel):
 
 @router.post("/chat/completions")
 async def chat_completions(req: ChatCompletionRequest):
-    """OpenAI-compatible endpoint — proxies to the configured Ollama instance."""
-    model = req.model or settings.ollama_model
-    ollama_msgs = [{"role": m.role, "content": m.content} for m in req.messages]
+    """
+    OpenAI-compatible endpoint — routes through the free LLM waterfall.
+    Tries: Ollama → Moonshot → SiliconFlow → DeepSeek → Zhipu → Groq → OpenRouter → Gemini.
+    """
+    from backend.core.llm_router import chat as llm_chat
+    msgs = [{"role": m.role, "content": m.content} for m in req.messages]
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            resp = await client.post(
-                f"{settings.ollama_base_url}/api/chat",
-                json={"model": model, "messages": ollama_msgs, "stream": False},
-            )
-        if resp.status_code != 200:
-            raise HTTPException(status_code=502, detail=f"Ollama error {resp.status_code}: {resp.text[:300]}")
-        data = resp.json()
-        content = data.get("message", {}).get("content", "")
-    except HTTPException:
-        raise
-    except httpx.ConnectError:
-        raise HTTPException(status_code=503, detail="Ollama not reachable. Is it running? (ollama serve)")
+        result = await llm_chat(
+            messages=msgs,
+            model=req.model,
+            max_tokens=req.max_tokens,
+            temperature=req.temperature,
+        )
+        content = result["content"]
+        provider = result["provider"]
+        used_model = result["model"]
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
     return {
         "id": f"chatcmpl-{uuid.uuid4().hex[:8]}",
         "object": "chat.completion",
-        "model": model,
+        "model": used_model,
+        "provider": provider,
         "choices": [{
             "index": 0,
             "message": {"role": "assistant", "content": content},
@@ -653,6 +655,13 @@ async def chat_completions(req: ChatCompletionRequest):
         }],
         "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
     }
+
+
+@router.get("/llm/providers")
+async def llm_providers():
+    """List all configured LLM providers and their health status."""
+    from backend.core.llm_router import provider_status
+    return {"providers": await provider_status()}
 
 # ─── UI: web search proxy (DuckDuckGo HTML scrape) ─────────────
 @router.get("/search")

@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from backend.core.config import settings
 from backend.core.db import init_db
 from backend.api.routes import router
+from backend.api.colony import router as colony_router
 from backend.api.auth import verify_auth
 from backend.api.middleware import (
     RateLimitMiddleware,
@@ -82,6 +83,7 @@ app.add_middleware(LoggingMiddleware)
 
 # ─── Routes ────────────────────────────────────────────────────
 app.include_router(router)
+app.include_router(colony_router)   # /colony/* — multi-repo hive standard
 
 # ─── Static Frontend ──────────────────────────────────────────
 try:

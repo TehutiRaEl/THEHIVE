@@ -42,10 +42,36 @@ class Settings(BaseSettings):
     # ─── Tier 3 ──────────────────────────────────────────────────
     ibmq_token: str = os.getenv("IBMQ_TOKEN", "")
     ipfs_api_url: str = os.getenv("IPFS_API_URL", "http://localhost:5001")
-    
+
     # ─── Phase ──────────────────────────────────────────────────
     hive_phase: int = int(os.getenv("HIVE_PHASE", "0"))
     enable_guilds: List[str] = os.getenv("ENABLE_GUILDS", "constitutional,audit,treasury").split(",")
+
+    # ─── Colony / Multi-Repo Hive ────────────────────────────────
+    colony_name: str = os.getenv("COLONY_NAME", "THEHIVE")
+    colony_role: str = os.getenv("COLONY_ROLE", "core")
+    meta_repo_url: str = os.getenv("META_REPO_URL", "https://github.com/TehutiRaEl/sovereign-hive-meta")
+    # Pipe-separated: "NAME|role|base_url" per colony
+    known_colonies: List[str] = os.getenv(
+        "KNOWN_COLONIES",
+        "THEHIVE|core|http://localhost:8080|"
+        "aether|revenue|https://aether.vercel.app|"
+        "automatisch|automation|http://localhost:3001|"
+        "kimi-gateway|llm|http://localhost:8181|"
+        "academy|knowledge|https://github.com/TehutiRaEl/free-programming-books",
+    ).split(",")
+
+    # ─── LLM Gateway (Kimi-K2 colony node) ─────────────────────
+    llm_gateway_url: str = os.getenv("LLM_GATEWAY_URL", "http://localhost:8181")
+
+    # ─── Free LLM API Keys (all optional — router skips missing keys) ──
+    moonshot_api_key: str = os.getenv("MOONSHOT_API_KEY", "")
+    siliconflow_api_key: str = os.getenv("SILICONFLOW_API_KEY", "")
+    deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
+    zhipu_api_key: str = os.getenv("ZHIPU_API_KEY", "")
+    groq_api_key: str = os.getenv("GROQ_API_KEY", "")
+    openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "")
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     
     class Config:
         env_file = ".env.local"
