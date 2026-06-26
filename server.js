@@ -24,16 +24,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', memoryBase: fs.existsSync(MEMORY_BASE) });
 });
 
-// Helper: resolve wildcard param to a clean path string
-// Express wildcard (*) can return an Array when using the 'router' package
-function resolveWildcard(param) {
-  if (Array.isArray(param)) return param.join('/');
-  return param || '';
-}
-
-// READ from memory-base (including tutorials)
-app.get('/api/memory/*', (req, res) => {
-  const file = resolveWildcard(req.params[0]);
+// READ from memory-base
+// Express 5 named wildcard syntax: :name(*) captures multi-segment paths
+app.get('/api/memory/:file(*)', (req, res) => {
+  const file = req.params.file;
   if (!file) return res.status(400).json({ error: 'No path provided' });
 
   const fullPath = path.join(MEMORY_BASE, file);
@@ -51,8 +45,8 @@ app.get('/api/memory/*', (req, res) => {
 });
 
 // WRITE to sovereign-memory (auto-commit)
-app.post('/api/memory/sovereign-memory/*', (req, res) => {
-  const file = resolveWildcard(req.params[0]);
+app.post('/api/memory/sovereign-memory/:file(*)', (req, res) => {
+  const file = req.params.file;
   if (!file) return res.status(400).json({ error: 'No path provided' });
 
   const fullPath = path.join(MEMORY_BASE, 'sovereign-memory', file);
