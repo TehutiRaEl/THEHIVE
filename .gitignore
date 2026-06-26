@@ -38,3 +38,4 @@ Thumbs.db
 .env.local
 *.pem
 *.key
+node_modules/
