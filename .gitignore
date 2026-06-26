@@ -39,5 +39,9 @@ Thumbs.db
 *.pem
 *.key
 
+# Node
+node_modules/
+npm-debug.log*
+
 # Archived legacy files
 .archive/
