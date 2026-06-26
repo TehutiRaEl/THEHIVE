@@ -48,6 +48,62 @@ services:
       retries: 3
       start_period: 20s
 
+  # ── Free LLM Gateway (Kimi-K2 Colony) ───────────────────
+  llm-gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: llm-gateway
+    restart: unless-stopped
+    ports:
+      - "8181:8181"
+    environment:
+      - PORT=8181
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3:8b}
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY:-}
+      - SILICONFLOW_API_KEY=${SILICONFLOW_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - ZHIPU_API_KEY=${ZHIPU_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    networks:
+      - hive_network
+    depends_on:
+      - ollama
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8181/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── Automation Colony / Hive Bus (Automatisch) ────────────
+  automatisch:
+    image: automatisch/automatisch:latest
+    container_name: automatisch
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - APP_ENV=production
+      - HOST=http://localhost:3001
+      - WEBHOOK_HOST=http://localhost:3001
+      - ENCRYPTION_KEY=${AUTOMATISCH_ENCRYPTION_KEY:-change-me-32-char-secret-key-here}
+      - APP_SECRET_KEY=${AUTOMATISCH_SECRET_KEY:-change-me-app-secret}
+      - DATABASE_URL=sqlite:///app/storage/automatisch.db
+    volumes:
+      - automatisch_data:/app/storage
+    networks:
+      - hive_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   # ── Backend API ──────────────────────────────────────────
   backend:
     build: .
@@ -58,24 +114,41 @@ services:
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3:8b}
-      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_PROVIDER=${LLM_PROVIDER:-auto}
+      - LLM_GATEWAY_URL=http://llm-gateway:8181
       - JASPER_API_KEY=${JASPER_API_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - DB_PATH=/app/data/jasper_memory.db
       - CHROMA_PATH=/app/data/chroma_db
       - HIVE_PHASE=${HIVE_PHASE:-0}
       - ENABLE_GUILDS=${ENABLE_GUILDS:-constitutional,audit,treasury}
+      # Colony identity
+      - COLONY_NAME=THEHIVE
+      - COLONY_ROLE=core
+      - META_REPO_URL=https://github.com/TehutiRaEl/sovereign-hive-meta
+      # Automation bus
+      - AUTOMATISCH_URL=http://automatisch:3000
       # Tier 3
       - IPFS_API_URL=http://ipfs:5001
       - IBMQ_TOKEN=${IBMQ_TOKEN:-}
       - SOUL_CONTRACT_ADDRESS=${SOUL_CONTRACT_ADDRESS:-}
       - SEPOLIA_RPC_URL=${SEPOLIA_RPC_URL:-}
+      # Free LLM API keys (all optional — router skips missing keys)
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY:-}
+      - SILICONFLOW_API_KEY=${SILICONFLOW_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - ZHIPU_API_KEY=${ZHIPU_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     volumes:
       - jasper_data:/app/data
     depends_on:
       ollama:
         condition: service_healthy
       ipfs:
+        condition: service_healthy
+      automatisch:
         condition: service_healthy
     networks:
       - hive_network
@@ -98,6 +171,7 @@ volumes:
   ollama_data:
   ipfs_data:
   jasper_data:
+  automatisch_data:
 
 networks:
   hive_network:
