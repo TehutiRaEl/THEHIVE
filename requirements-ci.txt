@@ -1,3 +1,4 @@
+# CI requirements — excludes torch (2GB) and other heavy GPU deps
 # Core
 fastapi>=0.115.6
 uvicorn[standard]>=0.34.0
@@ -18,7 +19,7 @@ sqlalchemy>=2.0.36
 alembic>=1.14.1
 aiosqlite>=0.20.0
 
-# AI & LLM
+# AI & LLM (lightweight only)
 ollama>=0.4.3
 langchain>=0.3.13
 langchain-community>=0.3.13
@@ -47,13 +48,6 @@ pytest>=8.3.4
 pytest-asyncio>=0.24.0
 pytest-cov>=6.0.0
 
-# Ethereum (optional)
-eth-account>=0.11.0
-web3>=6.15.0
-
-# RAG & Embeddings
+# RAG & Embeddings (CPU-only for CI)
 chromadb>=0.5.23
 sentence-transformers>=3.3.1
-
-# Tier 3 (heavy — skip on CI, use requirements-ci.txt instead)
-torch>=2.0.0
