@@ -508,6 +508,82 @@ def init_db():
     for pid, name, data in patterns:
         c.execute("INSERT OR IGNORE INTO governance_patterns (pattern_id, name, data) VALUES (?, ?, ?)", (pid, name, data))
 
+    # ─── Phase 1 Engine Tables ───────────────────────────────────
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS wealth_contributions (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            hours_saved REAL DEFAULT 0,
+            adoption_count INTEGER DEFAULT 0,
+            novelty_score REAL DEFAULT 0,
+            dispute_resilience REAL DEFAULT 0,
+            evw REAL DEFAULT 0,
+            utilized INTEGER DEFAULT 1,
+            created_at TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS wealth_time_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            seconds REAL DEFAULT 0,
+            logged_at TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS wealth_records (
+            user_id TEXT PRIMARY KEY,
+            tww REAL DEFAULT 0,
+            vww REAL DEFAULT 0,
+            w_total REAL DEFAULT 0,
+            computed_at TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS pruned_memory (
+            id TEXT PRIMARY KEY,
+            source_table TEXT,
+            content TEXT,
+            criteria_hit TEXT,
+            rationale TEXT,
+            archived_at TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS agency_log (
+            id TEXT PRIMARY KEY,
+            agent_id TEXT NOT NULL,
+            action TEXT,
+            level TEXT,
+            allowed INTEGER DEFAULT 0,
+            reason TEXT,
+            created_at TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS wisdom_ledger (
+            id TEXT PRIMARY KEY,
+            lesson TEXT,
+            source_id TEXT,
+            confidence REAL DEFAULT 0,
+            cycle_depth INTEGER DEFAULT 1,
+            grief_type TEXT,
+            created_at TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS missions (
+            id TEXT PRIMARY KEY,
+            title TEXT,
+            gap_id TEXT,
+            description TEXT,
+            status TEXT DEFAULT 'proposed',
+            origin TEXT,
+            created_at TEXT,
+            formalized_at TEXT
+        )
+    """)
+
     # ─── Indexes ────────────────────────────────────────────────
     c.execute("CREATE INDEX IF NOT EXISTS idx_agents_status ON agents(status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_episodic_agent ON episodic_memory(agent_name, created_at DESC)")

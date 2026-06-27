@@ -29,6 +29,13 @@ from backend.economy.staking import staking_manager
 from backend.governance.patterns import patterns
 from backend.simulator.twin import simulator
 from backend.api.auth import verify_auth, create_access_token
+from backend.core.validator import validator
+from backend.core.wealth import wealth_engine
+from backend.core.criteria import pruning_criteria
+from backend.core.protocol import hive_protocol
+from backend.core.agency import swarm_agency, AgencyLevel
+from backend.core.alchemy import reflector
+from backend.core.genesis import gap_detector, mission_generator
 
 # ─── Pydantic Models ───────────────────────────────────────────────
 class LLMChatRequest(BaseModel):
@@ -101,6 +108,26 @@ class SimulateRequest(BaseModel):
     trials: int = 1000
     base_rho: float = 0.7
     quorum: float = 0.6
+
+class ValidateRequest(BaseModel):
+    action: str
+    context: Dict[str, Any] = {}
+
+class ContributionRequest(BaseModel):
+    user_id: str
+    hours_saved: float = 0.0
+    adoption_count: int = 0
+    novelty_score: float = 0.0
+    dispute_resilience: float = 0.0
+    utilized: bool = True
+
+class TransmuteRequest(BaseModel):
+    memory_item: Dict[str, Any]
+
+class ChildProposalRequest(BaseModel):
+    title: str
+    description: str
+    proposer: str
 
 # ─── Router ─────────────────────────────────────────────────────────────
 router = APIRouter(prefix="/v11")
@@ -750,3 +777,74 @@ async def websocket_endpoint(websocket: WebSocket):
                 await ws_manager.broadcast({"type": "message", "data": data, "ts": time.time()})
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
+
+# ─── V11 Core Engine Routes ──────────────────────────────────────────────────
+
+@router.post("/validate")
+async def validate_action(req: ValidateRequest):
+    result = validator.validate(req.action, req.context)
+    return result.to_dict()
+
+@router.get("/wealth/{user_id}")
+async def get_wealth(user_id: str):
+    snap = wealth_engine.get_wealth(user_id)
+    if not snap:
+        raise HTTPException(status_code=404, detail="No wealth record for user")
+    return snap.to_dict()
+
+@router.post("/wealth/contribution")
+async def record_contribution(req: ContributionRequest):
+    cid = wealth_engine.record_contribution(
+        req.user_id, req.hours_saved, req.adoption_count,
+        req.novelty_score, req.dispute_resilience, req.utilized,
+    )
+    snap = wealth_engine.calculate(req.user_id)
+    return {"contribution_id": cid, "wealth": snap.to_dict()}
+
+@router.post("/memory/prune")
+async def prune_memory():
+    decisions = pruning_criteria.execute_pruning()
+    return {"pruned": len(decisions), "decisions": [d.to_dict() for d in decisions]}
+
+@router.get("/memory/pruning-log")
+async def get_pruning_log(limit: int = 100):
+    return pruning_criteria.get_pruning_log(limit)
+
+@router.get("/agency/check")
+async def agency_check(agent_id: str, action: str, level: str = "propose"):
+    try:
+        lv = AgencyLevel(level)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid level '{level}'. Use: propose, execute, deviate")
+    decision = swarm_agency.check(agent_id, action, lv)
+    return decision.to_dict()
+
+@router.get("/protocol/log")
+async def protocol_log(event_type: Optional[str] = None, limit: int = 100):
+    return hive_protocol.get_log(event_type, limit)
+
+@router.post("/cycle/transmute")
+async def transmute(req: TransmuteRequest):
+    wisdom = reflector.transmute(req.memory_item)
+    return wisdom.to_dict()
+
+@router.get("/genesis/gaps")
+async def genesis_gaps():
+    gaps = gap_detector.scan()
+    return [g.to_dict() for g in gaps]
+
+@router.get("/genesis/missions")
+async def genesis_missions(status: Optional[str] = None):
+    return mission_generator.list_missions(status)
+
+@router.post("/genesis/missions/propose")
+async def propose_mission(req: ChildProposalRequest):
+    mission = mission_generator.receive_child_proposal(req.title, req.description, req.proposer)
+    return mission.to_dict()
+
+@router.post("/genesis/missions/{mission_id}/formalize")
+async def formalize_mission(mission_id: str):
+    mission = mission_generator.formalize(mission_id)
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    return mission.to_dict()

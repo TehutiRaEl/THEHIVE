@@ -16,6 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from backend.core.config import settings
 from backend.core.constitution import constitution
 from backend.core.db import get_db
+from backend.core.validator import validator
 
 logger = logging.getLogger("jasper.middleware")
 
@@ -130,6 +131,21 @@ class ConstitutionMiddleware(BaseHTTPMiddleware):
                     "details": violation.get("details"),
                     "required_action": violation.get("required_action", "Review soul.md")
                 }
+            )
+
+        v_result = validator.validate(
+            f"{request.method}:{request.url.path}",
+            {"path": request.url.path, "method": request.method},
+        )
+        if not v_result.allowed:
+            logger.warning(f"F-law violation {v_result.violated_law}: {v_result.rationale}")
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "error": "CONSTITUTION_VIOLATION",
+                    "article": v_result.violated_law,
+                    "details": v_result.rationale,
+                },
             )
 
         return await call_next(request)
