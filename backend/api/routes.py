@@ -36,6 +36,7 @@ from backend.core.protocol import hive_protocol
 from backend.core.agency import swarm_agency, AgencyLevel
 from backend.core.alchemy import reflector
 from backend.core.genesis import gap_detector, mission_generator
+from backend.core.hive_mesh import hive_mesh
 
 # ─── Pydantic Models ───────────────────────────────────────────────
 class LLMChatRequest(BaseModel):
@@ -181,7 +182,7 @@ async def board(auth: Dict = Depends(verify_auth)):
 async def check_constitution(action_type: str, actor: str, params: Optional[str] = "{}", auth: Dict = Depends(verify_auth)):
     try:
         params_dict = json.loads(params) if params else {}
-    except:
+    except Exception:
         params_dict = {}
     result = constitution.check(action_type, actor, params_dict)
     constitution.log(action_type, actor, result)
@@ -653,7 +654,7 @@ async def chat_completions(req: ChatCompletionRequest):
     OpenAI-compatible endpoint — routes through the free LLM waterfall.
     Tries: Ollama → Moonshot → SiliconFlow → DeepSeek → Zhipu → Groq → OpenRouter → Gemini.
     """
-    from backend.core.llm_router import chat as llm_chat
+    from backend.llm_router import chat as llm_chat
     msgs = [{"role": m.role, "content": m.content} for m in req.messages]
     try:
         result = await llm_chat(
@@ -687,7 +688,7 @@ async def chat_completions(req: ChatCompletionRequest):
 @router.get("/llm/providers")
 async def llm_providers():
     """List all configured LLM providers and their health status."""
-    from backend.core.llm_router import provider_status
+    from backend.llm_router import provider_status
     return {"providers": await provider_status()}
 
 # ─── UI: web search proxy (DuckDuckGo HTML scrape) ─────────────────
@@ -752,7 +753,7 @@ class WebSocketManager:
             for ws in self.active:
                 try:
                     await ws.send_json(msg)
-                except:
+                except Exception:
                     dead.append(ws)
             for ws in dead:
                 self.disconnect(ws)
@@ -848,3 +849,23 @@ async def formalize_mission(mission_id: str):
     if not mission:
         raise HTTPException(status_code=404, detail="Mission not found")
     return mission.to_dict()
+
+@router.get("/hive/status")
+async def hive_status():
+    """Return health status of all known colonies."""
+    health = await hive_mesh.check_all_health()
+    return {"colonies": health, "timestamp": datetime.now().isoformat(), "queen": "THEHIVE"}
+
+@router.post("/hive/dispatch")
+async def hive_dispatch(event_type: str, payload: Dict[str, Any] = None, targets: Optional[List[str]] = None):
+    """Fan out an event to all (or specified) colonies."""
+    results = await hive_mesh.dispatch(event_type, payload or {}, targets)
+    return {"event_type": event_type, "dispatched_to": results, "timestamp": datetime.now().isoformat()}
+
+@router.get("/hive/manifest/{colony_id}")
+async def hive_manifest(colony_id: str):
+    """Fetch the capability manifest from a specific colony."""
+    manifest = await hive_mesh.get_manifest(colony_id)
+    if not manifest:
+        raise HTTPException(status_code=404, detail=f"Colony '{colony_id}' not found or offline")
+    return manifest

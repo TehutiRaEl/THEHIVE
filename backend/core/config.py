@@ -60,6 +60,14 @@ class Settings(BaseSettings):
         "academy|knowledge|https://github.com/TehutiRaEl/free-programming-books",
     ).split(",")
 
+    # ─── Colony URLs ─────────────────────────────────────────────
+    localagi_url: str = os.getenv("LOCALAGI_URL", "http://localhost:8080")
+    nar2_url: str = os.getenv("NAR2_URL", "http://localhost:8000")
+    fourdbrain_url: str = os.getenv("FOURDBRAIN_URL", "http://localhost:8001")
+    aether_url: str = os.getenv("AETHER_URL", "http://localhost:3000")
+    automatisch_url: str = os.getenv("AUTOMATISCH_URL", "http://localhost:3001")
+    kimi_k2_url: str = os.getenv("KIMI_K2_URL", "http://localhost:8002")
+
     # ─── LLM Gateway ─────────────────────────────────────────────
     llm_gateway_url: str = os.getenv("LLM_GATEWAY_URL", "http://localhost:8181")
 
