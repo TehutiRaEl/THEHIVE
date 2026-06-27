@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "users": {},
+  "global_metrics": {
+    "total_time_wealth": 0,
+    "total_evw_wealth": 0,
+    "last_updated": null
+  },
+  "formula": {
+    "method_1": "time actively providing value to the swarm",
+    "method_2": "sum of EVW of each utilized contribution",
+    "evw": "EVW = (utilization_count * quality_score * time_weight) / normalization_constant",
+    "total": "total_wealth = geometric_mean(method_1, method_2)"
+  }
+}
