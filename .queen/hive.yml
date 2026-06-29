@@ -83,3 +83,41 @@ colonies:
     branch: main
     guilds: []
     description: "Private colony — role TBD pending repo access"
+
+  # ── Infrastructure colonies (self-hosted, same machine) ───────
+
+  - name: n8n
+    role: workflow
+    repo: n8nio/n8n
+    base_url: "${N8N_URL:-http://localhost:5678}"
+    health_path: /healthz
+    branch: ""
+    guilds: [workflow]
+    description: "Complex multi-step agent workflows — complements automatisch for long-running tasks"
+
+  - name: postgres
+    role: storage
+    repo: ""
+    base_url: "${POSTGRES_URL:-postgresql://localhost:5432/hivemind}"
+    health_path: ""
+    branch: ""
+    guilds: [audit, treasury]
+    description: "Persistent colony state — replaces SQLite for durability across restarts"
+
+  - name: redis
+    role: cache
+    repo: ""
+    base_url: "${REDIS_URL:-redis://localhost:6379}"
+    health_path: ""
+    branch: ""
+    guilds: []
+    description: "Session cache, rate limiting, health score cache, OmniRoute latency state"
+
+  - name: ml-pipeline
+    role: ml
+    repo: ""
+    base_url: "${THEHIVE_URL:-http://localhost:8080}"
+    health_path: /v11/ml/health
+    branch: ""
+    guilds: [dream, arcane]
+    description: "Whisper STT, Stable Diffusion image gen, HuggingFace transformers — local inference"

@@ -5,11 +5,23 @@ Clones (or updates) open source knowledge repos and ingests their content
 into ChromaDB as vector embeddings for RAG.
 
 Repos ingested (all read-only, never executed):
-  - free-programming-books (TehutiRaEl fork)
-  - CS Notes, system-design-primer, coding-interview-university
-  - build-your-own-x, project-based-learning
-  - every-programmer-should-know, Awesome Python, Public APIs
-  - developer-roadmap (markdown only)
+Core knowledge:
+  - free-programming-books, CS Notes, system-design-primer
+  - coding-interview-university, build-your-own-x, project-based-learning
+  - every-programmer-should-know, Awesome Python, Public APIs, developer-roadmap
+
+Agent frameworks (documentation/patterns only):
+  - AutoGPT, BabyAGI, MetaGPT, CrewAI, MemGPT, LangChain, LlamaIndex
+  - Semantic Kernel, CAMEL, OpenHands, SuperAGI, SWE-agent, AgentBench
+
+Infrastructure patterns:
+  - n8n-docs, dify, temporal, prefect-docs
+
+Security:
+  - semgrep-rules, nuclei-templates (pattern docs only)
+
+ML/Data:
+  - mlflow-docs, transformers examples
 
 Usage:
   python scripts/ingest_knowledge.py [--dry-run] [--repo <name>]
@@ -38,6 +50,38 @@ REPOS = [
     ("public-apis", "https://github.com/public-apis/public-apis", "master"),
     ("developer-roadmap", "https://github.com/kamranahmedse/developer-roadmap", "master"),
     ("cs-notes", "https://github.com/CyC2018/CS-Notes", "master"),
+
+    # ── Agent frameworks (docs/patterns — read-only) ──────────────
+    ("autogpt-docs", "https://github.com/Significant-Gravitas/AutoGPT", "master"),
+    ("babyagi", "https://github.com/yoheinakajima/babyagi", "main"),
+    ("metagpt-docs", "https://github.com/geekan/MetaGPT", "main"),
+    ("crewai", "https://github.com/joaomdmoura/crewai", "main"),
+    ("memgpt", "https://github.com/cpacker/MemGPT", "main"),
+    ("langchain-docs", "https://github.com/langchain-ai/langchain", "master"),
+    ("llama-index", "https://github.com/run-llama/llama_index", "main"),
+    ("semantic-kernel", "https://github.com/microsoft/semantic-kernel", "main"),
+    ("camel-ai", "https://github.com/camel-ai/camel", "master"),
+    ("openhands", "https://github.com/All-Hands-AI/OpenHands", "main"),
+    ("superagi", "https://github.com/TransformerOptimus/SuperAGI", "main"),
+    ("swe-agent", "https://github.com/princeton-nlp/SWE-agent", "main"),
+    ("agentbench", "https://github.com/THUDM/AgentBench", "main"),
+
+    # ── Infrastructure patterns ────────────────────────────────────
+    ("dify", "https://github.com/langgenius/dify", "main"),
+    ("prefect-docs", "https://github.com/PrefectHQ/prefect", "main"),
+
+    # ── Security patterns (rules/templates as knowledge) ──────────
+    ("semgrep-rules", "https://github.com/returntocorp/semgrep-rules", "develop"),
+    ("nuclei-templates", "https://github.com/projectdiscovery/nuclei-templates", "main"),
+
+    # ── ML / Data ─────────────────────────────────────────────────
+    ("mlflow", "https://github.com/mlflow/mlflow", "master"),
+    ("transformers-examples", "https://github.com/huggingface/transformers", "main"),
+
+    # ── Open source philosophy / synthesis ────────────────────────
+    ("the-book-of-secret-knowledge", "https://github.com/trimstray/the-book-of-secret-knowledge", "master"),
+    ("awesome-selfhosted", "https://github.com/awesome-selfhosted/awesome-selfhosted", "master"),
+    ("free-for-dev", "https://github.com/ripienaar/free-for-dev", "master"),
 ]
 
 CHUNK_SIZE = 500   # tokens (approximate: chars / 4)

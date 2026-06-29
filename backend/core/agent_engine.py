@@ -1,14 +1,17 @@
 """
 Agent Engine — Sovereign Hive v12.0
 ReAct (Reason + Act) loop with long/short-term memory split and a typed tool registry.
-Patterns extracted from: open-mythos (Kye Gomez), OpenHands CodeAct, Hermes Agent, local-AGI.
+Patterns extracted from: open-mythos (Kye Gomez), OpenHands CodeAct, Hermes Agent, local-AGI,
+MemGPT/Letta (paging memory), CrewAI (agent delegation), BabyAGI (prioritized task queue).
 """
 
+import asyncio
+import heapq
 import json
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from backend.core import llm_router
 
@@ -64,26 +67,83 @@ class ShortTermMemory:
 @dataclass
 class LongTermMemory:
     """
-    Persistent summaries and key facts extracted from completed tasks.
-    In production this should write to ChromaDB; here we use an in-process list
-    so the engine works without any external deps.
+    MemGPT-style paging memory: main context (hot) + archival storage (cold).
+    Hot facts stay in the LLM context window; cold facts are paged out to archival
+    and retrieved on demand via keyword search.
+    Patterns from: MemGPT/Letta (cpacker), open-mythos (Kye Gomez).
     """
-    facts: List[str] = field(default_factory=list)
-    max_facts: int = 200
+    # Hot tier — always in context (last N facts)
+    hot: List[str] = field(default_factory=list)
+    hot_size: int = 20
+    # Cold tier — archival storage (paged out)
+    archival: List[str] = field(default_factory=list)
+    max_archival: int = 2000
 
     def store(self, fact: str):
-        self.facts.append(fact)
-        if len(self.facts) > self.max_facts:
-            self.facts = self.facts[-self.max_facts:]
+        self.hot.append(fact)
+        if len(self.hot) > self.hot_size:
+            # Page oldest hot fact to archival (MemGPT page-out)
+            evicted = self.hot.pop(0)
+            self.archival.append(evicted)
+            if len(self.archival) > self.max_archival:
+                self.archival = self.archival[-self.max_archival:]
 
     def retrieve(self, query: str, k: int = 5) -> List[str]:
-        # Naive keyword overlap — replace with ChromaDB vector search in production
-        scored = [
+        # Search archival (cold) + hot, deduplicated, ranked by keyword overlap
+        all_facts = self.archival + self.hot
+        scored: List[Tuple[int, str]] = [
             (sum(w in f.lower() for w in query.lower().split()), f)
-            for f in self.facts
+            for f in all_facts
         ]
         scored.sort(key=lambda x: x[0], reverse=True)
-        return [f for _, f in scored[:k] if _ > 0]
+        return [f for score, f in scored[:k] if score > 0]
+
+    def hot_context(self) -> str:
+        return "\n".join(f"- {f}" for f in self.hot) if self.hot else "None."
+
+
+# ── BabyAGI-style prioritized task queue ──────────────────────────
+
+@dataclass(order=True)
+class _PrioritizedTask:
+    priority: float          # lower = higher priority
+    task: str = field(compare=False)
+    result: Optional[str] = field(default=None, compare=False)
+
+class PrioritizedTaskQueue:
+    """
+    Self-ranking task queue inspired by BabyAGI (yoheinakajima).
+    Tasks are scored by estimated importance; highest-priority task is always next.
+    """
+    def __init__(self):
+        self._heap: List[_PrioritizedTask] = []
+        self._counter = 0
+
+    def add(self, task: str, priority: float = 5.0):
+        heapq.heappush(self._heap, _PrioritizedTask(priority=priority, task=task))
+
+    def pop(self) -> Optional[str]:
+        if not self._heap:
+            return None
+        return heapq.heappop(self._heap).task
+
+    def reprioritize(self, task: str, new_priority: float):
+        for item in self._heap:
+            if item.task == task:
+                item.priority = new_priority
+        heapq.heapify(self._heap)
+
+    def __len__(self):
+        return len(self._heap)
+
+    def as_list(self) -> List[Dict]:
+        return [{"task": item.task, "priority": item.priority}
+                for item in sorted(self._heap)]
+
+
+# ── Global agent registry (for CrewAI-style delegation) ───────────
+
+_AGENT_REGISTRY: Dict[str, "ReactAgent"] = {}
 
 
 # ── ReAct Agent ────────────────────────────────────────────────
@@ -123,18 +183,24 @@ class ReactAgent:
         self.llm_provider = llm_provider
         self.short_term = ShortTermMemory()
         self.long_term = LongTermMemory()
+        self.task_queue = PrioritizedTaskQueue()
         self._step_count = 0
         self._start_time = time.time()
+        # Register in global registry for delegation
+        _AGENT_REGISTRY[name] = self
 
     def _build_system(self, task: str) -> str:
         memories = self.long_term.retrieve(task)
         mem_str = "\n".join(f"- {m}" for m in memories) if memories else "None yet."
+        # MemGPT: also surface hot-tier facts directly in context
+        hot = self.long_term.hot_context()
+        full_mem = f"Hot memory (always present):\n{hot}\n\nRelevant archival:\n{mem_str}"
         return SYSTEM_PROMPT_TEMPLATE.format(
             name=self.name,
             role=self.role,
             soul_hash=self.soul_hash,
             tools=json.dumps(tool_schema_list(), indent=2),
-            memories=mem_str,
+            memories=full_mem,
         )
 
     async def _llm(self, messages: List[Dict]) -> str:
@@ -288,7 +354,54 @@ async def _ask_llm(agent: ReactAgent, question: str) -> str:
     return result["content"]
 
 
+@register_tool(
+    "delegate",
+    "Delegate a subtask to another named agent (CrewAI-style). Returns the sub-agent's answer.",
+    {"agent_name": "name of the target agent", "subtask": "the task to delegate"},
+)
+async def _delegate(agent: ReactAgent, agent_name: str, subtask: str) -> str:
+    target = _AGENT_REGISTRY.get(agent_name)
+    if not target:
+        available = list(_AGENT_REGISTRY.keys())
+        return f"Agent '{agent_name}' not found. Available agents: {available}"
+    if target.name == agent.name:
+        return "Cannot delegate to self."
+    logger.info(f"{agent.name} delegating to {agent_name}: {subtask[:80]}")
+    result = await target.run(subtask)
+    return result.get("answer", "No answer from delegate.")
+
+
+@register_tool(
+    "queue_task",
+    "Add a task to this agent's prioritized task queue (BabyAGI pattern). Priority 1=highest, 10=lowest.",
+    {"task": "task description", "priority": "float 1.0–10.0 (default 5.0)"},
+)
+async def _queue_task(agent: ReactAgent, task: str, priority: float = 5.0) -> str:
+    agent.task_queue.add(task, priority=float(priority))
+    return f"Queued '{task[:80]}' at priority {priority}. Queue size: {len(agent.task_queue)}"
+
+
+@register_tool(
+    "next_task",
+    "Pop the highest-priority task from this agent's queue.",
+    {},
+)
+async def _next_task(agent: ReactAgent) -> str:
+    task = agent.task_queue.pop()
+    if task is None:
+        return "Task queue is empty."
+    return f"Next task: {task}"
+
+
 # ── Factory ────────────────────────────────────────────────────
 
 def create_agent(name: str, role: str = "general", soul_hash: str = "unknown") -> ReactAgent:
     return ReactAgent(name=name, role=role, soul_hash=soul_hash)
+
+
+def list_agents() -> List[str]:
+    return list(_AGENT_REGISTRY.keys())
+
+
+def get_agent(name: str) -> Optional[ReactAgent]:
+    return _AGENT_REGISTRY.get(name)
