@@ -4,16 +4,18 @@ Permission model for semi-autonomous swarm agents.
 The Swarm has local freedom but must stay within constitutional bounds (F-003, F-005).
 """
 
+import time
 import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from backend.core.db import get_db
 
 
 class AgencyLevel(str, Enum):
+    OBSERVE = "observe"    # read-only; always allowed; not logged
     PROPOSE = "propose"    # always allowed — swarm can always propose
     EXECUTE = "execute"    # allowed within constitution
     DEVIATE = "deviate"    # requires constitutional validation; logged always
@@ -40,6 +42,10 @@ class SwarmAgency:
     The Swarm never overrides the mother's governance (F-005).
     """
 
+    # 30-second TTL cache for PROPOSE/EXECUTE decisions (not DEVIATE)
+    _cache: Dict[str, Tuple["AgencyDecision", float]] = {}
+    CACHE_TTL = 30.0
+
     # Actions permanently blocked regardless of level
     _BLOCKED_ACTIONS = {
         "override_constitution",
@@ -60,6 +66,29 @@ class SwarmAgency:
         """Evaluate whether an agent is permitted to take an action at a given level."""
         context = context or {}
         decision_id = str(uuid.uuid4())
+
+        # OBSERVE: always allowed, never logged
+        if level == AgencyLevel.OBSERVE:
+            return AgencyDecision(
+                agent_id=agent_id, action=action, level=level.value,
+                allowed=True, reason="OBSERVE is always permitted (read-only).", decision_id=decision_id,
+            )
+
+        # Check revocation
+        if self._is_revoked(agent_id) and level in (AgencyLevel.EXECUTE, AgencyLevel.DEVIATE):
+            decision = AgencyDecision(
+                agent_id=agent_id, action=action, level=level.value, allowed=False,
+                reason=f"Agent '{agent_id}' agency has been revoked.", decision_id=decision_id,
+            )
+            self._log(decision)
+            return decision
+
+        # Cache lookup for PROPOSE/EXECUTE
+        cache_key = f"{agent_id}:{action}:{level.value}"
+        if level in (AgencyLevel.PROPOSE, AgencyLevel.EXECUTE):
+            cached = self._cache.get(cache_key)
+            if cached and (time.monotonic() - cached[1]) < self.CACHE_TTL:
+                return cached[0]
 
         # Hard block — no level bypasses this
         if action in self._BLOCKED_ACTIONS:
@@ -89,6 +118,7 @@ class SwarmAgency:
                 decision_id=decision_id,
             )
             self._log(decision)
+            self._cache[cache_key] = (decision, time.monotonic())
             return decision
 
         # EXECUTE: allowed unless constitutional bounds exceeded
@@ -103,6 +133,7 @@ class SwarmAgency:
                 decision_id=decision_id,
             )
             self._log(decision)
+            self._cache[cache_key] = (decision, time.monotonic())
             return decision
 
         # DEVIATE: requires explicit bounds check + full logging
@@ -137,6 +168,51 @@ class SwarmAgency:
         if ctx.get("apply_wealth_penalty") and ctx.get("reason_is_fixed_right"):
             return False, "F-006: No wealth penalty for exercising fixed rights."
         return True, f"Action '{action}' is within constitutional bounds."
+
+    def _is_revoked(self, agent_id: str) -> bool:
+        """Check if an agent's agency has been revoked."""
+        try:
+            conn = get_db()
+            row = conn.execute(
+                "SELECT level FROM agency_log WHERE agent_id = ? AND level = 'revoked' ORDER BY created_at DESC LIMIT 1",
+                (agent_id,),
+            ).fetchone()
+            return row is not None
+        except Exception:
+            return False
+
+    def revoke_agency(self, agent_id: str, reason: str) -> bool:
+        """Revoke an agent's EXECUTE/DEVIATE rights. Inserts sentinel revocation row."""
+        revoke_id = str(uuid.uuid4())
+        try:
+            conn = get_db()
+            conn.execute(
+                """INSERT INTO agency_log (id, agent_id, action, level, allowed, reason, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (revoke_id, agent_id, "revoke", "revoked", 0, reason, datetime.now().isoformat()),
+            )
+            conn.commit()
+            # Invalidate cache for this agent
+            for k in list(self._cache.keys()):
+                if k.startswith(f"{agent_id}:"):
+                    del self._cache[k]
+            return True
+        except Exception:
+            return False
+
+    def get_agency_history(self, agent_id: str, limit: int = 50) -> List[Dict]:
+        """Return the last N agency decisions for an agent."""
+        try:
+            conn = get_db()
+            rows = conn.execute(
+                """SELECT id, agent_id, action, level, allowed, reason, created_at
+                   FROM agency_log WHERE agent_id = ?
+                   ORDER BY created_at DESC LIMIT ?""",
+                (agent_id, limit),
+            ).fetchall()
+            return [dict(r) for r in rows]
+        except Exception:
+            return []
 
     def _log(self, decision: AgencyDecision):
         try:

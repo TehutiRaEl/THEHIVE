@@ -1,0 +1,262 @@
+version: "3.9"
+
+# Sovereign Hive Federation — full multi-colony deployment
+# Start with: docker compose -f docker-compose.federation.yml up -d
+# Or use: ./scripts/hive-start.sh
+
+networks:
+  hive_network:
+    name: hive_network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  thehive_data:
+  localagi_data:
+  nar2_data:
+  fourdbrain_data:
+  automatisch_db:
+  automatisch_redis:
+  prometheus_data:
+  grafana_data:
+
+services:
+
+  # ─── Reverse Proxy ────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: hive_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - thehive
+    networks:
+      - hive_network
+
+  # ─── Queen: THEHIVE ───────────────────────────────────────────
+  thehive:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: thehive_queen
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_PATH=/data/hive.db
+      - PORT=8080
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env
+    volumes:
+      - thehive_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      hive_network:
+        ipv4_address: 172.20.0.10
+
+  # ─── Kimi-K2: Mind Colony ─────────────────────────────────────
+  kimi_k2:
+    build:
+      context: ../Kimi-K2
+      dockerfile: Dockerfile
+    container_name: kimi_k2_mind
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - QUEEN_URL=http://thehive:8080
+    env_file:
+      - ../Kimi-K2/.env
+    depends_on:
+      thehive:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/colony/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      hive_network:
+        ipv4_address: 172.20.0.12
+
+  # ─── NAR2: Security Colony ────────────────────────────────────
+  nar2:
+    build:
+      context: ../NAR2
+      dockerfile: Dockerfile
+    container_name: nar2_security
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - HIVE_PORT=8000
+      - QUEEN_URL=http://thehive:8080
+    env_file:
+      - ../NAR2/.env
+    volumes:
+      - nar2_data:/data
+    depends_on:
+      thehive:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/colony/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      hive_network:
+        ipv4_address: 172.20.0.13
+
+  # ─── 4DBRAIN: Cognitive Colony ────────────────────────────────
+  fourdbrain:
+    build:
+      context: ../4DBRAIN
+      dockerfile: Dockerfile
+    container_name: fourdbrain_cognitive
+    restart: unless-stopped
+    ports:
+      - "8003:8000"
+    environment:
+      - QUEEN_URL=http://thehive:8080
+    env_file:
+      - ../4DBRAIN/.env
+    volumes:
+      - fourdbrain_data:/data
+    depends_on:
+      thehive:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/colony/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      hive_network:
+        ipv4_address: 172.20.0.14
+
+  # ─── aether: Commerce Colony ──────────────────────────────────
+  aether:
+    build:
+      context: ../aether
+      dockerfile: Dockerfile
+    container_name: aether_commerce
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - QUEEN_URL=http://thehive:8080
+    depends_on:
+      thehive:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/colony/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      hive_network:
+        ipv4_address: 172.20.0.15
+
+  # ─── automatisch: Workflow Colony ─────────────────────────────
+  automatisch:
+    build:
+      context: ../automatisch
+      dockerfile: packages/backend/Dockerfile
+    container_name: automatisch_workflow
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - QUEEN_URL=http://thehive:8080
+      - POSTGRES_HOST=automatisch_db
+      - REDIS_HOST=automatisch_redis
+    env_file:
+      - ../automatisch/.env
+    depends_on:
+      - automatisch_db
+      - automatisch_redis
+      - thehive
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/colony/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      hive_network:
+        ipv4_address: 172.20.0.16
+
+  automatisch_db:
+    image: postgres:15-alpine
+    container_name: automatisch_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=automatisch
+      - POSTGRES_USER=automatisch
+      - POSTGRES_PASSWORD=${AUTOMATISCH_DB_PASSWORD:-hivepass}
+    volumes:
+      - automatisch_db:/var/lib/postgresql/data
+    networks:
+      - hive_network
+
+  automatisch_redis:
+    image: redis:7-alpine
+    container_name: automatisch_redis
+    restart: unless-stopped
+    volumes:
+      - automatisch_redis:/data
+    networks:
+      - hive_network
+
+  # ─── Monitoring ───────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hive_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+    networks:
+      - hive_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hive_grafana
+    restart: unless-stopped
+    ports:
+      - "3030:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-hivegraf}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - hive_network

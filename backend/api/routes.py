@@ -30,6 +30,7 @@ from backend.governance.patterns import patterns
 from backend.simulator.twin import simulator
 from backend.api.auth import verify_auth, create_access_token
 from backend.core.validator import validator
+from backend.api.models import HealthResponse, HiveStatusResponse, ValidationResponse
 from backend.core.wealth import wealth_engine
 from backend.core.criteria import pruning_criteria
 from backend.core.protocol import hive_protocol
@@ -134,7 +135,7 @@ class ChildProposalRequest(BaseModel):
 router = APIRouter(prefix="/v11")
 
 # ─── Health & Board ────────────────────────────────────────────────────
-@router.get("/health")
+@router.get("/health", response_model=HealthResponse)
 async def health():
     return {"status": "healthy", "version": "11.0", "phase": settings.hive_phase}
 
@@ -781,7 +782,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # ─── V11 Core Engine Routes ──────────────────────────────────────────────────
 
-@router.post("/validate")
+@router.post("/validate", response_model=ValidationResponse)
 async def validate_action(req: ValidateRequest):
     result = validator.validate(req.action, req.context)
     return result.to_dict()
@@ -850,7 +851,7 @@ async def formalize_mission(mission_id: str):
         raise HTTPException(status_code=404, detail="Mission not found")
     return mission.to_dict()
 
-@router.get("/hive/status")
+@router.get("/hive/status", response_model=HiveStatusResponse)
 async def hive_status():
     """Return health status of all known colonies."""
     health = await hive_mesh.check_all_health()

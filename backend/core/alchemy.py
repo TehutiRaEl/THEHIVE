@@ -5,10 +5,13 @@ through the recursive reflection cycle.
 Process: Capture → Evaluate vs Ma'at → Prune → Dissect → Return Lesson → Propagate
 """
 
+import asyncio
+import hashlib
+import time
 import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from backend.core.db import get_db
 from backend.core.protocol import hive_protocol, LESSON_DISSECTED, WISDOM_DISTILLED
@@ -42,6 +45,31 @@ class WisdomEntry:
         return asdict(self)
 
 
+@dataclass
+class TransmutationRecord:
+    """Maps wisdom_ledger row fields to a typed record."""
+    id: str
+    input_grief: str      # grief_type
+    output_wisdom: str    # lesson
+    depth: int            # cycle_depth
+    maat_score: float     # confidence
+    created_at: str
+
+    @classmethod
+    def from_row(cls, row: Dict) -> "TransmutationRecord":
+        return cls(
+            id=row["id"],
+            input_grief=row.get("grief_type", "unknown"),
+            output_wisdom=row.get("lesson", ""),
+            depth=row.get("cycle_depth", 1),
+            maat_score=row.get("confidence", 0.0),
+            created_at=row.get("created_at", ""),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
 class RecursiveReflector:
     """
     The transmutation engine. Grief enters; wisdom emerges.
@@ -51,11 +79,25 @@ class RecursiveReflector:
 
     MAX_DEPTH = 7  # mirrors the 7 cycle steps
 
+    # Session-scoped MD5-keyed cache: hash → (WisdomEntry, timestamp)
+    _cache: Dict[str, Tuple[WisdomEntry, float]] = {}
+    CACHE_TTL = 300.0  # 5 minutes
+
     def transmute(self, memory_item: Dict[str, Any], depth: int = 1) -> WisdomEntry:
         """
         Run one recursive reflection cycle on a memory item.
         Returns a WisdomEntry. Stores wisdom in wisdom_ledger table.
         """
+        if depth > self.MAX_DEPTH:
+            depth = self.MAX_DEPTH
+
+        # Cache at depth=1 to avoid redundant processing of identical items
+        if depth == 1:
+            cache_key = hashlib.md5(str(memory_item).encode()).hexdigest()
+            cached = self._cache.get(cache_key)
+            if cached and (time.monotonic() - cached[1]) < self.CACHE_TTL:
+                return cached[0]
+
         # Step 1: Capture — identify the grief
         grief_type = self._capture_grief(memory_item)
 
@@ -91,11 +133,20 @@ class RecursiveReflector:
 
         self._persist(wisdom)
         hive_protocol.publish_sync(WISDOM_DISTILLED, wisdom.to_dict())
+
+        if depth == 1:
+            self._cache[cache_key] = (wisdom, time.monotonic())
+
         return wisdom
+
+    async def transmute_async(self, memory_item: Dict[str, Any]) -> WisdomEntry:
+        """Non-blocking version of transmute for use in async contexts."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.transmute, memory_item)
 
     def _capture_grief(self, item: Dict) -> str:
         """Identify what kind of grief is present in this memory."""
-        text = " ".join(str(v) for v in item.values()).lower()
+        text = " ".join(str(v)[:500] for v in item.values()).lower()
         for signal in _GRIEF_SIGNALS:
             if signal in text:
                 return signal
@@ -160,6 +211,31 @@ class RecursiveReflector:
             "SELECT * FROM wisdom_ledger ORDER BY created_at DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(r) for r in rows]
+
+    def get_transmutation_history(self, limit: int = 20) -> List[TransmutationRecord]:
+        """Return typed TransmutationRecord history from wisdom_ledger."""
+        conn = get_db()
+        rows = conn.execute(
+            "SELECT * FROM wisdom_ledger ORDER BY created_at DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [TransmutationRecord.from_row(dict(r)) for r in rows]
+
+    def maat_score_breakdown(self, memory_item: Dict[str, Any]) -> Dict[str, Any]:
+        """Return per-dimension Ma'at truth/balance/order scores for an item."""
+        scores = {
+            dim: (1.0 if check(memory_item) else 0.0)
+            for dim, check in _MAAT_DIMENSIONS.items()
+        }
+        total = sum(scores.values()) / len(scores)
+        return {
+            "dimensions": scores,
+            "maat_score": round(total, 4),
+            "interpretation": (
+                "strong" if total >= 0.67 else
+                "partial" if total >= 0.33 else
+                "weak"
+            ),
+        }
 
 
 reflector = RecursiveReflector()

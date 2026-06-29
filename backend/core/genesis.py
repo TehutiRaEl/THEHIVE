@@ -5,13 +5,23 @@ Nanuet identifies under-explored areas in the tree and spawns mission templates.
 Children can propose new structures; Nanuet formalizes viable ones.
 """
 
+import time
 import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 from backend.core.db import get_db
 from backend.core.protocol import hive_protocol, MISSION_GENERATED
+
+
+class MissionStatus(str, Enum):
+    PROPOSED = "proposed"
+    FORMALIZED = "formalized"
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    ABANDONED = "abandoned"
 
 
 @dataclass
@@ -42,19 +52,35 @@ class MissionTemplate:
         return asdict(self)
 
 
+def gap_severity(gap: Dict[str, Any]) -> str:
+    """Classify gap severity from a gap dict or Gap object."""
+    sev = gap.get("severity", 0) if isinstance(gap, dict) else getattr(gap, "severity", 0)
+    if sev >= 0.8:
+        return "critical"
+    if sev >= 0.5:
+        return "major"
+    return "minor"
+
+
 class GapDetector:
     """
     Scans the hive's map and episodic memory for under-explored areas.
     Identifies nodes with no edges, sparse clusters, and unfulfilled patterns.
     """
 
-    # Cluster density threshold below which we flag a gap
     SPARSE_THRESHOLD = 2
+    _scan_cache: Optional[Tuple[List[Gap], float]] = None
+    CACHE_TTL = 60.0  # seconds
 
     def scan(self) -> List[Gap]:
-        """Scan for gaps and return a list of detected Gap objects."""
+        """Scan for gaps and return a list of detected Gap objects. Cached 60s."""
+        now = time.monotonic()
+        if self._scan_cache and (now - self._scan_cache[1]) < self.CACHE_TTL:
+            return self._scan_cache[0]
+
         conn = get_db()
         gaps: List[Gap] = []
+        _seen: set = set()  # deduplicate by description
 
         # Gap type 1: agents that have never been involved in any interaction
         try:
@@ -67,14 +93,17 @@ class GapDetector:
                    LIMIT 20"""
             ).fetchall()
             for row in rows:
-                gaps.append(Gap(
-                    id=str(uuid.uuid4()),
-                    description=f"Agent '{row['name']}' has no episodic memory — fully isolated node.",
-                    gap_type="isolated_node",
-                    severity=0.7,
-                    evidence=f"agent={row['name']}, episodic_count=0",
-                    detected_at=datetime.now().isoformat(),
-                ))
+                desc = f"Agent '{row['name']}' has no episodic memory — fully isolated node."
+                if desc not in _seen:
+                    _seen.add(desc)
+                    gaps.append(Gap(
+                        id=str(uuid.uuid4()),
+                        description=desc,
+                        gap_type="isolated_node",
+                        severity=0.7,
+                        evidence=f"agent={row['name']}, episodic_count=0",
+                        detected_at=datetime.now().isoformat(),
+                    ))
         except Exception:
             pass
 
@@ -87,17 +116,17 @@ class GapDetector:
                 (self.SPARSE_THRESHOLD,),
             ).fetchall()
             for row in rows:
-                gaps.append(Gap(
-                    id=str(uuid.uuid4()),
-                    description=(
-                        f"Guild/role '{row['role']}' has only {row['cnt']} active agent(s). "
-                        "Sparse cluster detected."
-                    ),
-                    gap_type="sparse_cluster",
-                    severity=0.5,
-                    evidence=f"role={row['role']}, active_count={row['cnt']}",
-                    detected_at=datetime.now().isoformat(),
-                ))
+                desc = f"Guild/role '{row['role']}' has only {row['cnt']} active agent(s). Sparse cluster detected."
+                if desc not in _seen:
+                    _seen.add(desc)
+                    gaps.append(Gap(
+                        id=str(uuid.uuid4()),
+                        description=desc,
+                        gap_type="sparse_cluster",
+                        severity=0.5,
+                        evidence=f"role={row['role']}, active_count={row['cnt']}",
+                        detected_at=datetime.now().isoformat(),
+                    ))
         except Exception:
             pass
 
@@ -105,17 +134,21 @@ class GapDetector:
         try:
             count = conn.execute("SELECT COUNT(*) FROM missions WHERE status = 'active'").fetchone()[0]
             if count == 0:
-                gaps.append(Gap(
-                    id=str(uuid.uuid4()),
-                    description="No active missions detected. The tree has no active growth fronts.",
-                    gap_type="unmet_need",
-                    severity=0.9,
-                    evidence="missions.active_count=0",
-                    detected_at=datetime.now().isoformat(),
-                ))
+                desc = "No active missions detected. The tree has no active growth fronts."
+                if desc not in _seen:
+                    _seen.add(desc)
+                    gaps.append(Gap(
+                        id=str(uuid.uuid4()),
+                        description=desc,
+                        gap_type="unmet_need",
+                        severity=0.9,
+                        evidence="missions.active_count=0",
+                        detected_at=datetime.now().isoformat(),
+                    ))
         except Exception:
             pass
 
+        GapDetector._scan_cache = (gaps, now)
         return gaps
 
 
@@ -168,8 +201,8 @@ class MissionGenerator:
             id=str(uuid.uuid4()),
             title=title[:200],
             gap_id="child_proposal",
-            description=description,
-            status="proposed",
+            description=description[:2000],
+            status=MissionStatus.PROPOSED,
             origin=f"child_proposal:{proposer}",
             created_at=datetime.now().isoformat(),
         )
@@ -177,11 +210,11 @@ class MissionGenerator:
         return mission
 
     def formalize(self, mission_id: str) -> Optional[MissionTemplate]:
-        """Nanuet formalizes a proposed mission — it becomes active."""
+        """Nanuet formalizes a proposed mission — advances to 'formalized' state."""
         conn = get_db()
         conn.execute(
-            "UPDATE missions SET status = 'active', formalized_at = ? WHERE id = ?",
-            (datetime.now().isoformat(), mission_id),
+            "UPDATE missions SET status = ?, formalized_at = ? WHERE id = ? AND status = ?",
+            (MissionStatus.FORMALIZED, datetime.now().isoformat(), mission_id, MissionStatus.PROPOSED),
         )
         conn.commit()
         row = conn.execute("SELECT * FROM missions WHERE id = ?", (mission_id,)).fetchone()
@@ -189,6 +222,37 @@ class MissionGenerator:
             return None
         d = dict(row)
         return MissionTemplate(**{k: d[k] for k in MissionTemplate.__dataclass_fields__})
+
+    def activate(self, mission_id: str) -> bool:
+        """Promote a formalized mission to active."""
+        conn = get_db()
+        conn.execute(
+            "UPDATE missions SET status = ? WHERE id = ? AND status = ?",
+            (MissionStatus.ACTIVE, mission_id, MissionStatus.FORMALIZED),
+        )
+        conn.commit()
+        return conn.execute("SELECT status FROM missions WHERE id = ?", (mission_id,)).fetchone()["status"] == MissionStatus.ACTIVE
+
+    def update_mission_status(self, mission_id: str, status: MissionStatus, notes: str = "") -> bool:
+        """Update mission status with an optional audit note."""
+        conn = get_db()
+        conn.execute(
+            "UPDATE missions SET status = ? WHERE id = ?",
+            (status.value, mission_id),
+        )
+        conn.commit()
+        if notes:
+            hive_protocol.publish_sync("mission.status_update", {"mission_id": mission_id, "status": status.value, "notes": notes})
+        return True
+
+    def get_active_missions(self) -> List[Dict]:
+        """Return all active missions."""
+        conn = get_db()
+        rows = conn.execute(
+            "SELECT * FROM missions WHERE status = ? ORDER BY created_at DESC",
+            (MissionStatus.ACTIVE,),
+        ).fetchall()
+        return [dict(r) for r in rows]
 
     def list_missions(self, status: Optional[str] = None) -> List[Dict]:
         conn = get_db()
@@ -208,8 +272,8 @@ class MissionGenerator:
             conn = get_db()
             conn.execute(
                 """INSERT INTO missions
-                   (id, title, gap_id, description, status, origin, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                   (id, title, gap_id, description, status, origin, created_at, formalized_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, NULL)""",
                 (
                     mission.id, mission.title, mission.gap_id,
                     mission.description, mission.status, mission.origin, mission.created_at,

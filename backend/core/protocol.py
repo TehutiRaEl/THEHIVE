@@ -97,21 +97,21 @@ class HiveProtocol:
         conn = get_db()
         if event_type:
             rows = conn.execute(
-                """SELECT id, channel_id as event_type, content as payload, created_at
+                """SELECT id, channel_id as event_type, payload, created_at
                    FROM pubsub_messages WHERE channel_id = ?
                    ORDER BY created_at DESC LIMIT ?""",
                 (event_type, limit),
             ).fetchall()
         else:
             rows = conn.execute(
-                """SELECT id, channel_id as event_type, content as payload, created_at
+                """SELECT id, channel_id as event_type, payload, created_at
                    FROM pubsub_messages ORDER BY created_at DESC LIMIT ?""",
                 (limit,),
             ).fetchall()
         result = []
         for r in rows:
             try:
-                payload = json.loads(r["payload"])
+                payload = json.loads(r["payload"] or "{}")
             except Exception:
                 payload = {}
             result.append({
@@ -126,9 +126,9 @@ class HiveProtocol:
         try:
             conn = get_db()
             conn.execute(
-                """INSERT OR IGNORE INTO pubsub_messages (id, channel_id, content, created_at)
-                   VALUES (?, ?, ?, ?)""",
-                (event.id, event.event_type, json.dumps(event.payload), event.created_at),
+                """INSERT INTO pubsub_messages (channel_id, payload, created_at)
+                   VALUES (?, ?, ?)""",
+                (event.event_type, json.dumps(event.payload), event.created_at),
             )
             conn.commit()
         except Exception:

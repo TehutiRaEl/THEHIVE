@@ -29,6 +29,9 @@ class Database:
         cls._local.conn.row_factory = sqlite3.Row
         cls._local.conn.execute("PRAGMA journal_mode=WAL")
         cls._local.conn.execute("PRAGMA synchronous=NORMAL")
+        cls._local.conn.execute("PRAGMA cache_size=-64000")
+        cls._local.conn.execute("PRAGMA temp_store=MEMORY")
+        cls._local.conn.execute("PRAGMA mmap_size=268435456")
         return cls._local.conn
     
     @classmethod
@@ -43,6 +46,10 @@ def init_db():
     conn = sqlite3.connect(settings.db_path)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA cache_size=-64000")
+    conn.execute("PRAGMA temp_store=MEMORY")
+    conn.execute("PRAGMA mmap_size=268435456")
+    conn.execute("PRAGMA journal_size_limit=67108864")
     c = conn.cursor()
 
     # ─── Core tables ──────────────────────────────────────────
@@ -591,8 +598,16 @@ def init_db():
     c.execute("CREATE INDEX IF NOT EXISTS idx_arena_challenger ON arena_challenges(challenger)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_pubsub_channel ON pubsub_messages(channel_id, created_at DESC)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_staking_agent ON staking_positions(agent_name)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_staking_locked ON staking_positions(agent_name, locked_until)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_constitution_log_time ON constitution_log(timestamp)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_constitution_log_actor ON constitution_log(actor, action_type)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_hitl_status ON hitl_requests(status)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_agency_log_agent ON agency_log(agent_id, created_at DESC)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_wisdom_grief ON wisdom_ledger(grief_type)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_missions_status ON missions(status)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_wealth_user ON wealth_contributions(user_id, created_at DESC)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_utility_agent ON utility_metrics(agent_name)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_wallet_agent ON agent_wallets(agent_name)")
 
     conn.commit()
     conn.close()
