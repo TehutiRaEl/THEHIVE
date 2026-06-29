@@ -489,6 +489,11 @@ class WorldScene extends Phaser.Scene {
       {name:"KIMI ORACLE",      guild:"🧠", cx:.55, cy:.88, rw:.14, rh:.12, color:0xFF9944, dark:0x331500, glow:0xFFCC44, desc:"LLM Gateway · Free Models · Kimi-K2"},
       {name:"ACADEMY DISTRICT", guild:"📚", cx:.72, cy:.88, rw:.16, rh:.14, color:0x88CCFF, dark:0x0a1a2d, glow:0xAADDFF, desc:"Knowledge Colony · Free Books · freeCodeCamp"},
       {name:"OUTER COLONIES",   guild:"🌍", cx:.88, cy:.75, rw:.12, rh:.18, color:0x607D8B, dark:0x1a2530, glow:0x88AACC, desc:"NAR2 · 4DBRAIN · Unknown Colonies"},
+      // Infrastructure colonies (Phase F)
+      {name:"POSTGRES VAULT",   guild:"🗄", cx:.13, cy:.15, rw:.13, rh:.14, color:0x336791, dark:0x0a1f2d, glow:0x4499CC, desc:"Postgres · Persistent Colony State · SQLite Replacement"},
+      {name:"REDIS CACHE",      guild:"⚡", cx:.31, cy:.08, rw:.12, rh:.10, color:0xFF4438, dark:0x2d0800, glow:0xFF6644, desc:"Redis · Rate Limiting · Health Score Cache · Sessions"},
+      {name:"N8N FORGE",        guild:"⚗", cx:.49, cy:.07, rw:.13, rh:.10, color:0xEA4B71, dark:0x2d0015, glow:0xFF5588, desc:"n8n · Complex Agent Workflows · Multi-step Automation"},
+      {name:"ML CRUCIBLE",      guild:"🔥", cx:.13, cy:.82, rw:.12, rh:.12, color:0xFF6B35, dark:0x2d1000, glow:0xFF8844, desc:"ML Pipeline · Whisper · Stable Diffusion · Transformers"},
     ];
     // Merge with any dynamically loaded colony zones
     const dynamic = (window.HIVE.colonyZones||[]).filter(z=>!core.find(c=>c.name===z.name));
