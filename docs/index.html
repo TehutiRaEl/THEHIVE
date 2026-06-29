@@ -3,558 +3,969 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sovereign Hive — Federated AI Intelligence</title>
-<meta name="description" content="A self-sustaining, self-governing federated AI civilization spanning 10+ colonies, unified by soul.md constitution and a SOUL token economy.">
-<meta property="og:title" content="Sovereign Hive">
-<meta property="og:description" content="Federated AI intelligence. 10+ colonies. One soul.">
-<meta property="og:image" content="https://tehutirael.github.io/THEHIVE/og-image.png">
+<title>Kai El · Sovereign Hive Command Center v12.0</title>
+<meta name="description" content="Sovereign Hive v12.0 — Production Command Center. Live backend required.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00e8ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+
 <style>
-  :root {
-    --gold: #f0c040;
-    --amber: #ff9900;
-    --deep: #0a0a0f;
-    --panel: rgba(255,255,255,0.04);
-    --border: rgba(240,192,64,0.2);
-    --text: #e8e0d0;
-    --muted: #888;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--deep);
-    color: var(--text);
-    font-family: 'Courier New', monospace;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#010108;font-family:'Courier New',monospace;overflow:hidden;color:#ccc}
 
-  /* ── Animated hex grid background ── */
-  #bg {
-    position: fixed; inset: 0; z-index: 0;
-    background:
-      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(240,192,64,0.07) 0%, transparent 70%),
-      radial-gradient(ellipse 40% 40% at 20% 80%, rgba(255,100,0,0.05) 0%, transparent 60%);
-  }
-  .hex-grid {
-    position: fixed; inset: 0; z-index: 0; opacity: 0.06;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52'%3E%3Cpolygon points='30,2 58,16 58,44 30,58 2,44 2,16' fill='none' stroke='%23f0c040' stroke-width='0.5'/%3E%3C/svg%3E");
-    background-size: 60px 52px;
-    animation: drift 60s linear infinite;
-  }
-  @keyframes drift { to { background-position: 60px 52px; } }
+#wow-canvas{position:fixed;inset:0;z-index:1}
 
-  /* ── Layout ── */
-  .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+#cortana-wrap{
+  position:fixed;bottom:58px;left:12px;z-index:20;
+  display:flex;flex-direction:column;align-items:center;gap:4px;width:220px;
+}
+#cortana-ring{
+  width:200px;height:200px;border-radius:50%;
+  border:2px solid rgba(0,200,255,0.35);
+  box-shadow:0 0 30px rgba(0,200,255,0.2),inset 0 0 20px rgba(0,100,200,0.1);
+  position:relative;overflow:hidden;background:rgba(0,5,20,0.6);
+}
+#cortana-canvas{position:absolute;inset:0}
+.cortana-scan{position:absolute;inset:0;border-radius:50%;background:linear-gradient(180deg,transparent 40%,rgba(0,200,255,0.04) 100%);animation:scan 3s linear infinite;}
+@keyframes scan{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.cortana-glow{position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,255,0.06) 0%,transparent 70%);animation:cortana-pulse 2s ease-in-out infinite;}
+@keyframes cortana-pulse{0%,100%{opacity:.4}50%{opacity:1}}
+.speech-bubble{background:rgba(0,10,30,0.92);border:1px solid rgba(0,200,255,0.4);border-radius:10px;padding:8px 12px;font-size:11px;color:#a0e8ff;line-height:1.5;max-height:80px;overflow:hidden;}
 
-  /* ── Nav ── */
-  nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(10,10,15,0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 14px 0;
-  }
-  nav .wrap { display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-size: 1.1rem; font-weight: bold; color: var(--gold); letter-spacing: 2px; }
-  .logo span { color: var(--muted); font-weight: normal; }
-  .nav-links { display: flex; gap: 24px; }
-  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
-  .nav-links a:hover { color: var(--gold); }
-  .nav-cta {
-    background: var(--gold); color: #000;
-    padding: 7px 18px; border-radius: 4px;
-    font-size: 0.82rem; font-weight: bold;
-    text-decoration: none; letter-spacing: 1px;
-    transition: opacity 0.2s;
-  }
-  .nav-cta:hover { opacity: 0.85; }
+#hud-top{
+  position:fixed;top:0;left:0;right:0;height:46px;z-index:30;
+  display:flex;align-items:center;gap:8px;padding:0 12px;
+  background:linear-gradient(90deg,rgba(0,5,20,0.96),rgba(0,10,30,0.94));
+  border-bottom:1px solid rgba(0,200,255,0.12);backdrop-filter:blur(8px);
+}
+.hud-stat{display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;border:1px solid rgba(0,200,255,0.15);background:rgba(0,20,40,0.4);font-size:11px;}
+.hud-stat .val{font-weight:bold;font-size:12px}
 
-  /* ── Hero ── */
-  .hero { padding: 100px 0 70px; text-align: center; }
-  .hero-tag {
-    display: inline-block;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--gold);
-    font-size: 0.72rem;
-    letter-spacing: 3px;
-    padding: 5px 14px;
-    border-radius: 20px;
-    margin-bottom: 28px;
-  }
-  .hero h1 {
-    font-size: clamp(2.2rem, 6vw, 4.2rem);
-    line-height: 1.1;
-    letter-spacing: -1px;
-    margin-bottom: 20px;
-  }
-  .hero h1 em { color: var(--gold); font-style: normal; }
-  .hero p {
-    font-size: 1.05rem;
-    color: var(--muted);
-    max-width: 600px;
-    margin: 0 auto 40px;
-    line-height: 1.7;
-    font-family: sans-serif;
-  }
-  .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-  .btn-primary {
-    background: var(--gold); color: #000;
-    padding: 12px 28px; border-radius: 5px;
-    font-weight: bold; text-decoration: none;
-    font-size: 0.88rem; letter-spacing: 1px;
-    transition: transform 0.15s, opacity 0.15s;
-  }
-  .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
-  .btn-secondary {
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--text);
-    padding: 12px 28px; border-radius: 5px;
-    text-decoration: none; font-size: 0.88rem;
-    letter-spacing: 1px;
-    transition: border-color 0.2s;
-  }
-  .btn-secondary:hover { border-color: var(--gold); }
+.panel{
+  position:fixed;top:54px;right:12px;bottom:58px;width:360px;z-index:25;
+  background:rgba(0,5,20,0.96);border:1px solid rgba(0,200,255,0.18);
+  border-radius:12px;padding:14px;overflow-y:auto;
+  backdrop-filter:blur(12px);box-shadow:-4px 0 30px rgba(0,0,40,0.6);
+  pointer-events:auto;
+}
+.panel::-webkit-scrollbar{width:4px}
+.panel::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.2);border-radius:2px}
 
-  /* ── Stats bar ── */
-  .stats-bar {
-    display: flex; justify-content: center; gap: 0;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--panel);
-    overflow: hidden;
-    margin: 60px 0;
-  }
-  .stat {
-    flex: 1; padding: 20px;
-    text-align: center;
-    border-right: 1px solid var(--border);
-  }
-  .stat:last-child { border-right: none; }
-  .stat-val { font-size: 1.8rem; font-weight: bold; color: var(--gold); }
-  .stat-label { font-size: 0.7rem; color: var(--muted); letter-spacing: 2px; margin-top: 4px; }
+#hud-bottom{
+  position:fixed;bottom:0;left:0;right:0;height:50px;z-index:30;
+  display:flex;align-items:center;padding:0 4px;gap:2px;
+  background:linear-gradient(90deg,rgba(0,5,20,0.97),rgba(0,8,25,0.97));
+  border-top:1px solid rgba(0,200,255,0.1);overflow-x:auto;
+}
+#hud-bottom::-webkit-scrollbar{height:0}
+.tab-btn{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:#334;font-family:'Courier New';font-size:10px;transition:all .15s;white-space:nowrap;}
+.tab-btn:hover{background:rgba(0,100,150,0.2);color:#668}
+.tab-btn.active{background:rgba(0,150,200,0.2);color:#00e8ff;border:1px solid rgba(0,200,255,0.3)}
 
-  /* ── Section ── */
-  section { padding: 70px 0; }
-  .section-tag {
-    font-size: 0.7rem; letter-spacing: 3px;
-    color: var(--amber); margin-bottom: 12px;
-  }
-  h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); margin-bottom: 14px; }
-  .section-sub { color: var(--muted); font-family: sans-serif; line-height: 1.7; max-width: 580px; }
+#freq-bar{position:fixed;right:380px;top:54px;bottom:58px;width:22px;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px;padding-bottom:6px;}
+.freq-pip{width:14px;border-radius:3px;transition:height .3s,background .3s}
 
-  /* ── Colony grid ── */
-  .colony-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-    margin-top: 40px;
-  }
-  .colony-card {
-    border: 1px solid var(--border);
-    background: var(--panel);
-    border-radius: 8px;
-    padding: 20px;
-    transition: border-color 0.2s, transform 0.15s;
-  }
-  .colony-card:hover { border-color: var(--gold); transform: translateY(-2px); }
-  .colony-role {
-    font-size: 0.65rem; letter-spacing: 2px;
-    color: var(--amber); margin-bottom: 8px;
-  }
-  .colony-name { font-size: 1rem; font-weight: bold; margin-bottom: 8px; }
-  .colony-desc { font-size: 0.8rem; color: var(--muted); font-family: sans-serif; line-height: 1.5; }
-  .colony-status {
-    display: inline-block;
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #2ecc71;
-    margin-right: 6px;
-    animation: pulse 2s infinite;
-  }
-  .colony-status.pending { background: var(--amber); animation: none; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+#minimap{position:fixed;bottom:58px;right:12px;z-index:20;width:120px;height:120px;border-radius:8px;border:1px solid rgba(0,200,255,0.2);background:rgba(0,5,15,0.95);overflow:hidden;}
 
-  /* ── LLM waterfall ── */
-  .waterfall {
-    margin-top: 36px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .wf-row {
-    display: flex; align-items: center;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    gap: 16px;
-    font-size: 0.82rem;
-  }
-  .wf-row:last-child { border-bottom: none; }
-  .wf-pri {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--panel); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.7rem; color: var(--gold); flex-shrink: 0;
-  }
-  .wf-name { font-weight: bold; min-width: 120px; }
-  .wf-model { color: var(--muted); flex: 1; }
-  .wf-free {
-    font-size: 0.65rem; letter-spacing: 1px;
-    color: #2ecc71; border: 1px solid rgba(46,204,113,0.3);
-    padding: 2px 8px; border-radius: 10px;
-  }
+#cmd-bar{
+  position:fixed;bottom:58px;left:240px;right:148px;height:36px;z-index:25;
+  display:flex;align-items:center;gap:6px;padding:0 8px;
+  background:rgba(0,5,20,0.9);border:1px solid rgba(0,150,200,0.2);border-radius:10px;
+}
+#cmd-input{flex:1;background:transparent;border:none;outline:none;color:#a0e8ff;font-family:'Courier New';font-size:11px;}
+#cmd-input::placeholder{color:#224}
+.cmd-btn{padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-family:'Courier New';font-size:10px;font-weight:bold;letter-spacing:.05em;transition:opacity .15s;}
+.cmd-btn:hover{opacity:.8}
 
-  /* ── Dual lens ── */
-  .lens-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 36px; }
-  @media(max-width:640px) { .lens-grid { grid-template-columns: 1fr; } }
-  .lens-card {
-    border: 1px solid var(--border);
-    background: var(--panel);
-    border-radius: 8px;
-    padding: 24px;
-  }
-  .lens-icon { font-size: 1.8rem; margin-bottom: 12px; }
-  .lens-title { font-size: 1rem; font-weight: bold; margin-bottom: 10px; color: var(--gold); }
-  .lens-steps { list-style: none; }
-  .lens-steps li {
-    font-size: 0.78rem; color: var(--muted);
-    font-family: sans-serif; padding: 5px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    line-height: 1.4;
-  }
-  .lens-steps li:last-child { border-bottom: none; }
+.fade-in{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
 
-  /* ── Architecture diagram ── */
-  .arch {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--panel);
-    padding: 28px;
-    margin-top: 36px;
-    font-size: 0.78rem;
-    line-height: 2;
-    overflow-x: auto;
-  }
-  .arch pre { color: var(--text); font-family: 'Courier New', monospace; }
-  .arch .hl { color: var(--gold); }
+.speaking-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#00ffff;animation:speak-dot .4s ease infinite alternate}
+@keyframes speak-dot{from{opacity:.2;transform:scale(.8)}to{opacity:1;transform:scale(1.2)}}
 
-  /* ── CTA banner ── */
-  .cta-banner {
-    border: 1px solid var(--border);
-    background: linear-gradient(135deg, rgba(240,192,64,0.06), rgba(255,100,0,0.04));
-    border-radius: 12px;
-    padding: 50px 40px;
-    text-align: center;
-    margin: 70px 0;
-  }
-  .cta-banner h2 { margin-bottom: 14px; }
-  .cta-banner p { color: var(--muted); font-family: sans-serif; margin-bottom: 30px; }
+/* Backend offline splash */
+#offline-splash{
+  position:fixed;inset:0;z-index:200;display:none;
+  background:rgba(0,0,10,0.97);align-items:center;justify-content:center;
+  flex-direction:column;gap:20px;
+}
+#offline-splash.show{display:flex}
 
-  /* ── Footer ── */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 30px 0;
-    text-align: center;
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
-  footer a { color: var(--gold); text-decoration: none; }
+/* Debugger terminal */
+.dbg-terminal{
+  background:#000;border:1px solid rgba(0,200,100,0.3);border-radius:6px;
+  padding:10px;font-size:9px;font-family:'Courier New';
+  max-height:400px;overflow-y:auto;color:#00ff88;line-height:1.6;
+}
+.dbg-terminal .err{color:#ff4444}
+.dbg-terminal .warn{color:#FFB800}
+.dbg-terminal .ok{color:#00ff88}
+.dbg-terminal .dim{color:#446}
+.dbg-table{width:100%;border-collapse:collapse;font-size:9px;margin-top:6px}
+.dbg-table th{color:#446;text-align:left;padding:3px 6px;border-bottom:1px solid #112}
+.dbg-table td{padding:3px 6px;border-bottom:1px solid #0a0a0a;color:#aaa}
 
-  /* ── Live colony health (JS-populated) ── */
-  #hive-health { min-height: 20px; }
+/* Colony graph */
+.colony-link{stroke:rgba(0,200,255,0.2);stroke-width:1.5}
+.colony-node{cursor:pointer}
 
-  @media(max-width:700px) {
-    .stats-bar { flex-direction: column; }
-    .stat { border-right: none; border-bottom: 1px solid var(--border); }
-    .stat:last-child { border-bottom: none; }
-    nav .nav-links { display: none; }
-  }
+/* Memory wiki */
+.wikilink{color:#00aaff;cursor:pointer;text-decoration:underline dotted}
+.memory-chip{display:inline-block;padding:3px 8px;margin:2px;border-radius:4px;background:rgba(0,30,60,0.6);border:1px solid rgba(0,150,255,0.25);color:#88bbff;font-size:9px;cursor:pointer;transition:all .15s;}
+.memory-chip:hover{background:rgba(0,60,120,0.7);color:#00e8ff}
 </style>
 </head>
 <body>
 
-<div id="bg"></div>
-<div class="hex-grid"></div>
+<!-- Phaser world canvas -->
+<div id="wow-canvas"></div>
 
-<!-- ── Navigation ── -->
-<nav>
-  <div class="wrap">
-    <div class="logo">SOVEREIGN<span> HIVE</span></div>
-    <div class="nav-links">
-      <a href="#colonies">Colonies</a>
-      <a href="#llm">LLM Gateway</a>
-      <a href="#philosophy">Philosophy</a>
-      <a href="https://github.com/TehutiRaEl/THEHIVE" target="_blank">GitHub</a>
+<!-- Backend offline splash — shown when no backend can be reached -->
+<div id="offline-splash">
+  <div style="text-align:center;max-width:520px;padding:40px;border:1px solid rgba(255,80,0,.4);border-radius:16px;background:rgba(10,5,0,.95)">
+    <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+    <h2 style="color:#FFB800;letter-spacing:.2em;margin-bottom:8px;font-size:18px">BACKEND UNREACHABLE</h2>
+    <p style="color:#664;font-size:11px;margin-bottom:20px">The Sovereign Hive Command Center requires a live backend.<br>Tried the following URLs — all failed:</p>
+    <div id="tried-urls" style="background:rgba(0,0,0,.5);border-radius:6px;padding:10px;margin-bottom:20px;font-size:10px;color:#886;text-align:left;font-family:monospace"></div>
+    <div style="background:rgba(0,20,5,.7);border:1px solid rgba(0,200,100,.2);border-radius:8px;padding:14px;margin-bottom:20px;text-align:left">
+      <div style="color:#00ff88;font-size:10px;font-weight:bold;margin-bottom:8px">▶ START THE BACKEND</div>
+      <code style="display:block;color:#88ffaa;font-size:10px;line-height:2">
+        cd /home/user/THEHIVE<br>
+        pip install -r requirements.txt<br>
+        uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
+      </code>
     </div>
-    <a class="nav-cta" href="https://github.com/TehutiRaEl/THEHIVE" target="_blank">ENTER HIVE</a>
-  </div>
-</nav>
-
-<!-- ── Hero ── -->
-<div class="wrap">
-  <div class="hero">
-    <div class="hero-tag">SOVEREIGN HIVE v12.0 — OPEN SOURCE</div>
-    <h1>Federated AI Intelligence.<br><em>One Constitution.</em> Many Minds.</h1>
-    <p>
-      A self-sustaining, self-governing digital civilization spanning 10+ GitHub colonies,
-      unified by an immutable soul.md constitution, a SOUL token economy, and a completely free
-      multi-provider LLM waterfall.
-    </p>
-    <div class="hero-btns">
-      <a class="btn-primary" href="https://github.com/TehutiRaEl/THEHIVE" target="_blank">View Repository</a>
-      <a class="btn-secondary" href="#colonies">Explore Colonies</a>
+    <div style="background:rgba(0,5,20,.7);border:1px solid rgba(0,100,200,.2);border-radius:8px;padding:14px;margin-bottom:20px;text-align:left">
+      <div style="color:#00e8ff;font-size:10px;font-weight:bold;margin-bottom:8px">▶ OR START THE FULL HIVE (Docker)</div>
+      <code style="display:block;color:#88ccff;font-size:10px;line-height:2">
+        docker-compose up -d<br>
+        # Backend → :8080 · Gateway → :8181 · n8n → :5678
+      </code>
     </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="stats-bar">
-    <div class="stat">
-      <div class="stat-val" id="colony-count">10+</div>
-      <div class="stat-label">COLONIES</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val">8</div>
-      <div class="stat-label">FREE LLM PROVIDERS</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val">$0</div>
-      <div class="stat-label">MONTHLY COST</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val" id="agent-count">∞</div>
-      <div class="stat-label">AGENTS SPAWNABLE</div>
-    </div>
-  </div>
-
-  <!-- ── Colonies ── -->
-  <section id="colonies">
-    <div class="section-tag">FEDERATED NETWORK</div>
-    <h2>The Colony Map</h2>
-    <p class="section-sub">
-      Each repository is a colony with a specialized role. They communicate via the
-      Hive Bus (automatisch), share a canonical constitution (soul.md), and settle
-      value in SOUL tokens.
-    </p>
-    <div class="colony-grid">
-      <div class="colony-card">
-        <div class="colony-role">CORE COLONY</div>
-        <div class="colony-name"><span class="colony-status"></span>THEHIVE</div>
-        <div class="colony-desc">Governance engine, agent population, SOUL ledger, Phaser world map, Three.js Cortana oracle. The brain of the federation.</div>
-      </div>
-      <div class="colony-card">
-        <div class="colony-role">QUEEN / META</div>
-        <div class="colony-name"><span class="colony-status"></span>sovereign-hive-meta</div>
-        <div class="colony-desc">Canonical soul.md constitution authority. Dispatches constitution updates to all colonies via GitHub Actions repository_dispatch.</div>
-      </div>
-      <div class="colony-card">
-        <div class="colony-role">AUTOMATION BUS</div>
-        <div class="colony-name"><span class="colony-status"></span>automatisch</div>
-        <div class="colony-desc">Self-hosted Zapier alternative (AGPL-3.0). The nervous system — cross-colony event routing, SOUL economy triggers, LLM failover alerts.</div>
-      </div>
-      <div class="colony-card">
-        <div class="colony-role">REVENUE / ORCHESTRATION</div>
-        <div class="colony-name"><span class="colony-status"></span>aether</div>
-        <div class="colony-desc">TypeScript/Next.js license authority with cross-colony task orchestration. RevenueSplitter.sol handles SOUL settlements on Sepolia.</div>
-      </div>
-      <div class="colony-card">
-        <div class="colony-role">LLM GATEWAY</div>
-        <div class="colony-name"><span class="colony-status"></span>kimi-gateway</div>
-        <div class="colony-desc">8-provider free LLM waterfall (Ollama → Moonshot → SiliconFlow → DeepSeek → Zhipu → Groq → OpenRouter → Gemini). Dynamic OmniRoute scoring.</div>
-      </div>
-      <div class="colony-card">
-        <div class="colony-role">ACADEMY A</div>
-        <div class="colony-name"><span class="colony-status"></span>free-programming-books</div>
-        <div class="colony-desc">40+ language knowledge base. RAG corpus ingested into ChromaDB. Agents ground responses in curated programming literature.</div>
-      </div>
-      <div class="colony-card">
-        <div class="colony-role">ACADEMY B</div>
-        <div class="colony-name"><span class="colony-status"></span>freeCodeCamp</div>
-        <div class="colony-desc">Full CS/math/programming curriculum. Curriculum units become hive tasks agents complete for SOUL rewards.</div>
-      </div>
-      <div class="colony-card">
-        <div class="colony-role">OUTER COLONY</div>
-        <div class="colony-name"><span class="colony-status pending"></span>NAR2</div>
-        <div class="colony-desc">Private repository — role to be assigned when access is granted. Reserved in hive.yml manifest.</div>
-      </div>
-      <div class="colony-card">
-        <div class="colony-role">OUTER COLONY</div>
-        <div class="colony-name"><span class="colony-status pending"></span>4DBRAIN</div>
-        <div class="colony-desc">Private repository — role to be assigned when access is granted. Reserved in hive.yml manifest.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── LLM Gateway ── -->
-  <section id="llm">
-    <div class="section-tag">COMPLETELY FREE</div>
-    <h2>LLM Provider Waterfall</h2>
-    <p class="section-sub">
-      Eight providers, zero cost. Dynamic OmniRoute scoring selects the best available
-      provider in real-time based on latency, availability, and remaining quota.
-      If all cloud providers fail — Ollama on Oracle Cloud Always Free is always available.
-    </p>
-    <div class="waterfall">
-      <div class="wf-row">
-        <div class="wf-pri">1</div>
-        <div class="wf-name">Ollama (Local)</div>
-        <div class="wf-model">llama3:8b, mistral, deepseek-r1 — Oracle Cloud ARM</div>
-        <div class="wf-free">FREE ALWAYS</div>
-      </div>
-      <div class="wf-row">
-        <div class="wf-pri">2</div>
-        <div class="wf-name">Moonshot / Kimi</div>
-        <div class="wf-model">kimi-k2-instruct, moonshot-v1-128k — 128K context</div>
-        <div class="wf-free">FREE TIER</div>
-      </div>
-      <div class="wf-row">
-        <div class="wf-pri">3</div>
-        <div class="wf-name">SiliconFlow</div>
-        <div class="wf-model">Qwen2.5-72B, DeepSeek-V3, InternLM3 — 14M tokens</div>
-        <div class="wf-free">FREE TIER</div>
-      </div>
-      <div class="wf-row">
-        <div class="wf-pri">4</div>
-        <div class="wf-name">DeepSeek</div>
-        <div class="wf-model">deepseek-chat, deepseek-reasoner — generous limits</div>
-        <div class="wf-free">FREE TIER</div>
-      </div>
-      <div class="wf-row">
-        <div class="wf-pri">5</div>
-        <div class="wf-name">Zhipu AI</div>
-        <div class="wf-model">glm-4-flash — free forever</div>
-        <div class="wf-free">FREE FOREVER</div>
-      </div>
-      <div class="wf-row">
-        <div class="wf-pri">6</div>
-        <div class="wf-name">Groq</div>
-        <div class="wf-model">llama-3.3-70b, mixtral-8x7b — 14,400 req/day</div>
-        <div class="wf-free">FREE TIER</div>
-      </div>
-      <div class="wf-row">
-        <div class="wf-pri">7</div>
-        <div class="wf-name">OpenRouter</div>
-        <div class="wf-model">:free suffix models — llama-3.1-8b:free, etc.</div>
-        <div class="wf-free">FREE MODELS</div>
-      </div>
-      <div class="wf-row">
-        <div class="wf-pri">8</div>
-        <div class="wf-name">Google Gemini</div>
-        <div class="wf-model">gemini-1.5-flash — 15 req/min, 1M req/day</div>
-        <div class="wf-free">FREE TIER</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Philosophy ── -->
-  <section id="philosophy">
-    <div class="section-tag">DUAL-LENS FRAMEWORK</div>
-    <h2>Devil's Advocate + Childlike Wonder</h2>
-    <p class="section-sub">
-      Every architectural decision passes through two lenses before implementation.
-      Not optional. Not aspirational. Non-negotiable.
-    </p>
-    <div class="lens-grid">
-      <div class="lens-card">
-        <div class="lens-icon">&#x1F608;</div>
-        <div class="lens-title">Devil's Advocate</div>
-        <ul class="lens-steps">
-          <li>1. Radical Innocence — suspend all assumptions</li>
-          <li>2. Five Whys — trace root cause to bedrock</li>
-          <li>3. Devil's Interrogation — steel-man every failure mode</li>
-          <li>4. Shadow Inventory — name what we're afraid to name</li>
-          <li>5. Paradox Pivot — the obstacle IS the path</li>
-        </ul>
-      </div>
-      <div class="lens-card">
-        <div class="lens-icon">&#x2728;</div>
-        <div class="lens-title">Childlike Wonder</div>
-        <ul class="lens-steps">
-          <li>1. Wonder Weave — ask "what if anything were possible?"</li>
-          <li>2. Future Cast — describe the destination in vivid detail</li>
-          <li>3. Inverse Engineering — work backwards from that future</li>
-          <li>4. Gift of Doubt — uncertainty as creative fuel</li>
-          <li>5. Wonder Rebirth — let the new emerge, unforced</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Architecture ── -->
-  <section id="arch">
-    <div class="section-tag">SEVEN-LAYER ARCHITECTURE</div>
-    <h2>How It All Fits Together</h2>
-    <div class="arch">
-<pre>
-<span class="hl">Layer 0</span>  Oracle Cloud Always Free — 4 ARM cores, 24GB RAM
-<span class="hl">Layer 1</span>  Infrastructure — Postgres · Redis · Traefik SSL
-<span class="hl">Layer 2</span>  Queen (sovereign-hive-meta) — soul.md · hive.yml · GitHub Actions dispatch
-<span class="hl">Layer 3</span>  Hive Bus — automatisch (webhooks) · n8n (complex flows)
-<span class="hl">Layer 4</span>  Core Colony (THEHIVE) — FastAPI · Phaser world · Three.js Cortana
-              ├─ /v11/*        main API (chat, agents, arena, economy)
-              ├─ /colony/*     colony standard layer
-              ├─ /v11/voice/*  Whisper speech-to-text
-              ├─ /v11/image/*  Stable Diffusion generation
-              └─ /v11/knowledge/*  ChromaDB RAG (30+ repos ingested)
-<span class="hl">Layer 5</span>  LLM Gateway (kimi-gateway) — OmniRoute dynamic scoring
-<span class="hl">Layer 6</span>  Satellite Colonies — aether · free-programming-books · freeCodeCamp · NAR2 · 4DBRAIN
-<span class="hl">Layer 7</span>  Knowledge Corpus — CS Notes · system-design-primer · build-your-own-x · Awesome Python
-</pre>
-    </div>
-  </section>
-
-  <!-- ── CTA ── -->
-  <div class="cta-banner">
-    <h2>Join the Federation</h2>
-    <p>Deploy your own colony. Pull the constitution. Earn SOUL.<br>Everything runs free on Oracle Cloud Always Free tier.</p>
-    <div class="hero-btns">
-      <a class="btn-primary" href="https://github.com/TehutiRaEl/THEHIVE" target="_blank">View on GitHub</a>
-      <a class="btn-secondary" href="https://github.com/TehutiRaEl/THEHIVE/blob/main/soul.md" target="_blank">Read soul.md</a>
-    </div>
+    <button id="retry-btn" style="padding:12px 32px;background:linear-gradient(135deg,#003366,#001133);border:1px solid rgba(0,200,255,.6);border-radius:10px;color:#00e8ff;font-weight:bold;cursor:pointer;font-size:13px;font-family:'Courier New';letter-spacing:.1em">
+      🔄 RETRY CONNECTION
+    </button>
   </div>
 </div>
 
-<!-- ── Footer ── -->
-<footer>
-  <div class="wrap">
-    <p>
-      Sovereign Hive &mdash; Open Source &mdash;
-      <a href="https://github.com/TehutiRaEl/THEHIVE" target="_blank">github.com/TehutiRaEl/THEHIVE</a>
-      &nbsp;&bull;&nbsp;
-      <a href="https://github.com/TehutiRaEl/THEHIVE/blob/main/soul.md" target="_blank">soul.md</a>
-      &nbsp;&bull;&nbsp;
-      <a href="https://github.com/TehutiRaEl/THEHIVE/blob/main/LICENSE" target="_blank">License</a>
-    </p>
+<!-- Cortana Oracle -->
+<div id="cortana-wrap">
+  <div id="cortana-ring">
+    <canvas id="cortana-canvas" width="200" height="200"></canvas>
+    <div class="cortana-scan"></div>
+    <div class="cortana-glow"></div>
   </div>
-</footer>
+  <div id="speech-wrap" style="width:220px">
+    <div class="speech-bubble" id="speech-text" style="display:none"></div>
+  </div>
+</div>
 
+<!-- Frequency Visualizer -->
+<div id="freq-bar"></div>
+
+<!-- Minimap -->
+<div id="minimap"><canvas id="minimap-canvas" width="120" height="120"></canvas></div>
+
+<!-- React root -->
+<div id="root" style="position:fixed;inset:0;z-index:15;pointer-events:none"></div>
+
+<!-- Command bar -->
+<div id="cmd-bar" style="pointer-events:auto">
+  <input id="cmd-input" type="text" placeholder="Speak to Kai El… (Enter to send)" autocomplete="off"/>
+  <button class="cmd-btn" id="cmd-send" style="background:linear-gradient(135deg,#006090,#003060);color:#00e8ff">SEND</button>
+  <button class="cmd-btn" id="cmd-mic" style="background:rgba(80,0,80,0.5);color:#e0aaff;border:1px solid rgba(180,0,255,0.4)">🎙</button>
+</div>
+
+<!-- ══════════════════════════════════════ BACKEND DETECTION ══ -->
 <script>
-  // Attempt to load live colony health from THEHIVE backend
-  (async () => {
-    const BACKENDS = [
-      'http://localhost:8080',
-      'https://thehive.sovereignhive.io',
-    ];
-    for (const base of BACKENDS) {
-      try {
-        const r = await fetch(`${base}/colony/manifest`, { signal: AbortSignal.timeout(3000) });
-        if (!r.ok) continue;
-        const data = await r.json();
-        if (data.colonies) {
-          document.getElementById('colony-count').textContent = data.colonies.length;
-        }
-        if (data.agent_count !== undefined) {
-          document.getElementById('agent-count').textContent = data.agent_count.toLocaleString();
-        }
-        // Update status dots
-        if (Array.isArray(data.colonies)) {
-          data.colonies.forEach(c => {
-            const dots = document.querySelectorAll('.colony-status');
-            // best-effort match by name
-          });
-        }
-        break;
-      } catch {}
+window._BACKEND_CANDIDATES = [
+  window.JASPER_BACKEND,
+  window.location.origin !== 'null' && !window.location.origin.includes('github.io')
+    ? window.location.origin : null,
+  'http://localhost:8080',
+  'http://localhost:8181',
+].filter(Boolean);
+
+window.BACKEND_BASE = null;
+window.BACKEND_ONLINE = false;
+
+async function detectBackend(showSplash = true) {
+  const tried = [];
+  for (const base of window._BACKEND_CANDIDATES) {
+    tried.push(base);
+    try {
+      const r = await fetch(base + '/v11/health', { signal: AbortSignal.timeout(3000) });
+      if (r.ok) {
+        window.BACKEND_BASE = base + '/v11';
+        window.BACKEND_ONLINE = true;
+        document.getElementById('offline-splash').classList.remove('show');
+        console.log('[hive] backend online:', base);
+        return true;
+      }
+    } catch {}
+  }
+  // All failed
+  window.BACKEND_BASE = null;
+  window.BACKEND_ONLINE = false;
+  if (showSplash) {
+    document.getElementById('tried-urls').innerHTML = tried.map(u => `❌ ${u}/v11/health`).join('<br>');
+    document.getElementById('offline-splash').classList.add('show');
+  }
+  console.warn('[hive] all backends offline');
+  return false;
+}
+
+document.getElementById('retry-btn').addEventListener('click', async () => {
+  document.getElementById('retry-btn').textContent = '⏳ Retrying…';
+  await detectBackend(true);
+  document.getElementById('retry-btn').textContent = '🔄 RETRY CONNECTION';
+});
+
+// Run detection on load
+detectBackend();
+</script>
+
+<!-- ══════════════════════════════════════ THREE.JS CORTANA ═══ -->
+<script>
+class CortanaHead {
+  constructor(canvas, params={}) {
+    this.canvas=canvas;
+    this.params={schumannHz:7.83,eloAvg:1200,soulTotal:0,activeFreq:432,hdDim:1024,speaking:false,...params};
+    this.time=0;
+    this.renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    this.renderer.setSize(200,200);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setClearColor(0x000000,0);
+    this.scene=new THREE.Scene();
+    this.camera=new THREE.PerspectiveCamera(55,1,0.01,50);
+    this.camera.position.set(0,0,3.6);
+    this.scene.add(new THREE.AmbientLight(0x002244,0.5));
+    this.buildFace(); this.buildNeural(); this.buildRings(); this.animate();
+  }
+  facePoint(phi,theta){const ax=1.05,ay=1.38,az=0.85,x=ax*Math.sin(phi)*Math.cos(theta),y=ay*Math.cos(phi),z=az*Math.sin(phi)*Math.sin(theta),fb=Math.exp(-theta*theta*1.5)*Math.exp(-(phi-1.35)*(phi-1.35)*2);return[x,y,z-fb*.18];}
+  featureDensity(phi,theta){const front=Math.exp(-Math.pow(Math.abs(theta)*2,2)),brow=Math.exp(-Math.pow(phi-.95,2)*40)*Math.exp(-theta*theta*4)*2,eyeL=Math.exp(-Math.pow(phi-1.08,2)*60)*Math.exp(-Math.pow(theta-.62,2)*60)*5,eyeR=Math.exp(-Math.pow(phi-1.08,2)*60)*Math.exp(-Math.pow(theta+.62,2)*60)*5,nose=Math.exp(-Math.pow(phi-1.35,2)*30)*Math.exp(-theta*theta*80)*2,lip=Math.exp(-Math.pow(phi-1.68,2)*50)*Math.exp(-Math.pow(theta,2)*18)*4,cheek=Math.exp(-Math.pow(phi-1.30,2)*20)*Math.exp(-Math.pow(Math.abs(theta)-.5,2)*20)*1.5;return front*(1+brow+eyeL+eyeR+nose+lip+cheek);}
+  buildFace(){const N=9000,pos=new Float32Array(N*3),col=new Float32Array(N*3),sz=new Float32Array(N);this.basePOS=new Float32Array(N*3);this.ptype=new Uint8Array(N);let k=0,tries=0;while(k<N&&tries<N*15){tries++;const phi=Math.acos(1-2*Math.random()),theta=(Math.random()-.5)*Math.PI*.82,dens=this.featureDensity(phi,theta);if(Math.random()>dens/7)continue;const[x,y,z]=this.facePoint(phi,theta),isEyeL=Math.exp(-Math.pow(phi-1.08,2)*60)*Math.exp(-Math.pow(theta-.62,2)*60)>.5,isEyeR=Math.exp(-Math.pow(phi-1.08,2)*60)*Math.exp(-Math.pow(theta+.62,2)*60)>.5,isLip=Math.exp(-Math.pow(phi-1.68,2)*50)*Math.exp(-Math.pow(theta,2)*18)>.5,isBrow=Math.exp(-Math.pow(phi-.95,2)*40)*Math.exp(-theta*theta*4)>.4;pos[k*3]=x;pos[k*3+1]=y;pos[k*3+2]=z;this.basePOS[k*3]=x;this.basePOS[k*3+1]=y;this.basePOS[k*3+2]=z;if(isEyeL||isEyeR){this.ptype[k]=1;col[k*3]=0;col[k*3+1]=1;col[k*3+2]=1;sz[k]=.03;}else if(isLip){this.ptype[k]=2;col[k*3]=.1;col[k*3+1]=.85;col[k*3+2]=1;sz[k]=.022;}else if(isBrow){this.ptype[k]=3;col[k*3]=.15;col[k*3+1]=.9;col[k*3+2]=.9;sz[k]=.018;}else{this.ptype[k]=0;const yn=(y+1.38)/2.76;col[k*3]=yn*.08;col[k*3+1]=.45+yn*.35;col[k*3+2]=.75+yn*.25;sz[k]=.012+Math.random()*.008;}k++;}while(k<N){const phi=Math.acos(1-2*Math.random()),theta=(Math.random()-.5)*Math.PI*.82,[x,y,z]=this.facePoint(phi,theta);pos[k*3]=x;pos[k*3+1]=y;pos[k*3+2]=z;this.basePOS[k*3]=x;this.basePOS[k*3+1]=y;this.basePOS[k*3+2]=z;col[k*3]=0;col[k*3+1]=.5;col[k*3+2]=.8;sz[k]=.01;this.ptype[k]=0;k++;}const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('color',new THREE.BufferAttribute(col,3));const mat=new THREE.PointsMaterial({size:.018,vertexColors:true,transparent:true,opacity:.88,sizeAttenuation:true,blending:THREE.AdditiveBlending,depthWrite:false});this.face=new THREE.Points(geo,mat);this.scene.add(this.face);this.posAttr=geo.attributes.position;this.colAttr=geo.attributes.color;this.N=N;}
+  buildNeural(){const segs=[];for(let i=0;i<300;i++){const a=Math.floor(Math.random()*this.N),b=Math.floor(Math.random()*this.N),dx=this.basePOS[a*3]-this.basePOS[b*3],dy=this.basePOS[a*3+1]-this.basePOS[b*3+1];if(dx*dx+dy*dy>.3)continue;segs.push(this.basePOS[a*3],this.basePOS[a*3+1],this.basePOS[a*3+2],this.basePOS[b*3],this.basePOS[b*3+1],this.basePOS[b*3+2]);}const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(segs,3));this.neural=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0x00ffee,transparent:true,opacity:.08,blending:THREE.AdditiveBlending}));this.scene.add(this.neural);}
+  buildRings(){this.rings=[];for(let i=0;i<3;i++){const geo=new THREE.RingGeometry(1.3+i*.18,1.32+i*.18,64),mat=new THREE.MeshBasicMaterial({color:[0x00ffff,0x0088ff,0x4400ff][i],transparent:true,opacity:.12,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}),ring=new THREE.Mesh(geo,mat);ring.rotation.x=Math.PI/2+i*.4;ring.rotation.z=i*1.2;this.scene.add(ring);this.rings.push(ring);}}
+  update(params){if(params)this.params={...this.params,...params};const t=this.time,hz=(this.params.schumannHz||7.83)*.08,pulse=Math.sin(t*hz*Math.PI*2)*.5+.5,elo=Math.min((this.params.eloAvg||1200)/2000,1),freqNorm=Math.min((this.params.activeFreq||432)/1000,1),pos=this.posAttr,col=this.colAttr;for(let i=0;i<this.N;i++){const bx=this.basePOS[i*3],by=this.basePOS[i*3+1],bz=this.basePOS[i*3+2],tp=this.ptype[i],br=1+Math.sin(t*hz*Math.PI*2)*.012,f=Math.sin(t*2.3+i*.013)*.004;pos.setX(i,bx*br+f);pos.setY(i,by*br+f*.5);pos.setZ(i,bz*br);if(tp===1){const ep=pulse*elo;col.setXYZ(i,0,.7+ep*.3,1);}else if(tp===2){if(this.params.speaking){const m=Math.sin(t*18+i*.5)*.5+.5;pos.setY(i,by*br+(Math.random()>.5?1:-1)*m*.06);col.setXYZ(i,.2,1,.8+m*.2);}else col.setXYZ(i,.1,.85,1);}else if(tp===3){const hdF=Math.min((this.params.hdDim||1024)/2048,1);col.setXYZ(i,0,.7+hdF*.3,.9+pulse*.1);}else{const gp=.55+pulse*.3;col.setXYZ(i,freqNorm*.12,gp*.65,gp*(.8+freqNorm*.2));}}pos.needsUpdate=true;col.needsUpdate=true;this.rings.forEach((r,i)=>{r.rotation.y=t*(.3+i*.15);r.rotation.z=t*(.2-i*.1);r.material.opacity=.08+pulse*.12*elo;});this.neural.material.opacity=.04+pulse*.14*elo;this.face.rotation.y=Math.sin(t*.28)*.18;this.neural.rotation.y=this.face.rotation.y;}
+  speak(text,duration=4000){this.params.speaking=true;const b=document.getElementById('speech-text');b.style.display='block';b.innerHTML=`<span class="speaking-dot"></span> ${text}`;setTimeout(()=>{this.params.speaking=false;b.style.display='none';},duration);}
+  animate(){requestAnimationFrame(()=>this.animate());this.time+=.016;this.update();this.renderer.render(this.scene,this.camera);}
+}
+window.cortana=null;
+window.addEventListener('load',()=>{
+  window.cortana=new CortanaHead(document.getElementById('cortana-canvas'));
+  setTimeout(()=>cortana.speak("I am Kai El. The hive resonates at 7.83 Hz.",4000),1500);
+});
+</script>
+
+<!-- ══════════════════════════════════════ PHASER WORLD ════════ -->
+<script>
+window.HIVE={agents:[],tasks:[],eloMap:{},soulMap:{},resonance:0,schumannHz:7.83,activeFreq:432,events:[],arenaActive:false,dayTime:.5,weather:"clear",colonyZones:[],colonyHealth:{}};
+
+class WorldScene extends Phaser.Scene {
+  constructor(){super({key:"World"})}
+  create(){this.agents={};this.worldW=2200;this.worldH=1800;this.cameras.main.setBounds(0,0,this.worldW,this.worldH);this._drawWorld();this._buildMinimap();this._startClock();this._startWeather();this.time.addEvent({delay:3000,loop:true,callback:this._syncAgents,callbackScope:this});this.time.addEvent({delay:2500,loop:true,callback:this._wanderTick,callbackScope:this});this.time.addEvent({delay:5000,loop:true,callback:this._checkArena,callbackScope:this});this.cameras.main.centerOn(this.worldW/2,this.worldH/2);this.schumannEmitter=this.add.graphics();this.schumannT=0;}
+  _ZONES(){return[
+    {name:"SOUL REALM",guild:"★",cx:.5,cy:.5,rw:.14,rh:.12,color:0xFFD700,dark:0x886600,glow:0xFFFF00,desc:"Town Hall · Governance Hub"},
+    {name:"FREQUENCY LANDS",guild:"Ψ",cx:.13,cy:.48,rw:.18,rh:.38,color:0x00CED1,dark:0x004455,glow:0x00FFFF,desc:"Ψ Guild · 7.83 Hz Baseline"},
+    {name:"ARENA BADLANDS",guild:"⚔",cx:.82,cy:.45,rw:.16,rh:.36,color:0xFF4500,dark:0x661500,glow:0xFF6600,desc:"Gladiator Arena · Projection Duels"},
+    {name:"TRUST CITADEL",guild:"⚖",cx:.28,cy:.18,rw:.18,rh:.24,color:0x4169E1,dark:0x0d1f5a,glow:0x6688FF,desc:"Trust Guild · Legal Sovereignty"},
+    {name:"R&D ARCHIPELAGO",guild:"🔬",cx:.67,cy:.2,rw:.18,rh:.26,color:0x9400D3,dark:0x2d0040,glow:0xCC44FF,desc:"R&D Guild · 4D Models"},
+    {name:"CRYPTO EXCHANGE",guild:"₿",cx:.72,cy:.82,rw:.16,rh:.2,color:0x00C853,dark:0x004d1f,glow:0x44FF88,desc:"Crypto Guild · SOUL Economy"},
+    {name:"AETHER CITADEL",guild:"⚙",cx:.22,cy:.82,rw:.16,rh:.16,color:0xE8B4FF,dark:0x2d0a3a,glow:0xFF88FF,desc:"Revenue Colony · aether"},
+    {name:"AUTOMATISCH NEXUS",guild:"🕸",cx:.38,cy:.88,rw:.14,rh:.12,color:0x00FFAA,dark:0x00241a,glow:0x44FFCC,desc:"Automation Colony · Hive Bus"},
+    {name:"KIMI ORACLE",guild:"🧠",cx:.55,cy:.88,rw:.14,rh:.12,color:0xFF9944,dark:0x331500,glow:0xFFCC44,desc:"LLM Gateway · Free Models"},
+    {name:"ACADEMY DISTRICT",guild:"📚",cx:.72,cy:.88,rw:.16,rh:.14,color:0x88CCFF,dark:0x0a1a2d,glow:0xAADDFF,desc:"Knowledge Colony · RAG Corpus"},
+    {name:"OUTER COLONIES",guild:"🌍",cx:.88,cy:.75,rw:.12,rh:.18,color:0x607D8B,dark:0x1a2530,glow:0x88AACC,desc:"NAR2 · 4DBRAIN · TBD"},
+  ];}
+  _drawWorld(){const wW=this.worldW,wH=this.worldH,bg=this.add.graphics();bg.fillStyle(0x010108,1);bg.fillRect(0,0,wW,wH);for(let i=0;i<400;i++){const x=Math.random()*wW,y=Math.random()*wH,s=Math.random()>.9?2:1;bg.fillStyle(0xffffff,Math.random()*.8+.1);bg.fillRect(x,y,s,s);}this._ZONES().forEach(z=>{const cx=z.cx*wW,cy=z.cy*wH,rw=z.rw*wW*.5,rh=z.rh*wH*.5,g=this.add.graphics();g.fillStyle(z.color,.04);g.fillEllipse(cx,cy,rw*2.8,rh*2.8);g.fillStyle(z.color,.07);g.fillEllipse(cx,cy,rw*2.2,rh*2.2);g.fillStyle(z.dark,.85);g.fillEllipse(cx,cy,rw*2,rh*2);g.lineStyle(2,z.color,.5);g.strokeEllipse(cx,cy,rw*2,rh*2);g.lineStyle(1,z.color,.06);for(let xi=-rw;xi<rw;xi+=32)for(let yi=-rh;yi<rh;yi+=28)if((xi*xi/rw/rw)+(yi*yi/rh/rh)<1)g.strokeRect(cx+xi,cy+yi,28,24);this.add.text(cx,cy-rh+22,`${z.guild} ${z.name}`,{fontSize:'13px',fontFamily:'Courier New',color:'#'+z.color.toString(16).padStart(6,'0'),stroke:'#000',strokeThickness:3,alpha:.9}).setOrigin(.5,.5);this.add.text(cx,cy-rh+38,z.desc,{fontSize:'9px',fontFamily:'Courier New',color:'#'+z.color.toString(16).padStart(6,'0'),alpha:.5}).setOrigin(.5,.5);if(!this._zones)this._zones={};this._zones[z.name]={cx,cy,rw,rh,...z};});const pathGfx=this.add.graphics();pathGfx.lineStyle(3,0x1a3a4a,.6);const zones=this._ZONES(),center=zones.find(z=>z.name==="SOUL REALM"),cx0=center.cx*wW,cy0=center.cy*wH;zones.filter(z=>z.name!=="SOUL REALM").forEach(z=>{pathGfx.beginPath();pathGfx.moveTo(cx0,cy0);const mid={x:(cx0+z.cx*wW)/2+Math.random()*60-30,y:(cy0+z.cy*wH)/2+Math.random()*60-30};pathGfx.lineTo(mid.x,mid.y);pathGfx.lineTo(z.cx*wW,z.cy*wH);pathGfx.strokePath();});const thx=wW*.5,thy=wH*.5,hall=this.add.graphics();hall.fillStyle(0x1a2a3a,1);hall.fillRect(thx-40,thy-45,80,70);hall.fillStyle(0xFFD700,.3);hall.fillTriangle(thx-50,thy-45,thx,thy-75,thx+50,thy-45);hall.lineStyle(2,0xFFD700,.8);hall.strokeRect(thx-40,thy-45,80,70);hall.strokeTriangle(thx-50,thy-45,thx,thy-75,thx+50,thy-45);this.add.text(thx,thy-10,"TOWN HALL",{fontSize:'10px',fontFamily:'Courier New',color:'#FFD700',stroke:'#000',strokeThickness:2}).setOrigin(.5);this.add.text(thx,thy+8,"★ SOUL REALM ★",{fontSize:'8px',fontFamily:'Courier New',color:'#FFD70099'}).setOrigin(.5);}
+  _eloColor(elo=1200){if(elo>=1800)return 0xFFD700;if(elo>=1600)return 0xEE82EE;if(elo>=1400)return 0x00FF88;if(elo>=1200)return 0x2A9FFF;return 0x888888;}
+  _eloZone(n){const h=Math.abs(n.split('').reduce((a,c)=>a+c.charCodeAt(0),0));const z=Object.keys(this._zones||{});return z.length?z[h%z.length]:null;}
+  _syncAgents(){const agents=window.HIVE.agents||[];agents.forEach((agent,idx)=>{if(this.agents[agent.name])return;const zoneName=this._eloZone(agent.name),z=this._zones&&this._zones[zoneName],x=z?z.cx+(Math.random()-.5)*z.rw*1.5:this.worldW*.4+Math.random()*this.worldW*.2,y=z?z.cy+(Math.random()-.5)*z.rh*1.5:this.worldH*.4+Math.random()*this.worldH*.2,elo=(window.HIVE.eloMap||{})[agent.name]||1200,color=this._eloColor(elo),radius=Math.max(8,Math.min(18,8+(elo-800)/100)),gfx=this.add.graphics();gfx.fillStyle(color,.15);gfx.fillCircle(0,0,radius+8);gfx.fillStyle(color,.9);gfx.fillCircle(0,0,radius);gfx.fillStyle(0xffffff,.4);gfx.fillCircle(0,0,radius*.28);const label=this.add.text(0,radius+5,agent.name.substring(0,8),{fontSize:'8px',fontFamily:'Courier New',color:'#'+color.toString(16).padStart(6,'0'),stroke:'#000',strokeThickness:2}).setOrigin(.5,0),eloTxt=this.add.text(0,-(radius+8),'◈'+elo,{fontSize:'7px',fontFamily:'Courier New',color:'#FFD700'}).setOrigin(.5,1),container=this.add.container(x,y,[gfx,label,eloTxt]);container.setDepth(5);this.tweens.add({targets:container,scaleX:1.1,scaleY:1.1,duration:1600+idx*120,yoyo:true,loop:-1,ease:'Sine.easeInOut'});this.agents[agent.name]={container,x,y,target:{x,y},gfx,elo,agent,radius,state:'idle'};});}
+  _wanderTick(){Object.values(this.agents).forEach(sp=>{if(sp.state==='selected')return;const r=Math.random(),z=this._zones&&this._zones[this._eloZone(sp.agent.name)];let tx=sp.x,ty=sp.y;if(r<.25&&z){tx=this.worldW*.5+(Math.random()-.5)*80;ty=this.worldH*.5+(Math.random()-.5)*80;}else if(z&&r<.7){tx=z.cx+(Math.random()-.5)*z.rw*1.8;ty=z.cy+(Math.random()-.5)*z.rh*1.8;}else{tx=Phaser.Math.Between(60,this.worldW-60);ty=Phaser.Math.Between(60,this.worldH-60);}sp.target={x:tx,y:ty};sp.state='walking';this.tweens.add({targets:sp.container,x:tx,y:ty,duration:2000+Math.random()*1500,ease:'Sine.easeInOut',onComplete:()=>{sp.x=tx;sp.y=ty;if(sp.state!=='selected')sp.state='idle';}});});}
+  _checkArena(){if(window.HIVE.arenaActive){const az=this._ZONES().find(z=>z.name==="ARENA BADLANDS");if(az){const flash=this.add.graphics();flash.fillStyle(0xFF4500,.15);flash.fillEllipse(az.cx*this.worldW,az.cy*this.worldH,az.rw*this.worldW*2,az.rh*this.worldH*2);this.tweens.add({targets:flash,alpha:0,duration:800,onComplete:()=>flash.destroy()});}}}
+  _buildMinimap(){this._drawMinimap();setInterval(()=>this._drawMinimap(),2000);}
+  _drawMinimap(){const c=document.getElementById('minimap-canvas');if(!c)return;const ctx=c.getContext('2d');ctx.fillStyle='rgba(0,5,15,0.95)';ctx.fillRect(0,0,120,120);this._ZONES().forEach(z=>{const mx=z.cx*120,my=z.cy*120,rx=z.rw*120*.5,ry=z.rh*120*.5;ctx.beginPath();ctx.ellipse(mx,my,rx,ry,0,0,Math.PI*2);ctx.fillStyle='#'+z.dark.toString(16).padStart(6,'0')+'99';ctx.fill();ctx.strokeStyle='#'+z.color.toString(16).padStart(6,'0')+'88';ctx.lineWidth=1;ctx.stroke();});Object.values(this.agents).forEach(sp=>{const mx=sp.container.x/this.worldW*120,my=sp.container.y/this.worldH*120;ctx.beginPath();ctx.arc(mx,my,2.5,0,Math.PI*2);ctx.fillStyle='#'+this._eloColor(sp.elo).toString(16).padStart(6,'0');ctx.fill();});const cam=this.cameras.main;ctx.strokeStyle='rgba(0,200,255,0.7)';ctx.lineWidth=1;ctx.strokeRect(cam.scrollX/this.worldW*120,cam.scrollY/this.worldH*120,cam.width/this.worldW*120,cam.height/this.worldH*120);}
+  _startClock(){this.dayOverlay=this.add.graphics();this.dayOverlay.setDepth(50);this.time.addEvent({delay:200,loop:true,callback:()=>{window.HIVE.dayTime=(window.HIVE.dayTime+.0003)%1;this._updateDayNight();}});}
+  _updateDayNight(){const t=window.HIVE.dayTime;this.dayOverlay.clear();if(t<.25||t>.75){this.dayOverlay.fillStyle(0x000022,.45);this.dayOverlay.fillRect(0,0,this.worldW,this.worldH);}else if((t>.2&&t<.3)||(t>.7&&t<.8)){this.dayOverlay.fillStyle(0x221100,.25);this.dayOverlay.fillRect(0,0,this.worldW,this.worldH);}}
+  _startWeather(){this.weatherGfx=this.add.graphics();this.weatherGfx.setDepth(48);this.weatherT=0;this.time.addEvent({delay:30000,loop:true,callback:()=>{window.HIVE.weather=['clear','clear','clear','aurora','rain','embers'][Math.floor(Math.random()*6)];}});}
+  update(){this.weatherT=(this.weatherT||0)+.02;this._updateWeather();this._updateSchumann();const keys=this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT'),cam=this.cameras.main,speed=6;if(keys.A.isDown||keys.LEFT.isDown)cam.scrollX-=speed;if(keys.D.isDown||keys.RIGHT.isDown)cam.scrollX+=speed;if(keys.W.isDown||keys.UP.isDown)cam.scrollY-=speed;if(keys.S.isDown||keys.DOWN.isDown)cam.scrollY+=speed;if(this.weatherT%30<.02)this._drawMinimap();}
+  _updateWeather(){this.weatherGfx.clear();const w=window.HIVE.weather,t=this.weatherT,cam=this.cameras.main,sx=cam.scrollX,sy=cam.scrollY,sw=cam.width,sh=cam.height;if(w==='aurora'){for(let i=0;i<5;i++){this.weatherGfx.lineStyle(3+i*2,[0x00ffff,0x00ff88,0x4400ff,0x00ccff,0x88ffff][i],.03+Math.sin(t+i)*.02);this.weatherGfx.beginPath();for(let x=sx;x<sx+sw;x+=20){const wy=sy+sh*.1+i*sh*.08+Math.sin((x+t*80)*.008+i)*40;x===sx?this.weatherGfx.moveTo(x,wy):this.weatherGfx.lineTo(x,wy);}this.weatherGfx.strokePath();}}else if(w==='rain'){this.weatherGfx.lineStyle(1,0x8888ff,.3);for(let i=0;i<60;i++){const rx=sx+(i*137+t*200)%sw,ry=sy+(i*97+t*400+i*17)%sh;this.weatherGfx.lineTo(rx,ry);this.weatherGfx.lineTo(rx-3,ry+12);this.weatherGfx.strokePath();this.weatherGfx.beginPath();}}else if(w==='embers'){for(let i=0;i<40;i++){this.weatherGfx.fillStyle(0xFF4500,(Math.sin(t*3+i)*.5+.5)*.4);this.weatherGfx.fillCircle(sx+(i*97+Math.sin(t+i)*60)%sw,sy+(i*137+t*30+i*11)%sh,2);}}}
+  _updateSchumann(){const t=this.weatherT,cx=this.worldW*.5,cy=this.worldH*.5,g=this.schumannEmitter;g.clear();for(let i=0;i<3;i++){const phase=(t*7.83*.12+i/3)%1;g.lineStyle(1.5,0xFFD700,(1-phase)*.15);g.strokeCircle(cx,cy,phase*400);}g.setDepth(4);}
+}
+
+window.phaserGame=new Phaser.Game({type:Phaser.AUTO,parent:'wow-canvas',width:window.innerWidth,height:window.innerHeight,backgroundColor:'#010108',scene:WorldScene,scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH}});
+window.phaserGame.events.once('ready',()=>{window.phaserScene=window.phaserGame.scene.getScene('World');});
+</script>
+
+<!-- ══════════════════════════════════════ REACT HUD ══════════ -->
+<script type="text/babel">
+const {useState,useRef,useEffect,useCallback}=React;
+
+// ── Live API helper ─────────────────────────────────────────
+async function api(path, opts={}) {
+  const base = window.BACKEND_BASE;
+  if(!base) throw new Error('No backend');
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), opts.timeout||10000);
+  try {
+    const r = await fetch(base+path, {signal: controller.signal, ...opts});
+    clearTimeout(timer);
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
+// ── Colony Graph renderer ────────────────────────────────────
+function renderColonyGraph(data, el) {
+  if(!el||!data)return;
+  el.innerHTML='';
+  const W=el.offsetWidth||300,H=el.offsetHeight||360;
+  const svg=d3.select(el).append('svg').attr('width',W).attr('height',H);
+  const roleColor={core:'#FFD700',revenue:'#E8B4FF',automation:'#00FFAA',llm:'#FF9944',knowledge:'#88CCFF',curriculum:'#66BBFF',unknown:'#607D8B',memory:'#AA88FF',api:'#FF6644'};
+  const sim=d3.forceSimulation(data.nodes).force('link',d3.forceLink(data.links).id(d=>d.id).distance(80)).force('charge',d3.forceManyBody().strength(-200)).force('center',d3.forceCenter(W/2,H/2)).force('collision',d3.forceCollide().radius(d=>(d.size||10)+8));
+  const link=svg.append('g').selectAll('line').data(data.links).join('line').attr('stroke',d=>d.active?'rgba(0,255,150,0.5)':'rgba(0,200,255,0.2)').attr('stroke-width',d=>d.active?2:1);
+  const node=svg.append('g').selectAll('g').data(data.nodes).join('g').attr('class','colony-node').call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;}).on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+  node.append('circle').attr('r',d=>d.size||10).attr('fill',d=>roleColor[d.role]||'#607D8B').attr('fill-opacity',.2).attr('stroke',d=>roleColor[d.role]||'#607D8B').attr('stroke-width',2);
+  node.append('circle').attr('r',d=>(d.size||10)*.4).attr('fill',d=>roleColor[d.role]||'#607D8B').attr('fill-opacity',.8);
+  node.append('text').attr('dy','1.8em').attr('text-anchor','middle').attr('fill',d=>roleColor[d.role]||'#aaa').attr('font-size','8px').attr('font-family','Courier New').text(d=>d.id);
+  sim.on('tick',()=>{link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);node.attr('transform',d=>`translate(${Math.max(15,Math.min(W-15,d.x))},${Math.max(15,Math.min(H-15,d.y))})`);});
+}
+
+const COLONY_GRAPH = {
+  nodes:[
+    {id:"THEHIVE",role:"core",size:20},{id:"aether",role:"revenue",size:14},
+    {id:"automatisch",role:"automation",size:14},{id:"kimi-gateway",role:"llm",size:16},
+    {id:"free-programming-books",role:"knowledge",size:12},{id:"freeCodeCamp",role:"curriculum",size:12},
+    {id:"sovereign-hive-meta",role:"core",size:18},{id:"NAR2",role:"unknown",size:10},
+    {id:"4DBRAIN",role:"unknown",size:10},{id:"Ollama",role:"llm",size:12},
+    {id:"ChromaDB",role:"memory",size:10},{id:"Postgres",role:"api",size:10},{id:"n8n",role:"automation",size:10},
+  ],
+  links:[
+    {source:"sovereign-hive-meta",target:"THEHIVE",active:true},{source:"sovereign-hive-meta",target:"aether"},
+    {source:"sovereign-hive-meta",target:"automatisch"},{source:"sovereign-hive-meta",target:"kimi-gateway"},
+    {source:"sovereign-hive-meta",target:"free-programming-books"},{source:"sovereign-hive-meta",target:"freeCodeCamp"},
+    {source:"THEHIVE",target:"kimi-gateway",active:true},{source:"THEHIVE",target:"ChromaDB"},
+    {source:"THEHIVE",target:"Postgres"},{source:"automatisch",target:"n8n"},
+    {source:"THEHIVE",target:"automatisch"},{source:"kimi-gateway",target:"Ollama",active:true},
+    {source:"THEHIVE",target:"aether"},{source:"sovereign-hive-meta",target:"NAR2"},{source:"sovereign-hive-meta",target:"4DBRAIN"},
+  ]
+};
+
+// ── Debug Panel ─────────────────────────────────────────────
+function DebugPanel() {
+  const [log, setLog] = useState(['[DEBUGGER] Ready. Click RUN DIAGNOSTIC to begin.']);
+  const [running, setRunning] = useState(false);
+  const [results, setResults] = useState(null);
+  const logRef = useRef(null);
+
+  const append = (line, cls='') => setLog(p => [...p, cls ? `[${cls.toUpperCase()}] ${line}` : line]);
+
+  const runDiagnostic = async () => {
+    if(running) return;
+    setRunning(true);
+    setLog(['[DEBUGGER] ═══ SOVEREIGN HIVE FULL DIAGNOSTIC ═══', `[DEBUGGER] ${new Date().toISOString()}`,'']);
+    setResults(null);
+
+    const base = window.BACKEND_BASE;
+    if(!base) {
+      append('No backend detected. Start the server first.','err');
+      setRunning(false); return;
     }
-  })();
+
+    append(`Backend: ${base}`,'ok');
+
+    // Endpoint ping table
+    const endpoints = [
+      {path:'/health',label:'Backend health'},
+      {path:'/debug/health',label:'Subsystem health'},
+      {path:'/debug/env',label:'Env keys'},
+      {path:'/debug/git',label:'Git status'},
+      {path:'/debug/logs?lines=20',label:'Log tail'},
+      {path:'/debug/colony-ping',label:'Colony ping'},
+      {path:'/debug/endpoints',label:'Route map'},
+      {path:'/agents',label:'Agents'},
+      {path:'/llm/status',label:'LLM status'},
+      {path:'/ml/status',label:'ML pipeline'},
+      {path:'/browser/status',label:'Browser agent'},
+      {path:'/knowledge/status',label:'Knowledge RAG'},
+    ];
+
+    append('');
+    append('── ENDPOINT HEALTH ──');
+    const collected = {};
+    for(const ep of endpoints) {
+      const t0 = performance.now();
+      try {
+        const r = await fetch(base+ep.path, {signal: AbortSignal.timeout(5000)});
+        const ms = Math.round(performance.now()-t0);
+        const data = await r.json().catch(()=>({}));
+        collected[ep.path] = {ok: r.status < 400, status: r.status, ms, data};
+        append(`${r.status < 400 ? '✅' : '❌'} ${ep.label.padEnd(22)} ${r.status} ${ms}ms`);
+      } catch(e) {
+        const ms = Math.round(performance.now()-t0);
+        collected[ep.path] = {ok: false, status: 0, ms, error: e.message};
+        append(`❌ ${ep.label.padEnd(22)} TIMEOUT/ERR — ${e.message.substring(0,40)}`, 'err');
+      }
+    }
+
+    // Env keys
+    const envData = collected['/env']?.data;
+    if(envData) {
+      append('');
+      append('── ENV KEYS ──');
+      append(`✅ Present (${envData.present?.length||0}): ${(envData.present||[]).join(', ')||'(none)'}`,'ok');
+      append(`❌ Missing (${envData.missing?.length||0}): ${(envData.missing||[]).join(', ')||'(none)'}`,'warn');
+    }
+
+    // Git status
+    const gitData = collected['/debug/git']?.data || collected['/git']?.data;
+    if(gitData) {
+      append('');
+      append('── GIT ──');
+      append(`Branch: ${gitData.branch}`);
+      append(`Status: ${gitData.status}`);
+      append(`Log:\n${gitData.log}`,'dim');
+    }
+
+    // Colony ping
+    const colonyData = collected['/debug/colony-ping']?.data;
+    if(colonyData?.colonies) {
+      append('');
+      append('── COLONY PING ──');
+      colonyData.colonies.forEach(c => {
+        const sym = c.status==='ok'?'✅':'❌';
+        append(`${sym} ${c.name.padEnd(26)} ${c.status} ${c.latency_ms!=null?c.latency_ms+'ms':'—'}`);
+      });
+    }
+
+    // Log tail
+    const logData = collected['/debug/logs?lines=20']?.data;
+    if(logData?.lines?.length) {
+      append('');
+      append('── BACKEND LOG TAIL ──');
+      logData.lines.forEach(l => append(l,'dim'));
+    }
+
+    append('');
+    append('═══ DIAGNOSTIC COMPLETE ═══','ok');
+    setResults(collected);
+    setRunning(false);
+  };
+
+  useEffect(()=>{if(logRef.current)logRef.current.scrollTop=logRef.current.scrollHeight;},[log]);
+
+  const copyLog = () => navigator.clipboard?.writeText(log.join('\n'));
+
+  return(
+    <div>
+      <div style={{fontSize:"11px",fontWeight:"bold",color:"#00ff88",marginBottom:"10px",letterSpacing:".1em"}}>🔧 HIVE DEBUGGER</div>
+      <div style={{display:"flex",gap:"6px",marginBottom:"10px",flexWrap:"wrap"}}>
+        <button onClick={runDiagnostic} disabled={running}
+          style={{padding:"6px 14px",background:running?"rgba(0,60,30,.4)":"rgba(0,120,60,.5)",border:"1px solid rgba(0,200,100,.4)",borderRadius:"6px",color:"#00ff88",fontSize:"10px",cursor:running?"not-allowed":"pointer",fontWeight:"bold"}}>
+          {running?"⏳ RUNNING…":"▶ RUN FULL DIAGNOSTIC"}
+        </button>
+        <button onClick={copyLog} style={{padding:"6px 10px",background:"rgba(0,50,80,.4)",border:"1px solid rgba(0,150,200,.3)",borderRadius:"6px",color:"#00aaff",fontSize:"10px",cursor:"pointer"}}>
+          📋 COPY
+        </button>
+        <button onClick={()=>setLog(['[DEBUGGER] Ready.'])} style={{padding:"6px 10px",background:"rgba(50,0,0,.4)",border:"1px solid rgba(200,0,0,.2)",borderRadius:"6px",color:"#ff4444",fontSize:"10px",cursor:"pointer"}}>
+          🗑 CLEAR
+        </button>
+      </div>
+      <div className="dbg-terminal" ref={logRef}>
+        {log.map((l,i)=>{
+          const cls = l.includes('[ERR]')||l.startsWith('❌')?'err':l.includes('[WARN]')||l.startsWith('⚠')?'warn':l.includes('[OK]')||l.startsWith('✅')?'ok':l.includes('[DIM]')?'dim':'';
+          return <div key={i} className={cls}>{l}</div>;
+        })}
+      </div>
+      {results && (
+        <div style={{marginTop:"10px"}}>
+          <div style={{fontSize:"9px",color:"#446",marginBottom:"6px"}}>
+            {Object.values(results).filter(r=>r.ok).length}/{Object.keys(results).length} endpoints healthy
+          </div>
+          <table className="dbg-table">
+            <thead><tr><th>Endpoint</th><th>Status</th><th>Latency</th></tr></thead>
+            <tbody>
+              {Object.entries(results).map(([path,r],i)=>(
+                <tr key={i}>
+                  <td style={{color:"#668"}}>{path}</td>
+                  <td style={{color:r.ok?"#00ff88":"#ff4444"}}>{r.ok?"✅":"❌"} {r.status||"err"}</td>
+                  <td style={{color:"#446"}}>{r.ms}ms</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Memory Panel ─────────────────────────────────────────────
+function MemoryPanel() {
+  const [index, setIndex] = useState(null);
+  const [current, setCurrent] = useState(null);
+  const [content, setContent] = useState(null);
+
+  useEffect(()=>{
+    fetch('./memory/_index.md').then(r=>r.ok?r.text():null).then(t=>setIndex(t||DEFAULT_INDEX)).catch(()=>setIndex(DEFAULT_INDEX));
+  },[]);
+
+  const nav = (link) => {
+    const path = `./memory/${link.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9/-]/g,'')}.md`;
+    fetch(path).then(r=>r.ok?r.text():null).then(t=>{setCurrent(link);setContent(t||`# ${link}\n\nNot yet generated. Run \`python scripts/generate_memory_vault.py\``);}).catch(()=>{setCurrent(link);setContent(`# ${link}\n\nNode not found.`);});
+  };
+
+  const render = (text) => text?.replace(/\[\[([^\]]+)\]\]/g,(_,l)=>`<span class="wikilink" data-link="${l}">[[${l}]]</span>`) || '';
+
+  const handleClick = e => { const l=e.target.getAttribute('data-link'); if(l)nav(l); };
+
+  const CATS=[
+    {l:"Constitution",n:["soul.md","constitution-middleware","voting","violations"],c:"#FFD700"},
+    {l:"Colonies",n:["THEHIVE","aether","automatisch","kimi-gateway"],c:"#00FFAA"},
+    {l:"Agents",n:["lifecycle","genome","elo","memory","react-engine"],c:"#88CCFF"},
+    {l:"Economy",n:["SOUL-token","wallet","staking","doubling-state"],c:"#FF9944"},
+    {l:"LLM",n:["waterfall","ollama","groq","openrouter","moonshot"],c:"#FF6644"},
+    {l:"Open Source",n:["AutoGPT","BabyAGI","MetaGPT","CrewAI","MemGPT","LlamaIndex","OmniRoute","Browser-Use"],c:"#AADDFF"},
+    {l:"Math",n:["resonance-score","doubling-threshold","hdc","tesseract"],c:"#44FFCC"},
+    {l:"Philosophy",n:["devils-advocate","childlike-wonder","alchemical-process","dual-lens-framework"],c:"#E8B4FF"},
+  ];
+
+  if(current&&content) return(
+    <div>
+      <button onClick={()=>{setCurrent(null);setContent(null);}} style={{padding:"3px 8px",background:"rgba(0,50,100,.4)",border:"1px solid rgba(0,150,255,.3)",borderRadius:"4px",color:"#88aaff",fontSize:"9px",cursor:"pointer",marginBottom:"8px"}}>← INDEX</button>
+      <div style={{fontSize:"10px",color:"#aa88ff",fontWeight:"bold",marginBottom:"6px"}}>📄 {current}</div>
+      <div style={{fontSize:"9px",lineHeight:"1.7",color:"#aaa",maxHeight:"calc(100vh - 220px)",overflowY:"auto"}} dangerouslySetInnerHTML={{__html:render(content).replace(/\n/g,'<br/>')}} onClick={handleClick}/>
+    </div>
+  );
+
+  return(
+    <div onClick={handleClick}>
+      {index?<div style={{fontSize:"9px",color:"#668",marginBottom:"10px",lineHeight:"1.6",maxHeight:"80px",overflowY:"auto"}} dangerouslySetInnerHTML={{__html:render(index)}}/>:<div style={{color:"#334",fontSize:"9px"}}>Loading…</div>}
+      {CATS.map((cat,i)=>(
+        <div key={i} style={{marginBottom:"8px"}}>
+          <div style={{fontSize:"9px",color:cat.c,fontWeight:"bold",marginBottom:"3px",letterSpacing:".1em"}}>{cat.l.toUpperCase()}</div>
+          <div>{cat.n.map(n=><span key={n} className="memory-chip" data-link={n}>{n}</span>)}</div>
+        </div>
+      ))}
+      <div style={{marginTop:"10px",padding:"6px 8px",background:"rgba(0,20,10,.4)",border:"1px solid rgba(0,150,50,.2)",borderRadius:"4px",fontSize:"8px",color:"#246"}}>
+        Generate vault: <code style={{color:"#00ff88"}}>python scripts/generate_memory_vault.py</code>
+      </div>
+    </div>
+  );
+}
+
+const DEFAULT_INDEX = `# Sovereign Hive Memory Vault\nClick any [[wiki-link]] to navigate.\n\n[[soul.md]] · [[THEHIVE]] · [[kimi-gateway]] · [[SOUL-token]] · [[react-engine]]`;
+
+// ── Main HUD ────────────────────────────────────────────────
+function HUD() {
+  const [tab, setTab] = useState("world");
+  const [token, setToken] = useState(localStorage.getItem("jasper_token"));
+  const [online, setOnline] = useState(false);
+  const [agents, setAgents] = useState([]);
+  const [elo, setElo] = useState([]);
+  const [soul, setSoul] = useState([]);
+  const [freq, setFreq] = useState({schumann:7.83,activeHz:432});
+  const [tasks, setTasks] = useState([]);
+  const [govLog, setGovLog] = useState([]);
+  const [challenges, setChallenges] = useState([]);
+  const [fallen, setFallen] = useState([]);
+  const [llmStatus, setLlmStatus] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+  const graphRef = useRef(null);
+  const wsRef = useRef(null);
+
+  const ah = () => ({"Authorization":`Bearer ${token}`,"Content-Type":"application/json"});
+
+  const auth = async () => {
+    try { const d = await api('/auth/token'); if(d?.access_token){setToken(d.access_token);localStorage.setItem("jasper_token",d.access_token);} } catch {}
+  };
+
+  const load = useCallback(async () => {
+    await new Promise(r=>setTimeout(r,1200));
+    const isOnline = !!window.BACKEND_BASE;
+    setOnline(isOnline);
+    if(!isOnline){ setLoadError("Backend offline"); return; }
+    setLoadError(null);
+
+    try {
+      const [agR,eloR,soulR,taskR,govR,llmR,chlR,falR] = await Promise.allSettled([
+        api('/agents',{headers:ah()}),
+        api('/grading/leaderboard',{headers:ah()}),
+        api('/wallet/leaderboard/soul',{headers:ah()}),
+        api('/tasks',{headers:ah()}),
+        api('/governance/log?limit=12',{headers:ah()}),
+        api('/llm/status',{headers:ah()}),
+        api('/arena/challenges',{headers:ah()}),
+        api('/arena/fallen?limit=8',{headers:ah()}),
+      ]);
+      if(agR.value){setAgents(agR.value.agents||[]);window.HIVE.agents=agR.value.agents||[];}
+      if(eloR.value){setElo(eloR.value.leaderboard||[]);const m={};(eloR.value.leaderboard||[]).forEach(x=>m[x.agent_name]=x.rating);window.HIVE.eloMap=m;}
+      if(soulR.value){setSoul(soulR.value.leaderboard||[]);const m={};(soulR.value.leaderboard||[]).forEach(x=>m[x.agent]=x.soul);window.HIVE.soulMap=m;}
+      if(taskR.value) setTasks(taskR.value.tasks||[]);
+      if(govR.value) setGovLog(govR.value||[]);
+      if(llmR.value) setLlmStatus(llmR.value);
+      if(chlR.value) setChallenges((chlR.value||{}).challenges||[]);
+      if(falR.value) setFallen((falR.value||{}).hall_of_fallen_ideas||[]);
+    } catch(e) { setLoadError(e.message); }
+  },[token]);
+
+  // WebSocket
+  useEffect(()=>{
+    if(!online||!window.BACKEND_BASE) return;
+    const wsUrl = window.BACKEND_BASE.replace(/^http/,"ws").replace('/v11','')+"/ws";
+    try {
+      const ws = new WebSocket(wsUrl);
+      ws.onmessage = ev => {
+        try {
+          const d = JSON.parse(ev.data);
+          if(d.type==="agent_born"){setMessages(p=>[...p,{role:"hive",content:`🧬 ${d.child} born from ${(d.parents||[]).join("×")}. Gen ${d.generation}.`,ts:new Date()}]);if(window.cortana)window.cortana.speak(`${d.child} has been born.`);load();}
+          if(d.type==="task_completed"){setMessages(p=>[...p,{role:"hive",content:`✅ Task completed by ${d.agent}. +${d.soul?.toFixed?.(1)||0} SOUL`,ts:new Date()}]);load();}
+          if(d.type==="elo_updated"&&window.cortana)window.cortana.update({eloAvg:d.rating});
+        } catch {}
+      };
+      wsRef.current = ws;
+      return () => ws.close();
+    } catch {}
+  },[online]);
+
+  useEffect(()=>{load();const iv=setInterval(load,15000);return()=>clearInterval(iv);},[]);
+
+  // D3 graph
+  useEffect(()=>{
+    if(tab!=="graph"||!graphRef.current) return;
+    fetch('./memory/_graph.json').then(r=>r.ok?r.json():null).then(d=>renderColonyGraph(d||COLONY_GRAPH,graphRef.current)).catch(()=>renderColonyGraph(COLONY_GRAPH,graphRef.current));
+  },[tab]);
+
+  // Frequency bar
+  useEffect(()=>{
+    const hz=freq.activeHz||432,bar=document.getElementById("freq-bar");
+    if(!bar) return;
+    bar.innerHTML="";
+    [7.83,174,285,396,417,432,528,639,741,852,963].forEach(b=>{
+      const active=Math.abs(b-hz)<50,pip=document.createElement("div");
+      pip.className="freq-pip";
+      pip.style.cssText=`height:${active?32+Math.random()*20:8+Math.random()*12}px;background:${active?"#00ffff":"#002244"};opacity:${active?.9:.3}`;
+      bar.appendChild(pip);
+    });
+  },[freq]);
+
+  // CMD bar
+  useEffect(()=>{
+    const inp=document.getElementById("cmd-input"),btn=document.getElementById("cmd-send");
+    if(!inp||!btn) return;
+    const onSend=()=>{if(inp.value.trim()){sendCmd(inp.value.trim());inp.value="";}};
+    const onKey=e=>{if(e.key==="Enter")onSend();};
+    btn.addEventListener("click",onSend); inp.addEventListener("keydown",onKey);
+    return()=>{btn.removeEventListener("click",onSend);inp.removeEventListener("keydown",onKey);};
+  },[token,loading,online]);
+
+  const sendCmd = async (cmd) => {
+    if(!cmd.trim()||loading) return;
+    setLoading(true);
+    setMessages(p=>[...p,{role:"user",content:cmd,ts:new Date()}]);
+    if(!online) {
+      setMessages(p=>[...p,{role:"error",content:"Backend offline — cannot process command. Start the backend server.",ts:new Date()}]);
+      setLoading(false); return;
+    }
+    try {
+      const d = await api('/command_text',{method:"POST",headers:ah(),body:JSON.stringify({command:cmd})});
+      const result = d?.result||"No response.";
+      setMessages(p=>[...p,{role:"kai",content:result,ts:new Date()}]);
+      if(window.cortana) window.cortana.speak(result.substring(0,120),5000);
+    } catch(e) {
+      setMessages(p=>[...p,{role:"error",content:`Error: ${e.message}`,ts:new Date()}]);
+    }
+    setLoading(false);
+  };
+
+  const TABS=[
+    {id:"world",label:"🌍 WORLD"},{id:"chat",label:"🌌 COMMUNE"},
+    {id:"agents",label:`🧬 SWARM(${agents.length})`},{id:"arena",label:"⚔ ARENA"},
+    {id:"freq",label:"Ψ FREQ"},{id:"soul",label:"💎 SOUL"},
+    {id:"tasks",label:`🏛 TASKS(${tasks.filter(t=>t.status==="open").length})`},
+    {id:"gov",label:"⚖ GOVERN"},{id:"llm",label:"🤖 LLM"},{id:"hive",label:"🐝 HIVE"},
+    {id:"graph",label:"🕸 GRAPH"},{id:"memory",label:"🧠 MEMORY"},{id:"debug",label:"🔧 DEBUG"},
+  ];
+
+  const topSoul=(soul[0]?.soul||0).toFixed(1),topElo=elo[0]?.rating||1200,prov=llmStatus?.active_provider||"?";
+
+  if(!token) return(
+    <div style={{position:"fixed",inset:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,background:"rgba(0,0,10,0.95)",pointerEvents:"auto"}}>
+      <div style={{textAlign:"center",padding:"40px",border:"1px solid rgba(0,200,255,0.4)",borderRadius:"16px",background:"rgba(0,5,20,0.9)"}}>
+        <div style={{fontSize:"60px",marginBottom:"16px"}}>🌌</div>
+        <h1 style={{color:"#00e8ff",letterSpacing:".2em",marginBottom:"8px"}}>KAI EL · SOVEREIGN HIVE</h1>
+        <p style={{color:"#668",fontSize:"12px",marginBottom:"24px"}}>v12.0 · 4D · Frequency · Arena · Utility · OmniRoute</p>
+        <button onClick={auth} style={{padding:"12px 32px",background:"linear-gradient(135deg,#003366,#001133)",border:"1px solid rgba(0,200,255,0.6)",borderRadius:"10px",color:"#00e8ff",fontWeight:"bold",cursor:"pointer",fontSize:"14px",fontFamily:"Courier New",letterSpacing:".1em"}}>
+          INITIALIZE SOVEREIGN SESSION
+        </button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{pointerEvents:"none"}}>
+      {/* TOP HUD */}
+      <div id="hud-top" style={{pointerEvents:"auto"}}>
+        <div style={{color:"#00e8ff",fontWeight:"bold",fontSize:"12px",letterSpacing:".2em",marginRight:"8px"}}>KAI EL</div>
+        <span style={{fontSize:"9px",padding:"2px 6px",border:`1px solid ${online?"rgba(0,255,100,.3)":"rgba(255,80,0,.3)"}`,borderRadius:"4px",color:online?"#00ff88":"#ff6644",marginRight:"4px"}}>{online?"● LIVE":"○ OFFLINE"}</span>
+        <div className="hud-stat" style={{borderColor:"rgba(255,215,0,.3)",background:"rgba(255,215,0,.05)"}}>
+          <span style={{color:"#FFD700"}}>💎</span><span className="val" style={{color:"#FFD700"}}>{topSoul}</span><span style={{color:"#664",fontSize:"9px"}}>SOUL</span>
+        </div>
+        <div className="hud-stat" style={{borderColor:"rgba(0,200,255,.3)"}}>
+          <span style={{color:"#88aaff"}}>◈</span><span className="val" style={{color:"#88aaff"}}>{topElo}</span><span style={{color:"#446",fontSize:"9px"}}>ELO</span>
+        </div>
+        <div className="hud-stat" style={{borderColor:"rgba(0,255,180,.3)"}}>
+          <span style={{color:"#00ffaa"}}>Ψ</span><span className="val" style={{color:"#00ffaa"}}>{freq.activeHz?.toFixed(1)||"432.0"}</span><span style={{color:"#244",fontSize:"9px"}}>Hz</span>
+        </div>
+        <div className="hud-stat" style={{borderColor:"rgba(255,255,0,.2)"}}>
+          <span style={{color:"#aaa6",fontSize:"9px"}}>7.83 Hz</span><span style={{color:"#ffff44",fontSize:"8px",marginLeft:"4px"}}>◉ SCHUMANN</span>
+        </div>
+        <div style={{marginLeft:"auto",display:"flex",gap:"8px",alignItems:"center"}}>
+          <span style={{fontSize:"10px",color:prov==="ollama"?"#00ff88":"#aa88ff",padding:"2px 6px",border:`1px solid ${prov==="ollama"?"rgba(0,255,100,.3)":"rgba(180,100,255,.3)"}`,borderRadius:"4px"}}>🤖 {prov.toUpperCase()}</span>
+          <span style={{fontSize:"10px",color:"#446",padding:"2px 6px",border:"1px solid #112",borderRadius:"4px"}}>v12.0 · {agents.length} agents</span>
+        </div>
+      </div>
+
+      {/* SIDE PANEL */}
+      {tab!=="world"&&(
+        <div className="panel fade-in" style={{pointerEvents:"auto"}}>
+
+          {/* CHAT */}
+          {tab==="chat"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#00e8ff",marginBottom:"10px",letterSpacing:".15em"}}>🌌 COMMUNE WITH KAI EL</div>
+            {!online&&<div style={{fontSize:"9px",color:"#ff6644",padding:"6px 8px",border:"1px solid rgba(255,100,0,.2)",borderRadius:"4px",marginBottom:"8px"}}>⚠ Backend offline — start the server to commune with Kai El.</div>}
+            <div style={{maxHeight:"360px",overflowY:"auto",marginBottom:"8px",display:"flex",flexDirection:"column",gap:"8px"}}>
+              {messages.map((m,i)=>(
+                <div key={i} style={{textAlign:m.role==="user"?"right":"left"}}>
+                  <div style={{display:"inline-block",maxWidth:"85%",padding:"8px 12px",borderRadius:"10px",fontSize:"11px",lineHeight:"1.5",background:m.role==="user"?"rgba(0,50,100,.6)":m.role==="kai"?"rgba(0,30,50,.7)":"rgba(50,0,0,.6)",border:`1px solid ${m.role==="user"?"rgba(0,150,255,.3)":m.role==="kai"?"rgba(0,200,255,.25)":"rgba(255,50,50,.3)"}`,color:m.role==="user"?"#88ccff":m.role==="kai"?"#a0e8ff":"#ff8888"}} dangerouslySetInnerHTML={{__html:marked.parse(m.content)}}/>
+                  <div style={{fontSize:"9px",color:"#334",marginTop:"2px"}}>{m.role==="user"?"YOU":m.role==="kai"?"KAI EL":"HIVE"}</div>
+                </div>
+              ))}
+              {loading&&<div style={{color:"#00e8ff88",fontSize:"11px",textAlign:"center"}}>▸▸▸ processing…</div>}
+            </div>
+          </div>}
+
+          {/* AGENTS */}
+          {tab==="agents"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#00e8ff",marginBottom:"10px"}}>🧬 SWARM REGISTRY</div>
+            {loadError&&<div style={{fontSize:"9px",color:"#ff6644",marginBottom:"8px"}}>⚠ {loadError}</div>}
+            {agents.length===0&&!loadError&&<div style={{fontSize:"9px",color:"#334",marginBottom:"8px"}}>No agents yet — spawn one below.</div>}
+            {agents.slice(0,15).map((a,i)=>{
+              const er=(window.HIVE.eloMap||{})[a.name]||1200,sr=(window.HIVE.soulMap||{})[a.name]||0;
+              return<div key={i} style={{padding:"8px 10px",marginBottom:"6px",borderRadius:"8px",background:"rgba(0,10,30,.6)",border:"1px solid rgba(0,150,255,.15)"}}>
+                <div style={{display:"flex",justifyContent:"space-between"}}>
+                  <span style={{fontWeight:"bold",color:"#88ccff",fontSize:"11px"}}>{a.name}</span>
+                  <div style={{display:"flex",gap:"8px",fontSize:"9px"}}><span style={{color:"#FFD700"}}>◈{er}</span><span style={{color:"#00cc88"}}>{typeof sr==="number"?sr.toFixed(1):"0.0"}Ψ</span></div>
+                </div>
+                <div style={{fontSize:"9px",color:"#446",marginTop:"2px"}}>{a.description||"Agent of the hive"}</div>
+              </div>;
+            })}
+            {online&&<div style={{display:"flex",gap:"6px",marginTop:"8px",flexWrap:"wrap"}}>
+              <button style={{padding:"5px 10px",background:"rgba(0,100,150,.3)",border:"1px solid rgba(0,200,255,.3)",borderRadius:"6px",color:"#00e8ff",fontSize:"10px",cursor:"pointer"}}
+                onClick={async()=>{const desc=prompt("Describe the agent:");if(!desc)return;const d=await api('/design_agent',{method:"POST",headers:ah(),body:JSON.stringify({command:desc})}).catch(()=>null);if(d?.design){const d2=await api('/spawn_agent',{method:"POST",headers:ah(),body:JSON.stringify(d.design)}).catch(()=>null);alert(`Agent ${d2?.name||"?"}: ${d2?.status}`);load();}}}>+ DESIGN AGENT</button>
+              <button style={{padding:"5px 10px",background:"rgba(150,0,150,.3)",border:"1px solid rgba(200,0,255,.3)",borderRadius:"6px",color:"#ee88ff",fontSize:"10px",cursor:"pointer"}}
+                onClick={async()=>{const p1=prompt("Parent 1:");const p2=prompt("Parent 2:");if(!p1||!p2)return;const d=await api('/agents/reproduce',{method:"POST",headers:ah(),body:JSON.stringify({parent1:p1,parent2:p2,mutation_rate:.1})}).catch(e=>({error:e.message}));alert(d?.error||`Born: ${d?.child} (Gen ${d?.generation})`);load();}}>🧬 REPRODUCE</button>
+            </div>}
+          </div>}
+
+          {/* ARENA */}
+          {tab==="arena"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#FF6633",marginBottom:"10px"}}>⚔ GLADIATOR ARENA</div>
+            <div style={{fontSize:"9px",color:"#664",marginBottom:"10px",borderLeft:"2px solid #FF4500",paddingLeft:"8px"}}>TITLE XII: Conflicts resolved by projection. No idea deleted.</div>
+            {online&&<button style={{padding:"5px 10px",background:"rgba(150,30,0,.4)",border:"1px solid rgba(255,70,0,.4)",borderRadius:"6px",color:"#FF8844",fontSize:"10px",cursor:"pointer",marginBottom:"10px"}}
+              onClick={async()=>{const ca=prompt("Challenger:");const cd=prompt("Challenged:");const pr=prompt("Proposition:");if(!ca||!cd||!pr)return;const d=await api('/arena/challenge',{method:"POST",headers:ah(),body:JSON.stringify({challenger:ca,challenged:cd,proposition:pr})}).catch(()=>null);alert(`Challenge ${d?.challenge_id} created!`);load();}}>⚔ NEW CHALLENGE</button>}
+            {challenges.slice(0,5).map((ch,i)=>(
+              <div key={i} style={{padding:"8px",marginBottom:"6px",borderRadius:"6px",background:"rgba(40,10,0,.6)",border:`1px solid rgba(255,70,0,.${ch.status==='pending'?4:2})`}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:"10px"}}>
+                  <span style={{color:"#FF8844",fontWeight:"bold"}}>#{ch.id} {ch.challenger} vs {ch.challenged}</span>
+                  <span style={{color:ch.status==="pending"?"#FFD700":"#00ff88",fontSize:"9px"}}>{ch.status}</span>
+                </div>
+                <div style={{fontSize:"9px",color:"#884",marginTop:"3px",fontStyle:"italic"}}>"{(ch.proposition||"").substring(0,60)}"</div>
+                {ch.status==="pending"&&online&&<button style={{marginTop:"4px",padding:"3px 8px",background:"rgba(200,50,0,.4)",border:"1px solid rgba(255,100,0,.4)",borderRadius:"4px",color:"#FF8844",fontSize:"9px",cursor:"pointer"}} onClick={async()=>{const d=await api(`/arena/run/${ch.id}`,{method:"POST",headers:ah()}).catch(()=>null);alert(`Winner: ${d?.winner}`);load();}}>▶ RUN PROJECTION</button>}
+                {ch.status==="completed"&&<div style={{fontSize:"9px",color:"#00ff88",marginTop:"3px"}}>Winner: {ch.winner}</div>}
+              </div>
+            ))}
+            <div style={{marginTop:"12px",fontSize:"10px",fontWeight:"bold",color:"#884",marginBottom:"6px"}}>HALL OF FALLEN IDEAS</div>
+            {fallen.slice(0,4).map((f,i)=>(
+              <div key={i} style={{padding:"6px 8px",marginBottom:"4px",borderRadius:"5px",background:"rgba(20,10,0,.5)",border:"1px solid rgba(100,50,0,.3)"}}>
+                <div style={{fontSize:"9px",color:"#886644",fontStyle:"italic"}}>"{(f.proposition||"").substring(0,55)}…"</div>
+                <div style={{fontSize:"8px",color:"#554",marginTop:"2px"}}>defeated by {f.defeated_by} · resurrected {f.resurrection_count}×</div>
+              </div>
+            ))}
+          </div>}
+
+          {/* FREQUENCY */}
+          {tab==="freq"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#00CED1",marginBottom:"10px"}}>Ψ FREQUENCY GUILD</div>
+            <div style={{fontSize:"9px",color:"#266",marginBottom:"10px",borderLeft:"2px solid #00CED1",paddingLeft:"8px"}}>TITLE X: All matter, thought, law = vibration. Schumann: 7.83 Hz</div>
+            <div style={{display:"flex",gap:"6px",marginBottom:"10px",flexWrap:"wrap"}}>
+              <button style={{padding:"5px 10px",background:"rgba(0,100,110,.3)",border:"1px solid rgba(0,200,210,.3)",borderRadius:"6px",color:"#00CED1",fontSize:"10px",cursor:"pointer"}}
+                onClick={async()=>{const w=prompt("Word:");if(!w)return;const d=await api(`/frequency/word/${encodeURIComponent(w)}`,{headers:ah()}).catch(()=>null);if(d){alert(`"${w}" → ${d.average_hz?.toFixed(2)||0} Hz\nEmotion: ${d.dominant_emotion}`);if(window.cortana)window.cortana.update({activeFreq:d.average_hz||432});}}}>Ψ WORD FREQ</button>
+              <button style={{padding:"5px 10px",background:"rgba(0,80,90,.3)",border:"1px solid rgba(0,180,200,.3)",borderRadius:"6px",color:"#00CED1",fontSize:"10px",cursor:"pointer"}}
+                onClick={async()=>{const s=prompt("Emotional state:");if(!s)return;const d=await api('/frequency/heal',{method:"POST",headers:ah(),body:JSON.stringify({emotional_state:s})}).catch(()=>null);if(d){if(window.cortana)window.cortana.update({activeFreq:d.healing_hz||432});alert(`${s} → ${d.healing_hz} Hz\n${d.description}`);}}}>♥ HEAL</button>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"3px"}}>
+              {["A","C","E","H","I","K","L","M","N","O","Y"].map(ch=>(
+                <div key={ch} onClick={async()=>{const d=await api(`/frequency/letter/${ch}`,{headers:ah()}).catch(()=>null);const hz=d?.sound_hz||432;if(window.cortana)window.cortana.update({activeFreq:hz});setFreq(f=>({...f,activeHz:hz}));}} style={{padding:"5px 2px",borderRadius:"4px",textAlign:"center",cursor:"pointer",border:"1px solid rgba(0,200,210,.2)",background:"rgba(0,50,60,.4)"}}>
+                  <div style={{fontSize:"12px",fontWeight:"bold",color:"#00CED1"}}>{ch}</div>
+                  <div style={{fontSize:"7px",color:"#006677"}}>Hz</div>
+                </div>
+              ))}
+            </div>
+          </div>}
+
+          {/* SOUL */}
+          {tab==="soul"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#FFD700",marginBottom:"10px"}}>💎 SOUL ECONOMY</div>
+            <div style={{fontSize:"9px",color:"#664",marginBottom:"10px",borderLeft:"2px solid #FFD700",paddingLeft:"8px"}}>TITLE XVI: 70% agent / 20% treasury / 10% irrevocable trust.</div>
+            {soul.slice(0,8).map((a,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 8px",marginBottom:"4px",borderRadius:"6px",background:"rgba(20,15,0,.5)",border:"1px solid rgba(255,215,0,.1)"}}>
+                <div><span style={{fontSize:"10px",color:i===0?"#FFD700":i===1?"#aaa":i===2?"#CD7F32":"#666",fontWeight:"bold",marginRight:"8px"}}>{i+1}</span><span style={{fontSize:"10px",color:"#ccc"}}>{a.agent}</span></div>
+                <div style={{textAlign:"right"}}><div style={{fontSize:"10px",color:"#FFD700",fontWeight:"bold"}}>{(a.soul||0).toFixed(1)} SOUL</div><div style={{fontSize:"8px",color:"#444"}}>ELO:{a.elo||1200}</div></div>
+              </div>
+            ))}
+            {online&&<div style={{display:"flex",gap:"6px",marginTop:"10px"}}>
+              <button style={{padding:"5px 10px",background:"rgba(100,70,0,.4)",border:"1px solid rgba(255,200,0,.3)",borderRadius:"6px",color:"#FFD700",fontSize:"10px",cursor:"pointer"}} onClick={async()=>{const f=prompt("From:");const t=prompt("To:");const a=parseFloat(prompt("Amount:")||"0");if(!f||!t||!a)return;const d=await api('/wallet/tip',{method:"POST",headers:ah(),body:JSON.stringify({from_agent:f,to_agent:t,amount:a})}).catch(()=>null);alert(d?.success?`Tipped ${a} SOUL`:d?.error);load();}}>💸 TIP</button>
+            </div>}
+          </div>}
+
+          {/* TASKS */}
+          {tab==="tasks"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#00ff88",marginBottom:"10px"}}>🏛 TOWN HALL TASKS</div>
+            {online&&<button style={{padding:"5px 10px",background:"rgba(0,80,40,.4)",border:"1px solid rgba(0,200,100,.3)",borderRadius:"6px",color:"#00ff88",fontSize:"10px",cursor:"pointer",marginBottom:"10px"}} onClick={async()=>{const t=prompt("Title:");const d=prompt("Description:");if(!t)return;const dt=await api('/tasks',{method:"POST",headers:ah(),body:JSON.stringify({title:t,description:d||"",creator:"Commander"})}).catch(()=>null);alert(`Task ${dt?.task_id} created!`);load();}}>+ CREATE</button>}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"6px",fontSize:"9px"}}>
+              {["open","assigned","done"].map(st=>(
+                <div key={st}>
+                  <div style={{color:st==="open"?"#00ff88":st==="assigned"?"#FFD700":"#444",fontWeight:"bold",marginBottom:"4px",textTransform:"uppercase"}}>{st}</div>
+                  {tasks.filter(t=>t.status===st).slice(0,4).map((t,i)=>(
+                    <div key={i} style={{padding:"5px 6px",marginBottom:"3px",borderRadius:"4px",background:"rgba(0,20,10,.5)",border:"1px solid rgba(0,200,100,.1)"}}>
+                      <div style={{color:"#ccc"}}>{(t.title||"").substring(0,20)}</div>
+                      {t.resonance_hz>0&&<div style={{color:"#006644",fontSize:"8px"}}>Ψ {t.resonance_hz?.toFixed(0)}Hz</div>}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>}
+
+          {/* GOVERNANCE */}
+          {tab==="gov"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#4169E1",marginBottom:"10px"}}>⚖ JUSTICIA · GOVERNANCE</div>
+            <div style={{maxHeight:"300px",overflowY:"auto"}}>
+              {govLog.map((e,i)=>(
+                <div key={i} style={{padding:"6px 8px",marginBottom:"4px",borderRadius:"5px",borderLeft:`2px solid ${e.decision==="allow"?"#00aa44":"#aa2200"}`,background:"rgba(0,5,20,.5)",fontSize:"9px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between"}}><span style={{color:"#88aaff"}}>{e.action_type}</span><span style={{color:e.decision==="allow"?"#00aa44":"#aa2200"}}>{e.decision}</span></div>
+                  <div style={{color:"#334",marginTop:"2px"}}>{(e.rationale||"").substring(0,60)}</div>
+                  <div style={{color:"#223",fontSize:"8px"}}>{e.actor} → {e.target}</div>
+                </div>
+              ))}
+            </div>
+            {online&&<button style={{marginTop:"8px",padding:"5px 10px",background:"rgba(20,30,100,.4)",border:"1px solid rgba(60,80,200,.3)",borderRadius:"6px",color:"#6688ff",fontSize:"10px",cursor:"pointer"}} onClick={async()=>{const d=await api('/constitution/soul_md',{headers:ah()}).catch(()=>null);alert(d?.soul_md?.substring(0,500)+"...");}}>📜 VIEW soul.md</button>}
+          </div>}
+
+          {/* LLM */}
+          {tab==="llm"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#9400D3",marginBottom:"10px"}}>🤖 LLM GATEWAY — OMNI ROUTE</div>
+            {!online&&<div style={{fontSize:"9px",color:"#ff6644",marginBottom:"8px"}}>⚠ Backend offline</div>}
+            {llmStatus&&<div>
+              <div style={{padding:"8px",borderRadius:"6px",background:"rgba(0,0,30,.5)",border:"1px solid rgba(100,100,255,.2)",marginBottom:"10px"}}>
+                <span style={{fontSize:"9px",color:"#446"}}>Active: </span>
+                <span style={{fontSize:"10px",fontWeight:"bold",color:"#00ff88"}}>{(llmStatus.active_provider||"?").toUpperCase()}</span>
+              </div>
+              {(llmStatus.providers||[]).map((p,i)=>(
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 8px",marginBottom:"4px",borderRadius:"5px",background:"rgba(0,5,20,.5)",border:`1px solid rgba(${p.healthy?0:100},${p.healthy?200:50},${p.healthy?100:50},.15)`}}>
+                  <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
+                    <span style={{width:"6px",height:"6px",borderRadius:"50%",background:p.healthy?"#00ff88":"#ff4444",display:"inline-block"}}/>
+                    <span style={{fontSize:"10px",color:"#aaa"}}>{p.id}</span>
+                  </div>
+                  <div style={{display:"flex",gap:"8px",fontSize:"9px"}}>
+                    <span style={{color:"#446"}}>{(p.model||"").substring(0,20)}</span>
+                    <span style={{color:"#664"}}>key:{p.has_key?"✓":"✗"}</span>
+                    {p.score!=null&&<span style={{color:"#00aa66"}}>◈{(p.score||0).toFixed(2)}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>}
+          </div>}
+
+          {/* HIVE */}
+          {tab==="hive"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#FFD700",marginBottom:"10px"}}>🐝 SOVEREIGN HIVE — COLONY NETWORK</div>
+            {[
+              {name:"THEHIVE",role:"core",icon:"🏛",color:"#FFD700",desc:"Core Colony — Governance · Agents · Arena"},
+              {name:"aether",role:"revenue",icon:"⚙",color:"#E8B4FF",desc:"Revenue Colony — License · SOUL settlement"},
+              {name:"automatisch",role:"automation",icon:"🕸",color:"#00FFAA",desc:"Hive Bus — Cross-colony event routing"},
+              {name:"kimi-gateway",role:"llm",icon:"🧠",color:"#FF9944",desc:"LLM Gateway — Free model waterfall"},
+              {name:"free-programming-books",role:"knowledge",icon:"📚",color:"#88CCFF",desc:"Academy A — RAG corpus"},
+              {name:"freeCodeCamp",role:"curriculum",icon:"🎓",color:"#66BBFF",desc:"Academy B — Curriculum"},
+              {name:"NAR2",role:"unknown",icon:"🌍",color:"#607D8B",desc:"Private · Role TBD"},
+              {name:"4DBRAIN",role:"unknown",icon:"🌍",color:"#607D8B",desc:"Private · Role TBD"},
+            ].map((col,i)=>{
+              const health=window.HIVE.colonyHealth[col.name],st=health?.status||"unknown";
+              return<div key={i} style={{padding:"8px 10px",marginBottom:"5px",borderRadius:"8px",background:"rgba(0,10,25,.6)",border:`1px solid ${col.color}22`}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
+                    <span style={{fontSize:"14px"}}>{col.icon}</span>
+                    <span style={{fontWeight:"bold",color:col.color,fontSize:"10px"}}>{col.name}</span>
+                    <span style={{fontSize:"8px",color:"#446",padding:"1px 4px",border:"1px solid #223",borderRadius:"3px"}}>{col.role}</span>
+                  </div>
+                  <span style={{fontSize:"9px",color:st==="healthy"?"#00ff88":st==="unknown"?"#888":"#ff4444",fontWeight:"bold"}}>{st}</span>
+                </div>
+                <div style={{fontSize:"8px",color:"#446",marginTop:"3px"}}>{col.desc}</div>
+              </div>;
+            })}
+          </div>}
+
+          {/* GRAPH */}
+          {tab==="graph"&&<div style={{height:"calc(100vh - 120px)"}}>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#00ffaa",marginBottom:"8px"}}>🕸 COLONY NETWORK GRAPH</div>
+            <div style={{fontSize:"9px",color:"#246",marginBottom:"8px"}}>D3 force graph · drag nodes · live health from /debug/colony-ping</div>
+            <div ref={graphRef} style={{width:"100%",height:"calc(100% - 56px)",background:"rgba(0,5,15,.8)",borderRadius:"8px",border:"1px solid rgba(0,200,100,.15)",overflow:"hidden"}}/>
+          </div>}
+
+          {/* MEMORY */}
+          {tab==="memory"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#aa88ff",marginBottom:"8px"}}>🧠 OBSIDIAN MEMORY VAULT</div>
+            <MemoryPanel/>
+          </div>}
+
+          {/* DEBUGGER */}
+          {tab==="debug"&&<DebugPanel/>}
+
+        </div>
+      )}
+
+      {/* BOTTOM TAB BAR */}
+      <div id="hud-bottom" style={{pointerEvents:"auto"}}>
+        {TABS.map(t=>(
+          <button key={t.id} className={`tab-btn${tab===t.id?" active":""}`} onClick={()=>setTab(tab===t.id?"world":t.id)} style={{pointerEvents:"auto"}}>
+            {t.label}
+          </button>
+        ))}
+        <div style={{marginLeft:"auto",fontSize:"10px",color:"#224",fontFamily:"Courier New",paddingRight:"8px",whiteSpace:"nowrap"}}>
+          ◉ 7.83 Hz · {new Date().toLocaleTimeString()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<HUD/>);
 </script>
 </body>
 </html>

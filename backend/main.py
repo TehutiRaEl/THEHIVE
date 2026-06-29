@@ -18,6 +18,7 @@ from backend.api.colony import router as colony_router
 from backend.api.knowledge import router as knowledge_router
 from backend.api.ml import router as ml_router
 from backend.api.browser import router as browser_router
+from backend.api.debug import router as debug_router
 from backend.api.auth import verify_auth
 from backend.api.middleware import (
     RateLimitMiddleware,
@@ -92,6 +93,7 @@ app.include_router(colony_router)    # /colony/* — multi-repo hive standard
 app.include_router(knowledge_router) # /v11/knowledge/* — RAG over ingested repos
 app.include_router(ml_router)        # /v11/voice, /v11/image, /v11/ml/*
 app.include_router(browser_router)   # /v11/browser/*
+app.include_router(debug_router)     # /v11/debug/*
 
 # ─── Static Frontend ──────────────────────────────────────────
 try:
