@@ -1,8 +1,12 @@
-# 🍄 SOVEREIGN HIVE – The Mycelial Intelligence
+# 🍯 SOVEREIGN HIVE – Federated AI Intelligence
 
-**Version:** 1.1 (Phase 0‑2)  
-**Status:** Germinating → Mycelium  
-**Purpose:** To grow from a single spore into a self‑sustaining, self‑governing digital civilisation that generates real‑world value, tokenised assets, and constitutional governance.
+**Version:** 12.0 (Multi-Colony Federation)  
+**Status:** Active — 10+ colonies online  
+**Website:** [tehutirael.github.io/THEHIVE](https://tehutirael.github.io/THEHIVE/)  
+**Purpose:** A self-sustaining, self-governing federated AI civilization spanning 10+ GitHub colonies, unified by an immutable `soul.md` constitution, a SOUL token economy, and a completely free 8-provider LLM waterfall.
+
+[![Deploy GitHub Pages](https://github.com/TehutiRaEl/THEHIVE/actions/workflows/pages.yml/badge.svg)](https://tehutirael.github.io/THEHIVE/)
+[![CI](https://github.com/TehutiRaEl/THEHIVE/actions/workflows/ci.yml/badge.svg)](https://github.com/TehutiRaEl/THEHIVE/actions/workflows/ci.yml)
 
 ## 📖 What Is This?
 
