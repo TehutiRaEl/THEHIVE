@@ -39,3 +39,6 @@ Thumbs.db
 *.pem
 *.key
 node_modules/
+
+# Archived legacy files
+.archive/
