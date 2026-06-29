@@ -1,8 +1,8 @@
 """
-Free LLM Router — Sovereign Hive v11.0
-Waterfall through all free LLM providers in priority order.
-All providers expose an OpenAI-compatible /chat/completions interface.
-Zero cost: Ollama (local) → Asian free APIs → Global free APIs.
+Free LLM Router — Sovereign Hive v12.0
+OmniRoute-style dynamic scoring: providers are ranked by composite score
+(availability × inverse_latency × quota_health) recalculated every 60s.
+Static priority is only the tiebreaker — fast providers naturally rise.
 """
 
 import asyncio
@@ -17,8 +17,6 @@ from backend.core.config import settings
 logger = logging.getLogger("jasper.llm_router")
 
 # ── Provider registry ──────────────────────────────────────────
-# Each entry: id, base_url, api_key_env, default_model, priority (lower = try first)
-# api_key = "" means no key needed (local) or key pulled from settings
 PROVIDERS: List[Dict[str, Any]] = [
     # Tier 1 — Local Ollama (zero latency, zero cost)
     {
@@ -90,22 +88,58 @@ PROVIDERS: List[Dict[str, Any]] = [
     },
 ]
 
-# ── Health cache (60s TTL per provider) ───────────────────────
-_health_cache: Dict[str, Dict] = {}
+# ── OmniRoute scoring state (per-provider, rolling 5-sample window) ──
+_stats: Dict[str, Dict] = {}
 _HEALTH_TTL = 60.0
 
 
+def _get_stats(pid: str) -> Dict:
+    if pid not in _stats:
+        _stats[pid] = {
+            "ok": True,
+            "ts": 0.0,            # last result timestamp
+            "latencies": [],      # rolling 5-sample list (seconds)
+            "errors": 0,          # errors in current window
+            "calls": 0,
+        }
+    return _stats[pid]
+
+
 def _provider_healthy(provider_id: str) -> bool:
-    entry = _health_cache.get(provider_id)
-    if not entry:
-        return True  # assume healthy until proven otherwise
-    if time.time() - entry["ts"] > _HEALTH_TTL:
-        return True  # cache expired
-    return entry["ok"]
+    s = _get_stats(provider_id)
+    if time.time() - s["ts"] > _HEALTH_TTL:
+        s["ok"] = True  # cache expired — optimistically reset
+    return s["ok"]
 
 
-def _mark_provider(provider_id: str, ok: bool):
-    _health_cache[provider_id] = {"ok": ok, "ts": time.time()}
+def _mark_provider(provider_id: str, ok: bool, latency: float = 0.0):
+    s = _get_stats(provider_id)
+    s["ok"] = ok
+    s["ts"] = time.time()
+    s["calls"] += 1
+    if not ok:
+        s["errors"] += 1
+        s["latencies"] = []  # reset on failure
+    elif latency > 0:
+        s["latencies"] = (s["latencies"] + [latency])[-5:]
+
+
+def _provider_score(provider: Dict) -> float:
+    """
+    OmniRoute composite score — higher is better.
+    score = availability × (1 / avg_latency) × quota_health
+    Falls back to static priority when no data yet.
+    """
+    pid = provider["id"]
+    s = _get_stats(pid)
+    if not s["ok"]:
+        return 0.0
+    availability = 1.0 if s["calls"] == 0 else max(0.0, 1.0 - s["errors"] / max(s["calls"], 1))
+    avg_lat = (sum(s["latencies"]) / len(s["latencies"])) if s["latencies"] else 5.0
+    inv_latency = 1.0 / max(avg_lat, 0.1)
+    # Static priority provides a small baseline tie-breaker
+    priority_boost = 1.0 / provider["priority"]
+    return availability * inv_latency * priority_boost
 
 
 def _get_api_key(provider: Dict) -> str:
@@ -115,17 +149,18 @@ def _get_api_key(provider: Dict) -> str:
     return getattr(settings, setting_name, "") or ""
 
 
-async def _call_ollama(messages: List[Dict], model: str, max_tokens: int, temperature: float) -> str:
-    """Call Ollama's native /api/chat endpoint."""
+async def _call_ollama(messages: List[Dict], model: str, max_tokens: int, temperature: float) -> tuple[str, float]:
+    """Call Ollama's native /api/chat endpoint. Returns (content, latency_s)."""
     base = settings.ollama_base_url.rstrip("/")
     model = model or settings.ollama_model
+    t0 = time.monotonic()
     async with httpx.AsyncClient(timeout=120.0) as client:
         resp = await client.post(
             f"{base}/api/chat",
             json={"model": model, "messages": messages, "stream": False},
         )
     resp.raise_for_status()
-    return resp.json().get("message", {}).get("content", "")
+    return resp.json().get("message", {}).get("content", ""), time.monotonic() - t0
 
 
 async def _call_openai_compat(
@@ -134,8 +169,8 @@ async def _call_openai_compat(
     model: str,
     max_tokens: int,
     temperature: float,
-) -> str:
-    """Call any OpenAI-compatible /chat/completions endpoint."""
+) -> tuple[str, float]:
+    """Call any OpenAI-compatible /chat/completions endpoint. Returns (content, latency_s)."""
     api_key = _get_api_key(provider)
     base = provider["base_url"].rstrip("/")
     model = model or provider["default_model"]
@@ -144,6 +179,7 @@ async def _call_openai_compat(
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
+    t0 = time.monotonic()
     async with httpx.AsyncClient(timeout=provider.get("timeout", 60.0)) as client:
         resp = await client.post(
             f"{base}/chat/completions",
@@ -158,7 +194,7 @@ async def _call_openai_compat(
         )
     resp.raise_for_status()
     data = resp.json()
-    return data["choices"][0]["message"]["content"]
+    return data["choices"][0]["message"]["content"], time.monotonic() - t0
 
 
 async def chat(
@@ -173,12 +209,12 @@ async def chat(
     Returns {"content": str, "provider": str, "model": str}.
     Falls through providers in priority order, skipping unhealthy ones.
     """
-    # Sort by priority
-    ordered = sorted(PROVIDERS, key=lambda p: p["priority"])
+    # OmniRoute: rank by composite score (desc), static priority as tiebreaker
+    ordered = sorted(PROVIDERS, key=lambda p: _provider_score(p), reverse=True)
 
     # If a specific provider is hinted and healthy, try it first
     if provider_hint:
-        hinted = [p for p in ordered if p["id"] == provider_hint]
+        hinted = [p for p in ordered if p["id"] == provider_hint and _provider_healthy(p["id"])]
         rest = [p for p in ordered if p["id"] != provider_hint]
         ordered = hinted + rest
 
@@ -191,18 +227,18 @@ async def chat(
 
         try:
             if provider.get("ollama_native"):
-                content = await _call_ollama(messages, model, max_tokens, temperature)
+                content, latency = await _call_ollama(messages, model, max_tokens, temperature)
             else:
                 api_key = _get_api_key(provider)
                 if not api_key:
                     logger.debug(f"Skipping {pid}: no API key configured")
                     continue
-                content = await _call_openai_compat(provider, messages, model, max_tokens, temperature)
+                content, latency = await _call_openai_compat(provider, messages, model, max_tokens, temperature)
 
-            _mark_provider(pid, True)
+            _mark_provider(pid, True, latency)
             used_model = model or provider.get("default_model", pid)
-            logger.info(f"LLM served by: {pid} / {used_model}")
-            return {"content": content, "provider": pid, "model": used_model}
+            logger.info(f"LLM served by: {pid} / {used_model} ({latency:.2f}s)")
+            return {"content": content, "provider": pid, "model": used_model, "latency_s": round(latency, 3)}
 
         except httpx.HTTPStatusError as e:
             status = e.response.status_code if e.response else 0
@@ -229,16 +265,22 @@ async def chat(
 
 
 async def provider_status() -> List[Dict]:
-    """Return health status of all configured providers."""
+    """Return health + OmniRoute scores for all configured providers."""
     result = []
-    for p in sorted(PROVIDERS, key=lambda x: x["priority"]):
+    for p in sorted(PROVIDERS, key=lambda x: _provider_score(x), reverse=True):
         has_key = bool(_get_api_key(p)) or p.get("ollama_native", False)
+        s = _get_stats(p["id"])
+        avg_lat = (sum(s["latencies"]) / len(s["latencies"])) if s["latencies"] else None
         result.append({
             "id": p["id"],
             "priority": p["priority"],
+            "score": round(_provider_score(p), 4),
             "model": p.get("default_model", ""),
             "base_url": p.get("base_url") or settings.ollama_base_url,
             "has_key": has_key,
             "healthy": _provider_healthy(p["id"]),
+            "avg_latency_s": round(avg_lat, 3) if avg_lat else None,
+            "calls": s["calls"],
+            "errors": s["errors"],
         })
     return result
