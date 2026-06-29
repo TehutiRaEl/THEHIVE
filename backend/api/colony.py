@@ -118,6 +118,7 @@ async def receive_event(event: ColonyEvent):
     event.timestamp = event.timestamp or datetime.now(timezone.utc).isoformat()
 
     if event.event_type == "constitution_update":
+        # Re-hash and validate — constitution.py reads soul.md from disk
         new_hash = constitution.get_hash()
         return {
             "received": True,
@@ -127,6 +128,7 @@ async def receive_event(event: ColonyEvent):
         }
 
     if event.event_type == "agent_migrated":
+        # Accept a migrating agent genome (full spawn handled by genome module)
         payload = event.payload
         agent_name = payload.get("agent_name", "unknown")
         return {

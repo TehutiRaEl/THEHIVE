@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     staking_lock_days: int = int(os.getenv("STAKING_LOCK_DAYS", "30"))
     staking_min_amount: float = float(os.getenv("STAKING_MIN_AMOUNT", "1.0"))
     doubling_threshold: float = float(os.getenv("DOUBLING_THRESHOLD", "0.707"))
-    decay_rate: float = float(os.getenv("DECAY_RATE", "0.95"))
+    decay_rate: float = float(os.getenv("DECAY_RATE", "0.95"))  # v11.0: prevents inflation
     
     # ─── LLM ────────────────────────────────────────────────────
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     colony_name: str = os.getenv("COLONY_NAME", "THEHIVE")
     colony_role: str = os.getenv("COLONY_ROLE", "core")
     meta_repo_url: str = os.getenv("META_REPO_URL", "https://github.com/TehutiRaEl/sovereign-hive-meta")
+    # Pipe-separated: "NAME|role|base_url" per colony
     known_colonies: List[str] = os.getenv(
         "KNOWN_COLONIES",
         "THEHIVE|core|http://localhost:8080|"
@@ -60,10 +61,10 @@ class Settings(BaseSettings):
         "academy|knowledge|https://github.com/TehutiRaEl/free-programming-books",
     ).split(",")
 
-    # ─── LLM Gateway ─────────────────────────────────────────────
+    # ─── LLM Gateway (Kimi-K2 colony node) ─────────────────────
     llm_gateway_url: str = os.getenv("LLM_GATEWAY_URL", "http://localhost:8181")
 
-    # ─── Free LLM API Keys (all optional) ──────────────────────
+    # ─── Free LLM API Keys (all optional — router skips missing keys) ──
     moonshot_api_key: str = os.getenv("MOONSHOT_API_KEY", "")
     siliconflow_api_key: str = os.getenv("SILICONFLOW_API_KEY", "")
     deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")

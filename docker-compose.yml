@@ -1,6 +1,71 @@
 version: '3.8'
 
 services:
+  # ── Postgres (replaces SQLite for persistent colony state) ──
+  postgres:
+    image: postgres:16-alpine
+    container_name: hive-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-hivemind}
+      - POSTGRES_USER=${POSTGRES_USER:-hive}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-hive_secret_change_me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - hive_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hive}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (session cache, rate limiting, health score cache) ──
+  redis:
+    image: redis:7-alpine
+    container_name: hive-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - hive_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── n8n — Complex workflow engine (complements automatisch) ──
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: hive-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=UTC
+      - DB_TYPE=sqlite
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-change-me-32-char-key-for-n8n-here}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - hive_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   # ── LLM Provider ──────────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
@@ -172,6 +237,9 @@ volumes:
   ipfs_data:
   jasper_data:
   automatisch_data:
+  postgres_data:
+  redis_data:
+  n8n_data:
 
 networks:
   hive_network:

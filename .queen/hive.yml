@@ -55,7 +55,7 @@ colonies:
     health_path: ""
     branch: main
     guilds: [academy]
-    description: "Programming knowledge corpus — RAG source for agent training"
+    description: "Programming knowledge corpus — RAG source for agent training (390K+ star resource)"
 
   - name: academy-camp
     role: curriculum

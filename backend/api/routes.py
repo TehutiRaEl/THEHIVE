@@ -30,7 +30,7 @@ from backend.governance.patterns import patterns
 from backend.simulator.twin import simulator
 from backend.api.auth import verify_auth, create_access_token
 
-# ─── Pydantic Models ───────────────────────────────────────────────
+# ─── Pydantic Models ──────────────────────────────────────────
 class LLMChatRequest(BaseModel):
     prompt: str
     system: str = ""
@@ -102,10 +102,10 @@ class SimulateRequest(BaseModel):
     base_rho: float = 0.7
     quorum: float = 0.6
 
-# ─── Router ─────────────────────────────────────────────────────────────
+# ─── Router ──────────────────────────────────────────────────
 router = APIRouter(prefix="/v11")
 
-# ─── Health & Board ────────────────────────────────────────────────────
+# ─── Health & Board ──────────────────────────────────────────
 @router.get("/health")
 async def health():
     return {"status": "healthy", "version": "11.0", "phase": settings.hive_phase}
@@ -149,7 +149,7 @@ async def board(auth: Dict = Depends(verify_auth)):
         }
     }
 
-# ─── Constitution ───────────────────────────────────────────────────────────────
+# ─── Constitution ──────────────────────────────────────────────
 @router.post("/constitution/check")
 async def check_constitution(action_type: str, actor: str, params: Optional[str] = "{}", auth: Dict = Depends(verify_auth)):
     try:
@@ -201,7 +201,7 @@ async def get_constitution_history(limit: int = 20, auth: Dict = Depends(verify_
     conn.close()
     return {"history": [{"version": r[0], "active": bool(r[2]), "approved_at": r[3]} for r in rows]}
 
-# ─── Governance Patterns (v11.0) ───────────────────────────────────────────────
+# ─── Governance Patterns (v11.0) ─────────────────────────────
 @router.get("/governance/patterns")
 async def get_patterns(auth: Dict = Depends(verify_auth)):
     return {"patterns": patterns.get_all()}
@@ -217,7 +217,7 @@ async def get_pattern(pattern_id: str, auth: Dict = Depends(verify_auth)):
         raise HTTPException(404, f"Pattern {pattern_id} not found")
     return pattern
 
-# ─── Simulator (v11.0) ─────────────────────────────────────────────────────────────
+# ─── Simulator (v11.0) ────────────────────────────────────────
 @router.post("/simulate")
 async def run_simulation(req: SimulateRequest, auth: Dict = Depends(verify_auth)):
     return simulator.monte_carlo_proposal(req.n_agents, req.trials, req.base_rho, req.quorum)
@@ -230,7 +230,7 @@ async def simulate_colony(initial_wealth: float = 1000.0, growth_rate: float = 0
 async def simulate_hyperparameters(param_grid: Dict, objective: str = "minimize_loss", n_trials: int = 50, auth: Dict = Depends(verify_auth)):
     return simulator.hyperparameter_optimization(param_grid, objective, n_trials)
 
-# ─── SSE Feed (v11.0) ──────────────────────────────────────────────────────────────
+# ─── SSE Feed (v11.0) ─────────────────────────────────────────
 @router.get("/feed")
 async def governance_feed(auth: Dict = Depends(verify_auth)):
     async def generate():
@@ -248,7 +248,7 @@ async def governance_feed(auth: Dict = Depends(verify_auth)):
             await asyncio.sleep(1)
     return StreamingResponse(generate(), media_type="text/event-stream")
 
-# ─── Frequency Guild ───────────────────────────────────────────────────────────
+# ─── Frequency Guild ──────────────────────────────────────────
 @router.get("/frequency/letter/{char}")
 async def freq_letter(char: str, auth: Dict = Depends(verify_auth)):
     return frequency_guild.letter(char)
@@ -274,7 +274,7 @@ async def freq_spectrum(auth: Dict = Depends(verify_auth)):
 async def freq_analyze(text: str, auth: Dict = Depends(verify_auth)):
     return frequency_guild.word(text)
 
-# ─── Arena ──────────────────────────────────────────────────────────────────────
+# ─── Arena ────────────────────────────────────────────────────
 @router.post("/arena/challenge")
 async def arena_challenge(req: ArenaChallengeCreate, auth: Dict = Depends(verify_auth)):
     return arena.create(req.challenger, req.challenged, req.proposition)
@@ -321,7 +321,7 @@ async def arena_stats(auth: Dict = Depends(verify_auth)):
     conn.close()
     return {"total_battles": total, "top_gladiators": [{"agent": r[0], "wins": r[1]} for r in top]}
 
-# ─── Wallet ────────────────────────────────────────────────────────────────────────
+# ─── Wallet ────────────────────────────────────────────────────
 @router.post("/wallet/create/{agent_name}")
 async def create_wallet(agent_name: str, auth: Dict = Depends(verify_auth)):
     return wallet_manager.create_wallet(agent_name)
@@ -358,7 +358,7 @@ async def transfer_soul(req: SoulTransferRequest, auth: Dict = Depends(verify_au
         raise HTTPException(400, result["error"])
     return result
 
-# ─── Staking (v11.0) ────────────────────────────────────────────────────────────────
+# ─── Staking (v11.0) ──────────────────────────────────────────
 @router.post("/staking/stake")
 async def stake_soul(req: StakeRequest, auth: Dict = Depends(verify_auth)):
     return await staking_manager.stake(req.agent_name, req.amount)
@@ -384,7 +384,7 @@ async def staking_leaderboard(limit: int = 10, auth: Dict = Depends(verify_auth)
 async def get_staking_rate(auth: Dict = Depends(verify_auth)):
     return {"apy": settings.staking_apy, "lock_days": settings.staking_lock_days, "min_amount": settings.staking_min_amount}
 
-# ─── Utility ────────────────────────────────────────────────────────────────────────
+# ─── Utility ──────────────────────────────────────────────────
 @router.post("/utility/credit/{agent_name}/{amount}")
 async def credit_utility(agent_name: str, amount: float, reason: str = "task", auth: Dict = Depends(verify_auth)):
     return utility_economy.credit_utility(agent_name, amount, reason)
@@ -402,7 +402,7 @@ async def refresh_utility(agent_name: str, auth: Dict = Depends(verify_auth)):
     m = utility_economy.get_multiplier(agent_name)
     return {"agent": agent_name, "multiplier": m}
 
-# ─── Genome ─────────────────────────────────────────────────────────────────────────
+# ─── Genome ────────────────────────────────────────────────────
 @router.get("/genome/compatibility")
 async def genome_compat(agent1: str, agent2: str, auth: Dict = Depends(verify_auth)):
     score = genome_reproduction.compatibility(agent1, agent2)
@@ -443,7 +443,7 @@ async def get_genealogy(agent_name: str, auth: Dict = Depends(verify_auth)):
 async def get_traits(auth: Dict = Depends(verify_auth)):
     return {"traits": genome_reproduction.TRAIT_COLS}
 
-# ─── Tasks ─────────────────────────────────────────────────────────────────────────
+# ─── Tasks ────────────────────────────────────────────────────
 @router.post("/tasks")
 async def create_task(req: TaskCreate, auth: Dict = Depends(verify_auth)):
     conn = get_db()
@@ -517,7 +517,7 @@ async def delete_task(task_id: int, auth: Dict = Depends(verify_auth)):
     conn.close()
     return {"status": "deleted", "task_id": task_id}
 
-# ─── ELO Grading ─────────────────────────────────────────────────────────────────
+# ─── ELO Grading ─────────────────────────────────────────────
 @router.post("/grading/submit")
 async def submit_grade(req: GradeRequest, auth: Dict = Depends(verify_auth)):
     conn = get_db()
@@ -554,7 +554,7 @@ async def get_agent_elo(agent_name: str, auth: Dict = Depends(verify_auth)):
         return {"agent": agent_name, "rating": 1200, "matches": 0}
     return {"agent": agent_name, "rating": row[0], "matches": row[1]}
 
-# ─── HD Vectors ───────────────────────────────────────────────────────────────────
+# ─── HD Vectors ──────────────────────────────────────────────
 @router.get("/hd/lexicon")
 async def hd_lexicon(auth: Dict = Depends(verify_auth)):
     return hdc.lexicon_summary()
@@ -585,7 +585,7 @@ async def hd_bundle(concepts: List[str], auth: Dict = Depends(verify_auth)):
     closest = hdc.closest(v, top_k=3)
     return {"concepts": concepts, "closest": [{"concept": c, "sim": round(s, 4)} for c, s in closest]}
 
-# ─── HITL ────────────────────────────────────────────────────────────────────────────
+# ─── HITL ────────────────────────────────────────────────────
 @router.post("/hitl/request")
 async def hitl_request(action_type: str, params: Dict, auth: Dict = Depends(verify_auth)):
     request_id = await hitl.request_approval(action_type, params, auth["user"])
@@ -608,7 +608,7 @@ async def hitl_pending(auth: Dict = Depends(verify_auth)):
 async def hitl_requests(status: Optional[str] = None, auth: Dict = Depends(verify_auth)):
     return {"requests": hitl.get_requests(status)}
 
-# ─── UI: OpenAI-compatible chat proxy (routes to LLM waterfall) ──────
+# ─── UI: OpenAI-compatible chat proxy (routes to Ollama) ──────
 class ChatMessage(BaseModel):
     role: str
     content: str
@@ -663,7 +663,7 @@ async def llm_providers():
     from backend.core.llm_router import provider_status
     return {"providers": await provider_status()}
 
-# ─── UI: web search proxy (DuckDuckGo HTML scrape) ─────────────────
+# ─── UI: web search proxy (DuckDuckGo HTML scrape) ─────────────
 @router.get("/search")
 async def web_search(q: str, n: int = 6):
     """Lightweight web search via DuckDuckGo HTML — returns titles, URLs, snippets."""
@@ -690,7 +690,37 @@ async def web_search(q: str, n: int = 6):
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Search failed: {e}")
 
-# ─── Tier 3 Status ──────────────────────────────────────────────────────────
+# ─── ReAct Agent Engine ────────────────────────────────────────
+class AgentRunRequest(BaseModel):
+    task: str
+    agent_name: str = "Jasper"
+    role: str = "general"
+    max_steps: int = 8
+    provider_hint: str = ""
+
+@router.post("/agent/run")
+async def agent_run(req: AgentRunRequest):
+    """
+    Run a task through the ReAct agent loop (Reason + Act cycles).
+    Agent has access to: web_search, remember, recall, ask_llm tools.
+    """
+    from backend.core.agent_engine import create_agent
+    from backend.core.constitution import constitution
+    agent = create_agent(
+        name=req.agent_name,
+        role=req.role,
+        soul_hash=constitution.get_hash()[:12],
+    )
+    agent.max_steps = req.max_steps
+    agent.llm_provider = req.provider_hint
+    try:
+        result = await agent.run(req.task)
+        return {"agent": req.agent_name, "task": req.task, **result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─── Tier 3 Status ──────────────────────────────────────────
 @router.get("/tier3/status")
 async def tier3_status(auth: Dict = Depends(verify_auth)):
     return {
@@ -703,8 +733,7 @@ async def tier3_status(auth: Dict = Depends(verify_auth)):
         "basis": "Sovereign Hive v11.0"
     }
 
-# ─── WebSocket ───────────────────────────────────────────────────────────────────
-
+# ─── WebSocket ─────────────────────────────────────────────────
 class WebSocketManager:
     def __init__(self):
         self.active: List[WebSocket] = []
