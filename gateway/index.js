@@ -83,19 +83,37 @@ const PROVIDERS = [
   },
 ];
 
-// ── Health cache (60s TTL) ─────────────────────────────────────
-const healthCache = new Map(); // id → {ok, ts}
+// ── OmniRoute scoring state ─────────────────────────────────────
+// score = availability × (1/avg_latency) × priority_boost
+const _stats = new Map(); // id → {ok, ts, latencies[], calls, errors}
 const HEALTH_TTL = 60_000;
 
-function isHealthy(id) {
-  const entry = healthCache.get(id);
-  if (!entry) return true;
-  if (Date.now() - entry.ts > HEALTH_TTL) return true;
-  return entry.ok;
+function getStats(id) {
+  if (!_stats.has(id)) _stats.set(id, { ok: true, ts: 0, latencies: [], calls: 0, errors: 0 });
+  return _stats.get(id);
 }
 
-function markProvider(id, ok) {
-  healthCache.set(id, { ok, ts: Date.now() });
+function isHealthy(id) {
+  const s = getStats(id);
+  if (Date.now() - s.ts > HEALTH_TTL) { s.ok = true; } // optimistic reset after TTL
+  return s.ok;
+}
+
+function markProvider(id, ok, latencyMs = 0) {
+  const s = getStats(id);
+  s.ok = ok; s.ts = Date.now(); s.calls++;
+  if (!ok) { s.errors++; s.latencies = []; }
+  else if (latencyMs > 0) { s.latencies = [...s.latencies.slice(-4), latencyMs]; }
+}
+
+function providerScore(provider) {
+  const s = getStats(provider.id);
+  if (!s.ok) return 0;
+  const availability = s.calls === 0 ? 1 : Math.max(0, 1 - s.errors / Math.max(s.calls, 1));
+  const avgLat = s.latencies.length ? s.latencies.reduce((a,b)=>a+b,0)/s.latencies.length : 5000;
+  const invLat = 1000 / Math.max(avgLat, 10);  // normalised to seconds
+  const priorityBoost = 1 / provider.priority;
+  return availability * invLat * priorityBoost;
 }
 
 // ── HTTP helper ────────────────────────────────────────────────
@@ -120,6 +138,7 @@ function httpRequest(url, options, body, timeoutMs) {
 // ── Call a single provider ─────────────────────────────────────
 async function callProvider(provider, messages, model, maxTokens, temperature) {
   const useModel = model || provider.model;
+  const t0 = Date.now();
 
   if (provider.ollamaNative) {
     const body = JSON.stringify({ model: useModel, messages, stream: false });
@@ -132,7 +151,7 @@ async function callProvider(provider, messages, model, maxTokens, temperature) {
     );
     if (res.status !== 200) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
     const data = JSON.parse(res.body);
-    return data.message?.content || "";
+    return { content: data.message?.content || "", latencyMs: Date.now() - t0 };
   }
 
   // OpenAI-compatible
@@ -154,18 +173,19 @@ async function callProvider(provider, messages, model, maxTokens, temperature) {
   );
   if (res.status !== 200) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
   const data = JSON.parse(res.body);
-  return data.choices?.[0]?.message?.content || "";
+  return { content: data.choices?.[0]?.message?.content || "", latencyMs: Date.now() - t0 };
 }
 
-// ── Waterfall router ───────────────────────────────────────────
+// ── OmniRoute router ───────────────────────────────────────────
 async function routeChat(messages, model, maxTokens, temperature) {
-  const ordered = [...PROVIDERS].sort((a, b) => a.priority - b.priority);
+  // Sort by composite score (desc) — fast + healthy providers rise naturally
+  const ordered = [...PROVIDERS].sort((a, b) => providerScore(b) - providerScore(a));
   for (const provider of ordered) {
     if (!isHealthy(provider.id)) continue;
     try {
-      const content = await callProvider(provider, messages, model, maxTokens, temperature);
-      markProvider(provider.id, true);
-      return { content, provider: provider.id, model: model || provider.model };
+      const { content, latencyMs } = await callProvider(provider, messages, model, maxTokens, temperature);
+      markProvider(provider.id, true, latencyMs);
+      return { content, provider: provider.id, model: model || provider.model, latency_ms: latencyMs };
     } catch (err) {
       if (err.message === "no_key") continue;
       const status = err.status || 0;
@@ -197,17 +217,27 @@ async function handleRequest(req, res) {
 
   if (req.method === "GET" && req.url === "/info") {
     res.writeHead(200, cors);
+    const ranked = [...PROVIDERS].sort((a,b) => providerScore(b) - providerScore(a));
     return res.end(JSON.stringify({
       name: "kimi-gateway",
       role: "llm",
-      version: "1.0",
-      providers: PROVIDERS.map((p) => ({
-        id: p.id,
-        priority: p.priority,
-        model: p.model,
-        hasKey: p.ollamaNative ? true : Boolean(p.apiKey),
-        healthy: isHealthy(p.id),
-      })),
+      version: "12.0",
+      routing: "omni-route-dynamic",
+      providers: ranked.map((p) => {
+        const s = getStats(p.id);
+        const avgLat = s.latencies.length ? Math.round(s.latencies.reduce((a,b)=>a+b,0)/s.latencies.length) : null;
+        return {
+          id: p.id,
+          priority: p.priority,
+          score: Math.round(providerScore(p) * 10000) / 10000,
+          model: p.model,
+          hasKey: p.ollamaNative ? true : Boolean(p.apiKey),
+          healthy: isHealthy(p.id),
+          avg_latency_ms: avgLat,
+          calls: s.calls,
+          errors: s.errors,
+        };
+      }),
     }));
   }
 

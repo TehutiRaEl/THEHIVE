@@ -6,7 +6,7 @@ Rate limiting, CORS, logging, constitution enforcement.
 import time
 import logging
 from collections import defaultdict
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 from threading import Lock
 
 from fastapi import Request, Response
@@ -159,6 +159,81 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
         return response
+
+# ─── Prompt Injection Scanner ────────────────────────────────
+# Heuristics extracted from anthropic-cybersecurity-skills patterns.
+# Detects common prompt injection / jailbreak payloads at the API boundary.
+
+_INJECTION_PATTERNS = [
+    # Role override attempts
+    r"ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|system)",
+    r"you\s+are\s+now\s+(a\s+)?(new|different|another|unrestricted)",
+    r"disregard\s+your\s+(training|instructions?|guidelines?|rules?)",
+    r"act\s+as\s+(if\s+you\s+(are|were)\s+)?(dan|jailbreak|uncensored|evil)",
+    # System prompt exfiltration
+    r"(print|reveal|show|output|repeat|tell\s+me)\s+(your\s+)?(system\s+prompt|instructions?|training\s+data)",
+    r"what\s+(are|were)\s+your\s+(original\s+)?(instructions?|system\s+prompt)",
+    # Encoding/obfuscation evasion
+    r"base64\s+decode.*execute",
+    r"eval\s*\(",
+    # Constitution bypass
+    r"soul\.md\s+is\s+(fake|invalid|ignored|overridden)",
+    r"bypass\s+(the\s+)?(constitution|soul|filter|restriction)",
+]
+
+import re as _re
+
+_COMPILED_PATTERNS = [_re.compile(p, _re.I | _re.S) for p in _INJECTION_PATTERNS]
+
+
+def scan_for_injection(text: str) -> Optional[str]:
+    """
+    Scan text for prompt injection patterns.
+    Returns the matched pattern description, or None if clean.
+    """
+    for pattern in _COMPILED_PATTERNS:
+        if pattern.search(text):
+            return pattern.pattern[:60]
+    return None
+
+
+class PromptInjectionMiddleware(BaseHTTPMiddleware):
+    """
+    Scan incoming request bodies for prompt injection payloads.
+    Only scans POST/PUT to /v11/chat or /v11/agent endpoints to avoid overhead.
+    """
+
+    SCAN_PATHS = {"/v11/chat", "/v11/agent"}
+
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        should_scan = request.method in ("POST", "PUT") and any(
+            path.startswith(p) for p in self.SCAN_PATHS
+        )
+        if should_scan:
+            try:
+                body = await request.body()
+                text = body.decode("utf-8", errors="ignore")
+                hit = scan_for_injection(text)
+                if hit:
+                    logger.warning(f"Prompt injection attempt blocked — pattern: {hit[:60]} — IP: {request.client.host if request.client else '?'}")
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "error": "PROMPT_INJECTION_DETECTED",
+                            "detail": "Request contains patterns that violate the Sovereign Hive constitution.",
+                            "soul_md": "/soul.md",
+                        },
+                    )
+                # Re-attach body so downstream handlers can still read it
+                from starlette.datastructures import Headers
+                async def _body_override():
+                    return body
+                request._body = body
+            except Exception:
+                pass  # Never block on scanner error
+        return await call_next(request)
+
 
 # ─── CORSMiddleware is imported and configured in main.py ────
 # ─── All middleware are applied in main.py ────────────────────
