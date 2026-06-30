@@ -11,7 +11,7 @@ class HealthResponse(BaseModel):
     status: str
     # /v11/health fields
     version: Optional[str] = None
-    phase: Optional[str] = None
+    phase: Optional[int] = None
     # /colony/health fields
     colony: Optional[str] = None
     role: Optional[str] = None
@@ -27,7 +27,7 @@ class ColonyInfoResponse(BaseModel):
     version: str
     soul_md_hash: Optional[str] = None
     guilds: List[str] = []
-    phase: Optional[str] = None
+    phase: Optional[int] = None
     meta_repo: Optional[str] = None
     api_base: Optional[str] = None
     status: Optional[str] = None

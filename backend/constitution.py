@@ -103,33 +103,27 @@ class ConstitutionChecker:
             content = f.read()
 
         # Parse Fixed Laws
-        fixed_section = re.search(r"## Fixed Laws.*?
-(.*?)(?=## |$)", content, re.DOTALL)
+        fixed_section = re.search(r"## Fixed Laws.*?\n(.*?)(?=## |$)", content, re.DOTALL)
         if fixed_section:
-            for line in fixed_section.group(1).split("
-"):
+            for line in fixed_section.group(1).split("\n"):
                 match = re.match(r"(\d+)\.\s*(.+)", line.strip())
                 if match:
                     num, text = match.groups()
                     rules[f"fixed_law_{num}"] = {"text": text, "tier": "fixed"}
 
         # Parse Cardinal Laws
-        cardinal_section = re.search(r"## Cardinal Laws.*?
-(.*?)(?=## |$)", content, re.DOTALL)
+        cardinal_section = re.search(r"## Cardinal Laws.*?\n(.*?)(?=## |$)", content, re.DOTALL)
         if cardinal_section:
-            for line in cardinal_section.group(1).split("
-"):
+            for line in cardinal_section.group(1).split("\n"):
                 match = re.match(r"(\d+)\.\s*(.+)", line.strip())
                 if match:
                     num, text = match.groups()
                     rules[f"cardinal_law_{num}"] = {"text": text, "tier": "cardinal"}
 
         # Parse Mutable Laws
-        mutable_section = re.search(r"## Mutable Laws.*?
-(.*?)(?=## |$)", content, re.DOTALL)
+        mutable_section = re.search(r"## Mutable Laws.*?\n(.*?)(?=## |$)", content, re.DOTALL)
         if mutable_section:
-            for line in mutable_section.group(1).split("
-"):
+            for line in mutable_section.group(1).split("\n"):
                 match = re.match(r"(\d+)\.\s*(.+)", line.strip())
                 if match:
                     num, text = match.groups()

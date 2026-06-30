@@ -3,7 +3,7 @@ Authentication Module — Sovereign Hive v11.0
 JWT + API key authentication for all endpoints.
 """
 
-import jwt
+from jose import jwt
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
