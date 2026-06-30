@@ -42,13 +42,51 @@ class HiveProtocol:
     Lightweight async event bus for intra-hive coordination.
     Nanuet and Kai El share work/outputs via events — not internal state.
     All events are persisted to SQLite for audit compliance (F-004).
+    Uses a 50ms batch window + executemany() to reduce SQLite write pressure.
     """
 
     def __init__(self):
         self._queues: Dict[str, List[asyncio.Queue]] = {}
+        self._batch_queue: asyncio.Queue = asyncio.Queue(maxsize=1000)
+        self._batch_task: Optional[asyncio.Task] = None
+
+    async def start_batch_worker(self):
+        """Start the background batch-flush coroutine. Call once from app lifespan."""
+        if self._batch_task is None or self._batch_task.done():
+            self._batch_task = asyncio.create_task(self._batch_flush())
+
+    async def _batch_flush(self):
+        """Collect events for 50ms windows then flush with executemany()."""
+        while True:
+            batch = []
+            try:
+                event = await asyncio.wait_for(self._batch_queue.get(), timeout=0.05)
+                batch.append(event)
+                while True:
+                    try:
+                        batch.append(self._batch_queue.get_nowait())
+                    except asyncio.QueueEmpty:
+                        break
+            except asyncio.TimeoutError:
+                await asyncio.sleep(0)
+                continue
+            except asyncio.CancelledError:
+                break
+
+            if batch:
+                try:
+                    conn = get_db()
+                    conn.executemany(
+                        """INSERT INTO pubsub_messages (channel_id, payload, created_at)
+                           VALUES (?, ?, ?)""",
+                        [(e.event_type, json.dumps(e.payload), e.created_at) for e in batch],
+                    )
+                    conn.commit()
+                except Exception:
+                    pass
 
     async def publish(self, event_type: str, payload: Dict[str, Any]) -> str:
-        """Publish an event. Persists to DB and delivers to in-memory subscribers."""
+        """Publish an event. Enqueues for batch DB write; delivers to in-memory subscribers."""
         event_id = str(uuid.uuid4())
         event = HiveEvent(
             id=event_id,
@@ -57,8 +95,11 @@ class HiveProtocol:
             created_at=datetime.now().isoformat(),
         )
 
-        # Persist to SQLite audit log
-        self._persist(event)
+        # Enqueue for batch persist; fall back to direct persist if queue is full
+        try:
+            self._batch_queue.put_nowait(event)
+        except asyncio.QueueFull:
+            self._persist(event)
 
         # Deliver to in-memory subscribers
         for queue in self._queues.get(event_type, []):
