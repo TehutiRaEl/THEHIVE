@@ -333,7 +333,7 @@ async function api(path, opts={}) {
 }
 
 // ── Colony Graph renderer ────────────────────────────────────
-function renderColonyGraph(data, el) {
+function renderColonyGraph(data, el, onNodeClick) {
   if(!el||!data)return;
   el.innerHTML='';
   const W=el.offsetWidth||300,H=el.offsetHeight||360;
@@ -341,12 +341,26 @@ function renderColonyGraph(data, el) {
   const roleColor={core:'#FFD700',revenue:'#E8B4FF',automation:'#00FFAA',llm:'#FF9944',knowledge:'#88CCFF',curriculum:'#66BBFF',unknown:'#607D8B',memory:'#AA88FF',api:'#FF6644'};
   const sim=d3.forceSimulation(data.nodes).force('link',d3.forceLink(data.links).id(d=>d.id).distance(80)).force('charge',d3.forceManyBody().strength(-200)).force('center',d3.forceCenter(W/2,H/2)).force('collision',d3.forceCollide().radius(d=>(d.size||10)+8));
   const link=svg.append('g').selectAll('line').data(data.links).join('line').attr('stroke',d=>d.active?'rgba(0,255,150,0.5)':'rgba(0,200,255,0.2)').attr('stroke-width',d=>d.active?2:1);
-  const node=svg.append('g').selectAll('g').data(data.nodes).join('g').attr('class','colony-node').call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;}).on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+  const node=svg.append('g').selectAll('g').data(data.nodes).join('g').attr('class','colony-node').style('cursor',onNodeClick?'pointer':'default').call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;}).on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+  if(onNodeClick) node.on('click',(e,d)=>{e.stopPropagation();onNodeClick(d);});
   node.append('circle').attr('r',d=>d.size||10).attr('fill',d=>roleColor[d.role]||'#607D8B').attr('fill-opacity',.2).attr('stroke',d=>roleColor[d.role]||'#607D8B').attr('stroke-width',2);
   node.append('circle').attr('r',d=>(d.size||10)*.4).attr('fill',d=>roleColor[d.role]||'#607D8B').attr('fill-opacity',.8);
   node.append('text').attr('dy','1.8em').attr('text-anchor','middle').attr('fill',d=>roleColor[d.role]||'#aaa').attr('font-size','8px').attr('font-family','Courier New').text(d=>d.id);
   sim.on('tick',()=>{link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);node.attr('transform',d=>`translate(${Math.max(15,Math.min(W-15,d.x))},${Math.max(15,Math.min(H-15,d.y))})`);});
 }
+
+// Colony id -> base URL + console path for iframe zoom-in panel
+const COLONY_BASE_URLS = {
+  "THEHIVE":     {url:"http://localhost:8080", path:"/docs/index.html"},
+  "aether":      {url:"http://localhost:3000", path:"/colony-console"},
+  "automatisch": {url:"http://localhost:3001", path:"/"},
+  "kimi-gateway":{url:"http://localhost:8002", path:"/colony-console.html"},
+  "Kimi-K2":     {url:"http://localhost:8002", path:"/colony-console.html"},
+  "NAR2":        {url:"http://localhost:8000", path:"/colony-console.html"},
+  "4DBRAIN":     {url:"http://localhost:8001", path:"/colony-console.html"},
+  "LocalAGI":    {url:"http://localhost:8080", path:"/"},
+};
+function colonyConsoleUrl(id){const c=COLONY_BASE_URLS[id];return c?c.url+c.path:null;}
 
 const COLONY_GRAPH = {
   nodes:[
@@ -590,6 +604,7 @@ function HUD() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(null);
+  const [zoomColony, setZoomColony] = useState(null);
   const graphRef = useRef(null);
   const wsRef = useRef(null);
 
@@ -652,7 +667,8 @@ function HUD() {
   // D3 graph
   useEffect(()=>{
     if(tab!=="graph"||!graphRef.current) return;
-    fetch('./memory/_graph.json').then(r=>r.ok?r.json():null).then(d=>renderColonyGraph(d||COLONY_GRAPH,graphRef.current)).catch(()=>renderColonyGraph(COLONY_GRAPH,graphRef.current));
+    const onClick = d => setZoomColony(d.id);
+    fetch('./memory/_graph.json').then(r=>r.ok?r.json():null).then(d=>renderColonyGraph(d||COLONY_GRAPH,graphRef.current,onClick)).catch(()=>renderColonyGraph(COLONY_GRAPH,graphRef.current,onClick));
   },[tab]);
 
   // Frequency bar
@@ -931,6 +947,7 @@ function HUD() {
                   <span style={{fontSize:"9px",color:st==="healthy"?"#00ff88":st==="unknown"?"#888":"#ff4444",fontWeight:"bold"}}>{st}</span>
                 </div>
                 <div style={{fontSize:"8px",color:"#446",marginTop:"3px"}}>{col.desc}</div>
+                <button onClick={()=>setZoomColony(col.name)} style={{marginTop:"5px",fontSize:"8px",padding:"2px 8px",background:"rgba(0,200,100,.08)",border:"1px solid rgba(0,200,100,.25)",borderRadius:"4px",color:"#00ff88",cursor:"pointer",fontFamily:"Courier New"}}>⬡ zoom in</button>
               </div>;
             })}
           </div>}
@@ -965,6 +982,34 @@ function HUD() {
           ◉ 7.83 Hz · {new Date().toLocaleTimeString()}
         </div>
       </div>
+
+      {/* COLONY ZOOM-IN SLIDE PANEL */}
+      {zoomColony&&(
+        <div style={{position:"fixed",top:0,right:0,width:"min(660px,95vw)",height:"100vh",zIndex:200,display:"flex",flexDirection:"column",background:"rgba(5,10,25,0.97)",borderLeft:"1px solid rgba(0,200,100,.3)",boxShadow:"-8px 0 40px rgba(0,0,0,.7)",pointerEvents:"auto"}}>
+          <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",borderBottom:"1px solid rgba(0,200,100,.15)",flexShrink:0}}>
+            <span style={{fontSize:"14px"}}>⬡</span>
+            <span style={{fontWeight:"bold",color:"#00ff88",fontSize:"11px",letterSpacing:".1em",fontFamily:"Courier New"}}>{zoomColony}</span>
+            <span style={{fontSize:"9px",color:"#446",marginLeft:"4px"}}>colony console</span>
+            {colonyConsoleUrl(zoomColony)&&(
+              <a href={colonyConsoleUrl(zoomColony)} target="_blank" rel="noreferrer" style={{marginLeft:"auto",fontSize:"9px",color:"#00ccff",textDecoration:"none",border:"1px solid rgba(0,200,255,.2)",padding:"2px 7px",borderRadius:"3px"}}>↗ open</a>
+            )}
+            <button onClick={()=>setZoomColony(null)} style={{marginLeft:colonyConsoleUrl(zoomColony)?"6px":"auto",background:"rgba(255,50,50,.08)",border:"1px solid rgba(255,50,50,.25)",borderRadius:"4px",color:"#ff6644",cursor:"pointer",fontSize:"10px",padding:"2px 8px",fontFamily:"Courier New"}}>✕</button>
+          </div>
+          {colonyConsoleUrl(zoomColony)?(
+            <iframe
+              src={colonyConsoleUrl(zoomColony)}
+              style={{flex:1,border:"none",background:"#0a0e1a"}}
+              title={`${zoomColony} colony console`}
+              sandbox="allow-scripts allow-same-origin allow-forms"
+            />
+          ):(
+            <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"#446",fontSize:"11px",fontFamily:"Courier New"}}>
+              No console URL configured for "{zoomColony}".<br/>
+              Add an entry to COLONY_BASE_URLS to enable zoom-in.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
