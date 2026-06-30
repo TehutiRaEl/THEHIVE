@@ -58,7 +58,7 @@ services:
     volumes:
       - thehive_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v11/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -178,7 +178,7 @@ services:
   automatisch:
     build:
       context: ../automatisch
-      dockerfile: packages/backend/Dockerfile
+      dockerfile: docker/Dockerfile
     container_name: automatisch_workflow
     restart: unless-stopped
     ports:
