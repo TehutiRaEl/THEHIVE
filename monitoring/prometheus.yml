@@ -1,0 +1,49 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    federation: 'sovereign-hive'
+
+scrape_configs:
+  - job_name: 'thehive'
+    static_configs:
+      - targets: ['thehive:8080']
+    metrics_path: '/metrics'
+    honor_labels: true
+
+  - job_name: 'kimi_k2'
+    static_configs:
+      - targets: ['kimi_k2:8002']
+    metrics_path: '/metrics'
+
+  - job_name: 'nar2'
+    static_configs:
+      - targets: ['nar2:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'aether'
+    static_configs:
+      - targets: ['aether:3000']
+    metrics_path: '/metrics'
+
+  - job_name: 'automatisch'
+    static_configs:
+      - targets: ['automatisch:3000']
+    metrics_path: '/metrics'
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:9113']
+
+  # Colony health synthetic checks via blackbox exporter pattern
+  - job_name: 'colony_health'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://thehive:8080/health
+          - http://kimi_k2:8002/colony/health
+          - http://nar2:8000/colony/health
+          - http://aether:3000/colony/health
+          - http://automatisch:3000/colony/health

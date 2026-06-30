@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "nodes": [],
+  "edges": [],
+  "clusters": [],
+  "gaps": [],
+  "cycles": [],
+  "bridges": [],
+  "fractures": [],
+  "meta": {
+    "generated_by": "Kai El",
+    "last_dissection": null,
+    "description": "Cartographic voxel space — the structural map of relationships without meaning"
+  },
+  "dissection_schema": {
+    "nodes": "every entity that acted or was acted upon",
+    "edges": "every observed interaction",
+    "temporal_layers": "sequence as it occurred",
+    "clusters": "regions of higher density",
+    "gaps": "regions of lower or absent interaction",
+    "cycles": "patterns that repeat",
+    "bridges": "entities connecting otherwise isolated clusters",
+    "fractures": "attempted interactions that failed or were abandoned"
+  }
+}

@@ -3,7 +3,7 @@ Authentication Module — Sovereign Hive v11.0
 JWT + API key authentication for all endpoints.
 """
 
-import jwt
+from jose import jwt
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
@@ -21,8 +21,13 @@ security_api_key = APIKeyHeader(name="X-API-Key", auto_error=False)
 def create_access_token(user_id: str, role: str = "user") -> str:
     """Create a JWT access token."""
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
+    if len(settings.jwt_secret_key) < 32:
+        import logging
+        logging.getLogger("jasper.auth").warning(
+            "JWT secret is shorter than 32 chars — use a strong secret in production"
+        )
     return jwt.encode(
-        {"sub": user_id, "role": role, "exp": expire},
+        {"sub": user_id, "role": role, "exp": expire, "iss": "sovereign-hive"},
         settings.jwt_secret_key,
         algorithm=settings.jwt_algorithm
     )
@@ -52,7 +57,8 @@ async def verify_auth(
                 jwt_creds.credentials,
                 settings.jwt_secret_key,
                 algorithms=[settings.jwt_algorithm],
-                options={"verify_exp": True}
+                options={"verify_exp": True},
+                issuer="sovereign-hive",
             )
             exp = payload.get("exp")
             if exp and datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
@@ -136,7 +142,7 @@ def create_refresh_token(user_id: str, role: str = "user") -> str:
     """Create a refresh token with longer expiry."""
     expire = datetime.now(timezone.utc) + timedelta(days=7)
     return jwt.encode(
-        {"sub": user_id, "role": role, "exp": expire, "refresh": True},
+        {"sub": user_id, "role": role, "exp": expire, "refresh": True, "iss": "sovereign-hive"},
         settings.jwt_secret_key,
         algorithm=settings.jwt_algorithm
     )

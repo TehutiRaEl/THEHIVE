@@ -230,7 +230,7 @@ class ConstitutionChecker:
                         "details": "Human veto is prohibited.",
                         "required_action": "Amendments require 2/3 guild supermajority + 30 days."
                     }
-            except:
+            except Exception:
                 pass
 
         # Fixed Law #4: 100% reserve for SOUL

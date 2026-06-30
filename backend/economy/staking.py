@@ -95,7 +95,7 @@ class StakingManager:
 
             try:
                 locked_dt = datetime.fromisoformat(locked_until_str)
-            except:
+            except Exception:
                 locked_dt = datetime.now()
 
             days_staked = (datetime.now() - locked_dt).days + settings.staking_lock_days

@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from backend.core.config import settings
 from backend.core.constitution import constitution
 from backend.core.db import get_db
+from backend.api.models import HealthResponse, ColonyInfoResponse
 
 router = APIRouter(prefix="/colony", tags=["colony"])
 
@@ -44,7 +45,7 @@ class AgentMigration(BaseModel):
 
 # ── Endpoints ──────────────────────────────────────────────────
 
-@router.get("/info")
+@router.get("/info", response_model=ColonyInfoResponse)
 async def colony_info():
     """Return colony identity and constitution hash."""
     return {
@@ -60,7 +61,7 @@ async def colony_info():
     }
 
 
-@router.get("/health")
+@router.get("/health", response_model=HealthResponse)
 async def colony_health():
     """Standard health endpoint polled by the Queen's hive-health workflow."""
     uptime_s = int(time.time() - _start_time)

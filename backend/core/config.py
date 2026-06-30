@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     staking_lock_days: int = int(os.getenv("STAKING_LOCK_DAYS", "30"))
     staking_min_amount: float = float(os.getenv("STAKING_MIN_AMOUNT", "1.0"))
     doubling_threshold: float = float(os.getenv("DOUBLING_THRESHOLD", "0.707"))
-    decay_rate: float = float(os.getenv("DECAY_RATE", "0.95"))  # v11.0: prevents inflation
+    decay_rate: float = float(os.getenv("DECAY_RATE", "0.95"))
     
     # ─── LLM ────────────────────────────────────────────────────
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -60,6 +60,14 @@ class Settings(BaseSettings):
         "kimi-gateway|llm|http://localhost:8181|"
         "academy|knowledge|https://github.com/TehutiRaEl/free-programming-books",
     ).split(",")
+
+    # ─── Colony URLs ─────────────────────────────────────────────
+    localagi_url: str = os.getenv("LOCALAGI_URL", "http://localhost:8080")
+    nar2_url: str = os.getenv("NAR2_URL", "http://localhost:8000")
+    fourdbrain_url: str = os.getenv("FOURDBRAIN_URL", "http://localhost:8001")
+    aether_url: str = os.getenv("AETHER_URL", "http://localhost:3000")
+    automatisch_url: str = os.getenv("AUTOMATISCH_URL", "http://localhost:3001")
+    kimi_k2_url: str = os.getenv("KIMI_K2_URL", "http://localhost:8002")
 
     # ─── LLM Gateway (Kimi-K2 colony node) ─────────────────────
     llm_gateway_url: str = os.getenv("LLM_GATEWAY_URL", "http://localhost:8181")

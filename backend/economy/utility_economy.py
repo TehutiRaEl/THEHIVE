@@ -65,7 +65,7 @@ class UtilityEconomy:
                     days_since = (datetime.now() - datetime.fromisoformat(last_update)).days
                     decay_factor = settings.decay_rate ** days_since
                     base_mult *= decay_factor
-                except:
+                except Exception:
                     pass
 
         return round(max(0.5, min(10.0, base_mult)), 4)

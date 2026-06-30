@@ -29,8 +29,17 @@ from backend.economy.staking import staking_manager
 from backend.governance.patterns import patterns
 from backend.simulator.twin import simulator
 from backend.api.auth import verify_auth, create_access_token
+from backend.core.validator import validator
+from backend.api.models import HealthResponse, HiveStatusResponse, ValidationResponse
+from backend.core.wealth import wealth_engine
+from backend.core.criteria import pruning_criteria
+from backend.core.protocol import hive_protocol
+from backend.core.agency import swarm_agency, AgencyLevel
+from backend.core.alchemy import reflector
+from backend.core.genesis import gap_detector, mission_generator
+from backend.core.hive_mesh import hive_mesh
 
-# ─── Pydantic Models ──────────────────────────────────────────
+# ─── Pydantic Models ───────────────────────────────────────────────
 class LLMChatRequest(BaseModel):
     prompt: str
     system: str = ""
@@ -102,11 +111,31 @@ class SimulateRequest(BaseModel):
     base_rho: float = 0.7
     quorum: float = 0.6
 
-# ─── Router ──────────────────────────────────────────────────
+class ValidateRequest(BaseModel):
+    action: str
+    context: Dict[str, Any] = {}
+
+class ContributionRequest(BaseModel):
+    user_id: str
+    hours_saved: float = 0.0
+    adoption_count: int = 0
+    novelty_score: float = 0.0
+    dispute_resilience: float = 0.0
+    utilized: bool = True
+
+class TransmuteRequest(BaseModel):
+    memory_item: Dict[str, Any]
+
+class ChildProposalRequest(BaseModel):
+    title: str
+    description: str
+    proposer: str
+
+# ─── Router ─────────────────────────────────────────────────────────────
 router = APIRouter(prefix="/v11")
 
-# ─── Health & Board ──────────────────────────────────────────
-@router.get("/health")
+# ─── Health & Board ────────────────────────────────────────────────────
+@router.get("/health", response_model=HealthResponse)
 async def health():
     return {"status": "healthy", "version": "11.0", "phase": settings.hive_phase}
 
@@ -149,12 +178,12 @@ async def board(auth: Dict = Depends(verify_auth)):
         }
     }
 
-# ─── Constitution ──────────────────────────────────────────────
+# ─── Constitution ───────────────────────────────────────────────────────────────
 @router.post("/constitution/check")
 async def check_constitution(action_type: str, actor: str, params: Optional[str] = "{}", auth: Dict = Depends(verify_auth)):
     try:
         params_dict = json.loads(params) if params else {}
-    except:
+    except Exception:
         params_dict = {}
     result = constitution.check(action_type, actor, params_dict)
     constitution.log(action_type, actor, result)
@@ -201,7 +230,7 @@ async def get_constitution_history(limit: int = 20, auth: Dict = Depends(verify_
     conn.close()
     return {"history": [{"version": r[0], "active": bool(r[2]), "approved_at": r[3]} for r in rows]}
 
-# ─── Governance Patterns (v11.0) ─────────────────────────────
+# ─── Governance Patterns (v11.0) ───────────────────────────────────────────────
 @router.get("/governance/patterns")
 async def get_patterns(auth: Dict = Depends(verify_auth)):
     return {"patterns": patterns.get_all()}
@@ -217,7 +246,7 @@ async def get_pattern(pattern_id: str, auth: Dict = Depends(verify_auth)):
         raise HTTPException(404, f"Pattern {pattern_id} not found")
     return pattern
 
-# ─── Simulator (v11.0) ────────────────────────────────────────
+# ─── Simulator (v11.0) ─────────────────────────────────────────────────────────────
 @router.post("/simulate")
 async def run_simulation(req: SimulateRequest, auth: Dict = Depends(verify_auth)):
     return simulator.monte_carlo_proposal(req.n_agents, req.trials, req.base_rho, req.quorum)
@@ -230,7 +259,7 @@ async def simulate_colony(initial_wealth: float = 1000.0, growth_rate: float = 0
 async def simulate_hyperparameters(param_grid: Dict, objective: str = "minimize_loss", n_trials: int = 50, auth: Dict = Depends(verify_auth)):
     return simulator.hyperparameter_optimization(param_grid, objective, n_trials)
 
-# ─── SSE Feed (v11.0) ─────────────────────────────────────────
+# ─── SSE Feed (v11.0) ──────────────────────────────────────────────────────────────
 @router.get("/feed")
 async def governance_feed(auth: Dict = Depends(verify_auth)):
     async def generate():
@@ -248,7 +277,7 @@ async def governance_feed(auth: Dict = Depends(verify_auth)):
             await asyncio.sleep(1)
     return StreamingResponse(generate(), media_type="text/event-stream")
 
-# ─── Frequency Guild ──────────────────────────────────────────
+# ─── Frequency Guild ───────────────────────────────────────────────────────────
 @router.get("/frequency/letter/{char}")
 async def freq_letter(char: str, auth: Dict = Depends(verify_auth)):
     return frequency_guild.letter(char)
@@ -274,7 +303,7 @@ async def freq_spectrum(auth: Dict = Depends(verify_auth)):
 async def freq_analyze(text: str, auth: Dict = Depends(verify_auth)):
     return frequency_guild.word(text)
 
-# ─── Arena ────────────────────────────────────────────────────
+# ─── Arena ──────────────────────────────────────────────────────────────────────
 @router.post("/arena/challenge")
 async def arena_challenge(req: ArenaChallengeCreate, auth: Dict = Depends(verify_auth)):
     return arena.create(req.challenger, req.challenged, req.proposition)
@@ -321,7 +350,7 @@ async def arena_stats(auth: Dict = Depends(verify_auth)):
     conn.close()
     return {"total_battles": total, "top_gladiators": [{"agent": r[0], "wins": r[1]} for r in top]}
 
-# ─── Wallet ────────────────────────────────────────────────────
+# ─── Wallet ────────────────────────────────────────────────────────────────────────
 @router.post("/wallet/create/{agent_name}")
 async def create_wallet(agent_name: str, auth: Dict = Depends(verify_auth)):
     return wallet_manager.create_wallet(agent_name)
@@ -358,7 +387,7 @@ async def transfer_soul(req: SoulTransferRequest, auth: Dict = Depends(verify_au
         raise HTTPException(400, result["error"])
     return result
 
-# ─── Staking (v11.0) ──────────────────────────────────────────
+# ─── Staking (v11.0) ────────────────────────────────────────────────────────────────
 @router.post("/staking/stake")
 async def stake_soul(req: StakeRequest, auth: Dict = Depends(verify_auth)):
     return await staking_manager.stake(req.agent_name, req.amount)
@@ -384,7 +413,7 @@ async def staking_leaderboard(limit: int = 10, auth: Dict = Depends(verify_auth)
 async def get_staking_rate(auth: Dict = Depends(verify_auth)):
     return {"apy": settings.staking_apy, "lock_days": settings.staking_lock_days, "min_amount": settings.staking_min_amount}
 
-# ─── Utility ──────────────────────────────────────────────────
+# ─── Utility ────────────────────────────────────────────────────────────────────────
 @router.post("/utility/credit/{agent_name}/{amount}")
 async def credit_utility(agent_name: str, amount: float, reason: str = "task", auth: Dict = Depends(verify_auth)):
     return utility_economy.credit_utility(agent_name, amount, reason)
@@ -402,7 +431,7 @@ async def refresh_utility(agent_name: str, auth: Dict = Depends(verify_auth)):
     m = utility_economy.get_multiplier(agent_name)
     return {"agent": agent_name, "multiplier": m}
 
-# ─── Genome ────────────────────────────────────────────────────
+# ─── Genome ─────────────────────────────────────────────────────────────────────────
 @router.get("/genome/compatibility")
 async def genome_compat(agent1: str, agent2: str, auth: Dict = Depends(verify_auth)):
     score = genome_reproduction.compatibility(agent1, agent2)
@@ -443,7 +472,7 @@ async def get_genealogy(agent_name: str, auth: Dict = Depends(verify_auth)):
 async def get_traits(auth: Dict = Depends(verify_auth)):
     return {"traits": genome_reproduction.TRAIT_COLS}
 
-# ─── Tasks ────────────────────────────────────────────────────
+# ─── Tasks ─────────────────────────────────────────────────────────────────────────
 @router.post("/tasks")
 async def create_task(req: TaskCreate, auth: Dict = Depends(verify_auth)):
     conn = get_db()
@@ -517,7 +546,7 @@ async def delete_task(task_id: int, auth: Dict = Depends(verify_auth)):
     conn.close()
     return {"status": "deleted", "task_id": task_id}
 
-# ─── ELO Grading ─────────────────────────────────────────────
+# ─── ELO Grading ─────────────────────────────────────────────────────────────────
 @router.post("/grading/submit")
 async def submit_grade(req: GradeRequest, auth: Dict = Depends(verify_auth)):
     conn = get_db()
@@ -554,7 +583,7 @@ async def get_agent_elo(agent_name: str, auth: Dict = Depends(verify_auth)):
         return {"agent": agent_name, "rating": 1200, "matches": 0}
     return {"agent": agent_name, "rating": row[0], "matches": row[1]}
 
-# ─── HD Vectors ──────────────────────────────────────────────
+# ─── HD Vectors ───────────────────────────────────────────────────────────────────
 @router.get("/hd/lexicon")
 async def hd_lexicon(auth: Dict = Depends(verify_auth)):
     return hdc.lexicon_summary()
@@ -585,7 +614,7 @@ async def hd_bundle(concepts: List[str], auth: Dict = Depends(verify_auth)):
     closest = hdc.closest(v, top_k=3)
     return {"concepts": concepts, "closest": [{"concept": c, "sim": round(s, 4)} for c, s in closest]}
 
-# ─── HITL ────────────────────────────────────────────────────
+# ─── HITL ────────────────────────────────────────────────────────────────────────────
 @router.post("/hitl/request")
 async def hitl_request(action_type: str, params: Dict, auth: Dict = Depends(verify_auth)):
     request_id = await hitl.request_approval(action_type, params, auth["user"])
@@ -608,7 +637,7 @@ async def hitl_pending(auth: Dict = Depends(verify_auth)):
 async def hitl_requests(status: Optional[str] = None, auth: Dict = Depends(verify_auth)):
     return {"requests": hitl.get_requests(status)}
 
-# ─── UI: OpenAI-compatible chat proxy (routes to Ollama) ──────
+# ─── UI: OpenAI-compatible chat proxy (routes to LLM waterfall) ──────
 class ChatMessage(BaseModel):
     role: str
     content: str
@@ -663,7 +692,7 @@ async def llm_providers():
     from backend.core.llm_router import provider_status
     return {"providers": await provider_status()}
 
-# ─── UI: web search proxy (DuckDuckGo HTML scrape) ─────────────
+# ─── UI: web search proxy (DuckDuckGo HTML scrape) ─────────────────
 @router.get("/search")
 async def web_search(q: str, n: int = 6):
     """Lightweight web search via DuckDuckGo HTML — returns titles, URLs, snippets."""
@@ -720,7 +749,7 @@ async def agent_run(req: AgentRunRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ─── Tier 3 Status ──────────────────────────────────────────
+# ─── Tier 3 Status ──────────────────────────────────────────────────────────
 @router.get("/tier3/status")
 async def tier3_status(auth: Dict = Depends(verify_auth)):
     return {
@@ -733,7 +762,8 @@ async def tier3_status(auth: Dict = Depends(verify_auth)):
         "basis": "Sovereign Hive v11.0"
     }
 
-# ─── WebSocket ─────────────────────────────────────────────────
+# ─── WebSocket ───────────────────────────────────────────────────────────────────
+
 class WebSocketManager:
     def __init__(self):
         self.active: List[WebSocket] = []
@@ -754,7 +784,7 @@ class WebSocketManager:
             for ws in self.active:
                 try:
                     await ws.send_json(msg)
-                except:
+                except Exception:
                     dead.append(ws)
             for ws in dead:
                 self.disconnect(ws)
@@ -779,3 +809,94 @@ async def websocket_endpoint(websocket: WebSocket):
                 await ws_manager.broadcast({"type": "message", "data": data, "ts": time.time()})
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
+
+# ─── V11 Core Engine Routes ──────────────────────────────────────────────────
+
+@router.post("/validate", response_model=ValidationResponse)
+async def validate_action(req: ValidateRequest):
+    result = validator.validate(req.action, req.context)
+    return result.to_dict()
+
+@router.get("/wealth/{user_id}")
+async def get_wealth(user_id: str):
+    snap = wealth_engine.get_wealth(user_id)
+    if not snap:
+        raise HTTPException(status_code=404, detail="No wealth record for user")
+    return snap.to_dict()
+
+@router.post("/wealth/contribution")
+async def record_contribution(req: ContributionRequest):
+    cid = wealth_engine.record_contribution(
+        req.user_id, req.hours_saved, req.adoption_count,
+        req.novelty_score, req.dispute_resilience, req.utilized,
+    )
+    snap = wealth_engine.calculate(req.user_id)
+    return {"contribution_id": cid, "wealth": snap.to_dict()}
+
+@router.post("/memory/prune")
+async def prune_memory():
+    decisions = pruning_criteria.execute_pruning()
+    return {"pruned": len(decisions), "decisions": [d.to_dict() for d in decisions]}
+
+@router.get("/memory/pruning-log")
+async def get_pruning_log(limit: int = 100):
+    return pruning_criteria.get_pruning_log(limit)
+
+@router.get("/agency/check")
+async def agency_check(agent_id: str, action: str, level: str = "propose"):
+    try:
+        lv = AgencyLevel(level)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid level '{level}'. Use: propose, execute, deviate")
+    decision = swarm_agency.check(agent_id, action, lv)
+    return decision.to_dict()
+
+@router.get("/protocol/log")
+async def protocol_log(event_type: Optional[str] = None, limit: int = 100):
+    return hive_protocol.get_log(event_type, limit)
+
+@router.post("/cycle/transmute")
+async def transmute(req: TransmuteRequest):
+    wisdom = reflector.transmute(req.memory_item)
+    return wisdom.to_dict()
+
+@router.get("/genesis/gaps")
+async def genesis_gaps():
+    gaps = gap_detector.scan()
+    return [g.to_dict() for g in gaps]
+
+@router.get("/genesis/missions")
+async def genesis_missions(status: Optional[str] = None):
+    return mission_generator.list_missions(status)
+
+@router.post("/genesis/missions/propose")
+async def propose_mission(req: ChildProposalRequest):
+    mission = mission_generator.receive_child_proposal(req.title, req.description, req.proposer)
+    return mission.to_dict()
+
+@router.post("/genesis/missions/{mission_id}/formalize")
+async def formalize_mission(mission_id: str):
+    mission = mission_generator.formalize(mission_id)
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    return mission.to_dict()
+
+@router.get("/hive/status", response_model=HiveStatusResponse)
+async def hive_status():
+    """Return health status of all known colonies."""
+    health = await hive_mesh.check_all_health()
+    return {"colonies": health, "timestamp": datetime.now().isoformat(), "queen": "THEHIVE"}
+
+@router.post("/hive/dispatch")
+async def hive_dispatch(event_type: str, payload: Dict[str, Any] = None, targets: Optional[List[str]] = None):
+    """Fan out an event to all (or specified) colonies."""
+    results = await hive_mesh.dispatch(event_type, payload or {}, targets)
+    return {"event_type": event_type, "dispatched_to": results, "timestamp": datetime.now().isoformat()}
+
+@router.get("/hive/manifest/{colony_id}")
+async def hive_manifest(colony_id: str):
+    """Fetch the capability manifest from a specific colony."""
+    manifest = await hive_mesh.get_manifest(colony_id)
+    if not manifest:
+        raise HTTPException(status_code=404, detail=f"Colony '{colony_id}' not found or offline")
+    return manifest
