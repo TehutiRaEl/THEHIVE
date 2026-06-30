@@ -27,6 +27,7 @@ from backend.api.middleware import (
     PromptInjectionMiddleware,
 )
 from backend.core.constitution import constitution
+from backend.core.protocol import hive_protocol
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,9 +44,13 @@ async def lifespan(app: FastAPI):
     logger.info(f"Staking APY: {settings.staking_apy}")
     init_db()
     logger.info("✅ Database initialized")
+    await hive_protocol.start_batch_worker()
+    logger.info("✅ Protocol batch worker started")
     logger.info(f"Constitution: {constitution.get_hash()[:16]}...")
     logger.info(f"Active Guilds: {', '.join(settings.enable_guilds)}")
     yield
+    if hive_protocol._batch_task:
+        hive_protocol._batch_task.cancel()
     logger.info("🛑 Shutting down Jasper Sovereign Hive...")
 
 app = FastAPI(

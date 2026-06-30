@@ -7,12 +7,16 @@ F-006: Exercising fixed rights never reduces wealth.
 """
 
 import math
+import time
 import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 
 from backend.core.db import get_db
+
+_CACHE_TTL = 60.0
+_wealth_cache: Dict[str, Tuple[float, "WealthSnapshot"]] = {}  # user_id → (cached_at, snapshot)
 
 
 @dataclass
@@ -63,6 +67,7 @@ class WealthEngine:
         utilized: bool = True,
     ) -> str:
         """Record a new contribution and return its ID."""
+        _wealth_cache.pop(user_id, None)  # invalidate cached wealth
         c = Contribution(
             user_id=user_id,
             hours_saved=max(0.0, hours_saved),
@@ -90,6 +95,7 @@ class WealthEngine:
 
     def record_active_time(self, user_id: str, seconds: float):
         """Log time actively providing value to the swarm (F-001 method 1)."""
+        _wealth_cache.pop(user_id, None)  # invalidate cached wealth
         conn = get_db()
         conn.execute(
             "INSERT INTO wealth_time_log (user_id, seconds, logged_at) VALUES (?, ?, ?)",
@@ -98,7 +104,12 @@ class WealthEngine:
         conn.commit()
 
     def calculate(self, user_id: str) -> WealthSnapshot:
-        """Compute current wealth for a user."""
+        """Compute current wealth for a user. Results cached for 60 seconds."""
+        now = time.monotonic()
+        cached = _wealth_cache.get(user_id)
+        if cached is not None and now - cached[0] < _CACHE_TTL:
+            return cached[1]
+
         conn = get_db()
 
         # TWW: total hours providing value (method 1)
@@ -134,6 +145,7 @@ class WealthEngine:
             (user_id, tww, vww, w_total, snapshot.computed_at),
         )
         conn.commit()
+        _wealth_cache[user_id] = (now, snapshot)
         return snapshot
 
     def get_wealth(self, user_id: str) -> Optional[WealthSnapshot]:
