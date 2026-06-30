@@ -7,6 +7,8 @@
     "start": "node index.js",
     "dev": "node --watch index.js"
   },
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "license": "AGPL-3.0"
 }

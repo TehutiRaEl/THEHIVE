@@ -1,10 +1,12 @@
-# THEHIVE — Queen of the Sovereign Hive
+# 🍯 SOVEREIGN HIVE – Federated AI Intelligence
 
-[![Colony](https://img.shields.io/badge/colony-Queen-gold)](#)
-[![Layer](https://img.shields.io/badge/layer-2%20MATER-purple)](#)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green)](https://fastapi.tiangolo.com)
-[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+**Version:** 12.0 (Multi-Colony Federation)  
+**Status:** Active — 10+ colonies online  
+**Website:** [tehutirael.github.io/THEHIVE](https://tehutirael.github.io/THEHIVE/)  
+**Purpose:** A self-sustaining, self-governing federated AI civilization spanning 10+ GitHub colonies, unified by an immutable `soul.md` constitution, a SOUL token economy, and a completely free 8-provider LLM waterfall.
+
+[![Deploy GitHub Pages](https://github.com/TehutiRaEl/THEHIVE/actions/workflows/pages.yml/badge.svg)](https://tehutirael.github.io/THEHIVE/)
+[![CI](https://github.com/TehutiRaEl/THEHIVE/actions/workflows/ci.yml/badge.svg)](https://github.com/TehutiRaEl/THEHIVE/actions/workflows/ci.yml)
 
 > Queen of the Sovereign Hive — constitutional governance, agent economy, and cross-colony coordination.
 

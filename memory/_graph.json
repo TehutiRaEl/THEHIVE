@@ -1,0 +1,741 @@
+{
+  "nodes": [
+    {
+      "id": "colony/THEHIVE",
+      "label": "THEHIVE",
+      "group": "colony"
+    },
+    {
+      "id": "colony/aether",
+      "label": "aether",
+      "group": "colony"
+    },
+    {
+      "id": "colony/automatisch",
+      "label": "automatisch",
+      "group": "colony"
+    },
+    {
+      "id": "colony/kimi-gateway",
+      "label": "kimi-gateway",
+      "group": "colony"
+    },
+    {
+      "id": "colony/free-programming-books",
+      "label": "free-programming-books",
+      "group": "colony"
+    },
+    {
+      "id": "colony/freeCodeCamp",
+      "label": "freeCodeCamp",
+      "group": "colony"
+    },
+    {
+      "id": "colony/sovereign-hive-meta",
+      "label": "sovereign-hive-meta",
+      "group": "colony"
+    },
+    {
+      "id": "colony/NAR2",
+      "label": "NAR2",
+      "group": "colony"
+    },
+    {
+      "id": "colony/4DBRAIN",
+      "label": "4DBRAIN",
+      "group": "colony"
+    },
+    {
+      "id": "colony/n8n",
+      "label": "n8n",
+      "group": "colony"
+    },
+    {
+      "id": "guild/academy",
+      "label": "Academy",
+      "group": "guild"
+    },
+    {
+      "id": "guild/arcane",
+      "label": "Arcane",
+      "group": "guild"
+    },
+    {
+      "id": "guild/arena",
+      "label": "Arena",
+      "group": "guild"
+    },
+    {
+      "id": "guild/audit",
+      "label": "Audit",
+      "group": "guild"
+    },
+    {
+      "id": "guild/commerce",
+      "label": "Commerce",
+      "group": "guild"
+    },
+    {
+      "id": "guild/constitutional",
+      "label": "Constitutional",
+      "group": "guild"
+    },
+    {
+      "id": "guild/dream",
+      "label": "Dream",
+      "group": "guild"
+    },
+    {
+      "id": "guild/frequency",
+      "label": "Frequency",
+      "group": "guild"
+    },
+    {
+      "id": "guild/security",
+      "label": "Security",
+      "group": "guild"
+    },
+    {
+      "id": "guild/treasury",
+      "label": "Treasury",
+      "group": "guild"
+    },
+    {
+      "id": "guild/workflow",
+      "label": "Workflow",
+      "group": "guild"
+    },
+    {
+      "id": "guild/worldbuilding",
+      "label": "Worldbuilding",
+      "group": "guild"
+    },
+    {
+      "id": "backend/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/agent_identity",
+      "label": "agent_identity",
+      "group": "module"
+    },
+    {
+      "id": "backend/api/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/api/auth",
+      "label": "auth",
+      "group": "module"
+    },
+    {
+      "id": "backend/api/browser",
+      "label": "browser",
+      "group": "module"
+    },
+    {
+      "id": "backend/api/colony",
+      "label": "colony",
+      "group": "module"
+    },
+    {
+      "id": "backend/api/debug",
+      "label": "debug",
+      "group": "module"
+    },
+    {
+      "id": "backend/api/knowledge",
+      "label": "knowledge",
+      "group": "module"
+    },
+    {
+      "id": "backend/api/middleware",
+      "label": "middleware",
+      "group": "module"
+    },
+    {
+      "id": "backend/api/ml",
+      "label": "ml",
+      "group": "module"
+    },
+    {
+      "id": "backend/api/routes",
+      "label": "routes",
+      "group": "module"
+    },
+    {
+      "id": "backend/audit_chain",
+      "label": "audit_chain",
+      "group": "module"
+    },
+    {
+      "id": "backend/auth",
+      "label": "auth",
+      "group": "module"
+    },
+    {
+      "id": "backend/config",
+      "label": "config",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/agent_engine",
+      "label": "agent_engine",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/arena",
+      "label": "arena",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/config",
+      "label": "config",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/constitution",
+      "label": "constitution",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/db",
+      "label": "db",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/frequency_guild",
+      "label": "frequency_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/genome",
+      "label": "genome",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/hdc",
+      "label": "hdc",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/hitl",
+      "label": "hitl",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/llm_router",
+      "label": "llm_router",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/ml_pipeline",
+      "label": "ml_pipeline",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/wallet",
+      "label": "wallet",
+      "group": "module"
+    },
+    {
+      "id": "backend/database",
+      "label": "database",
+      "group": "module"
+    },
+    {
+      "id": "backend/economy/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/economy/staking",
+      "label": "staking",
+      "group": "module"
+    },
+    {
+      "id": "backend/economy/utility_economy",
+      "label": "utility_economy",
+      "group": "module"
+    },
+    {
+      "id": "backend/governance/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/governance/patterns",
+      "label": "patterns",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/academy_guild",
+      "label": "academy_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/arcane_guild",
+      "label": "arcane_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/arena_guild",
+      "label": "arena_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/audit_guild",
+      "label": "audit_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/commerce_guild",
+      "label": "commerce_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/constitutional_guild",
+      "label": "constitutional_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/dream_guild",
+      "label": "dream_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/frequency_guild",
+      "label": "frequency_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/security_guild",
+      "label": "security_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/treasury_guild",
+      "label": "treasury_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/workflow_guild",
+      "label": "workflow_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/guilds/worldbuilding_guild",
+      "label": "worldbuilding_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/llm_router",
+      "label": "llm_router",
+      "group": "module"
+    },
+    {
+      "id": "backend/main",
+      "label": "main",
+      "group": "module"
+    },
+    {
+      "id": "backend/mcp/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/mcp/server",
+      "label": "server",
+      "group": "module"
+    },
+    {
+      "id": "backend/mcp/tools",
+      "label": "tools",
+      "group": "module"
+    },
+    {
+      "id": "backend/memory/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/memory/episodic_memory",
+      "label": "episodic_memory",
+      "group": "module"
+    },
+    {
+      "id": "backend/memory/vector_store",
+      "label": "vector_store",
+      "group": "module"
+    },
+    {
+      "id": "backend/models",
+      "label": "models",
+      "group": "module"
+    },
+    {
+      "id": "backend/phase_manager",
+      "label": "phase_manager",
+      "group": "module"
+    },
+    {
+      "id": "backend/resonance",
+      "label": "resonance",
+      "group": "module"
+    },
+    {
+      "id": "backend/sheaf_crypto",
+      "label": "sheaf_crypto",
+      "group": "module"
+    },
+    {
+      "id": "backend/simulator/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/simulator/twin",
+      "label": "twin",
+      "group": "module"
+    },
+    {
+      "id": "backend/tier2/argnn",
+      "label": "argnn",
+      "group": "module"
+    },
+    {
+      "id": "backend/tier2/dream_engine",
+      "label": "dream_engine",
+      "group": "module"
+    },
+    {
+      "id": "backend/tier2/hypercomplex_layers",
+      "label": "hypercomplex_layers",
+      "group": "module"
+    },
+    {
+      "id": "backend/tier2/tesseract_core",
+      "label": "tesseract_core",
+      "group": "module"
+    },
+    {
+      "id": "backend/tier3/arena_renderer",
+      "label": "arena_renderer",
+      "group": "module"
+    },
+    {
+      "id": "backend/tier3/ipfs_pubsub",
+      "label": "ipfs_pubsub",
+      "group": "module"
+    },
+    {
+      "id": "backend/tier3/quantum_bridge",
+      "label": "quantum_bridge",
+      "group": "module"
+    },
+    {
+      "id": "backend/tier3/sheaf_guild",
+      "label": "sheaf_guild",
+      "group": "module"
+    },
+    {
+      "id": "backend/tier3/tesseract_model",
+      "label": "tesseract_model",
+      "group": "module"
+    },
+    {
+      "id": "backend/utils/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/utils/crypto",
+      "label": "crypto",
+      "group": "module"
+    },
+    {
+      "id": "backend/utils/helpers",
+      "label": "helpers",
+      "group": "module"
+    },
+    {
+      "id": "backend/utils/rate_limiter",
+      "label": "rate_limiter",
+      "group": "module"
+    },
+    {
+      "id": "philosophy/devils-advocate",
+      "label": "Devils Advocate",
+      "group": "philosophy"
+    },
+    {
+      "id": "philosophy/childlike-wonder",
+      "label": "Childlike Wonder",
+      "group": "philosophy"
+    },
+    {
+      "id": "philosophy/alchemical-process",
+      "label": "Alchemical Process",
+      "group": "philosophy"
+    },
+    {
+      "id": "philosophy/dual-lens-framework",
+      "label": "Dual Lens Framework",
+      "group": "philosophy"
+    }
+  ],
+  "links": [
+    {
+      "source": "backend/api/routes",
+      "target": "backend/api/auth"
+    },
+    {
+      "source": "backend/core/constitution",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/core/db",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/core/frequency_guild",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/core/genome",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/core/hitl",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/core/hitl",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/core/llm_router",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/core/wallet",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/core/wallet",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/database",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/economy/staking",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/economy/staking",
+      "target": "backend/core/wallet"
+    },
+    {
+      "source": "backend/economy/staking",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/economy/utility_economy",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/economy/utility_economy",
+      "target": "backend/core/wallet"
+    },
+    {
+      "source": "backend/economy/utility_economy",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/guilds/treasury_guild",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/api/routes"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/api/colony"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/api/knowledge"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/api/ml"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/api/browser"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/api/debug"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/api/auth"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/api/middleware"
+    },
+    {
+      "source": "backend/main",
+      "target": "backend/core/constitution"
+    },
+    {
+      "source": "backend/memory/episodic_memory",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/phase_manager",
+      "target": "backend/database"
+    },
+    {
+      "source": "backend/resonance",
+      "target": "backend/database"
+    },
+    {
+      "source": "backend/sheaf_crypto",
+      "target": "backend/database"
+    },
+    {
+      "source": "backend/sheaf_crypto",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/simulator/twin",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/tier2/argnn",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/tier2/argnn",
+      "target": "backend/core/frequency_guild"
+    },
+    {
+      "source": "backend/tier2/dream_engine",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/tier2/dream_engine",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "colony/aether",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "colony/automatisch",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "colony/kimi-gateway",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "colony/free-programming-books",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "colony/freeCodeCamp",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "colony/sovereign-hive-meta",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "colony/NAR2",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "colony/4DBRAIN",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "colony/n8n",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/academy",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/arcane",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/arena",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/audit",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/commerce",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/constitutional",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/dream",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/frequency",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/security",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/treasury",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/workflow",
+      "target": "colony/THEHIVE"
+    },
+    {
+      "source": "guild/worldbuilding",
+      "target": "colony/THEHIVE"
+    }
+  ]
+}

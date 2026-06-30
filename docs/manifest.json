@@ -1,0 +1,33 @@
+{
+  "name": "Jasper Sovereign Hive",
+  "short_name": "THEHIVE",
+  "description": "Sovereign Hive Command Center — Agent population, SOUL economy, colony federation",
+  "start_url": "/THEHIVE/",
+  "display": "standalone",
+  "background_color": "#010108",
+  "theme_color": "#FFD700",
+  "orientation": "landscape-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍄</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Debug Diagnostic",
+      "short_name": "Debug",
+      "description": "Run full system diagnostic",
+      "url": "/THEHIVE/#debug"
+    },
+    {
+      "name": "Colony Graph",
+      "short_name": "Graph",
+      "description": "View colony network graph",
+      "url": "/THEHIVE/#graph"
+    }
+  ]
+}

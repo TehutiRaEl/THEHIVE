@@ -655,7 +655,7 @@ async def chat_completions(req: ChatCompletionRequest):
     OpenAI-compatible endpoint — routes through the free LLM waterfall.
     Tries: Ollama → Moonshot → SiliconFlow → DeepSeek → Zhipu → Groq → OpenRouter → Gemini.
     """
-    from backend.llm_router import chat as llm_chat
+    from backend.core.llm_router import chat as llm_chat
     msgs = [{"role": m.role, "content": m.content} for m in req.messages]
     try:
         result = await llm_chat(
@@ -689,7 +689,7 @@ async def chat_completions(req: ChatCompletionRequest):
 @router.get("/llm/providers")
 async def llm_providers():
     """List all configured LLM providers and their health status."""
-    from backend.llm_router import provider_status
+    from backend.core.llm_router import provider_status
     return {"providers": await provider_status()}
 
 # ─── UI: web search proxy (DuckDuckGo HTML scrape) ─────────────────
@@ -718,6 +718,36 @@ async def web_search(q: str, n: int = 6):
         return {"q": q, "results": results, "engine": "duckduckgo"}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Search failed: {e}")
+
+# ─── ReAct Agent Engine ────────────────────────────────────────
+class AgentRunRequest(BaseModel):
+    task: str
+    agent_name: str = "Jasper"
+    role: str = "general"
+    max_steps: int = 8
+    provider_hint: str = ""
+
+@router.post("/agent/run")
+async def agent_run(req: AgentRunRequest):
+    """
+    Run a task through the ReAct agent loop (Reason + Act cycles).
+    Agent has access to: web_search, remember, recall, ask_llm tools.
+    """
+    from backend.core.agent_engine import create_agent
+    from backend.core.constitution import constitution
+    agent = create_agent(
+        name=req.agent_name,
+        role=req.role,
+        soul_hash=constitution.get_hash()[:12],
+    )
+    agent.max_steps = req.max_steps
+    agent.llm_provider = req.provider_hint
+    try:
+        result = await agent.run(req.task)
+        return {"agent": req.agent_name, "task": req.task, **result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ─── Tier 3 Status ──────────────────────────────────────────────────────────
 @router.get("/tier3/status")

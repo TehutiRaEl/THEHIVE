@@ -15,11 +15,16 @@ from backend.core.config import settings
 from backend.core.db import init_db
 from backend.api.routes import router
 from backend.api.colony import router as colony_router
+from backend.api.knowledge import router as knowledge_router
+from backend.api.ml import router as ml_router
+from backend.api.browser import router as browser_router
+from backend.api.debug import router as debug_router
 from backend.api.auth import verify_auth
 from backend.api.middleware import (
     RateLimitMiddleware,
     LoggingMiddleware,
-    ConstitutionMiddleware
+    ConstitutionMiddleware,
+    PromptInjectionMiddleware,
 )
 from backend.core.constitution import constitution
 
@@ -50,6 +55,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# ─── CORS ──────────────────────────────────────────────────────
 _cors_origins = settings.cors_origins
 if "*" not in _cors_origins:
     _cors_origins = ["*"] if os.getenv("CORS_ALLOW_ALL", "true").lower() == "true" else _cors_origins
@@ -61,12 +67,18 @@ app.add_middleware(
     allow_headers=["Authorization", "X-API-Key", "Content-Type"],
 )
 
+# ─── Middleware ──────────────────────────────────────────────
+app.add_middleware(PromptInjectionMiddleware)
 app.add_middleware(ConstitutionMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(LoggingMiddleware)
 
 app.include_router(router)
-app.include_router(colony_router)   # /colony/* — multi-repo hive standard
+app.include_router(colony_router)    # /colony/* — multi-repo hive standard
+app.include_router(knowledge_router) # /v11/knowledge/* — RAG over ingested repos
+app.include_router(ml_router)        # /v11/voice, /v11/image, /v11/ml/*
+app.include_router(browser_router)   # /v11/browser/*
+app.include_router(debug_router)     # /v11/debug/*
 
 try:
     _frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")

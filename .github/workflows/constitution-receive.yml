@@ -11,13 +11,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
 
-      - name: Download canonical soul.md from Queen
+      - name: Download canonical soul.md from Queen (with exponential backoff retry)
         run: |
-          curl -fsSL \
-            "https://raw.githubusercontent.com/TehutiRaEl/sovereign-hive-meta/main/soul.md" \
-            -o soul.md
+          QUEEN_URL="https://raw.githubusercontent.com/TehutiRaEl/sovereign-hive-meta/main/soul.md"
+          MAX_ATTEMPTS=5
+          DELAY=2
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Attempt $attempt/$MAX_ATTEMPTS..."
+            if curl -fsSL "$QUEEN_URL" -o soul.md; then
+              echo "Downloaded successfully on attempt $attempt"
+              break
+            fi
+            if [ $attempt -eq $MAX_ATTEMPTS ]; then
+              echo "All $MAX_ATTEMPTS attempts failed. Queen may be unreachable."
+              exit 1
+            fi
+            echo "Failed. Retrying in ${DELAY}s..."
+            sleep $DELAY
+            DELAY=$((DELAY * 2))
+          done
 
       - name: Verify hash matches dispatch payload
         run: |

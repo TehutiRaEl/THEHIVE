@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     colony_name: str = os.getenv("COLONY_NAME", "THEHIVE")
     colony_role: str = os.getenv("COLONY_ROLE", "core")
     meta_repo_url: str = os.getenv("META_REPO_URL", "https://github.com/TehutiRaEl/sovereign-hive-meta")
+    # Pipe-separated: "NAME|role|base_url" per colony
     known_colonies: List[str] = os.getenv(
         "KNOWN_COLONIES",
         "THEHIVE|core|http://localhost:8080|"
@@ -68,10 +69,10 @@ class Settings(BaseSettings):
     automatisch_url: str = os.getenv("AUTOMATISCH_URL", "http://localhost:3001")
     kimi_k2_url: str = os.getenv("KIMI_K2_URL", "http://localhost:8002")
 
-    # ─── LLM Gateway ─────────────────────────────────────────────
+    # ─── LLM Gateway (Kimi-K2 colony node) ─────────────────────
     llm_gateway_url: str = os.getenv("LLM_GATEWAY_URL", "http://localhost:8181")
 
-    # ─── Free LLM API Keys (all optional) ──────────────────────
+    # ─── Free LLM API Keys (all optional — router skips missing keys) ──
     moonshot_api_key: str = os.getenv("MOONSHOT_API_KEY", "")
     siliconflow_api_key: str = os.getenv("SILICONFLOW_API_KEY", "")
     deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
