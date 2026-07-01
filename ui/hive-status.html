@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sovereign Hive — Federation Status</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --panel: #0f1523;
+      --border: #1a2540;
+      --accent: #6366f1;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --dim: #334155;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 13px;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hive-logo {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .header-right {
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .timestamp {
+      font-size: 10px;
+      color: var(--dim);
+    }
+
+    main {
+      padding: 24px;
+      max-width: 1100px;
+    }
+
+    /* Summary bar */
+    .summary-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 12px 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .summary-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .summary-value {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .summary-value.all-healthy { color: var(--success); }
+    .summary-value.partial { color: var(--warning); }
+    .summary-value.none-healthy { color: var(--danger); }
+
+    .refresh-btn {
+      margin-left: auto;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 6px 14px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+
+    .refresh-btn:hover { background: #4f52d0; }
+    .refresh-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Colony grid */
+    .colony-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .colony-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .colony-card.healthy { border-color: rgba(34,197,94,0.3); }
+    .colony-card.degraded { border-color: rgba(234,179,8,0.3); }
+    .colony-card.unreachable { border-color: rgba(239,68,68,0.2); }
+    .colony-card.loading { border-color: var(--border); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .status-dot.healthy { background: var(--success); animation: pulse 2s infinite; }
+    .status-dot.degraded { background: var(--warning); }
+    .status-dot.unreachable { background: var(--danger); }
+    .status-dot.loading { background: var(--dim); animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    .colony-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .colony-id {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--dim);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .status-badge.healthy { background: rgba(34,197,94,0.12); color: var(--success); }
+    .status-badge.degraded { background: rgba(234,179,8,0.12); color: var(--warning); }
+    .status-badge.unreachable { background: rgba(239,68,68,0.1); color: var(--danger); }
+    .status-badge.loading { background: rgba(100,116,139,0.1); color: var(--muted); }
+
+    .card-details {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 4px 8px;
+      font-size: 11px;
+    }
+
+    .card-details dt { color: var(--muted); }
+    .card-details dd { color: var(--text); }
+    .card-details dd.ok { color: var(--success); }
+    .card-details dd.err { color: var(--danger); }
+
+    .card-url {
+      margin-top: 10px;
+      font-size: 10px;
+      color: var(--dim);
+      word-break: break-all;
+    }
+
+    .card-url a { color: var(--accent); text-decoration: none; }
+    .card-url a:hover { text-decoration: underline; }
+
+    /* Event log */
+    .event-log-section {
+      margin-top: 28px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .event-log {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      font-size: 11px;
+    }
+
+    .event-row {
+      display: grid;
+      grid-template-columns: 80px 90px 1fr auto;
+      gap: 8px;
+      padding: 7px 14px;
+      border-bottom: 1px solid #0a0e1a;
+      align-items: center;
+    }
+
+    .event-row:last-child { border-bottom: none; }
+
+    .event-time { color: var(--dim); font-size: 10px; }
+    .event-type { color: var(--accent); font-weight: 600; font-size: 10px; letter-spacing: 0.04em; }
+    .event-source { color: var(--muted); }
+    .event-payload { color: var(--dim); text-align: right; font-size: 10px; }
+
+    .event-log-empty {
+      padding: 32px;
+      text-align: center;
+      color: var(--dim);
+    }
+
+    footer {
+      margin-top: 36px;
+      padding: 0 24px 24px;
+      font-size: 10px;
+      color: var(--dim);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="hive-logo" aria-hidden>⬡</span>
+  <div>
+    <h1>SOVEREIGN HIVE — FEDERATION STATUS</h1>
+    <p class="subtitle">Real-time colony health dashboard</p>
+  </div>
+  <div class="header-right">
+    <div class="timestamp" id="last-updated">—</div>
+  </div>
+</header>
+
+<main>
+  <!-- Summary bar -->
+  <div class="summary-bar" role="status" aria-live="polite" aria-label="Federation health summary">
+    <div>
+      <div class="summary-label">Queen</div>
+      <div id="queen-status" class="summary-value" style="font-size:13px; color: var(--muted)">checking…</div>
+    </div>
+    <div>
+      <div class="summary-label">Colonies</div>
+      <div id="summary-count" class="summary-value partial">—</div>
+    </div>
+    <div>
+      <div class="summary-label">Phase</div>
+      <div id="hive-phase" style="color:var(--muted)">—</div>
+    </div>
+    <button class="refresh-btn" id="refresh-btn" onclick="refresh()">↻ Refresh</button>
+  </div>
+
+  <!-- Colony cards -->
+  <div class="colony-grid" id="colony-grid" role="list" aria-label="Colony status cards">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Event log -->
+  <div class="event-log-section">
+    <h2 class="section-title">Recent Hive Events</h2>
+    <div class="event-log" id="event-log" role="log" aria-live="polite" aria-label="Recent hive events">
+      <div class="event-log-empty">No events received yet.</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Sovereign Hive v11 &nbsp;·&nbsp;
+  Queen: <span id="footer-queen">—</span> &nbsp;·&nbsp;
+  Auto-refresh every 30s
+</footer>
+
+<script>
+  // ── Configuration ────────────────────────────────────────────────
+  // Override by setting ?queen=http://... in the URL, or by editing COLONIES below.
+  const params = new URLSearchParams(location.search);
+  const QUEEN = params.get('queen') || 'http://localhost:8080';
+
+  const COLONIES = [
+    { id: 'thehive',     name: 'THEHIVE (Queen)', url: params.get('thehive')     || QUEEN,                    healthPath: '/colony/health' },
+    { id: 'nar2',        name: 'NAR2',            url: params.get('nar2')        || 'http://localhost:8000',   healthPath: '/colony/health' },
+    { id: '4dbrain',     name: '4DBRAIN',         url: params.get('4dbrain')     || 'http://localhost:8001',   healthPath: '/colony/health' },
+    { id: 'aether',      name: 'aether',          url: params.get('aether')      || 'http://localhost:3000',   healthPath: '/colony/health' },
+    { id: 'automatisch', name: 'automatisch',     url: params.get('automatisch') || 'http://localhost:3001',   healthPath: '/colony/health' },
+    { id: 'kimi-k2',     name: 'Kimi-K2',         url: params.get('kimi-k2')     || 'http://localhost:8002',   healthPath: '/colony/health' },
+    { id: 'localagi',    name: 'LocalAGI',        url: params.get('localagi')    || 'http://localhost:8080',   healthPath: '/colony/health' },
+  ];
+
+  const POLL_MS = 30_000;
+  const events = [];
+  const MAX_EVENTS = 50;
+
+  // ── State ────────────────────────────────────────────────────────
+  let colonyData = COLONIES.map(c => ({ ...c, status: 'loading', data: null, error: null }));
+
+  // ── Render ───────────────────────────────────────────────────────
+  function formatUptime(s) {
+    if (!s && s !== 0) return '—';
+    if (s < 60) return s + 's';
+    if (s < 3600) return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+    return Math.floor(s / 3600) + 'h ' + Math.floor((s % 3600) / 60) + 'm';
+  }
+
+  function renderCard(colony) {
+    const { id, name, url, status, data, error } = colony;
+    const isHealthy = status === 'healthy';
+    const isDegraded = status === 'degraded';
+    const badgeClass = ['healthy','degraded','unreachable','loading'].includes(status) ? status : 'loading';
+
+    const details = data ? `
+      <dl class="card-details">
+        ${data.role ? `<dt>role</dt><dd>${esc(data.role)}</dd>` : ''}
+        ${data.uptime_seconds !== undefined ? `<dt>uptime</dt><dd>${formatUptime(data.uptime_seconds)}</dd>` : ''}
+        ${data.db ? `<dt>db</dt><dd class="${data.db === 'ok' ? 'ok' : 'err'}">${esc(data.db)}</dd>` : ''}
+        ${data.soul_md_hash ? `<dt>soul</dt><dd><code>${esc(String(data.soul_md_hash).slice(0,14))}…</code></dd>` : ''}
+        ${data.timestamp ? `<dt>checked</dt><dd>${new Date(data.timestamp).toLocaleTimeString()}</dd>` : ''}
+      </dl>` : '';
+
+    const errorNote = error ? `<p style="color:var(--danger);font-size:11px;margin-top:8px">${esc(error)}</p>` : '';
+
+    return `
+      <article class="colony-card ${badgeClass}" role="listitem" aria-label="${esc(name)} colony status">
+        <div class="card-header">
+          <span class="status-dot ${badgeClass}" aria-hidden="true"></span>
+          <span class="colony-name">${esc(name)}</span>
+          <code class="colony-id">${esc(id)}</code>
+        </div>
+        <span class="status-badge ${badgeClass}">${status}</span>
+        ${details}
+        ${errorNote}
+        <p class="card-url">
+          <a href="${esc(url + '/colony/health')}" target="_blank" rel="noopener">${esc(url)}/colony/health</a>
+        </p>
+      </article>`;
+  }
+
+  function renderGrid() {
+    document.getElementById('colony-grid').innerHTML = colonyData.map(renderCard).join('');
+    const healthy = colonyData.filter(c => c.status === 'healthy').length;
+    const total = colonyData.length;
+    const el = document.getElementById('summary-count');
+    el.textContent = `${healthy}/${total}`;
+    el.className = 'summary-value ' + (healthy === total ? 'all-healthy' : healthy === 0 ? 'none-healthy' : 'partial');
+  }
+
+  function renderEvents() {
+    const log = document.getElementById('event-log');
+    if (events.length === 0) {
+      log.innerHTML = '<div class="event-log-empty">No events received yet.</div>';
+      return;
+    }
+    log.innerHTML = events.slice().reverse().map(ev => `
+      <div class="event-row">
+        <span class="event-time">${new Date(ev.ts).toLocaleTimeString()}</span>
+        <span class="event-type">${esc(ev.type)}</span>
+        <span class="event-source">${esc(ev.source || '—')}</span>
+        <span class="event-payload">${ev.ok ? '✓' : '✗'} ${esc(ev.colony)}</span>
+      </div>`).join('');
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ── Fetch ────────────────────────────────────────────────────────
+  async function fetchColony(colony) {
+    const endpoint = colony.url.replace(/\/$/, '') + colony.healthPath;
+    try {
+      const res = await fetch(endpoint, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      return { ...colony, status: data.status ?? 'unknown', data, error: null };
+    } catch (err) {
+      return { ...colony, status: 'unreachable', data: null, error: err.message };
+    }
+  }
+
+  async function fetchFederationStatus() {
+    try {
+      const res = await fetch(QUEEN + '/v11/hive/status', { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return;
+      const data = await res.json();
+      document.getElementById('queen-status').textContent = 'online';
+      document.getElementById('queen-status').style.color = 'var(--success)';
+      if (data.queen) document.getElementById('footer-queen').textContent = data.queen;
+    } catch {
+      document.getElementById('queen-status').textContent = 'unreachable';
+      document.getElementById('queen-status').style.color = 'var(--danger)';
+    }
+  }
+
+  async function refresh() {
+    document.getElementById('refresh-btn').textContent = '↻ Checking…';
+    document.getElementById('refresh-btn').disabled = true;
+
+    // Fan out all health checks concurrently
+    const [results] = await Promise.all([
+      Promise.all(colonyData.map(fetchColony)),
+      fetchFederationStatus(),
+    ]);
+
+    colonyData = results;
+
+    // Record health-check events
+    for (const colony of colonyData) {
+      events.push({ ts: Date.now(), type: 'health_check', source: 'dashboard', colony: colony.id, ok: colony.status === 'healthy' });
+    }
+    while (events.length > MAX_EVENTS) events.shift();
+
+    renderGrid();
+    renderEvents();
+
+    const now = new Date();
+    document.getElementById('last-updated').textContent = 'updated ' + now.toLocaleTimeString();
+
+    document.getElementById('refresh-btn').textContent = '↻ Refresh';
+    document.getElementById('refresh-btn').disabled = false;
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────
+  document.getElementById('footer-queen').textContent = QUEEN;
+  renderGrid(); // initial loading state
+  refresh();
+  setInterval(refresh, POLL_MS);
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "colony_id": "thehive",
+  "colony_name": "THEHIVE",
+  "role": "queen",
+  "archetype": "governance",
+  "layer": 1,
+  "entity": "QUEEN (Sovereign Governance Engine)",
+  "guilds": ["governance", "economy", "arena", "constitutional", "frequency", "worldbuilding"],
+  "hive": "sovereign-hive",
+  "queen": "https://github.com/TehutiRaEl/-sovereign-hive-meta",
+  "version": "11.0.0",
+  "health_endpoint": "/colony/health",
+  "manifest_endpoint": "/colony/manifest",
+  "events_endpoint": "/colony/events",
+  "port": 8080,
+  "capabilities": [
+    "agent_governance", "soul_ledger", "arena_battles", "hive_mesh",
+    "constitution_enforcement", "llm_waterfall", "elo_ranking",
+    "memory_vault", "frequency_guild", "websocket_streaming"
+  ]
+}

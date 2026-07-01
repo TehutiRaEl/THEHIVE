@@ -85,7 +85,7 @@ class IPFSClient:
                     self._available = True
                     self.peer_id = r.json().get("ID","?")[:16]
                     return True
-        except: pass
+        except Exception: pass
         self._available = False
         return False
 
@@ -99,7 +99,7 @@ class IPFSClient:
                     content=data,
                 )
                 return r.status_code == 200
-        except: return False
+        except Exception: return False
 
     async def peers(self, topic: str) -> List[str]:
         if not self._available: return []
@@ -108,7 +108,7 @@ class IPFSClient:
                 r = await cl.post(f"{self.api}/api/v0/pubsub/peers",
                                    params={"arg": topic})
                 return r.json().get("Strings", []) if r.status_code == 200 else []
-        except: return []
+        except Exception: return []
 
 ipfs = IPFSClient()
 
@@ -151,7 +151,7 @@ class HDMessageEncoder:
                 env["hd_vector"] = np.frombuffer(
                     bytes.fromhex(env["vec"]), dtype=np.float32)
             return env
-        except: return None
+        except Exception: return None
 
     def similarity(self, v1: np.ndarray, v2: np.ndarray) -> float:
         return float(np.dot(v1, v2) /
@@ -254,7 +254,7 @@ class PubSubBroker:
                 else:
                     cb(msg_obj)
                 delivered += 1
-            except: pass
+            except Exception: pass
         return {
             "published": True, "channel": channel_id, "sender": sender,
             "topic": topic, "nonce": nonce[:8],

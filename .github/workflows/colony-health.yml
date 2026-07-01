@@ -1,0 +1,98 @@
+name: Colony Health Matrix
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Check colony health endpoints
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        colony:
+          - name: THEHIVE (Queen)
+            url: ${{ vars.THEHIVE_URL || 'http://localhost:8080' }}
+            path: /colony/health
+          - name: NAR2
+            url: ${{ vars.NAR2_URL || 'http://localhost:8000' }}
+            path: /colony/health
+          - name: 4DBRAIN
+            url: ${{ vars.FOURDBRAIN_URL || 'http://localhost:8001' }}
+            path: /colony/health
+          - name: aether
+            url: ${{ vars.AETHER_URL || 'http://localhost:3000' }}
+            path: /colony/health
+          - name: automatisch
+            url: ${{ vars.AUTOMATISCH_URL || 'http://localhost:3001' }}
+            path: /colony/health
+          - name: Kimi-K2
+            url: ${{ vars.KIMI_K2_URL || 'http://localhost:8002' }}
+            path: /colony/health
+          - name: LocalAGI
+            url: ${{ vars.LOCALAGI_URL || 'http://localhost:8080' }}
+            path: /colony/health
+
+    steps:
+      - name: Health check — ${{ matrix.colony.name }}
+        id: health
+        run: |
+          url="${{ matrix.colony.url }}${{ matrix.colony.path }}"
+          echo "Checking: $url"
+
+          response=$(curl -sf --max-time 10 --connect-timeout 5 \
+            -w "\n%{http_code}" "$url" 2>&1) || true
+
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+
+          echo "HTTP $http_code"
+          echo "$body"
+
+          if [ "$http_code" = "200" ]; then
+            status=$(echo "$body" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status','unknown'))" 2>/dev/null || echo "unknown")
+            echo "colony_status=$status" >> "$GITHUB_OUTPUT"
+            echo "check_result=pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "colony_status=unreachable" >> "$GITHUB_OUTPUT"
+            echo "check_result=fail" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report result
+        run: |
+          colony="${{ matrix.colony.name }}"
+          result="${{ steps.health.outputs.check_result }}"
+          status="${{ steps.health.outputs.colony_status }}"
+          if [ "$result" = "pass" ]; then
+            echo "✓ $colony — $status"
+          else
+            echo "✗ $colony — unreachable (non-blocking in CI; configure $colony URL in repo vars to enable real checks)"
+          fi
+
+  manifest-check:
+    name: Verify colony manifests
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: always()
+    steps:
+      - name: Check Queen manifest
+        run: |
+          url="${{ vars.THEHIVE_URL || 'http://localhost:8080' }}/colony/manifest"
+          echo "Fetching colony manifest from $url"
+          response=$(curl -sf --max-time 10 "$url" 2>/dev/null) || true
+          if [ -n "$response" ]; then
+            count=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('count',0))" 2>/dev/null || echo "0")
+            echo "Known colonies in manifest: $count"
+          else
+            echo "Queen unreachable or manifest not available (configure THEHIVE_URL repo var)"
+          fi
+
+      - name: Summary
+        run: |
+          echo "Colony health matrix complete."
+          echo "Set repository variables (THEHIVE_URL, NAR2_URL, etc.) to point at a live federation."
+          echo "Health failures are non-blocking on localhost defaults — real endpoints require live deployment."

@@ -642,6 +642,108 @@ def build_graph(module_infos: list[dict]) -> dict:
     return {"nodes": nodes, "links": links}
 
 
+# ── Federation repo walk ─────────────────────────────────────────────────────
+
+FEDERATION_ROOT = ROOT.parent  # /home/user (parent of THEHIVE checkout)
+
+ROLE_FOR_COLONY_ID = {
+    "thehive": "core",
+    "aether": "revenue",
+    "automatisch": "automation",
+    "kimi-k2": "llm",
+    "localagi": "unknown",
+    "nar2": "unknown",
+    "4dbrain": "unknown",
+    "build-your-own-x": "knowledge",
+    "free-programming-books": "knowledge",
+    "freecodecamp": "curriculum",
+}
+
+SIZE_FOR_ROLE = {
+    "core": 22, "revenue": 15, "automation": 15, "llm": 17,
+    "knowledge": 13, "curriculum": 13, "unknown": 11,
+}
+
+
+def scan_federation_repos() -> dict:
+    """Walk sibling repo directories, read colony.json/soul.md/README.md.
+
+    Returns extra_nodes and extra_links to merge into _graph.json.
+    """
+    extra_nodes: list[dict] = []
+    extra_links: list[dict] = []
+    seen_ids: set[str] = set()
+
+    if not FEDERATION_ROOT.is_dir():
+        return {"nodes": extra_nodes, "links": extra_links}
+
+    for repo_dir in sorted(FEDERATION_ROOT.iterdir()):
+        if not repo_dir.is_dir() or repo_dir.name.startswith("."):
+            continue
+        if repo_dir == ROOT:
+            continue  # THEHIVE is already in COLONY_GRAPH
+
+        # Try reading colony.json for authoritative identity
+        colony_json_path = repo_dir / "colony.json"
+        colony_id = repo_dir.name
+        role = ROLE_FOR_COLONY_ID.get(colony_id.lower(), "unknown")
+        description = ""
+
+        if colony_json_path.exists():
+            try:
+                cj = json.loads(colony_json_path.read_text(encoding="utf-8", errors="ignore"))
+                colony_id = cj.get("colony_name") or cj.get("colony_id") or colony_id
+                role_map = {"colony": "unknown", "outer-colony": "unknown",
+                            "core": "core", "mind": "llm"}
+                archetype_map = {
+                    "commerce": "revenue", "cognitive": "unknown", "security": "unknown",
+                    "workflow": "automation", "mind": "llm",
+                }
+                role = (archetype_map.get(cj.get("archetype", ""), None)
+                        or role_map.get(cj.get("role", ""), "unknown")
+                        or ROLE_FOR_COLONY_ID.get(repo_dir.name.lower(), "unknown"))
+                description = str(cj.get("entity", "")) or cj.get("colony_name", "")
+            except Exception:
+                pass
+
+        # Soul.md first line as description fallback
+        if not description:
+            soul_path = repo_dir / "soul.md"
+            if soul_path.exists():
+                try:
+                    first = soul_path.read_text(encoding="utf-8", errors="ignore").split("\n")[0]
+                    description = first.lstrip("# ").strip()
+                except Exception:
+                    pass
+
+        # README first non-empty, non-header line
+        if not description:
+            readme = repo_dir / "README.md"
+            if readme.exists():
+                try:
+                    for line in readme.read_text(encoding="utf-8", errors="ignore").split("\n"):
+                        stripped = line.strip().lstrip("#").strip()
+                        if stripped and not stripped.startswith("!") and not stripped.startswith("<"):
+                            description = stripped[:120]
+                            break
+                except Exception:
+                    pass
+
+        node_id = colony_id
+        if node_id not in seen_ids:
+            extra_nodes.append({
+                "id": node_id,
+                "role": role,
+                "size": SIZE_FOR_ROLE.get(role, 11),
+                "description": description,
+                "repo": repo_dir.name,
+            })
+            seen_ids.add(node_id)
+            extra_links.append({"source": node_id, "target": "THEHIVE", "active": False})
+
+    return {"nodes": extra_nodes, "links": extra_links}
+
+
 # ── _index.md ─────────────────────────────────────────────────────────────────
 
 def emit_index():
@@ -700,11 +802,20 @@ def main():
     emit_guild_pages()
     emit_index()
 
-    # _graph.json
+    # _graph.json — merge THEHIVE AST graph with federation-wide repo scan
     graph = build_graph(module_infos)
+    fed = scan_federation_repos()
+    existing_ids = {n["id"] for n in graph["nodes"]}
+    for node in fed["nodes"]:
+        if node["id"] not in existing_ids:
+            graph["nodes"].append(node)
+            existing_ids.add(node["id"])
+    graph["links"].extend(fed["links"])
     graph_path = MEMORY / "_graph.json"
     graph_path.write_text(json.dumps(graph, indent=2), encoding="utf-8")
     print(f"  wrote memory/_graph.json ({len(graph['nodes'])} nodes, {len(graph['links'])} links)")
+    if fed["nodes"]:
+        print(f"  + {len(fed['nodes'])} federation repo nodes from {FEDERATION_ROOT}")
 
     total = sum(1 for _ in MEMORY.rglob("*.md"))
     print(f"\nDone — {total} Markdown files, 1 graph JSON in memory/")

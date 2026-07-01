@@ -219,7 +219,7 @@ class ArenaProjectionEngine:
 
             if frame_callback:
                 try: await frame_callback(frame)
-                except: pass
+                except Exception: pass
 
         conn.commit(); conn.close()
 

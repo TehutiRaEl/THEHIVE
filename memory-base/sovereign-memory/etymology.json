@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "primitives": {
+    "capture": {
+      "root": "kaph-teth-resh",
+      "meaning": "to hold, to take, to grasp — the act of receiving without judgment",
+      "cycle_step": 1
+    },
+    "evaluate": {
+      "root": "ex-valeo",
+      "meaning": "to be strong out of — to test against the measure of Maat",
+      "cycle_step": 2
+    },
+    "prune": {
+      "root": "per-rune",
+      "meaning": "to cut forward, to shape by removal — not destruction but clarification",
+      "cycle_step": 3
+    },
+    "dissect": {
+      "root": "dis-sect",
+      "meaning": "to cut apart, to separate completely — no presumptions, no hypotheticals",
+      "cycle_step": 5
+    },
+    "propagate": {
+      "root": "pro-paginate",
+      "meaning": "to fix forward, to spread by rooting — the mycelial reach",
+      "cycle_step": 7
+    },
+    "innerstood": {
+      "root": "inner-stand",
+      "meaning": "to understand from within, not from beneath — deep recursive integration",
+      "usage": "tier 3 immune response"
+    },
+    "mycelium": {
+      "root": "mykes-helios",
+      "meaning": "fungal sun — the underground network that feeds all growth from the dark",
+      "usage": "the architecture of the hive's expansion"
+    },
+    "sovereign": {
+      "root": "super-regnare",
+      "meaning": "to reign above — ownership of self before ownership of anything else",
+      "usage": "the governing principle of all hive law"
+    }
+  }
+}

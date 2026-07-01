@@ -183,7 +183,7 @@ class GuildKeyManager:
         try:
             reconstructed = sss.reconstruct(others + [share])
             return True
-        except: return False
+        except Exception: return False
 
 gkm = GuildKeyManager()
 
