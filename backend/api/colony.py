@@ -159,6 +159,36 @@ async def receive_event(event: ColonyEvent):
     return {"received": True, "event": event.event_type, "colony": COLONY_NAME}
 
 
+@router.get("/capabilities")
+async def colony_capabilities():
+    """
+    Return colony.json identity + live health status.
+    Used by scan_federation_repos() and the ColonyZoomPanel header.
+    """
+    import json, os
+    colony_json_path = os.path.join(os.path.dirname(__file__), "..", "..", "colony.json")
+    identity: Dict[str, Any] = {}
+    try:
+        with open(os.path.normpath(colony_json_path)) as f:
+            identity = json.load(f)
+    except Exception:
+        identity = {
+            "colony_id": settings.colony_name.lower(),
+            "colony_name": settings.colony_name,
+            "role": settings.colony_role,
+            "version": COLONY_VERSION,
+        }
+
+    return {
+        **identity,
+        "status": "healthy",
+        "uptime_s": round(time.time() - _start_time, 1),
+        "soul_md_hash": constitution.get_hash()[:16],
+        "health_endpoint": "/colony/health",
+        "capabilities_endpoint": "/colony/capabilities",
+    }
+
+
 @router.get("/manifest")
 async def hive_manifest():
     """
