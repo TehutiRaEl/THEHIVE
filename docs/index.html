@@ -605,6 +605,7 @@ function HUD() {
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [zoomColony, setZoomColony] = useState(null);
+  const [zoomHealth, setZoomHealth] = useState(null); // {status, soul_md_hash, latency_ms}
   const graphRef = useRef(null);
   const wsRef = useRef(null);
 
@@ -984,12 +985,25 @@ function HUD() {
       </div>
 
       {/* COLONY ZOOM-IN SLIDE PANEL */}
+      {zoomColony&&React.createElement(React.Fragment,null,React.useEffect(()=>{
+        setZoomHealth(null);
+        const c=COLONY_BASE_URLS[zoomColony];
+        if(!c)return;
+        const t0=Date.now();
+        fetch(c.url+'/colony/capabilities',{signal:AbortSignal.timeout(4000)})
+          .then(r=>r.json()).then(d=>setZoomHealth({status:d.status||'healthy',hash:(d.soul_md_hash||'').slice(0,8),latency:Date.now()-t0}))
+          .catch(()=>fetch(c.url+'/colony/health',{signal:AbortSignal.timeout(4000)})
+            .then(r=>r.json()).then(d=>setZoomHealth({status:d.status||'healthy',hash:'',latency:Date.now()-t0}))
+            .catch(()=>setZoomHealth({status:'offline',hash:'',latency:Date.now()-t0})));
+      },[zoomColony]))}
       {zoomColony&&(
         <div style={{position:"fixed",top:0,right:0,width:"min(660px,95vw)",height:"100vh",zIndex:200,display:"flex",flexDirection:"column",background:"rgba(5,10,25,0.97)",borderLeft:"1px solid rgba(0,200,100,.3)",boxShadow:"-8px 0 40px rgba(0,0,0,.7)",pointerEvents:"auto"}}>
           <div style={{display:"flex",alignItems:"center",gap:"10px",padding:"10px 14px",borderBottom:"1px solid rgba(0,200,100,.15)",flexShrink:0}}>
             <span style={{fontSize:"14px"}}>⬡</span>
             <span style={{fontWeight:"bold",color:"#00ff88",fontSize:"11px",letterSpacing:".1em",fontFamily:"Courier New"}}>{zoomColony}</span>
             <span style={{fontSize:"9px",color:"#446",marginLeft:"4px"}}>colony console</span>
+            {zoomHealth&&<span style={{fontSize:"9px",fontFamily:"Courier New",padding:"1px 7px",borderRadius:"3px",background:zoomHealth.status==='healthy'?"rgba(0,255,100,.1)":"rgba(255,80,50,.1)",color:zoomHealth.status==='healthy'?"#00ff88":"#ff6644",border:`1px solid ${zoomHealth.status==='healthy'?"rgba(0,255,100,.25)":"rgba(255,80,50,.25)"}`}}>{zoomHealth.status==='healthy'?'✅':'⚠️'} {zoomHealth.status}{zoomHealth.latency?` · ${zoomHealth.latency}ms`:''}{zoomHealth.hash?` · ${zoomHealth.hash}`:''}</span>}
+            {!zoomHealth&&<span style={{fontSize:"9px",color:"#446",fontFamily:"Courier New"}}>checking…</span>}
             {colonyConsoleUrl(zoomColony)&&(
               <a href={colonyConsoleUrl(zoomColony)} target="_blank" rel="noreferrer" style={{marginLeft:"auto",fontSize:"9px",color:"#00ccff",textDecoration:"none",border:"1px solid rgba(0,200,255,.2)",padding:"2px 7px",borderRadius:"3px"}}>↗ open</a>
             )}

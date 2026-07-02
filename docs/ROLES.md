@@ -116,4 +116,20 @@ triage, not a permissions model.
 | Janitorial/Ops | 100 | Log Hygiene | All repos | Ensures logging doesn't leak secrets or PII. |
 | Janitorial/Ops | 101 | CI Minutes Steward | All repos | Monitors GitHub Actions usage to stay within free-tier limits. |
 
+## Federation AI Session Roles
+
+The following roles are used by autonomous AI sessions contributing to the hive. They follow the same `[ROLE: <Title>]` convention.
+
+| Tier | # | Role Title | Primary Repo(s) | Responsibility |
+|---|---|---|---|---|
+| AI Session | 102 | Sovereign Architect | THEHIVE | Designs and implements cross-cutting hive infrastructure (agent engine, LLM routing, colony standard). |
+| AI Session | 103 | Memory Architect | THEHIVE | Builds and maintains the Obsidian-style memory vault, ChromaDB ingestion, and `_graph.json`. |
+| AI Session | 104 | Agent Engineer | THEHIVE | Implements ReAct loop, MemGPT paging memory, CrewAI delegation, BabyAGI task queue. |
+| AI Session | 105 | Knowledge Curator | THEHIVE, All repos | Manages the 35-repo knowledge ingestion pipeline and ChromaDB RAG corpus. |
+| AI Session | 106 | Infra Engineer | THEHIVE | Handles docker-compose services, CI workflows, debug subsystem, ML pipeline endpoints. |
+| AI Session | 107 | Federation Engineer | THEHIVE | Wires cross-colony health checks, HiveMesh fan-out, event bus integration, and `colony.json` contracts. |
+| AI Session | 108 | Performance Engineer | THEHIVE | Batch event writes, TTL caches, connection pooling, async queue optimization. |
+| AI Session | 109 | Frontend Engineer | THEHIVE | Production Command Center UI, D3 colony graph, Phaser world zones, PWA manifest. |
+| AI Session | 110 | Governance Kernel | THEHIVE, All repos | Advisory CI workflows, GOVERNANCE.md, ROLES.md, constitution hash validation. |
+
 See [GOVERNANCE.md](./GOVERNANCE.md) for how role tags are used in commits and PRs.
