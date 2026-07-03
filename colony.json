@@ -12,10 +12,16 @@
   "health_endpoint": "/colony/health",
   "manifest_endpoint": "/colony/manifest",
   "events_endpoint": "/colony/events",
+  "capabilities_endpoint": "/colony/capabilities",
+  "sse_stream_endpoint": "/v11/events/stream",
   "port": 8080,
   "capabilities": [
     "agent_governance", "soul_ledger", "arena_battles", "hive_mesh",
     "constitution_enforcement", "llm_waterfall", "elo_ranking",
-    "memory_vault", "frequency_guild", "websocket_streaming"
+    "memory_vault", "frequency_guild", "websocket_streaming",
+    "react_agent_engine", "memgpt_paging_memory", "crewai_delegation",
+    "babyagi_task_queue", "knowledge_rag", "ml_pipeline",
+    "browser_agent", "debug_subsystem", "sse_event_stream",
+    "federation_health_check", "prompt_injection_shield"
   ]
 }

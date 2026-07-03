@@ -749,6 +749,54 @@ async def agent_run(req: AgentRunRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ─── SSE Event Stream ───────────────────────────────────────────────────────
+import asyncio as _asyncio
+
+_sse_subscribers: list = []
+
+def _sse_publish(event_type: str, data: dict):
+    """Broadcast an event to all active SSE subscribers (non-blocking)."""
+    import json as _json
+    msg = f"event: {event_type}\ndata: {_json.dumps(data)}\n\n"
+    dead = []
+    for q in _sse_subscribers:
+        try:
+            q.put_nowait(msg)
+        except Exception:
+            dead.append(q)
+    for q in dead:
+        try:
+            _sse_subscribers.remove(q)
+        except ValueError:
+            pass
+
+@router.get("/events/stream")
+async def events_stream():
+    """
+    Server-Sent Events stream for real-time hive activity.
+    Publishes: arena battles, agent tasks, economy events, colony dispatches.
+    """
+    q: _asyncio.Queue = _asyncio.Queue(maxsize=100)
+    _sse_subscribers.append(q)
+
+    async def generate():
+        try:
+            yield "event: connected\ndata: {\"hive\": \"THEHIVE\", \"status\": \"streaming\"}\n\n"
+            while True:
+                try:
+                    msg = await _asyncio.wait_for(q.get(), timeout=30.0)
+                    yield msg
+                except _asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        finally:
+            try:
+                _sse_subscribers.remove(q)
+            except ValueError:
+                pass
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
 # ─── Tier 3 Status ──────────────────────────────────────────────────────────
 @router.get("/tier3/status")
 async def tier3_status(auth: Dict = Depends(verify_auth)):
