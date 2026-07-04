@@ -14,6 +14,7 @@ Output format per frame:
 Three.js integration: see arena_renderer_frontend.js snippet at bottom.
 """
 
+import asyncio
 import math
 import json
 import time
@@ -23,7 +24,11 @@ import hashlib
 from typing import List, Dict, Tuple, Optional
 import numpy as np
 
-DB_PATH = "jasper_memory.db"
+try:
+    from backend.core.config import settings
+    DB_PATH = settings.db_path
+except Exception:
+    DB_PATH = "jasper_memory.db"
 
 # ════════════════════════════════════════════════════════════
 # COLONY STATE TENSOR
@@ -112,26 +117,34 @@ class ArenaProjectionEngine:
     Streams compressed frames via callback for WebSocket.
     """
     DEFAULT_TICKS = 30
-    DB_PATH = "jasper_memory.db"
 
     def __init__(self):
         self._init_table()
 
     def _init_table(self):
-        conn = sqlite3.connect(self.DB_PATH); c = conn.cursor()
+        conn = sqlite3.connect(DB_PATH); c = conn.cursor()
         c.execute("""CREATE TABLE IF NOT EXISTS arena_projections (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             challenge_id INTEGER, tick INTEGER,
             challenger_wealth REAL, challenged_wealth REAL,
             frame_data TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+        c.execute("""CREATE TABLE IF NOT EXISTS arena_projection_frames (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            challenge_id INTEGER, tick INTEGER,
+            frame TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
+        c.execute("""CREATE INDEX IF NOT EXISTS idx_proj_frames
+            ON arena_projection_frames(challenge_id, tick)""")
         conn.commit(); conn.close()
 
     def _params_from_agent(self, agent_name: str, elo: int,
                             agent_hz: float) -> Dict:
         """Map agent properties to colony simulation parameters."""
+        # sha1, not hash(): PYTHONHASHSEED randomizes hash() per process
+        seed = int(hashlib.sha1(agent_name.encode()).hexdigest()[:8], 16) % (2**31)
         return {
-            "seed":       abs(hash(agent_name)) % (2**31),
+            "seed":       seed,
             "agent_hz":   agent_hz,
             "elo_factor": elo / 1200.0,
         }
@@ -141,10 +154,14 @@ class ArenaProjectionEngine:
                   challenger_elo: int = 1200, challenged_elo: int = 1200,
                   challenger_hz: float = 432.0, challenged_hz: float = 528.0,
                   ticks: int = None,
-                  frame_callback = None) -> Dict:
+                  frame_callback = None,
+                  tick_delay: float = 0.0,
+                  persist_frames: bool = True) -> Dict:
         """
         Full projection run.
-        frame_callback: async fn(frame_dict) called per tick for WebSocket streaming.
+        frame_callback: async fn(frame_dict) called per tick for SSE/WebSocket streaming.
+        tick_delay: optional sleep between ticks so live subscribers can watch.
+        persist_frames: store compact frames per tick for GET replay.
         """
         if ticks is None:
             ticks = self.DEFAULT_TICKS
@@ -157,7 +174,10 @@ class ArenaProjectionEngine:
         prev_a, prev_b = [], []
         frame_log = []
 
-        conn = sqlite3.connect(self.DB_PATH); c = conn.cursor()
+        conn = sqlite3.connect(DB_PATH); c = conn.cursor()
+        if persist_frames:
+            c.execute("DELETE FROM arena_projection_frames WHERE challenge_id=?",
+                      (challenge_id,))
 
         for tick in range(ticks):
             state_a.step(cp["agent_hz"], cp["elo_factor"])
@@ -217,9 +237,17 @@ class ArenaProjectionEngine:
                     (challenge_id, tick, state_a.wealth, state_b.wealth,
                      json.dumps(metric)))
 
+            if persist_frames:
+                c.execute("""INSERT INTO arena_projection_frames
+                    (challenge_id,tick,frame) VALUES(?,?,?)""",
+                    (challenge_id, tick, compressor.compress(frame).decode()))
+
             if frame_callback:
                 try: await frame_callback(frame)
                 except Exception: pass
+
+            if tick_delay > 0:
+                await asyncio.sleep(tick_delay)
 
         conn.commit(); conn.close()
 
@@ -248,12 +276,26 @@ class ArenaProjectionEngine:
         }
 
     def get_projection_history(self, challenge_id: int) -> List[Dict]:
-        conn = sqlite3.connect(self.DB_PATH); c = conn.cursor()
+        conn = sqlite3.connect(DB_PATH); c = conn.cursor()
         c.execute("""SELECT tick,challenger_wealth,challenged_wealth
                      FROM arena_projections WHERE challenge_id=?
                      ORDER BY tick""", (challenge_id,))
         rows = c.fetchall(); conn.close()
         return [{"tick":r[0],"ch_a":r[1],"ch_b":r[2]} for r in rows]
+
+    def get_frames(self, challenge_id: int) -> List[Dict]:
+        """Persisted compact frames ({t,m,da,db,dv}) ordered by tick, for replay."""
+        conn = sqlite3.connect(DB_PATH); c = conn.cursor()
+        c.execute("""SELECT frame FROM arena_projection_frames
+                     WHERE challenge_id=? ORDER BY tick""", (challenge_id,))
+        rows = c.fetchall(); conn.close()
+        return [json.loads(r[0]) for r in rows]
+
+    def clear_frames(self, challenge_id: int) -> None:
+        conn = sqlite3.connect(DB_PATH); c = conn.cursor()
+        c.execute("DELETE FROM arena_projection_frames WHERE challenge_id=?",
+                  (challenge_id,))
+        conn.commit(); conn.close()
 
 # ════════════════════════════════════════════════════════════
 # FRAME COMPRESSOR  (efficient WebSocket payload)
