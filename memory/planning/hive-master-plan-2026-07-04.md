@@ -90,11 +90,16 @@ Fold `frontend/index.html`'s unique features into `docs/index.html` (or an expli
 then retire the stale copy. *DA*: three hand-maintained 70KB HTML files is how bugs breed.
 *CW*: every improvement lands everywhere at once.
 
-### Milestone 6 — Colony intelligence round-out
-LocalAGI HMAC (merge PR #3), then capabilities endpoints + zoom-panel parity for NAR2/4DBRAIN/
-Kimi-K2/automatisch mirroring THEHIVE's `/colony/capabilities`. Placeholder colonies in
-`.queen/hive.yml` either get real configs or move to an "aspirational" block the UI renders as
-under construction. *DA*: a registry that lists fiction breaks federation trust.
+### Milestone 6 — Colony intelligence round-out (capabilities slice ✅: PRs open)
+Capabilities parity shipped for four colonies — NAR2 PR #5, 4DBRAIN PR #5, Kimi-K2 PR #4,
+automatisch PR #4: `/colony/capabilities` added to each colony SDK / node server, mirroring the
+Queen's endpoint. Bonus finding: both zero-dep node servers (Kimi-K2 `colony-server.js`,
+automatisch sidecar) accepted **unsigned** `/colony/events` while their python/Express siblings
+verified HMAC — closed in the same PRs (permissive when `HIVE_JWT_SECRET` unset, 401 on mismatch).
+Remaining: LocalAGI HMAC (merge PR #3) and its capabilities endpoint (blocked on that merge to
+avoid entanglement), zoom-panel parity, and the `.queen/hive.yml` placeholder-colony decision.
+*DA*: a registry that lists fiction breaks federation trust; two transports with different auth
+contracts is how spoofed events get in.
 *CW*: zoom into any colony and see a living dashboard.
 
 ## 4. Standing constraints (unchanged, re-affirmed)
