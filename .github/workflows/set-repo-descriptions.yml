@@ -1,0 +1,40 @@
+name: Set Repo Descriptions
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  describe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set descriptions for all 10 sovereign-hive repos
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: |
+          set_desc() {
+            local repo="$1"
+            local desc="$2"
+            local response
+            response=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/TehutiRaEl/$repo" \
+              -d "{\"description\":\"$desc\"}")
+            if [ "$response" = "200" ]; then
+              echo "✅ $repo → $desc"
+            else
+              echo "❌ $repo failed (HTTP $response)"
+            fi
+          }
+
+          set_desc "THEHIVE"               "Queen of the Sovereign Hive — constitutional governance, agent economy, and hive coordination (FastAPI + SQLite)"
+          set_desc "LocalAGI"              "Body colony (The Swarm) — local-first AI agent platform with skills, RAG, and multimodal support"
+          set_desc "NAR2"                  "Solomon security colony — nocturnal swarm with free LLM gateways, deep search, and ephemeral blueprint wipe"
+          set_desc "4DBRAIN"               "Mind extension colony — 4D ReAct AI orchestrator with hybrid cloud/local LLM and real-time WebSocket streaming"
+          set_desc "aether"                "Commerce colony — License Authority Server with Stripe Connect, JWT licensing, and SOUL ledger settlement"
+          set_desc "automatisch"           "Workflow colony — open-source Zapier alternative and hive automation bus (1000+ app integrations)"
+          set_desc "Kimi-K2"               "Mind colony — Kimi K2 language model interface and reasoning gateway for the Sovereign Hive"
+          set_desc "build-your-own-x"      "Sovereign Hive knowledge source — engineering curriculum: rebuild popular technologies from scratch"
+          set_desc "free-programming-books" "Sovereign Hive knowledge source — curated library of free programming books and courses"
+          set_desc "freecodecamp"          "Sovereign Hive academy — full-stack developer curriculum and 50+ free certifications"
