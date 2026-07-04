@@ -39,15 +39,44 @@ from backend.core.alchemy import reflector
 from backend.core.genesis import gap_detector, mission_generator
 from backend.core.hive_mesh import hive_mesh
 
-# Tier 3 voxel projection — optional: API must survive missing numpy/tier3
+# Tier 3 modules — all optional: the API must survive any of them missing
 try:
     from backend.tier3.arena_renderer import engine as projection_engine, \
-        compressor as frame_compressor
+        compressor as frame_compressor, ColonyState as VoxelColonyState
     PROJECTION_AVAILABLE = True
 except Exception:
     projection_engine = None
     frame_compressor = None
+    VoxelColonyState = None
     PROJECTION_AVAILABLE = False
+
+try:
+    from backend.tier3 import quantum_bridge as quantum
+    QUANTUM_AVAILABLE = True
+except Exception:
+    quantum = None
+    QUANTUM_AVAILABLE = False
+
+try:
+    from backend.tier3 import sheaf_guild as sheaf
+    SHEAF_AVAILABLE = True
+except Exception:
+    sheaf = None
+    SHEAF_AVAILABLE = False
+
+try:
+    from backend.tier3 import ipfs_pubsub as pubsub
+    PUBSUB_AVAILABLE = True
+except Exception:
+    pubsub = None
+    PUBSUB_AVAILABLE = False
+
+try:
+    from backend.tier3 import tesseract_model as tesseract
+    TESSERACT_AVAILABLE = True
+except Exception:
+    tesseract = None
+    TESSERACT_AVAILABLE = False
 
 _projections_running: set = set()
 
@@ -880,19 +909,105 @@ async def events_stream():
 
 
 # ─── Tier 3 Status ──────────────────────────────────────────────────────────
+def _t3(available: bool, detail: str) -> Dict:
+    return {"available": available,
+            "status": f"Loaded — {detail}" if available else "Not loaded"}
+
 @router.get("/tier3/status")
 async def tier3_status(auth: Dict = Depends(verify_auth)):
     return {
-        "quantum_bridge": {"available": False, "status": "Not loaded"},
-        "sheaf_guild": {"available": False, "status": "Not loaded"},
-        "ipfs_pubsub": {"available": False, "status": "Not loaded"},
-        "arena_renderer": {"available": PROJECTION_AVAILABLE,
-                           "status": "Loaded — voxel projection active"
-                           if PROJECTION_AVAILABLE else "Not loaded"},
-        "tesseract_model": {"available": False, "status": "Not loaded"},
-        "message": "Import Tier 3 modules to enable",
+        "quantum_bridge": _t3(QUANTUM_AVAILABLE, "QRNG, BB84, Grover, IBMQ monitor"),
+        "sheaf_guild": _t3(SHEAF_AVAILABLE, "Shamir SSS guild keys + sealed messaging"),
+        "ipfs_pubsub": _t3(PUBSUB_AVAILABLE, "channel registry + HD-encoded broker"),
+        "arena_renderer": _t3(PROJECTION_AVAILABLE, "voxel projection active"),
+        "tesseract_model": _t3(TESSERACT_AVAILABLE, "4D GRU forecast (numpy)"),
         "basis": "Sovereign Hive v11.0"
     }
+
+# ─── Tier 3: Quantum ────────────────────────────────────────────────────────
+def _require(flag: bool, name: str):
+    if not flag:
+        raise HTTPException(503, f"{name} unavailable (tier3 not loaded)")
+
+@router.get("/quantum/qrng")
+async def quantum_qrng(n_bits: int = 16, auth: Dict = Depends(verify_auth)):
+    _require(QUANTUM_AVAILABLE, "quantum_bridge")
+    n_bits = max(1, min(256, n_bits))
+    return {"bits": quantum.qrng.random_bits(n_bits), "n_bits": n_bits,
+            "source": "Hadamard-measured simulated qubits"}
+
+@router.post("/quantum/bb84")
+async def quantum_bb84(n_bits: int = 64, eve_present: bool = False,
+                       auth: Dict = Depends(verify_auth)):
+    _require(QUANTUM_AVAILABLE, "quantum_bridge")
+    return quantum.BB84().exchange(max(8, min(256, n_bits)), eve_present)
+
+@router.get("/quantum/ibmq/status")
+async def quantum_ibmq_status(auth: Dict = Depends(verify_auth)):
+    _require(QUANTUM_AVAILABLE, "quantum_bridge")
+    return await quantum.ibmq.check_availability()
+
+@router.post("/quantum/encode")
+async def quantum_encode(text: str, n_qubits: int = 8, auth: Dict = Depends(verify_auth)):
+    _require(QUANTUM_AVAILABLE, "quantum_bridge")
+    return quantum.quantum_encode_text(text[:500], max(1, min(16, n_qubits)))
+
+# ─── Tier 3: Sheaf Guild ────────────────────────────────────────────────────
+@router.get("/sheaf/guilds")
+async def sheaf_guilds(auth: Dict = Depends(verify_auth)):
+    _require(SHEAF_AVAILABLE, "sheaf_guild")
+    gm = sheaf.GuildMessenger.GUILD_MEMBERS
+    return {"guilds": [{"name": g, "members": m,
+                        "threshold": sheaf.GuildMessenger.THRESHOLD}
+                       for g, m in gm.items()]}
+
+@router.post("/sheaf/setup/all")
+async def sheaf_setup_all(auth: Dict = Depends(verify_auth)):
+    _require(SHEAF_AVAILABLE, "sheaf_guild")
+    return {"setup": sheaf.messenger.setup_all_guilds()}
+
+# ─── Tier 3: PubSub ─────────────────────────────────────────────────────────
+@router.get("/pubsub/channels")
+async def pubsub_channels(auth: Dict = Depends(verify_auth)):
+    _require(PUBSUB_AVAILABLE, "ipfs_pubsub")
+    return {"channels": pubsub.registry.list_channels()}
+
+@router.post("/pubsub/channel")
+async def pubsub_create_channel(colony_name: str, description: str = "",
+                                auth: Dict = Depends(verify_auth)):
+    _require(PUBSUB_AVAILABLE, "ipfs_pubsub")
+    channel_id = pubsub.registry.create(colony_name[:64], description[:200])
+    return {"colony": colony_name, "channel_id": channel_id}
+
+# ─── Tier 3: Voxel snapshot + Tesseract ─────────────────────────────────────
+@router.get("/arena/render/voxels/{colony}")
+async def arena_render_voxels(colony: str, ticks: int = 3,
+                              auth: Dict = Depends(verify_auth)):
+    """Standalone voxel snapshot of a named colony (no challenge required)."""
+    _require(PROJECTION_AVAILABLE, "arena_renderer")
+    import hashlib as _h
+    seed = int(_h.sha1(colony.encode()).hexdigest()[:8], 16) % (2**31)
+    state = VoxelColonyState(colony[:64], seed)
+    for _ in range(max(1, min(60, ticks))):
+        state.step()
+    voxels = state.to_voxels()
+    return {"colony": colony, "ticks": ticks, "wealth": round(state.wealth, 2),
+            "total_voxels": len(voxels), "voxels": voxels[:1024]}
+
+@router.get("/tesseract/status")
+async def tesseract_status(auth: Dict = Depends(verify_auth)):
+    _require(TESSERACT_AVAILABLE, "tesseract_model")
+    m = tesseract.get_model()
+    return {"backend": type(m).__name__, "dim": getattr(m, "dim", None),
+            "t_steps": tesseract.T_STEPS, "grid": [tesseract.X_SIZE, tesseract.Y_SIZE],
+            "channels": tesseract.N_CHAN}
+
+@router.post("/tesseract/forecast")
+async def tesseract_forecast(colony_name: str, n_forecast: int = 4,
+                             auth: Dict = Depends(verify_auth)):
+    _require(TESSERACT_AVAILABLE, "tesseract_model")
+    return tesseract.get_model().wealth_forecast(colony_name[:64],
+                                                 max(1, min(16, n_forecast)))
 
 # ─── WebSocket ───────────────────────────────────────────────────────────────────
 

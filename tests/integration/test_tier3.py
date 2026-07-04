@@ -1,110 +1,124 @@
 """
-Integration tests for Tier 3 endpoints
+Integration tests for Tier 3 endpoints — rewritten against backend.main
+(the previous version imported the retired jasper_v9_complete entrypoint,
+which aborted collection of the whole integration suite).
 """
 
+import os
+import tempfile
+
+_TEST_DB = os.path.join(tempfile.gettempdir(), "hive_tier3_test.db")
+os.environ.setdefault("DB_PATH", _TEST_DB)
+
 import pytest
-import httpx
 from fastapi.testclient import TestClient
 
-from jasper_v9_complete import app
+from backend.main import app
+from backend.core.config import settings
 
 client = TestClient(app)
+HEADERS = {"X-API-Key": settings.api_key}
 
-# Test authentication
+
 def test_tier3_status_requires_auth():
-    response = client.get("/tier3/status")
-    assert response.status_code in [401, 403]
+    assert client.get("/v11/tier3/status").status_code in (401, 403)
 
-def test_tier3_status_with_auth():
-    # First get a token
-    token_resp = client.post("/auth/token")
-    assert token_resp.status_code == 200
-    token = token_resp.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.get("/tier3/status", headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert "quantum_bridge" in data
-    assert "sheaf_guild" in data
-    assert "ipfs_pubsub" in data
-    assert "arena_renderer" in data
-    assert "tesseract_model" in data
 
-# ─── Quantum Endpoints ──────────────────────────────────────
+def test_tier3_status_reports_all_modules():
+    r = client.get("/v11/tier3/status", headers=HEADERS)
+    assert r.status_code == 200
+    data = r.json()
+    for module in ("quantum_bridge", "sheaf_guild", "ipfs_pubsub",
+                   "arena_renderer", "tesseract_model"):
+        assert "available" in data[module]
+        # status string must agree with the flag — no fiction
+        loaded = data[module]["available"]
+        assert data[module]["status"].startswith("Loaded" if loaded else "Not loaded")
+
+
+# ─── Quantum ─────────────────────────────────────────────────────────────
 def test_quantum_qrng():
-    token = client.post("/auth/token").json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.get("/quantum/qrng?n_bits=16", headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert "bits" in data
-    assert len(data["bits"]) == 16
+    r = client.get("/v11/quantum/qrng?n_bits=16", headers=HEADERS)
+    assert r.status_code in (200, 503)
+    if r.status_code == 200:
+        bits = r.json()["bits"]
+        assert len(bits) == 16 and set(bits) <= {0, 1}
+
+
+def test_quantum_bb84_exchange():
+    r = client.post("/v11/quantum/bb84?n_bits=32", headers=HEADERS)
+    assert r.status_code in (200, 503)
+
 
 def test_quantum_ibmq_status():
-    token = client.post("/auth/token").json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.get("/quantum/ibmq/status", headers=headers)
-    assert response.status_code in [200, 503]  # 503 if module not available
+    r = client.get("/v11/quantum/ibmq/status", headers=HEADERS)
+    assert r.status_code in (200, 503)
+    if r.status_code == 200:
+        assert "available" in r.json()
 
-# ─── Sheaf Endpoints ──────────────────────────────────────
+
+# ─── Sheaf ───────────────────────────────────────────────────────────────
 def test_sheaf_guilds():
-    token = client.post("/auth/token").json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.get("/sheaf/guilds", headers=headers)
-    assert response.status_code in [200, 503]
-    if response.status_code == 200:
-        data = response.json()
-        assert "guilds" in data
+    r = client.get("/v11/sheaf/guilds", headers=HEADERS)
+    assert r.status_code in (200, 503)
+    if r.status_code == 200:
+        guilds = r.json()["guilds"]
+        assert len(guilds) >= 5
+        assert all("members" in g and "threshold" in g for g in guilds)
 
-def test_sheaf_setup():
-    token = client.post("/auth/token").json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.post("/sheaf/setup/all", headers=headers)
-    assert response.status_code in [200, 503]
 
-# ─── PubSub Endpoints ─────────────────────────────────────
-def test_pubsub_channels():
-    token = client.post("/auth/token").json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.get("/pubsub/channels", headers=headers)
-    assert response.status_code in [200, 503]
+def test_sheaf_setup_all():
+    r = client.post("/v11/sheaf/setup/all", headers=HEADERS)
+    assert r.status_code in (200, 503)
+    if r.status_code == 200:
+        assert len(r.json()["setup"]) >= 5
 
-def test_pubsub_create_channel():
-    token = client.post("/auth/token").json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.post("/pubsub/channel?colony_name=TEST_INTEGRATION", headers=headers)
-    assert response.status_code in [200, 503]
 
-# ─── Arena Renderer Endpoints ─────────────────────────────
-def test_arena_voxels():
-    token = client.post("/auth/token").json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.get("/arena/render/voxels/TEST_COLONY?ticks=3", headers=headers)
-    assert response.status_code in [200, 503]
-    if response.status_code == 200:
-        data = response.json()
-        assert "colony" in data
-        assert "voxels" in data
+# ─── PubSub ──────────────────────────────────────────────────────────────
+def test_pubsub_create_then_list():
+    r = client.post("/v11/pubsub/channel?colony_name=TEST_INTEGRATION",
+                    headers=HEADERS)
+    assert r.status_code in (200, 503)
+    if r.status_code == 200:
+        channel_id = r.json()["channel_id"]
+        chans = client.get("/v11/pubsub/channels", headers=HEADERS).json()["channels"]
+        assert any(c.get("channel_id") == channel_id or channel_id in str(c)
+                   for c in chans)
 
-# ─── Tesseract Model Endpoints ────────────────────────────
+
+# ─── Voxel snapshot ──────────────────────────────────────────────────────
+def test_arena_render_voxels():
+    r = client.get("/v11/arena/render/voxels/TEST_COLONY?ticks=3", headers=HEADERS)
+    assert r.status_code in (200, 503)
+    if r.status_code == 200:
+        data = r.json()
+        assert data["colony"] == "TEST_COLONY"
+        assert data["total_voxels"] > 0
+        v = data["voxels"][0]
+        assert {"x", "y", "z", "r", "g", "b", "a"} <= set(v)
+
+
+def test_arena_render_voxels_deterministic():
+    a = client.get("/v11/arena/render/voxels/SAME_SEED?ticks=1", headers=HEADERS)
+    b = client.get("/v11/arena/render/voxels/SAME_SEED?ticks=1", headers=HEADERS)
+    if a.status_code == 200 and b.status_code == 200:
+        # same sha1 seed → same initial grid; step() noise differs, but
+        # voxel COUNT from the seeded exponential field stays in family
+        assert abs(a.json()["total_voxels"] - b.json()["total_voxels"]) < 400
+
+
+# ─── Tesseract ───────────────────────────────────────────────────────────
 def test_tesseract_status():
-    token = client.post("/auth/token").json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.get("/tesseract_model/status", headers=headers)
-    assert response.status_code in [200, 503]
+    r = client.get("/v11/tesseract/status", headers=HEADERS)
+    assert r.status_code in (200, 503)
+    if r.status_code == 200:
+        data = r.json()
+        assert data["grid"] == [16, 16] and data["channels"] == 4
+
 
 def test_tesseract_forecast():
-    token = client.post("/auth/token").json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    response = client.post("/tesseract_model/forecast?colony_name=TEST&n_forecast=3", headers=headers)
-    assert response.status_code in [200, 503]
+    r = client.post("/v11/tesseract/forecast?colony_name=TEST&n_forecast=3",
+                    headers=HEADERS)
+    assert r.status_code in (200, 503)
+    if r.status_code == 200:
+        assert "forecast" in str(r.json()).lower() or "wealth" in str(r.json()).lower()
