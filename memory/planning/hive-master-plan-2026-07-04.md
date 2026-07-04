@@ -52,6 +52,17 @@ Every item below passed both lenses of [[dual-lens-framework]]:
     `tests/integration/test_tier3.py` imported that same dead module, aborting the whole advisory
     integration collection — **rewritten against `backend.main` in Milestone 4 (this branch)**;
     the remaining UI-endpoint drift folds into Milestones 3 and 5.
+12. **The PAT was never distributed — and the Queen never existed** (diagnosed 2026-07-04): colony
+    workflows reference `secrets.PAT`, but no workflow in any repo's history ever wrote that secret
+    into the colonies. The remembered "distribution" workflow is
+    `.queen/.github/workflows/constitution-sync.yml` — which (a) sits in a scaffold subfolder GitHub
+    Actions never executes (only root `.github/workflows/` runs), (b) targets a Queen repo
+    `sovereign-hive-meta` that was never created (404; colonies even curl a different name,
+    `-sovereign-hive-meta`, stray leading dash), (c) dispatches events — it never distributed
+    secrets anyway, and (d) lists only THEHIVE/aether/automatisch. → **Corrected on this branch**:
+    `.github/workflows/distribute-pat.yml` (manual trigger) pushes THEHIVE's `secrets.PAT` into all
+    nine sibling repos via `gh secret set`. Open decision: create `sovereign-hive-meta`, or crown
+    THEHIVE as Queen and repoint the colonies' `constitution-receive.yml` URLs.
 
 ## 3. Roadmap
 

@@ -1,0 +1,74 @@
+name: Distribute PAT to Colonies
+
+# The missing link in the hive's secret plumbing.
+#
+# History: colony workflows (constitution-receive.yml, pages.yml, and
+# THEHIVE's set-repo-descriptions.yml) all reference `secrets.PAT`, but no
+# workflow ever existed that put that secret INTO the colony repos. The
+# closest thing — .queen/.github/workflows/constitution-sync.yml — lives in
+# a scaffold subfolder GitHub Actions never executes, was written for a
+# Queen repo (sovereign-hive-meta) that was never created, and dispatches
+# events rather than distributing secrets anyway.
+#
+# This workflow is the actual distributor. Run it once, and again after
+# every PAT rotation: Actions → "Distribute PAT to Colonies" → Run workflow.
+#
+# Prerequisite (one manual step, by design — secrets can't bootstrap
+# themselves): add `PAT` under THEHIVE → Settings → Secrets and variables →
+# Actions. Classic token: `repo` scope. Fine-grained token: all ten hive
+# repos, with "Secrets: Read and write" + "Metadata: Read".
+#
+# Security notes: the token is piped via stdin (never in argv or logs);
+# GitHub masks it in output; each colony receives it encrypted through the
+# Actions Secrets API (gh handles the libsodium sealed box).
+
+on:
+  workflow_dispatch:
+    inputs:
+      secret_name:
+        description: "Secret name to create in each colony"
+        default: "PAT"
+        required: false
+
+permissions: {}
+
+jobs:
+  distribute:
+    name: Push PAT into every colony's Actions secrets
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PAT }}
+    steps:
+      - name: Verify source PAT exists
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::secrets.PAT is not set in THEHIVE. Add it under Settings → Secrets and variables → Actions, then re-run."
+            exit 1
+          fi
+          echo "PAT present. Authenticated as: $(gh api user -q .login 2>/dev/null || echo 'unknown — token may lack scopes')"
+
+      - name: Distribute to all colonies
+        env:
+          SECRET_NAME: ${{ inputs.secret_name || 'PAT' }}
+        run: |
+          set +e
+          ok=0; fail=0; failed_repos=""
+          for repo in LocalAGI NAR2 4DBRAIN aether automatisch Kimi-K2 \
+                      build-your-own-x free-programming-books freeCodeCamp; do
+            if printf '%s' "$GH_TOKEN" | gh secret set "$SECRET_NAME" --repo "TehutiRaEl/$repo" 2>err.txt; then
+              echo "✅ $repo — secret '$SECRET_NAME' set"
+              ok=$((ok+1))
+            else
+              echo "❌ $repo — $(head -1 err.txt)"
+              fail=$((fail+1)); failed_repos="$failed_repos $repo"
+            fi
+          done
+          {
+            echo "## PAT distribution summary"
+            echo ""
+            echo "- ✅ succeeded: $ok"
+            echo "- ❌ failed: $fail${failed_repos:+ —$failed_repos}"
+            echo ""
+            echo "Failures usually mean the PAT lacks admin/secrets access on that repo."
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ "$fail" -eq 0 ]
