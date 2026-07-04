@@ -39,6 +39,18 @@ from backend.core.alchemy import reflector
 from backend.core.genesis import gap_detector, mission_generator
 from backend.core.hive_mesh import hive_mesh
 
+# Tier 3 voxel projection — optional: API must survive missing numpy/tier3
+try:
+    from backend.tier3.arena_renderer import engine as projection_engine, \
+        compressor as frame_compressor
+    PROJECTION_AVAILABLE = True
+except Exception:
+    projection_engine = None
+    frame_compressor = None
+    PROJECTION_AVAILABLE = False
+
+_projections_running: set = set()
+
 # ─── Pydantic Models ───────────────────────────────────────────────
 class LLMChatRequest(BaseModel):
     prompt: str
@@ -312,6 +324,7 @@ async def arena_challenge(req: ArenaChallengeCreate, auth: Dict = Depends(verify
 async def arena_resolve(challenge_id: int, auth: Dict = Depends(verify_auth)):
     result = await arena.run(challenge_id)
     await ws_manager.broadcast({"type": "arena_resolved", "challenge_id": challenge_id, "winner": result.get("winner")})
+    _sse_publish("arena_resolved", {"challenge_id": challenge_id, "winner": result.get("winner")})
     return result
 
 @router.get("/arena/challenges")
@@ -349,6 +362,77 @@ async def arena_stats(auth: Dict = Depends(verify_auth)):
     top = c.fetchall()
     conn.close()
     return {"total_battles": total, "top_gladiators": [{"agent": r[0], "wins": r[1]} for r in top]}
+
+@router.post("/arena/project/{challenge_id}")
+async def arena_project(challenge_id: int, ticks: int = 30, tick_delay: float = 0.0,
+                        auth: Dict = Depends(verify_auth)):
+    """
+    Voxel projection of a challenge (visualization only — GladiatorArena stays
+    the authoritative decider). Persists compact frames for GET replay and
+    publishes each tick on the SSE stream.
+    """
+    if not PROJECTION_AVAILABLE:
+        raise HTTPException(503, "arena_renderer unavailable (tier3 not loaded)")
+    if challenge_id in _projections_running:
+        raise HTTPException(409, f"projection for challenge {challenge_id} already running")
+    ch = arena.get_challenge(challenge_id)
+    if not ch:
+        raise HTTPException(404, f"challenge {challenge_id} not found")
+
+    ticks = max(1, min(60, ticks))
+    tick_delay = max(0.0, min(0.3, tick_delay))
+
+    challenger, challenged = ch["challenger"], ch["challenged"]
+    challenger_elo, challenged_elo = 1200, 1200
+    sa, sb = ch.get("challenger_score"), ch.get("challenged_score")
+    if sa and sb:
+        # bias toward the resolved outcome so projection tends to agree
+        mean = (sa + sb) / 2
+        challenger_elo = max(400, min(2400, int(1200 * sa / mean)))
+        challenged_elo = max(400, min(2400, int(1200 * sb / mean)))
+
+    async def _cb(frame):
+        _sse_publish("arena_frame", json.loads(frame_compressor.compress(frame)))
+
+    def _hz(name, default):
+        try:
+            return frequency_guild.agent_hz(name)
+        except Exception:
+            return default
+
+    _projections_running.add(challenge_id)
+    try:
+        result = await projection_engine.run(
+            challenge_id, challenger, challenged,
+            challenger_elo=challenger_elo, challenged_elo=challenged_elo,
+            challenger_hz=_hz(challenger, 432.0),
+            challenged_hz=_hz(challenged, 528.0),
+            ticks=ticks, frame_callback=_cb, tick_delay=tick_delay)
+    finally:
+        _projections_running.discard(challenge_id)
+
+    arena_winner = ch.get("winner")
+    _sse_publish("arena_projection_complete",
+                 {"challenge_id": challenge_id,
+                  "arena_winner": arena_winner,
+                  "projection_winner": result["winner"]})
+    await ws_manager.broadcast({"type": "arena_projection_complete",
+                                "challenge_id": challenge_id,
+                                "winner": arena_winner or result["winner"]})
+    return {"challenge_id": challenge_id,
+            "arena_winner": arena_winner,
+            "projection": result,
+            "frames_url": f"/v11/arena/projection/{challenge_id}/frames"}
+
+@router.get("/arena/projection/{challenge_id}/frames")
+async def arena_projection_frames(challenge_id: int, auth: Dict = Depends(verify_auth)):
+    """Replay source of truth: persisted compact frames {t,m,da,db,dv}."""
+    if not PROJECTION_AVAILABLE:
+        raise HTTPException(503, "arena_renderer unavailable (tier3 not loaded)")
+    frames = projection_engine.get_frames(challenge_id)
+    if not frames:
+        raise HTTPException(404, f"no projection frames for challenge {challenge_id}")
+    return {"challenge_id": challenge_id, "total_frames": len(frames), "frames": frames}
 
 # ─── Wallet ────────────────────────────────────────────────────────────────────────
 @router.post("/wallet/create/{agent_name}")
@@ -804,7 +888,9 @@ async def tier3_status(auth: Dict = Depends(verify_auth)):
         "quantum_bridge": {"available": False, "status": "Not loaded"},
         "sheaf_guild": {"available": False, "status": "Not loaded"},
         "ipfs_pubsub": {"available": False, "status": "Not loaded"},
-        "arena_renderer": {"available": False, "status": "Not loaded"},
+        "arena_renderer": {"available": PROJECTION_AVAILABLE,
+                           "status": "Loaded — voxel projection active"
+                           if PROJECTION_AVAILABLE else "Not loaded"},
         "tesseract_model": {"available": False, "status": "Not loaded"},
         "message": "Import Tier 3 modules to enable",
         "basis": "Sovereign Hive v11.0"
