@@ -324,7 +324,6 @@ async def arena_challenge(req: ArenaChallengeCreate, auth: Dict = Depends(verify
 async def arena_resolve(challenge_id: int, auth: Dict = Depends(verify_auth)):
     result = await arena.run(challenge_id)
     await ws_manager.broadcast({"type": "arena_resolved", "challenge_id": challenge_id, "winner": result.get("winner")})
-    _sse_publish("arena_resolved", {"challenge_id": challenge_id, "winner": result.get("winner")})
     return result
 
 @router.get("/arena/challenges")
@@ -412,13 +411,10 @@ async def arena_project(challenge_id: int, ticks: int = 30, tick_delay: float = 
         _projections_running.discard(challenge_id)
 
     arena_winner = ch.get("winner")
-    _sse_publish("arena_projection_complete",
-                 {"challenge_id": challenge_id,
-                  "arena_winner": arena_winner,
-                  "projection_winner": result["winner"]})
     await ws_manager.broadcast({"type": "arena_projection_complete",
                                 "challenge_id": challenge_id,
-                                "winner": arena_winner or result["winner"]})
+                                "arena_winner": arena_winner,
+                                "projection_winner": result["winner"]})
     return {"challenge_id": challenge_id,
             "arena_winner": arena_winner,
             "projection": result,
@@ -878,7 +874,9 @@ async def events_stream():
             except ValueError:
                 pass
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(generate(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache",
+                                      "X-Accel-Buffering": "no"})
 
 
 # ─── Tier 3 Status ──────────────────────────────────────────────────────────
@@ -913,6 +911,8 @@ class WebSocketManager:
             self.active.remove(ws)
 
     async def broadcast(self, msg: Dict):
+        # one event bus, two transports: every WS broadcast also reaches SSE
+        _sse_publish(msg.get("type", "message"), msg)
         async with self._lock:
             dead = []
             for ws in self.active:
