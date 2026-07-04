@@ -267,6 +267,82 @@ window.addEventListener('load',()=>{
 });
 </script>
 
+<!-- ══════════════════════════════════════ THREE.JS VOXEL ARENA ═══ -->
+<script>
+/* Renders /v11/arena/projection frames: two 16×16×8 colonies side by side.
+   Fixed camera + slow auto-rotation (no OrbitControls: extra CDN dep and
+   pointer-drag would fight the fullscreen Phaser canvas). */
+class VoxelArenaViewer {
+  constructor(canvas){
+    this.canvas=canvas;
+    const w=canvas.width||340,h=canvas.height||240;
+    this.renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    this.renderer.setSize(w,h,false);
+    this.scene=new THREE.Scene();
+    this.camera=new THREE.PerspectiveCamera(45,w/h,0.1,200);
+    this.camera.position.set(0,18,34);this.camera.lookAt(0,2,0);
+    this.scene.add(new THREE.AmbientLight(0x8899aa,.7));
+    const sun=new THREE.DirectionalLight(0xffffff,.8);sun.position.set(10,20,10);this.scene.add(sun);
+    this.groups={};this.meshes={};this.maps={};
+    ["a","b"].forEach((k,i)=>{
+      const g=new THREE.Group();g.position.x=i===0?-11:11;
+      const mesh=new THREE.InstancedMesh(
+        new THREE.BoxGeometry(.85,.85,.85),
+        new THREE.MeshLambertMaterial({transparent:true,opacity:.92}),2048);
+      mesh.setColorAt(0,new THREE.Color(1,1,1)); // allocate full color buffer while count=2048 (r128 sizes it from current count)
+      mesh.count=0;g.add(mesh);this.scene.add(g);
+      const base=this.baseplate(i===0?0x113322:0x113344);g.add(base);
+      this.groups[k]=g;this.meshes[k]=mesh;this.maps[k]=new Map();
+    });
+    this.frames=[];this.idx=0;this._timer=null;this._raf=null;this._disposed=false;
+    this._dummy=new THREE.Object3D();this._color=new THREE.Color();
+    window.voxelViewer=this;
+    this._animate();
+  }
+  baseplate(color){
+    const p=new THREE.Mesh(new THREE.BoxGeometry(16.4,.2,16.4),
+      new THREE.MeshLambertMaterial({color,transparent:true,opacity:.5}));
+    p.position.y=-.6;return p;
+  }
+  loadFrames(frames){this.frames=frames||[];this.reset();}
+  _upsert(k,v){
+    const mesh=this.meshes[k],map=this.maps[k],key=v.x+","+v.y+","+v.z;
+    let i=map.get(key);
+    if(i===undefined){if(map.size>=2048)return;i=map.size;map.set(key,i);mesh.count=map.size;}
+    const s=.3+.7*Math.min(v.a||0,1);
+    this._dummy.position.set(v.x-7.5,v.z,v.y-7.5);
+    this._dummy.scale.set(s,s,s);this._dummy.updateMatrix();
+    mesh.setMatrixAt(i,this._dummy.matrix);
+    this._color.setRGB(v.r||.5,v.g||.5,v.b||.5);
+    mesh.setColorAt(i,this._color);
+  }
+  _applyFrame(f){
+    (f.da||[]).forEach(v=>this._upsert("a",v));
+    (f.db||[]).forEach(v=>this._upsert("b",v));
+    ["a","b"].forEach(k=>{const m=this.meshes[k];m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;});
+  }
+  play(fps=8,onTick=null,onDone=null){
+    this.stop();
+    this._timer=setInterval(()=>{
+      if(this.idx>=this.frames.length){this.stop();if(onDone)onDone();return;}
+      const f=this.frames[this.idx++];
+      this._applyFrame(f);
+      if(onTick)onTick(f);
+    },1000/fps);
+  }
+  stop(){if(this._timer){clearInterval(this._timer);this._timer=null;}}
+  reset(){this.stop();this.idx=0;["a","b"].forEach(k=>{this.maps[k].clear();this.meshes[k].count=0;});}
+  dispose(){this._disposed=true;this.stop();if(this._raf)cancelAnimationFrame(this._raf);this.renderer.dispose();}
+  _animate(){
+    if(this._disposed)return;
+    this._raf=requestAnimationFrame(()=>this._animate());
+    this.groups.a.rotation.y+=.004;this.groups.b.rotation.y-=.004;
+    this.renderer.render(this.scene,this.camera);
+  }
+}
+window.VoxelArenaViewer=VoxelArenaViewer;
+</script>
+
 <!-- ══════════════════════════════════════ PHASER WORLD ════════ -->
 <script>
 window.HIVE={agents:[],tasks:[],eloMap:{},soulMap:{},resonance:0,schumannHz:7.83,activeFreq:432,events:[],arenaActive:false,dayTime:.5,weather:"clear",colonyZones:[],colonyHealth:{}};
@@ -606,8 +682,13 @@ function HUD() {
   const [loadError, setLoadError] = useState(null);
   const [zoomColony, setZoomColony] = useState(null);
   const [zoomHealth, setZoomHealth] = useState(null); // {status, soul_md_hash, latency_ms}
+  const [proj, setProj] = useState(null);            // {challenge_id, arena_winner, projection, frames}
+  const [projStatus, setProjStatus] = useState("idle"); // idle|running|ready|error
+  const [projTick, setProjTick] = useState(null);    // current compact frame {t,m,...}
+  const [projDone, setProjDone] = useState(false);
   const graphRef = useRef(null);
   const wsRef = useRef(null);
+  const voxelRef = useRef(null);
 
   const ah = () => ({"Authorization":`Bearer ${token}`,"Content-Type":"application/json"});
 
@@ -664,6 +745,27 @@ function HUD() {
   },[online]);
 
   useEffect(()=>{load();const iv=setInterval(load,15000);return()=>clearInterval(iv);},[]);
+
+  // Arena voxel projection: POST runs the sim, GET replays persisted frames
+  const runProjection = async (chId) => {
+    setProjStatus("running"); setProj(null); setProjDone(false); setProjTick(null);
+    try {
+      const p = await api(`/arena/project/${chId}`,{method:"POST",headers:ah(),timeout:30000});
+      const f = await api(`/arena/projection/${chId}/frames`,{headers:ah()});
+      setProj({...p, frames:f.frames}); setProjStatus("ready");
+    } catch(e){ setProjStatus("error"); }
+  };
+
+  useEffect(()=>{
+    if(tab!=="arena"||!proj||!proj.frames) return;
+    const canvas = document.getElementById('voxel-canvas');
+    if(!canvas) return;
+    const v = new VoxelArenaViewer(canvas);
+    voxelRef.current = v;
+    v.loadFrames(proj.frames);
+    v.play(8, f=>setProjTick(f), ()=>setProjDone(true));
+    return ()=>{ v.dispose(); voxelRef.current=null; };
+  },[proj,tab]);
 
   // D3 graph
   useEffect(()=>{
@@ -817,10 +919,34 @@ function HUD() {
                   <span style={{color:ch.status==="pending"?"#FFD700":"#00ff88",fontSize:"9px"}}>{ch.status}</span>
                 </div>
                 <div style={{fontSize:"9px",color:"#884",marginTop:"3px",fontStyle:"italic"}}>"{(ch.proposition||"").substring(0,60)}"</div>
-                {ch.status==="pending"&&online&&<button style={{marginTop:"4px",padding:"3px 8px",background:"rgba(200,50,0,.4)",border:"1px solid rgba(255,100,0,.4)",borderRadius:"4px",color:"#FF8844",fontSize:"9px",cursor:"pointer"}} onClick={async()=>{const d=await api(`/arena/run/${ch.id}`,{method:"POST",headers:ah()}).catch(()=>null);alert(`Winner: ${d?.winner}`);load();}}>▶ RUN PROJECTION</button>}
-                {ch.status==="completed"&&<div style={{fontSize:"9px",color:"#00ff88",marginTop:"3px"}}>Winner: {ch.winner}</div>}
+                {ch.status==="pending"&&online&&<button style={{marginTop:"4px",padding:"3px 8px",background:"rgba(200,50,0,.4)",border:"1px solid rgba(255,100,0,.4)",borderRadius:"4px",color:"#FF8844",fontSize:"9px",cursor:"pointer"}} onClick={async()=>{const d=await api(`/arena/resolve/${ch.id}`,{method:"POST",headers:ah()}).catch(()=>null);if(d?.winner){if(window.cortana)cortana.speak(`${d.winner} prevails in the arena.`);await runProjection(ch.id);}load();}}>▶ RUN PROJECTION</button>}
+                {ch.status==="completed"&&<div style={{fontSize:"9px",color:"#00ff88",marginTop:"3px"}}>Winner: {ch.winner}
+                  {online&&<button style={{marginLeft:"8px",padding:"2px 6px",background:"rgba(0,60,90,.4)",border:"1px solid rgba(0,180,220,.4)",borderRadius:"4px",color:"#44ccee",fontSize:"8px",cursor:"pointer"}} onClick={()=>runProjection(ch.id)}>🧊 PROJECT</button>}
+                </div>}
               </div>
             ))}
+            {projStatus!=="idle"&&<div style={{marginTop:"10px",border:"1px solid rgba(255,70,0,.3)",borderRadius:"8px",padding:"8px",background:"rgba(20,5,0,.6)"}}>
+              <div style={{fontSize:"10px",color:"#FF8844",fontWeight:"bold",marginBottom:"6px"}}>🧊 VOXEL PROJECTION{proj?` · #${proj.challenge_id}`:""}{projTick?` · tick ${projTick.t+1}/${proj?.projection?.ticks_run||30}`:""}</div>
+              {projStatus==="running"&&<div style={{fontSize:"9px",color:"#886644"}}>Simulating colony futures…</div>}
+              {projStatus==="error"&&<div style={{fontSize:"9px",color:"#ff5544"}}>Projection failed — tier3 renderer offline?</div>}
+              {proj&&<div>
+                <canvas id="voxel-canvas" width={340} height={240} style={{width:"100%",borderRadius:"6px",background:"#000208",display:"block"}}/>
+                {projTick&&projTick.m&&<div style={{marginTop:"6px"}}>
+                  <div style={{display:"flex",height:"8px",borderRadius:"4px",overflow:"hidden",background:"#111"}}>
+                    <div style={{width:`${(projTick.m.challenger_share||.5)*100}%`,background:"#22cc55",transition:"width .12s linear"}}/>
+                    <div style={{width:`${(projTick.m.challenged_share||.5)*100}%`,background:"#00bbcc",transition:"width .12s linear"}}/>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:"8px",marginTop:"2px"}}>
+                    <span style={{color:"#22cc55"}}>challenger {projTick.m.challenger_wealth}</span>
+                    <span style={{color:"#FFD700"}}>▲ {projTick.m.leading}</span>
+                    <span style={{color:"#00bbcc"}}>{projTick.m.challenged_wealth} challenged</span>
+                  </div>
+                </div>}
+                {projDone&&<div style={{color:"#00ff88",fontSize:"11px",fontWeight:"bold",marginTop:"6px"}}>🏆 WINNER: {proj.arena_winner||proj.projection.winner}
+                  {proj.arena_winner&&proj.projection.winner!==proj.arena_winner&&<span style={{color:"#886644",fontSize:"9px",fontWeight:"normal"}}> (projection dissented: {proj.projection.winner})</span>}
+                </div>}
+              </div>}
+            </div>}
             <div style={{marginTop:"12px",fontSize:"10px",fontWeight:"bold",color:"#884",marginBottom:"6px"}}>HALL OF FALLEN IDEAS</div>
             {fallen.slice(0,4).map((f,i)=>(
               <div key={i} style={{padding:"6px 8px",marginBottom:"4px",borderRadius:"5px",background:"rgba(20,10,0,.5)",border:"1px solid rgba(100,50,0,.3)"}}>
