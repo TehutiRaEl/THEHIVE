@@ -113,3 +113,28 @@ class TestProjectionEndpoints:
         r = client.get("/v11/tier3/status", headers=HEADERS)
         assert r.status_code == 200
         assert r.json()["arena_renderer"]["available"] is True
+
+
+class TestEventBus:
+    def test_ws_broadcast_fans_out_to_sse(self):
+        from backend.api.routes import ws_manager, _sse_subscribers
+        q = asyncio.Queue(maxsize=10)
+        _sse_subscribers.append(q)
+        try:
+            asyncio.run(ws_manager.broadcast({"type": "unit_test_event", "x": 1}))
+            msg = q.get_nowait()
+        finally:
+            _sse_subscribers.remove(q)
+        assert msg.startswith("event: unit_test_event\n")
+        assert '"x": 1' in msg
+
+    def test_sse_stream_headers(self):
+        # don't open the infinite stream via TestClient (hangs on close);
+        # inspect the StreamingResponse the route builds instead
+        from backend.api.routes import events_stream, _sse_subscribers
+        before = len(_sse_subscribers)
+        resp = asyncio.run(events_stream())
+        del _sse_subscribers[before:]  # route subscribed a queue we never drain
+        assert resp.media_type == "text/event-stream"
+        assert resp.headers.get("x-accel-buffering") == "no"
+        assert resp.headers.get("cache-control") == "no-cache"
