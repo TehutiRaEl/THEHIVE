@@ -187,6 +187,18 @@ body{background:#010108;font-family:'Courier New',monospace;overflow:hidden;colo
 
 <!-- ══════════════════════════════════════ BACKEND DETECTION ══ -->
 <script>
+// GitHub Pages has no same-origin backend: let visitors point at one with
+// ?backend=https://my-hive-host (persisted) — ?backend=clear forgets it.
+(function(){
+  try {
+    const qp = new URLSearchParams(window.location.search).get('backend');
+    if (qp === 'clear') localStorage.removeItem('jasper_backend');
+    else if (qp) localStorage.setItem('jasper_backend', qp.replace(/\/+$/,''));
+    const saved = localStorage.getItem('jasper_backend');
+    if (saved && !window.JASPER_BACKEND) window.JASPER_BACKEND = saved;
+  } catch {}
+})();
+
 window._BACKEND_CANDIDATES = [
   window.JASPER_BACKEND,
   window.location.origin !== 'null' && !window.location.origin.includes('github.io')
@@ -742,6 +754,23 @@ function HUD() {
       wsRef.current = ws;
       return () => ws.close();
     } catch {}
+  },[online]);
+
+  // SSE live feed — auth-free stream; surfaces the event types the WS handler doesn't
+  useEffect(()=>{
+    if(!online||!window.BACKEND_BASE) return;
+    let es;
+    try { es = new EventSource(window.BACKEND_BASE+"/events/stream"); } catch { return; }
+    const feed = content => setMessages(p=>[...p,{role:"hive",content,ts:new Date()}]);
+    const on = (type,fn)=>es.addEventListener(type,ev=>{try{fn(JSON.parse(ev.data))}catch{}});
+    on("arena_resolved", d=>{feed(`⚔ Challenge #${d.challenge_id} resolved — ${d.winner} prevails.`);load();});
+    on("arena_projection_complete", d=>feed(`🧊 Projection #${d.challenge_id}: ${d.arena_winner||d.projection_winner}${d.arena_winner&&d.projection_winner&&d.projection_winner!==d.arena_winner?` (projection saw ${d.projection_winner})`:""}`));
+    on("soul_tip", d=>feed(`💠 ${d.from} tipped ${d.to} ${d.amount} SOUL`));
+    on("task_created", d=>feed(`📋 Task #${d.task_id} created: ${d.title||""}`));
+    on("task_assigned", d=>feed(`📌 Task #${d.task_id} → ${d.assignee}`));
+    on("hitl_request", d=>feed(`🖐 HITL approval requested: ${d.action_type} (#${d.request_id})`));
+    on("hitl_resolved", d=>feed(`🖐 HITL #${d.request_id} ${d.approved?"approved":"denied"}`));
+    return ()=>es.close();
   },[online]);
 
   useEffect(()=>{load();const iv=setInterval(load,15000);return()=>clearInterval(iv);},[]);
