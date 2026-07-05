@@ -2,9 +2,9 @@ name: Distribute PAT to Colonies
 
 # The missing link in the hive's secret plumbing.
 #
-# History: colony workflows (constitution-receive.yml, pages.yml, and
-# THEHIVE's set-repo-descriptions.yml) all reference `secrets.PAT`, but no
-# workflow ever existed that put that secret INTO the colony repos. The
+# History: colony workflows (constitution-receive.yml, pages.yml) reference
+# `secrets.PAT`, but no workflow ever existed that put that secret INTO the
+# colony repos. The
 # closest thing — .queen/.github/workflows/constitution-sync.yml — lives in
 # a scaffold subfolder GitHub Actions never executes, was written for a
 # Queen repo (sovereign-hive-meta) that was never created, and dispatches
@@ -15,7 +15,7 @@ name: Distribute PAT to Colonies
 #
 # Prerequisite (one manual step, by design — secrets can't bootstrap
 # themselves): add `PAT` under THEHIVE → Settings → Secrets and variables →
-# Actions. Classic token: `repo` scope. Fine-grained token: all ten hive
+# Actions. Classic token: `repo` scope. Fine-grained token: the seven code
 # repos, with "Secrets: Read and write" + "Metadata: Read".
 #
 # Security notes: the token is piped via stdin (never in argv or logs);
@@ -53,8 +53,9 @@ jobs:
         run: |
           set +e
           ok=0; fail=0; failed_repos=""
-          for repo in LocalAGI NAR2 4DBRAIN aether automatisch Kimi-K2 \
-                      build-your-own-x free-programming-books freeCodeCamp; do
+          # the six code colonies only — the knowledge forks have no
+          # workflows that need the PAT
+          for repo in LocalAGI NAR2 4DBRAIN aether automatisch Kimi-K2; do
             if printf '%s' "$GH_TOKEN" | gh secret set "$SECRET_NAME" --repo "TehutiRaEl/$repo" 2>err.txt; then
               echo "✅ $repo — secret '$SECRET_NAME' set"
               ok=$((ok+1))

@@ -63,6 +63,23 @@ Every item below passed both lenses of [[dual-lens-framework]]:
     `.github/workflows/distribute-pat.yml` (manual trigger) pushes THEHIVE's `secrets.PAT` into all
     nine sibling repos via `gh secret set`. Open decision: create `sovereign-hive-meta`, or crown
     THEHIVE as Queen and repoint the colonies' `constitution-receive.yml` URLs.
+13. **Actions-tab archaeology (audited 2026-07-04, all ten repos, live run histories + file audit)**:
+    deploy.yml had 165 straight failures (unprovisioned Oracle secrets, fired after every CI run) →
+    gated to skip gracefully; NAR2 hive.yml could not even parse (stray markdown fence at L130) and
+    both NAR2 workflows used the disallowed `secrets` context in `if:` → fixed; LocalAGI e2e failed
+    every push (needs a live stack) → advisory, and image.yml (upstream quay + phantom self-hosted
+    runner) deleted; automatisch upstream release/playwright/docs-change deleted; freeCodeCamp's 21
+    and free-programming-books' 7 upstream workflows deleted (frozen RAG content); root v9 packages
+    (quantum/sheaf/pubsub/tesseract) deleted with unit tests repointed at the live backend/tier3 v11
+    modules; tests/test_governance.py moved into tests/unit/ so CI finally collects it.
+
+### Milestone 7 — The constitution machine, real for the first time ✅ (this branch)
+THEHIVE crowned Queen: root `constitution-sync.yml` (soul.md push → sha256 → repository_dispatch to
+all six colonies via secrets.PAT, PAT-gated with graceful skip) replaces the inert `.queen/` scaffold
+(deleted); every colony's `constitution-receive.yml` rebuilt — real Queen URL
+(THEHIVE/main/soul.md), retry backoff, dispatch-payload hash verification, manual trigger for drills.
+*DA*: a constitution that can't propagate is a wall plaque; two wrong Queen URLs meant even a manual
+dispatch died. *CW*: push one edit to soul.md and watch six colonies inherit it within a minute.
 
 ## 3. Roadmap
 
