@@ -87,7 +87,11 @@ sss = ShamirSSS()
 # ════════════════════════════════════════════════════════════
 # GUILD KEY MANAGER
 # ════════════════════════════════════════════════════════════
-DB_PATH = "jasper_memory.db"
+try:
+    from backend.core.config import settings as _settings
+    DB_PATH = _settings.db_path
+except Exception:
+    DB_PATH = "jasper_memory.db"
 
 def _init_sheaf_tables():
     conn = sqlite3.connect(DB_PATH); c = conn.cursor()

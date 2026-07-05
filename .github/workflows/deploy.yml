@@ -21,7 +21,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The Oracle Always Free box is part of the vision but not provisioned
+      # yet. Until its secrets exist, skip gracefully instead of failing after
+      # every CI run (this workflow accumulated 165 straight failures that way).
+      - name: Check deploy target is provisioned
+        id: provisioned
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+        run: |
+          if [ -z "$ORACLE_HOST" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "⏸ Oracle box not provisioned yet (secrets.ORACLE_HOST unset) — skipping deploy." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy via SSH
+        if: steps.provisioned.outputs.ready == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.ORACLE_HOST }}

@@ -1,0 +1,78 @@
+name: Constitution Sync
+
+# THEHIVE is the Queen: the root soul.md in THIS repo is the canonical
+# constitution. When it changes, this workflow tells every colony to pull
+# the new text and verify its hash.
+#
+# Reborn from .queen/.github/workflows/constitution-sync.yml — a scaffold
+# that could never run: it sat in a subfolder GitHub Actions ignores, was
+# written for a Queen repo (sovereign-hive-meta) that was never created,
+# needed a secret (COLONY_DISPATCH_TOKEN) that was never set, and only knew
+# three of the six colonies.
+#
+# Needs secrets.PAT (repo scope) — the same token distribute-pat.yml seeds
+# into the colonies. Until PAT exists here, this skips gracefully.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - soul.md
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Dispatch constitution update to all colonies
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PAT }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check PAT is present
+        id: pat
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "⏸ secrets.PAT unset — colonies not notified. Add PAT and re-run." | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute soul.md hash
+        id: hash
+        run: echo "sha=$(sha256sum soul.md | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch to all colonies
+        if: steps.pat.outputs.ready == 'true'
+        run: |
+          set +e
+          ok=0; fail=0
+          for repo in LocalAGI NAR2 4DBRAIN aether automatisch Kimi-K2; do
+            if gh api "repos/TehutiRaEl/$repo/dispatches" \
+                 -f event_type=constitution_update \
+                 -f "client_payload[soul_md_hash]=${{ steps.hash.outputs.sha }}" \
+                 -f "client_payload[queen_ref]=${{ github.sha }}" >/dev/null 2>err.txt; then
+              echo "✅ $repo notified"
+              ok=$((ok+1))
+            else
+              echo "❌ $repo — $(head -1 err.txt)"
+              fail=$((fail+1))
+            fi
+          done
+          echo "## Constitution sync: $ok notified, $fail failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "soul.md hash: \`${{ steps.hash.outputs.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record hash in .queen/hive.yml
+        run: |
+          sed -i "s/soul_md_hash: .*/soul_md_hash: \"${{ steps.hash.outputs.sha }}\"/" .queen/hive.yml
+          git config user.name "Sovereign Hive Bot"
+          git config user.email "bot@sovereignhive.io"
+          git add .queen/hive.yml
+          git diff --staged --quiet && echo "hash unchanged" || \
+            git commit -m "chore: update soul.md hash to ${{ steps.hash.outputs.sha }}"
+          git push
+        continue-on-error: true

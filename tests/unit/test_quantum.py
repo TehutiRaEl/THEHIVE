@@ -4,7 +4,7 @@ Unit tests for Quantum Bridge module
 
 import pytest
 import numpy as np
-from quantum.quantum_bridge import (
+from backend.tier3.quantum_bridge import (
     QuantumCircuit, QRNG, BB84, GroverSearch, HadamardHD,
     quantum_encode_text, grover_lexicon_search
 )

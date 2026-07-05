@@ -4,7 +4,7 @@ Unit tests for Tesseract Model module
 
 import pytest
 import numpy as np
-from tesseract.tesseract_model import (
+from backend.tier3.tesseract_model import (
     ColonyTensor4D, TesseractModelNumpy, FourDVideoGenerator,
     T_STEPS, X_SIZE, Y_SIZE, N_CHAN
 )

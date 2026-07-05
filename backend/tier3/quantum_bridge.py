@@ -342,7 +342,11 @@ whd = HadamardHD(dim=1024)
 # ════════════════════════════════════════════════════════════
 class IBMQMonitor:
     IBMQ_API = "https://api-qcon.quantum.ibm.com"
-    DB_PATH  = "jasper_memory.db"
+    try:
+        from backend.core.config import settings as _settings
+        DB_PATH = _settings.db_path
+    except Exception:
+        DB_PATH = "jasper_memory.db"
 
     def __init__(self):
         import os

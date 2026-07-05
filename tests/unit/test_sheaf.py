@@ -3,7 +3,7 @@ Unit tests for Sheaf Guild module
 """
 
 import pytest
-from sheaf.sheaf_guild import (
+from backend.tier3.sheaf_guild import (
     ShamirSSS, sss, GuildKeyManager, SheafCipher, GuildMessenger, P
 )
 
