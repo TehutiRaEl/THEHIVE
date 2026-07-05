@@ -7,10 +7,10 @@ import os
 import sqlite3
 import tempfile
 
-_TEST_DB = os.path.join(tempfile.gettempdir(), "hive_projection_test.db")
-os.environ["DB_PATH"] = _TEST_DB
-if os.path.exists(_TEST_DB):
-    os.remove(_TEST_DB)
+# setdefault: another test module may pin DB_PATH first in a combined run —
+# the engine binds its path at import, so tests query the engine's own DB
+os.environ.setdefault("DB_PATH", os.path.join(tempfile.gettempdir(),
+                                              "hive_projection_test.db"))
 
 import pytest
 from fastapi.testclient import TestClient
@@ -18,7 +18,7 @@ from fastapi.testclient import TestClient
 from backend.main import app
 from backend.core.config import settings
 from backend.core.db import init_db
-from backend.tier3.arena_renderer import engine
+from backend.tier3.arena_renderer import engine, DB_PATH as _ENGINE_DB
 
 init_db()  # TestClient without a context manager never runs the lifespan hook
 client = TestClient(app)
@@ -27,11 +27,15 @@ HEADERS = {"X-API-Key": settings.api_key, "Content-Type": "application/json"}
 
 class TestProjectionEngine:
     def test_run_persists_frames_and_metrics(self):
+        conn = sqlite3.connect(_ENGINE_DB)
+        conn.execute("DELETE FROM arena_projections WHERE challenge_id=999")
+        conn.commit(); conn.close()
+
         result = asyncio.run(engine.run(999, "AgentA", "AgentB", ticks=6))
         assert result["winner"] in ("AgentA", "AgentB")
         assert result["ticks_run"] == 6
 
-        conn = sqlite3.connect(_TEST_DB)
+        conn = sqlite3.connect(_ENGINE_DB)
         c = conn.cursor()
         c.execute("SELECT COUNT(*) FROM arena_projection_frames WHERE challenge_id=999")
         assert c.fetchone()[0] == 6

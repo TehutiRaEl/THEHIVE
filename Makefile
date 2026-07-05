@@ -41,23 +41,23 @@ clean:
 # ─── Tier 3 Targets ──────────────────────────────────────────
 tier3-check:
 	@echo "🔍 Checking Tier 3 services..."
-	@curl -s http://localhost:8080/tier3/status | python -m json.tool || echo "❌ Tier 3 services not responding"
+	@curl -s http://localhost:8080/v11/tier3/status | python -m json.tool || echo "❌ Tier 3 services not responding"
 
 tier3-quantum:
 	@echo "🔬 Testing Quantum Bridge..."
-	@curl -s http://localhost:8080/quantum/qrng?n_bits=16 | python -m json.tool
+	@curl -s http://localhost:8080/v11/quantum/qrng?n_bits=16 | python -m json.tool
 
 tier3-sheaf:
 	@echo "🔐 Testing Sheaf Guild..."
-	@curl -s http://localhost:8080/sheaf/guilds | python -m json.tool
+	@curl -s http://localhost:8080/v11/sheaf/guilds | python -m json.tool
 
 tier3-pubsub:
 	@echo "📡 Testing IPFS PubSub..."
-	@curl -s http://localhost:8080/pubsub/channels | python -m json.tool
+	@curl -s http://localhost:8080/v11/pubsub/channels | python -m json.tool
 
 tier3-arena:
 	@echo "⚔️ Testing Arena Renderer..."
-	@curl -s "http://localhost:8080/arena/render/voxels/TEST_COLONY?ticks=3" | python -m json.tool
+	@curl -s "http://localhost:8080/v11/arena/render/voxels/TEST_COLONY?ticks=3" | python -m json.tool
 
 tier3-tesseract:
 	@echo "🧊 Testing Tesseract Model..."

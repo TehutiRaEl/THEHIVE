@@ -4,7 +4,7 @@ Unit tests for IPFS PubSub module
 
 import pytest
 import asyncio
-from pubsub.ipfs_pubsub import (
+from backend.tier3.ipfs_pubsub import (
     ChannelRegistry, PubSubBroker, HDMessageEncoder, ColonyFederation
 )
 
