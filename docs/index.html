@@ -201,6 +201,7 @@ window._BACKEND_CANDIDATES = [
   window.JASPER_BACKEND,
   window.location.origin !== 'null' && !window.location.origin.includes('github.io')
     ? window.location.origin : null,
+  'https://thehive.mac18lee.workers.dev',  // production Queen (Cloudflare edge)
   'http://localhost:8080',
   'http://localhost:8181',
 ].filter(Boolean);
