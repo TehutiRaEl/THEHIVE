@@ -1,0 +1,25 @@
+# One-click deploy of the Queen to Render's free tier.
+#
+#   1. https://dashboard.render.com → New → Blueprint → pick this repo
+#   2. Accept the defaults; deploy takes ~3 minutes
+#   3. You get a URL like https://thehive-queen.onrender.com
+#   4. Open the Command Center with ?backend=<that URL> once — it persists
+#
+# Free-tier notes: the service sleeps after 15 idle minutes; the Command
+# Center's boot screen knows this and patiently wakes it (up to ~75s).
+# The SQLite DB lives on ephemeral disk — state resets on redeploy, which
+# suits the simulation-economy phase. Upgrade to a disk when it shouldn't.
+
+services:
+  - type: web
+    name: thehive-queen
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-ci.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /v11/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DB_PATH
+        value: /tmp/jasper_memory.db

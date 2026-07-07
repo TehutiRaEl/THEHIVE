@@ -142,3 +142,17 @@ class TestEventBus:
         assert resp.media_type == "text/event-stream"
         assert resp.headers.get("x-accel-buffering") == "no"
         assert resp.headers.get("cache-control") == "no-cache"
+
+
+class TestAuthBootstrap:
+    def test_auth_token_issues_visitor_jwt(self):
+        for method in (client.get, client.post):
+            r = method("/v11/auth/token")
+            assert r.status_code == 200
+            body = r.json()
+            assert body["token_type"] == "bearer" and body["access_token"]
+        # the issued token actually authenticates
+        token = client.get("/v11/auth/token").json()["access_token"]
+        r = client.get("/v11/arena/challenges",
+                       headers={"Authorization": f"Bearer {token}"})
+        assert r.status_code == 200

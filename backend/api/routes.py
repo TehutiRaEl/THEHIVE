@@ -180,6 +180,16 @@ router = APIRouter(prefix="/v11")
 async def health():
     return {"status": "healthy", "version": "11.0", "phase": settings.hive_phase}
 
+# The Command Center bootstraps auth with this (v9 parity — the UI's
+# INITIALIZE flow called it, but backend.main never had it: gap #11).
+# Visitor-tier token; admin actions still require the API key.
+@router.get("/auth/token")
+@router.post("/auth/token")
+async def issue_token():
+    return {"access_token": create_access_token("visitor", role="user"),
+            "token_type": "bearer",
+            "expires_in_minutes": settings.access_token_expire_minutes}
+
 @router.get("/board")
 async def board(auth: Dict = Depends(verify_auth)):
     """The Board is Always Seen — full system status."""
