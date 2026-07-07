@@ -42,3 +42,9 @@ node_modules/
 
 # Archived legacy files
 .archive/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
