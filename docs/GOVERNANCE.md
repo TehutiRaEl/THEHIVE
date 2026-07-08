@@ -1,4 +1,24 @@
 # Sovereign Hive — Governance
+Framework
+# Constitution (F-001 to F-006)
+
+**F-001 Data Sovereignty & Time Wealth**  
+Research respects user data; real-time intelligence is gathered ethically.
+
+**F-002 Value-Weighted Wealth**  
+Identifies gaps where EVW can be maximized; monitors wealth metrics.
+
+**F-003 Autonomy & Alternatives**  
+Strategic recommendations always include alternative paths.
+
+**F-004 Explainability**  
+Every strategic recommendation includes rationale and evidence.
+
+**F-005 Conflict Priority**  
+Strategic direction aligns with constitutional hierarchy.
+
+**F-006 Cross-Law Non-Penalization**  
+Strategic adjustments never penalize users for exercising rights.
 
 This document defines how contributions are reviewed and tagged across the
 Sovereign Hive federation: THEHIVE (this repo, the hub) plus six colony
@@ -15,6 +35,11 @@ by itself — see "Enforcement" below.
 Give every contributor — human or AI — a shared, lightweight vocabulary for
 what a change is and why it's safe to merge, without slowing down normal
 development.
+
+## Governance-as-a-Service
+- Policy-check layer intercepts agent actions.
+- Declarative rules for compliance.
+- Audit logs for all decisions.
 
 ## Principles
 
