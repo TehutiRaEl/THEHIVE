@@ -36,7 +36,8 @@ from backend.core.criteria import pruning_criteria
 from backend.core.protocol import hive_protocol
 from backend.core.agency import swarm_agency, AgencyLevel
 from backend.core.alchemy import reflector
-from backend.core.genesis import gap_detector, mission_generator
+from backend.core.genesis import gap_detector, mission_generator, MissionStatus
+from backend.core.governance import governance_engine
 from backend.core.hive_mesh import hive_mesh
 
 # Tier 3 modules — all optional: the API must survive any of them missing
@@ -1139,6 +1140,54 @@ async def formalize_mission(mission_id: str):
     if not mission:
         raise HTTPException(status_code=404, detail="Mission not found")
     return mission.to_dict()
+
+@router.post("/genesis/missions/{mission_id}/activate")
+async def activate_mission(mission_id: str):
+    ok = mission_generator.activate(mission_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Mission not found or not in formalized state")
+    rows = mission_generator.list_missions()
+    match = next((r for r in rows if r.get("id") == mission_id), None)
+    return match or {"id": mission_id, "status": MissionStatus.ACTIVE}
+
+@router.patch("/genesis/missions/{mission_id}/status")
+async def update_mission_status(mission_id: str, status: str, notes: str = ""):
+    try:
+        ms = MissionStatus(status)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid status '{status}'")
+    mission_generator.update_mission_status(mission_id, ms, notes)
+    rows = mission_generator.list_missions()
+    match = next((r for r in rows if r.get("id") == mission_id), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    return match
+
+@router.get("/genesis/missions/{mission_id}")
+async def get_mission(mission_id: str):
+    rows = mission_generator.list_missions()
+    match = next((r for r in rows if r.get("id") == mission_id), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    return match
+
+@router.get("/governance/log")
+async def governance_log(limit: int = 50):
+    entries = governance_engine.get_audit_log(limit=limit)
+    return {"entries": [e.to_dict() for e in entries], "count": len(entries)}
+
+@router.post("/governance/vote")
+async def governance_vote(proposal_id: str, voter: str, vote: str, rationale: str = ""):
+    record = governance_engine.submit_vote(proposal_id, voter, vote, rationale)
+    return record.to_dict()
+
+@router.get("/governance/vote/{proposal_id}/tally")
+async def governance_vote_tally(proposal_id: str):
+    return governance_engine.get_vote_tally(proposal_id).to_dict()
+
+@router.get("/governance/status")
+async def governance_status():
+    return governance_engine.get_governance_status().to_dict()
 
 @router.get("/hive/status", response_model=HiveStatusResponse)
 async def hive_status():
