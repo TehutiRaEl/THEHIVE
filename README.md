@@ -1,5 +1,5 @@
 # 🍯 SOVEREIGN HIVE – Federated AI Intelligence
-
+come back here later https://jasperbernaers.com/
 **Version:** 12.0 (Multi-Colony Federation)  
 **Status:** Active — 10+ colonies online  
 **Website:** [tehutirael.github.io/THEHIVE](https://tehutirael.github.io/THEHIVE/)  
