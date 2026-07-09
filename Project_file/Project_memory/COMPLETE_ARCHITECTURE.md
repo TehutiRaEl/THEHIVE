@@ -46,12 +46,10 @@ This document describes the complete technical architecture of the Sovereign Hiv
 - Zustand
 - Sentry
 
-## Key Components
+## Key Components Created by Mistral
 - TesseractRenderer.tsx: 4D visualization with Option B
 - SpaceNavigation.tsx: WASD + mouse navigation
 - KaiChatBox.tsx: Full keyboard support
-- ColonyZoomPanel.tsx: Interactive D3 colony graph
-- MemoryGraph.tsx: D3 force-directed memory graph
 
 ## Constitutional Compliance
 - F-001 (Data Sovereignty): Implemented
