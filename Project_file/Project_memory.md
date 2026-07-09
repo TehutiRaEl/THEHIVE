@@ -9,7 +9,7 @@
 |-------|--------|--------|-------|
 | **Claude** | Backend / Infrastructure | `claude/session-continuation-owj5wr` | API, DB, auth, tests, CI, constitution |
 | **Mistral** | Frontend / UI | `mistral/frontend-command-center` | React app, TypeScript scaffolding, component library |
-| **Grok** | Strategy / Research | TBD | Architecture decisions, LLM integration strategy |
+| **Grok** | Strategy / Research |`grok-strategist-main` | Architecture decisions, LLM integration strategy |
 
 **Coordination rule:** This file is the shared source of truth. Update it when your domain state changes. Mistral reads the Backend API Reference (section 5) to know what endpoints exist.
 
