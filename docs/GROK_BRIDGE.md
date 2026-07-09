@@ -1,94 +1,117 @@
 # Grok Bridge — Setup Guide
 
 **Purpose:** Enable Grok's isolated sandbox to push files to THEHIVE without direct git remote access.
-**Mechanism:** GitHub `repository_dispatch` → `grok-bridge.yml` workflow → commit to `grok-strategist-main`
+**Mechanism:** Cloudflare Worker token relay → GitHub `repository_dispatch` → `grok-bridge.yml` → commit to `grok-strategist-main`
 
 ---
 
 ## Architecture
 
 ```
-Grok's Sandbox                          GitHub
-─────────────────                       ────────────────────────────────────
-Local files                             THEHIVE repository
-     │                                       │
-     │  python3 scripts/grok_push.py         │
-     │  GITHUB_TOKEN=<pat> ...               │
-     │                                       │
-     └──── POST /repos/TehutiRaEl/THEHIVE/dispatches ──►  grok-bridge.yml (Actions)
-                                                                │
-                                             (workflow runs)    │
-                                                                ▼
+Grok's Sandbox                   Cloudflare Worker            GitHub
+─────────────────                ─────────────────────        ─────────────────────────────
+export GROK_BRIDGE_KEY=...       thehive.workers.dev          THEHIVE repository
+                                                                    │
+python3 scripts/grok_push.py     GET /v11/bridge/grok-token        │
+  │                              (hash-protected)                   │
+  │──── fetch GITHUB_TOKEN ─────►  D1: grok_bridge_tokens    (populated by workflow below)
+  │◄─── returns github_token ───                                    │
+  │                                                                  │
+  └──── POST /repos/.../dispatches ─────────────────────────►  grok-bridge.yml (Actions)
+                                                                    │
                                                     Checkout grok-strategist-main
                                                     Write files from payload
                                                     git commit + git push
-                                                                │
-                                                                ▼
-                                                    Branch: grok-strategist-main
+                                                                    │
+                                                                    ▼
+                                                        Branch: grok-strategist-main
 ```
 
-**Key property:** Grok's PAT only makes the dispatch call. The actual repo write uses
-`secrets.GITHUB_TOKEN` server-side — Grok never has direct push access.
+**How the token gets into the Worker:** The `grok-pat-distribute.yml` GitHub Actions workflow
+(trigger: manual) reads `secrets.PAT` + `secrets.WORKER_ADMIN_KEY` + `secrets.GROK_BRIDGE_KEY`
+and POSTs them to the Worker. The Worker stores a SHA-256 hash of `GROK_BRIDGE_KEY` as the
+lookup key and the PAT as the value in D1. The raw `GROK_BRIDGE_KEY` is never stored — only its hash.
+
+**Key property:** Grok only needs ONE env var (`GROK_BRIDGE_KEY`). No GitHub PAT needed in
+their sandbox. Rotation is done by re-triggering the workflow — zero manual PAT management.
 
 ---
 
-## One-Time Setup (User Action Required)
+## One-Time Setup (User Action Required — do this once)
 
-### Step 1 — Create a GitHub Classic PAT for Grok
+### Step 1 — Set Cloudflare Worker Secret
 
-1. Go to: `https://github.com/settings/tokens/new`
-2. Name: `grok-sandbox-bridge`
-3. Expiration: 90 days (rotate quarterly)
-4. **Required scope:** `repo` — *Full control of private repositories*
-   - This scope is needed to send `repository_dispatch` events
-5. Click "Generate token" — copy the token immediately (shown once only)
+In the Cloudflare Dashboard:
+1. Go to: Workers → `thehive` → Settings → Variables
+2. Under **Environment Variables**, click **Add variable**
+3. Name: `WORKER_ADMIN_KEY` | Type: **Secret** | Value: any 32+ char random string
+4. Click **Save**
 
-### Step 2 — Set the PAT in Grok's Sandbox
+> This secret authenticates the GitHub Actions workflow writing to the Worker.
+> The `thehive` Worker connects to GitHub via Workers Builds (not via Actions CI) —
+> you cannot inject this via GitHub; it must be set in the Cloudflare dashboard.
 
-In Grok's terminal session:
+### Step 2 — Set GitHub Actions Secrets in THEHIVE
+
+Go to THEHIVE → Settings → Secrets and variables → Actions → New repository secret:
+
+| Secret name | Value |
+|-------------|-------|
+| `WORKER_ADMIN_KEY` | Same value you set in Cloudflare (Step 1) |
+| `GROK_BRIDGE_KEY` | Any memorable passphrase, e.g. `sovereign-hive-grok-2026` |
+
+> `secrets.PAT` should already exist (Claude's GitHub token). If not, add it too.
+
+### Step 3 — Trigger the Distribution Workflow
+
+1. Go to: THEHIVE → Actions → **"Distribute PAT to Grok Bridge"**
+2. Click **Run workflow** → **Run workflow**
+3. Wait for the green checkmark
+
+This stores the PAT in the Cloudflare Worker's D1 database, keyed by `GROK_BRIDGE_KEY`.
+
+### Step 4 — Share `GROK_BRIDGE_KEY` with Grok
+
+Tell Grok to set this ONE env var in their sandbox:
 
 ```bash
-export GITHUB_TOKEN=ghp_<your-token-here>
+export GROK_BRIDGE_KEY=sovereign-hive-grok-2026   # (or whatever value you chose)
 ```
 
-To persist across sessions (add to sandbox profile):
+To persist across sessions:
 ```bash
-echo 'export GITHUB_TOKEN=ghp_<your-token-here>' >> ~/.bashrc
+echo 'export GROK_BRIDGE_KEY=sovereign-hive-grok-2026' >> ~/.bashrc
 ```
 
-> **Security:** Never commit the PAT to any file. Always set it as an environment variable.
-
-### Step 3 — Verify Setup
-
-From Grok's sandbox:
-
-```bash
-# Verify Python is available (3.6+ required, no pip install needed)
-python3 --version
-
-# Dry-run the push script (no files yet — just check the help)
-python3 scripts/grok_push.py --help
-```
+Setup is complete. Grok can now push files without any GitHub PAT.
 
 ---
 
-## Usage
+## Usage (Grok's Push Workflow — after setup)
 
 ### Push a Single File
 
 ```bash
-GITHUB_TOKEN=<pat> python3 scripts/grok_push.py docs/GAP_ANALYSIS.md \
-    --message "Phase 1 gap analysis update"
+# Only GROK_BRIDGE_KEY needed — script auto-fetches the GitHub token
+python3 scripts/grok_push.py docs/GAP_ANALYSIS.md \
+    --message "Phase 2 gap analysis update"
 ```
 
 ### Push Multiple Files at Once
 
 ```bash
-GITHUB_TOKEN=<pat> python3 scripts/grok_push.py \
+python3 scripts/grok_push.py \
     docs/GAP_ANALYSIS.md \
     Project_file/Grok_memory.md \
     docs/STRATEGY.md \
-    --message "Session 2 strategist work"
+    --message "Session 3 strategist work"
+```
+
+### Alternative — Direct PAT (if GROK_BRIDGE_KEY not available)
+
+```bash
+GITHUB_TOKEN=ghp_<pat> python3 scripts/grok_push.py docs/GAP_ANALYSIS.md \
+    --message "direct push"
 ```
 
 ### Verify the Push Landed
@@ -99,7 +122,7 @@ After dispatch:
 3. When green: check `grok-strategist-main` for the commit
 
 ```bash
-# From THEHIVE checkout, verify files appeared:
+# From THEHIVE checkout:
 git fetch origin grok-strategist-main
 git log origin/grok-strategist-main --oneline | head -5
 ```
@@ -108,24 +131,29 @@ git log origin/grok-strategist-main --oneline | head -5
 
 ## File Path Rules
 
-- Paths must be relative to the THEHIVE repo root (e.g., `docs/GAP_ANALYSIS.md`, not `/home/grok/docs/GAP_ANALYSIS.md`)
+- Paths must be relative to the THEHIVE repo root (e.g., `docs/GAP_ANALYSIS.md`)
 - No absolute paths (starting with `/`)
 - No directory traversal (`../`)
 - The workflow will skip unsafe paths with a warning, not fail
 
 ---
 
+## Rotating the PAT
+
+1. Re-trigger **"Distribute PAT to Grok Bridge"** workflow in THEHIVE Actions
+2. That's it — new PAT is stored in Worker D1; Grok's `GROK_BRIDGE_KEY` doesn't change
+
+---
+
 ## Integration with git Workflow
 
-Grok's `grok-strategist-main` branch is Grok's working branch.
-
+Grok's `grok-strategist-main` is Grok's working branch.
 The canonical cross-team branch is `claude/session-continuation-owj5wr`.
 
-**Workflow for merging Grok's work into the team branch:**
+**Merge workflow:**
 1. Grok pushes to `grok-strategist-main` via this bridge
-2. Claude or the user reviews the changes on that branch
+2. Claude or the user reviews changes on that branch
 3. Claude cherry-picks or merges relevant files into `claude/session-continuation-owj5wr`
-4. PR #33 (or current open PR) gets updated
 
 ---
 
@@ -133,20 +161,26 @@ The canonical cross-team branch is `claude/session-continuation-owj5wr`.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `HTTP 401` | PAT invalid or expired | Regenerate PAT at github.com/settings/tokens |
-| `HTTP 403` | PAT missing `repo` scope | Recreate PAT with `repo` scope checked |
-| `HTTP 404` | Wrong repo URL or PAT has no access | Verify REPO constant in script is `TehutiRaEl/THEHIVE` |
+| `GROK_BRIDGE_KEY not registered in Worker` | Workflow hasn't run yet, or wrong key | Trigger `grok-pat-distribute.yml` from THEHIVE Actions |
+| `Worker returned HTTP 403` | `WORKER_ADMIN_KEY` mismatch | Verify both Cloudflare secret and GitHub secret use same value |
+| `Worker returned HTTP 401` | `X-Grok-Key` missing | Ensure `GROK_BRIDGE_KEY` env var is set |
+| `HTTP 401` on dispatch | PAT invalid or expired | Re-trigger distribution workflow to refresh |
+| `HTTP 403` on dispatch | PAT missing `repo` scope | Add `repo` scope to PAT, re-trigger workflow |
+| `HTTP 404` on dispatch | Wrong repo URL | Verify REPO constant in script is `TehutiRaEl/THEHIVE` |
 | `Network error` | Sandbox has no outbound HTTPS | Check sandbox network policy |
-| Workflow fails | `PAT` secret not set in THEHIVE | User must add `PAT` in THEHIVE Settings → Secrets |
 | No commit made | Files already identical to branch | Not an error — workflow reports "No changes" |
 
 ---
 
-## Rotating the PAT
+## Security Model
 
-1. Create a new PAT at github.com/settings/tokens
-2. Update in Grok's sandbox: `export GITHUB_TOKEN=ghp_<new-token>`
-3. Update in THEHIVE secrets if used there: Settings → Secrets and variables → Actions → PAT
+| Concern | Mitigation |
+|---------|------------|
+| PAT never committed to git | Stored in D1 only; written via HTTPS in CI |
+| D1 write protected | `WORKER_ADMIN_KEY` required (Cloudflare secret, never in code) |
+| D1 read protected | SHA-256 hash of `GROK_BRIDGE_KEY` as lookup key; raw key never stored |
+| Token in transit | HTTPS only — Cloudflare Workers enforce TLS |
+| Compromised `GROK_BRIDGE_KEY` | Only exposes GitHub PAT; rotate by re-triggering workflow |
 
 ---
 
