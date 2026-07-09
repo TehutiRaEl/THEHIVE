@@ -39,6 +39,30 @@ their sandbox. Rotation is done by re-triggering the workflow — zero manual PA
 
 ## One-Time Setup (User Action Required — do this once)
 
+### Step 0 — Find Your Cloudflare Worker URL and Set It as a Secret
+
+The workflow needs the actual deployed URL of the `thehive` Cloudflare Worker. The URL format
+is `https://thehive.{account-subdomain}.workers.dev` — the account subdomain is required and
+is unique to your Cloudflare account.
+
+**Find the URL:**
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → **Workers & Pages**
+2. Click on **thehive**
+3. Copy the URL shown under the worker name (e.g. `https://thehive.abc123def.workers.dev`)
+
+**If the Worker shows "Not deployed":**
+- Option A: In the Cloudflare Dashboard, connect the THEHIVE GitHub repo under **Workers & Pages → thehive → Deployments → Connect Git** — Cloudflare will auto-deploy on every push to `main`
+- Option B (one-shot): Run locally from the THEHIVE root: `npx wrangler deploy` (requires `wrangler` and `wrangler login` first)
+
+**Add `WORKER_URL` as a GitHub Actions secret:**
+1. Go to: THEHIVE → Settings → Secrets and variables → Actions → **New repository secret**
+2. Name: `WORKER_URL` | Value: the full base URL, no trailing slash (e.g. `https://thehive.abc123def.workers.dev`)
+
+**Also share with Grok** (Grok sets this alongside `GROK_BRIDGE_KEY`):
+```bash
+export WORKER_URL=https://thehive.abc123def.workers.dev
+```
+
 ### Step 1 — Set Cloudflare Worker Secret
 
 In the Cloudflare Dashboard:
@@ -57,6 +81,7 @@ Go to THEHIVE → Settings → Secrets and variables → Actions → New reposit
 
 | Secret name | Value |
 |-------------|-------|
+| `WORKER_URL` | Full base URL from Step 0 (e.g. `https://thehive.abc123def.workers.dev`) |
 | `WORKER_ADMIN_KEY` | Same value you set in Cloudflare (Step 1) |
 | `GROK_BRIDGE_KEY` | Any memorable passphrase, e.g. `sovereign-hive-grok-2026` |
 
@@ -161,6 +186,8 @@ The canonical cross-team branch is `claude/session-continuation-owj5wr`.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
+| Workflow step 1 fails: `secrets.WORKER_URL` missing | `WORKER_URL` secret not set in GitHub | Follow Step 0 above to find deployed URL and add secret |
+| `curl exit code 6` (DNS resolution failure) | Wrong Worker URL or Worker not deployed | Verify URL in Cloudflare Dashboard; deploy Worker if needed |
 | `GROK_BRIDGE_KEY not registered in Worker` | Workflow hasn't run yet, or wrong key | Trigger `grok-pat-distribute.yml` from THEHIVE Actions |
 | `Worker returned HTTP 403` | `WORKER_ADMIN_KEY` mismatch | Verify both Cloudflare secret and GitHub secret use same value |
 | `Worker returned HTTP 401` | `X-Grok-Key` missing | Ensure `GROK_BRIDGE_KEY` env var is set |

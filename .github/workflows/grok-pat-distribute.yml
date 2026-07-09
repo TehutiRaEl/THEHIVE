@@ -15,6 +15,7 @@ jobs:
           [ -z "${{ secrets.PAT }}" ] && missing="$missing secrets.PAT"
           [ -z "${{ secrets.WORKER_ADMIN_KEY }}" ] && missing="$missing secrets.WORKER_ADMIN_KEY"
           [ -z "${{ secrets.GROK_BRIDGE_KEY }}" ] && missing="$missing secrets.GROK_BRIDGE_KEY"
+          [ -z "${{ secrets.WORKER_URL }}" ] && missing="$missing secrets.WORKER_URL"
           if [ -n "$missing" ]; then
             echo "::error::Missing required secrets:$missing"
             echo "See docs/GROK_BRIDGE.md for setup instructions."
@@ -27,14 +28,14 @@ jobs:
           GITHUB_PAT: ${{ secrets.PAT }}
           ADMIN_KEY: ${{ secrets.WORKER_ADMIN_KEY }}
           GROK_KEY: ${{ secrets.GROK_BRIDGE_KEY }}
+          WORKER_BASE_URL: ${{ secrets.WORKER_URL }}
         run: |
+          PAYLOAD=$(printf '{"admin_key":"%s","github_token":"%s","grok_key":"%s"}' \
+            "$ADMIN_KEY" "$GITHUB_PAT" "$GROK_KEY")
           HTTP_STATUS=$(curl -s -o /tmp/worker_response.json -w "%{http_code}" \
-            -X POST "https://thehive.workers.dev/v11/admin/grok-token" \
+            -X POST "${WORKER_BASE_URL}/v11/admin/grok-token" \
             -H "Content-Type: application/json" \
-            --data-binary @- <<EOF
-          {"admin_key":"${ADMIN_KEY}","github_token":"${GITHUB_PAT}","grok_key":"${GROK_KEY}"}
-          EOF
-          )
+            --data "$PAYLOAD")
           BODY=$(cat /tmp/worker_response.json)
           if [ "$HTTP_STATUS" = "200" ]; then
             echo "✅ Token stored in Cloudflare Worker D1"
@@ -52,10 +53,11 @@ jobs:
       - name: Verify token is retrievable
         env:
           GROK_KEY: ${{ secrets.GROK_BRIDGE_KEY }}
+          WORKER_BASE_URL: ${{ secrets.WORKER_URL }}
         run: |
           HTTP_STATUS=$(curl -s -o /tmp/verify_response.json -w "%{http_code}" \
             -H "X-Grok-Key: ${GROK_KEY}" \
-            "https://thehive.workers.dev/v11/bridge/grok-token")
+            "${WORKER_BASE_URL}/v11/bridge/grok-token")
           if [ "$HTTP_STATUS" = "200" ]; then
             echo "✅ Token is retrievable by Grok — bridge is fully operational"
           else
