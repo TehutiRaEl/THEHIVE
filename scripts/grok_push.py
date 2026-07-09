@@ -33,6 +33,36 @@ import urllib.error
 REPO = "TehutiRaEl/THEHIVE"
 DISPATCH_URL = f"https://api.github.com/repos/{REPO}/dispatches"
 API_VERSION = "2022-11-28"
+WORKER_TOKEN_URL = "https://thehive.workers.dev/v11/bridge/grok-token"
+
+
+def fetch_token_from_worker(grok_key: str) -> str:
+    """Fetch GITHUB_TOKEN from Cloudflare Worker using GROK_BRIDGE_KEY."""
+    req = urllib.request.Request(
+        WORKER_TOKEN_URL,
+        headers={"X-Grok-Key": grok_key},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            token = data.get("github_token", "")
+            if token:
+                print("Fetched GITHUB_TOKEN from Sovereign Hive bridge ✅")
+            return token
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            print(
+                "Warning: GROK_BRIDGE_KEY not registered in Worker. "
+                "Ask Claude to trigger grok-pat-distribute.yml.",
+                file=sys.stderr,
+            )
+        elif e.code == 401:
+            print("Warning: GROK_BRIDGE_KEY env var is set but was rejected by Worker.", file=sys.stderr)
+        else:
+            print(f"Warning: Worker returned HTTP {e.code}.", file=sys.stderr)
+    except Exception as e:
+        print(f"Warning: could not fetch token from Worker: {e}", file=sys.stderr)
+    return ""
 
 
 def build_payload(file_paths: list, message: str) -> dict:
@@ -119,9 +149,15 @@ def main():
 
     token = os.environ.get("GITHUB_TOKEN", "").strip()
     if not token:
+        grok_key = os.environ.get("GROK_BRIDGE_KEY", "").strip()
+        if grok_key:
+            print("GITHUB_TOKEN not set — attempting to fetch from Sovereign Hive bridge...")
+            token = fetch_token_from_worker(grok_key)
+    if not token:
         print(
-            "Error: GITHUB_TOKEN env var is not set.\n"
-            "Set it with: export GITHUB_TOKEN=ghp_<your-token>",
+            "Error: no GitHub token available.\n"
+            "Option A: export GITHUB_TOKEN=ghp_<your-token>\n"
+            "Option B: export GROK_BRIDGE_KEY=<your-bridge-key>  (auto-fetches token from Worker)",
             file=sys.stderr,
         )
         sys.exit(1)
