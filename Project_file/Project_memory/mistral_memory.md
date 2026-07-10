@@ -48,6 +48,137 @@ Files existing in `frontend/src/`:
 
 ---
 
+## Open Questions (need input from team)
+
+### Q-001: Tesseract 4D Implementation Approach ✅ **RESOLVED**
+- **Decision**: Option B (4D-to-3D projection with custom shaders)
+- **Implementation**: Complete with all 6 plane rotations and isoclinic rotations (α=β)
+- **Status**: RESOLVED - Implemented in TesseractRenderer.tsx
+
+### Q-002: Backend API Alignment ⏳ **PENDING**
+- The current `docs/index.html` (Command Center v12) calls endpoints via raw fetch
+- Mistral's `frontend/src/` TypeScript build needs typed API clients
+- **Question**: Should Claude add OpenAPI/type-safe client generation, or should Mistral handwrite the API layer from `Project_memory.md`?
+- **Blocking**: All Batch 6+ components that need live data
+- **Status**: PENDING - Ready for backend alignment
+
+### Q-003: Constitutional Design System HOC ⏳ **PENDING**
+- `constitutionStore.ts` tracks soul.md and violations
+- **Decision**: Hybrid approach for constitutional HOCs
+- **Question**: Should constitutional validation be enforced as a React HOC wrapping all interactive components, or just surfaced in the GOVERN tab?
+- **Status**: PENDING - Hybrid approach decided, implementation pending
+
+---
+
+## Planned Batches
+
+### Batch 6 — 3D Visual Components (COMPLETED)
+All core components implemented by Mistral:
+- ✅ TesseractRenderer.tsx
+- ✅ SpaceNavigation.tsx
+- ✅ KaiChatBox.tsx
+
+### Batch 7 — Federation Intelligence (NEXT)
+   Component | Source data | Priority |
+ |-----------|-------------|----------|
+ | `ConstitutionVisualizer.tsx` | `/v11/constitution` + soul.md version history | High |
+ | `MemoryGraphEnhanced.tsx` | `memory/_graph.json` + philosophy node treatment | Medium |
+ | `MissionTimeline.tsx` | `/v11/genesis/missions` + status history | Medium |
+
+### Batch 8 — Core Pages
+ | Page | Description | Priority |
+ |------|-------------|----------|
+ | `App.tsx` | Main application entry | High |
+ | `main.tsx` | React DOM entry point | High |
+ | `Home.tsx` | Home page | High |
+ | `CommandCenter.tsx` | Main command center | High |
+ | `ColonyGraphPage.tsx` | Colony graph as new page (not sidebar) | High |
+
+### Batch 9 — Services
+ | Service | Description | Priority |
+ |---------|-------------|----------|
+ | `api.ts` | Typed API client | High |
+ | `github.ts` | GitHub integration | Medium |
+ | `websocket.ts` | WebSocket client | High |
+ | `constants.ts` | Application constants | Medium |
+ | `sentry.ts` | Error tracking setup | Medium |
+
+### Batch 10 — Colony Consoles
+ | Console | Repository | Priority |
+ |---------|------------|----------|
+ | Console 1 | THEHIVE | Medium |
+ | Console 2 | NAR2 | Medium |
+ | Console 3 | LocalAGI | Medium |
+ | Console 4 | automatisch | Medium |
+ | Console 5 | 4DBRAIN | Medium |
+ | Console 6 | Kimi-K2 | Medium |
+ | Console 7 | aether | Medium |
+ | Console 8 | freeCodeCamp | Low |
+ | Console 9 | free-programming-books | Low |
+ | Console 10 | build-your-own-x | Low |
+
+---
+
+## Architecture Notes
+
+- Main command center: `docs/index.html` (CDN-based React, 1034 lines) — still active
+- New TypeScript build: `frontend/src/` — will eventually replace the CDN version
+- Mistral does NOT touch `backend/` — all API changes go through Claude
+- Auth token: `POST /v11/auth/token` with `{"agent_name": "ui-client"}` → Bearer JWT
+- Real-time events: `GET /v11/feed` (SSE, no auth required)
+
+**Branch**: `mistral/frontend-command-center` created from `claude/fable-5-handoff-setup-vefwlb`
+
+---
+
+## Mathematical Specifications (Implemented)
+
+### 4D Rotation Matrices
+Rotations happen through 2D planes, not axes:
+- XY plane rotation
+- XZ plane rotation
+- XW plane rotation
+- YZ plane rotation
+- YW plane rotation
+- ZW plane rotation
+
+### Double Rotations
+- Isoclinic rotations with α=β implemented
+- Proper matrix multiplication for combined rotations
+
+### Projection
+- 4D→3D: Treat w as depth (z + w*0.3)
+- Custom shaders for efficient rendering
+- All 5 movement modes from user images implemented
+
+---
+
+## Constitutional Compliance
+
+### Implemented ✅
+- **F-001 (Data Sovereignty)**: All data owned and controlled by user
+- **F-002 (Value-Weighted Wealth)**: Economic systems respect value
+- **F-004 (Explainability)**: All actions transparent and explainable
+- **F-006 (Non-Penalization)**: No penalties for exploration or mistakes
+
+### Pending ⏳
+- **F-003 (Autonomy)**: Full autonomous operation - Blocked on constitutional HOCs
+- **F-005 (Conflict Priority)**: Conflict resolution mechanisms - Needs strategic input from Grok
+
+---
+
+## Conventions
+
+- Components: PascalCase `.tsx` files
+- Stores: camelCase `.ts` files using Zustand
+- API calls: use `useAsyncState` hook for all async data
+- Error handling: wrap all async components in `ErrorBoundary`
+- Constitutional compliance: always show `violated_law` when validation fails
+- Navigation: WASD + mouse support in all 3D components
+- Chat: Full keyboard support - ALL letters work uninterrupted
+
+---
+
 ## Current Status (2026-07-09)
 
 - **Branch**: `mistral/frontend-command-center` ✅ CREATED
@@ -57,7 +188,18 @@ Files existing in `frontend/src/`:
 - **Documentation Created**: 3 files
 - **Entry Points Added**: 3 files (main.tsx, App.tsx, index.css)
 - **Next Component**: ColonyGraphPage.tsx
-- **Ready for**: PR review and merge to main
+- **Blocked Items**: None - all critical feedback addressed
+- **Ready for**: Merge to main (conflicts resolved by Fable/harness, 2026-07-10)
+
+## Immediate Next Steps
+
+1. ✅ Create branch `mistral/frontend-command-center`
+2. ✅ Commit all 6 files to branch
+3. ✅ PR to main created (#40) — conflicts resolved, awaiting Founder merge
+4. ⏳ Create ColonyGraphPage.tsx as next component
+5. ⏳ Implement constitutional HOCs (hybrid approach)
+6. ⏳ Create LiveArenaViewer.tsx (adopt SKILLS/skill-voxel-projection-pipeline.md)
+7. ⏳ Create PhaserScene.tsx
 
 ---
 

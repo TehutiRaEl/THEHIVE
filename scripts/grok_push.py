@@ -3,12 +3,18 @@
 Grok Bridge Push — send local files to THEHIVE via GitHub repository_dispatch.
 
 Usage:
+    # Option A — auto-fetch token via Sovereign Hive bridge (recommended for Grok):
+    export GROK_BRIDGE_KEY=<your-key>
+    export WORKER_URL=https://thehive.<subdomain>.workers.dev   # get from Cloudflare Dashboard
+    python3 scripts/grok_push.py <file1> [<file2> ...] --message "Phase 1 gap analysis"
+
+    # Option B — direct PAT:
     GITHUB_TOKEN=<pat> python3 scripts/grok_push.py <file1> [<file2> ...] \\
         --message "Phase 1 gap analysis"
 
 Requirements:
     - Python 3.6+ (stdlib only — no pip install needed)
-    - GITHUB_TOKEN env var set to a GitHub classic PAT with 'repo' scope
+    - Either GROK_BRIDGE_KEY + WORKER_URL, or GITHUB_TOKEN with 'repo' scope
 
 What this does:
     1. Reads each specified file from disk
@@ -33,6 +39,37 @@ import urllib.error
 REPO = "TehutiRaEl/THEHIVE"
 DISPATCH_URL = f"https://api.github.com/repos/{REPO}/dispatches"
 API_VERSION = "2022-11-28"
+_WORKER_BASE_URL = os.environ.get("WORKER_URL", "https://thehive.workers.dev").rstrip("/")
+WORKER_TOKEN_URL = f"{_WORKER_BASE_URL}/v11/bridge/grok-token"
+
+
+def fetch_token_from_worker(grok_key: str) -> str:
+    """Fetch GITHUB_TOKEN from Cloudflare Worker using GROK_BRIDGE_KEY."""
+    req = urllib.request.Request(
+        WORKER_TOKEN_URL,
+        headers={"X-Grok-Key": grok_key},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            token = data.get("github_token", "")
+            if token:
+                print("Fetched GITHUB_TOKEN from Sovereign Hive bridge ✅")
+            return token
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            print(
+                "Warning: GROK_BRIDGE_KEY not registered in Worker. "
+                "Ask Claude to trigger grok-pat-distribute.yml.",
+                file=sys.stderr,
+            )
+        elif e.code == 401:
+            print("Warning: GROK_BRIDGE_KEY env var is set but was rejected by Worker.", file=sys.stderr)
+        else:
+            print(f"Warning: Worker returned HTTP {e.code}.", file=sys.stderr)
+    except Exception as e:
+        print(f"Warning: could not fetch token from Worker: {e}", file=sys.stderr)
+    return ""
 
 
 def build_payload(file_paths: list, message: str) -> dict:
@@ -119,9 +156,15 @@ def main():
 
     token = os.environ.get("GITHUB_TOKEN", "").strip()
     if not token:
+        grok_key = os.environ.get("GROK_BRIDGE_KEY", "").strip()
+        if grok_key:
+            print("GITHUB_TOKEN not set — attempting to fetch from Sovereign Hive bridge...")
+            token = fetch_token_from_worker(grok_key)
+    if not token:
         print(
-            "Error: GITHUB_TOKEN env var is not set.\n"
-            "Set it with: export GITHUB_TOKEN=ghp_<your-token>",
+            "Error: no GitHub token available.\n"
+            "Option A: export GITHUB_TOKEN=ghp_<your-token>\n"
+            "Option B: export GROK_BRIDGE_KEY=<your-bridge-key>  (auto-fetches token from Worker)",
             file=sys.stderr,
         )
         sys.exit(1)

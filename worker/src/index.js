@@ -6,12 +6,17 @@
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-API-Key',
+  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-API-Key,X-Grok-Key',
 };
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...CORS } });
 
 const COLORS = [[0.1, 0.8, 0.1], [0.1, 0.4, 0.9], [0.0, 0.9, 0.9], [1.0, 0.8, 0.0]];
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 function simulate(a, b, eloA, eloB) {
   const frames = []; const va = new Set(), vb = new Set();
@@ -149,6 +154,40 @@ export default {
           .bind(+m[1]).all();
         if (!results.length) return json({ detail: 'no frames' }, 404);
         return json({ challenge_id: +m[1], total_frames: results.length, frames: results.map(r => JSON.parse(r.frame)) });
+      }
+
+      // POST /admin/grok-token — store GitHub PAT for Grok's bridge (WORKER_ADMIN_KEY protected)
+      if (p === '/admin/grok-token' && method === 'POST') {
+        const body = await request.json();
+        if (!env.WORKER_ADMIN_KEY || body.admin_key !== env.WORKER_ADMIN_KEY)
+          return json({ error: 'Forbidden' }, 403);
+        if (!body.github_token || !body.grok_key)
+          return json({ error: 'github_token and grok_key are required' }, 400);
+        const keyHash = await sha256(body.grok_key);
+        await DB.prepare(
+          'CREATE TABLE IF NOT EXISTS grok_bridge_tokens (key_hash TEXT PRIMARY KEY, github_token TEXT NOT NULL, updated_at TEXT NOT NULL)'
+        ).run();
+        await DB.prepare(
+          'INSERT OR REPLACE INTO grok_bridge_tokens (key_hash, github_token, updated_at) VALUES (?, ?, ?)'
+        ).bind(keyHash, body.github_token, new Date().toISOString()).run();
+        return json({ ok: true });
+      }
+
+      // GET /bridge/grok-token — retrieve GitHub PAT using GROK_BRIDGE_KEY
+      if (p === '/bridge/grok-token' && method === 'GET') {
+        const grokKey = request.headers.get('X-Grok-Key') || url.searchParams.get('key');
+        if (!grokKey) return json({ error: 'Unauthorized' }, 401);
+        const keyHash = await sha256(grokKey);
+        let row;
+        try {
+          row = await DB.prepare(
+            'SELECT github_token FROM grok_bridge_tokens WHERE key_hash = ? LIMIT 1'
+          ).bind(keyHash).first();
+        } catch (_) {
+          return json({ error: 'Not Found' }, 404);
+        }
+        if (!row) return json({ error: 'Not Found' }, 404);
+        return json({ github_token: row.github_token });
       }
 
       return json({ detail: 'not found', path: url.pathname }, 404);
