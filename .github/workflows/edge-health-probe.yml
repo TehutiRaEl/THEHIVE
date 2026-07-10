@@ -36,6 +36,10 @@ jobs:
           probe /v11/health "JSON {status:healthy}"
           probe / "HTML command center"
           probe /v11/agents "JSON {agents:[...]}"
+          echo "── GitHub Pages copy — which Queen hostname does it auto-discover?"
+          curl -sS -m 20 -o /tmp/ghio "https://tehutirael.github.io/THEHIVE/" \
+            && grep -o "thehive\.[a-z0-9-]*\.workers\.dev" /tmp/ghio | sort -u \
+            || echo "::warning::github.io fetch failed"
           if [ "$overall" != "0" ]; then
             echo "::error::One or more probes failed — see bodies above. JSON health failing while the root page serves = Worker deployed assets-only (build config ignoring wrangler.jsonc)."
             exit 1
