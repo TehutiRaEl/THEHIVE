@@ -3,12 +3,18 @@
 Grok Bridge Push — send local files to THEHIVE via GitHub repository_dispatch.
 
 Usage:
+    # Option A — auto-fetch token via Sovereign Hive bridge (recommended for Grok):
+    export GROK_BRIDGE_KEY=<your-key>
+    export WORKER_URL=https://thehive.<subdomain>.workers.dev   # get from Cloudflare Dashboard
+    python3 scripts/grok_push.py <file1> [<file2> ...] --message "Phase 1 gap analysis"
+
+    # Option B — direct PAT:
     GITHUB_TOKEN=<pat> python3 scripts/grok_push.py <file1> [<file2> ...] \\
         --message "Phase 1 gap analysis"
 
 Requirements:
     - Python 3.6+ (stdlib only — no pip install needed)
-    - GITHUB_TOKEN env var set to a GitHub classic PAT with 'repo' scope
+    - Either GROK_BRIDGE_KEY + WORKER_URL, or GITHUB_TOKEN with 'repo' scope
 
 What this does:
     1. Reads each specified file from disk
@@ -33,7 +39,8 @@ import urllib.error
 REPO = "TehutiRaEl/THEHIVE"
 DISPATCH_URL = f"https://api.github.com/repos/{REPO}/dispatches"
 API_VERSION = "2022-11-28"
-WORKER_TOKEN_URL = "https://thehive.workers.dev/v11/bridge/grok-token"
+_WORKER_BASE_URL = os.environ.get("WORKER_URL", "https://thehive.workers.dev").rstrip("/")
+WORKER_TOKEN_URL = f"{_WORKER_BASE_URL}/v11/bridge/grok-token"
 
 
 def fetch_token_from_worker(grok_key: str) -> str:
