@@ -22,13 +22,28 @@ const TAB_DEFINITIONS = [
 interface TabNavigatorProps {
   className?: string;
   vertical?: boolean;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
-const TabNavigator: React.FC<TabNavigatorProps> = ({ className = '', vertical = false }) => {
-  const { activeTab, setActiveTab } = useUiStore();
-
+const TabNavigator: React.FC<TabNavigatorProps> = ({
+  className = '',
+  vertical = false,
+  activeTab: externalActiveTab,
+  onTabChange
+}) => {
+  const { activeTab: storeActiveTab, setActiveTab } = useUiStore();
+  
+  // Use external activeTab if provided, otherwise fall back to store
+  const currentActiveTab = externalActiveTab || storeActiveTab;
+  
   const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
+    // Call external handler if provided, otherwise use store
+    if (onTabChange) {
+      onTabChange(tabId);
+    } else {
+      setActiveTab(tabId);
+    }
   };
 
   return (
@@ -38,7 +53,7 @@ const TabNavigator: React.FC<TabNavigatorProps> = ({ className = '', vertical = 
           key={tab.id}
           to={tab.path}
           className={({ isActive }) =>
-            `tab-button ${isActive || activeTab === tab.id ? 'active' : ''}`
+            `tab-button ${isActive || currentActiveTab === tab.id ? 'active' : ''}`
           }
           onClick={() => handleTabClick(tab.id)}
           title={tab.description}
