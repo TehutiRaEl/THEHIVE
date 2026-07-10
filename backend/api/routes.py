@@ -275,12 +275,30 @@ async def get_constitution_violations(limit: int = 20, auth: Dict = Depends(veri
 
 @router.get("/constitution/history")
 async def get_constitution_history(limit: int = 20, auth: Dict = Depends(verify_auth)):
+    import subprocess, shutil
+    if shutil.which("git"):
+        try:
+            res = subprocess.run(
+                ["git", "log", f"--max-count={limit}", "--pretty=format:%H|%ai|%an|%s", "--", "soul.md"],
+                capture_output=True, text=True, timeout=5
+            )
+            entries = []
+            for line in res.stdout.strip().splitlines():
+                parts = line.split("|", 3)
+                if len(parts) == 4:
+                    entries.append({"hash": parts[0][:8], "timestamp": parts[1],
+                                    "author": parts[2], "message": parts[3]})
+            if entries:
+                return {"history": entries, "source": "git"}
+        except Exception:
+            pass
+    # fallback: DB-stored constitution versions (may be empty in fresh deploys)
     conn = get_db()
     c = conn.cursor()
     c.execute("SELECT version, content, active, approved_at FROM constitution ORDER BY version DESC LIMIT ?", (limit,))
     rows = c.fetchall()
     conn.close()
-    return {"history": [{"version": r[0], "active": bool(r[2]), "approved_at": r[3]} for r in rows]}
+    return {"history": [{"version": r[0], "active": bool(r[2]), "approved_at": r[3]} for r in rows], "source": "db"}
 
 # ─── Governance Patterns (v11.0) ───────────────────────────────────────────────
 @router.get("/governance/patterns")
@@ -1208,3 +1226,55 @@ async def hive_manifest(colony_id: str):
     if not manifest:
         raise HTTPException(status_code=404, detail=f"Colony '{colony_id}' not found or offline")
     return manifest
+
+
+@router.get("/agents")
+async def list_all_agents():
+    from backend.core.agent_engine import list_agents, get_agent
+    agents = []
+    for name in list_agents():
+        a = get_agent(name)
+        agents.append({
+            "name": name,
+            "role": getattr(a, "role", "general"),
+            "elo": getattr(a, "elo_rating", 1200),
+            "guild": getattr(a, "guild", "unaffiliated"),
+            "zone": getattr(a, "zone", "SOUL REALM"),
+        })
+    return {"agents": agents, "count": len(agents)}
+
+
+@router.get("/llm/status")
+async def llm_status():
+    try:
+        from backend.core.llm_router import provider_status
+        providers = await provider_status()
+    except Exception:
+        providers = []
+    active = [p for p in providers if p.get("healthy")]
+    return {
+        "active_provider": active[0]["id"] if active else "none",
+        "available_count": len(active),
+        "providers": providers,
+    }
+
+
+@router.get("/wallet/leaderboard/soul")
+async def soul_leaderboard_alias(limit: int = 10, auth: Dict = Depends(verify_auth)):
+    return {"leaderboard": wallet_manager.leaderboard(limit)}
+
+
+@router.get("/dream/status")
+async def dream_status():
+    try:
+        from backend.tier2.dream_engine import DreamEngine, DR_AXIOMS, DREAM_PRIMITIVES
+        engine = DreamEngine()
+        return {
+            "axioms": DR_AXIOMS,
+            "primitives": DREAM_PRIMITIVES,
+            "active_agents": len(engine.wake_phases),
+            "cycle": engine.cycle,
+            "status": "operational",
+        }
+    except Exception as exc:
+        return {"status": "unavailable", "error": str(exc)}

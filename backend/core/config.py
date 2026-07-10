@@ -37,7 +37,13 @@ class Settings(BaseSettings):
     anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
     
     # ─── CORS ────────────────────────────────────────────────────
-    cors_origins: List[str] = os.getenv("CORS_ORIGINS", "http://localhost:8080,http://localhost:3000").split(",")
+    cors_origins: List[str] = os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:8080,http://localhost:3000,https://tehutirael.github.io"
+    ).split(",")
+
+    # ─── HITL ────────────────────────────────────────────────────
+    hitl_timeout_seconds: int = int(os.getenv("HITL_TIMEOUT_SECONDS", "300"))
     
     # ─── Tier 3 ──────────────────────────────────────────────────
     ibmq_token: str = os.getenv("IBMQ_TOKEN", "")
