@@ -8,6 +8,7 @@
  * - 4D rotation matrices for all 6 planes (XY, XZ, XW, YZ, YW, ZW)
  * - Double rotations and isoclinic rotations (alpha=beta)
  * - Projection: 4D to 3D by treating w as depth (z + w*0.3)
+ * - Custom GLSL shaders for enhanced visualization
  * - WASD + mouse navigation integration
  * - Cortana/JARVIS brain integration
  * - All 5 movement modes from user images
@@ -97,20 +98,49 @@ function createTesseractGeometry(vertices3D: number[][]): THREE.BufferGeometry {
   return geometry;
 }
 
+// Custom GLSL shaders as string constants
+const tesseractVertexShader = 'varying vec3 vPosition; varying float vDepth; uniform float time; uniform float depthFactor; void main() { vPosition = position; vDepth = position.z + position.w * depthFactor; float wave = sin(time * 2.0 + position.x * 10.0) * 0.01; float pulse = sin(time * 3.0 + position.y * 8.0) * 0.005; vec3 animatedPosition = position; animatedPosition.x += wave; animatedPosition.y += pulse; vec4 modelViewPosition = modelViewMatrix * vec4(animatedPosition, 1.0); gl_Position = projectionMatrix * modelViewPosition; }';
+
+const tesseractFragmentShader = 'uniform float time; uniform vec3 colorA; uniform vec3 colorB; uniform float depthFactor; varying vec3 vPosition; varying float vDepth; void main() { float depthFactor = smoothstep(-5.0, 5.0, vDepth); vec3 baseColor = mix(colorA, colorB, depthFactor); float glow = sin(time * 2.0 + vDepth * 3.0) * 0.2 + 0.8; glow = pow(glow, 2.0); float edgeGlow = exp(-abs(vDepth) * 0.5) * 0.5; vec3 finalColor = baseColor * (glow + edgeGlow); gl_FragColor = vec4(finalColor, 1.0); }';
+
+// Create custom shader material
+function createTesseractShaderMaterial(colorA: THREE.Color, colorB: THREE.Color): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      time: { value: 0 },
+      depthFactor: { value: 0.3 },
+      colorA: { value: colorA },
+      colorB: { value: colorB }
+    },
+    vertexShader: tesseractVertexShader,
+    fragmentShader: tesseractFragmentShader,
+    transparent: false,
+    depthTest: true,
+    depthWrite: true
+  });
+}
+
 interface TesseractProps {
   rotationSpeed?: number;
   wAngle?: number;
   xwAngle?: number;
   depthFactor?: number;
+  useShader?: boolean;
+  colorA?: string;
+  colorB?: string;
 }
 
 const Tesseract: React.FC<TesseractProps> = ({
   rotationSpeed = 0.01,
   wAngle = 0,
   xwAngle = 0,
-  depthFactor = 0.3
+  depthFactor = 0.3,
+  useShader = true,
+  colorA = '#ff1493',
+  colorB = '#00ffff'
 }) => {
   const meshRef = useRef<THREE.LineSegments>(null);
+  const shaderMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const vertices3D = useMemo(() => {
     const rotXW = rotation4D([0, 3], wAngle);
     const rotZW = rotation4D([2, 3], xwAngle);
@@ -129,11 +159,21 @@ const Tesseract: React.FC<TesseractProps> = ({
       meshRef.current.rotation.x += rotationSpeed * 0.5;
       meshRef.current.rotation.y += rotationSpeed * 0.7;
     }
+    if (shaderMaterialRef.current) {
+      shaderMaterialRef.current.uniforms.time.value += delta;
+    }
   });
 
   return (
     <Line ref={meshRef} geometry={geometry}>
-      <THREE.LineBasicMaterial color="hotpink" linewidth={2} />
+      {useShader ? (
+        <primitive
+          object={createTesseractShaderMaterial(new THREE.Color(colorA), new THREE.Color(colorB))}
+          ref={shaderMaterialRef}
+        />
+      ) : (
+        <THREE.LineBasicMaterial color="hotpink" linewidth={2} />
+      )}
     </Line>
   );
 };
@@ -142,14 +182,17 @@ interface DoubleRotationTesseractProps {
   alpha: number;
   beta: number;
   rotationSpeed?: number;
+  useShader?: boolean;
 }
 
 const DoubleRotationTesseract: React.FC<DoubleRotationTesseractProps> = ({
   alpha,
   beta,
-  rotationSpeed = 0.01
+  rotationSpeed = 0.01,
+  useShader = true
 }) => {
   const meshRef = useRef<THREE.LineSegments>(null);
+  const shaderMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const vertices3D = useMemo(() => {
     const rotXY = rotation4D([0, 1], alpha);
     const rotZW = rotation4D([2, 3], beta);
@@ -168,30 +211,57 @@ const DoubleRotationTesseract: React.FC<DoubleRotationTesseractProps> = ({
       meshRef.current.rotation.x += rotationSpeed * 0.5;
       meshRef.current.rotation.y += rotationSpeed * 0.7;
     }
+    if (shaderMaterialRef.current) {
+      shaderMaterialRef.current.uniforms.time.value += delta;
+    }
   });
 
   return (
     <Line ref={meshRef} geometry={geometry}>
-      <THREE.LineBasicMaterial color="cyan" linewidth={2} />
+      {useShader ? (
+        <primitive
+          object={createTesseractShaderMaterial(new THREE.Color('#00ffff'), new THREE.Color('#ff1493'))}
+          ref={shaderMaterialRef}
+        />
+      ) : (
+        <THREE.LineBasicMaterial color="cyan" linewidth={2} />
+      )}
     </Line>
+  );
+};
+
+// Add isoclinic rotation (alpha = beta) for special 4D rotation
+const IsoclinicTesseract: React.FC<{ rotationSpeed?: number; useShader?: boolean }> = ({
+  rotationSpeed = 0.015,
+  useShader = true
+}) => {
+  const [alpha, setAlpha] = useState(0);
+  
+  useFrame((state, delta) => {
+    setAlpha(prev => prev + delta * 0.4);
+  });
+
+  return (
+    <DoubleRotationTesseract alpha={alpha} beta={alpha} rotationSpeed={rotationSpeed} useShader={useShader} />
   );
 };
 
 interface TesseractRendererProps {
   showDoubleRotation?: boolean;
-  alpha?: number;
-  beta?: number;
+  showIsoclinic?: boolean;
 }
 
 const TesseractRenderer: React.FC<TesseractRendererProps> = ({
   showDoubleRotation = false,
-  alpha = 0.5,
-  beta = 0.5
+  showIsoclinic = true
 }) => {
   const [wAngle, setWAngle] = useState(0);
   const [xwAngle, setXwAngle] = useState(0);
   const [depthFactor, setDepthFactor] = useState(0.3);
   const [useOrbitControls, setUseOrbitControls] = useState(true);
+  const [useShaders, setUseShaders] = useState(true);
+  const [colorA, setColorA] = useState('#ff1493');
+  const [colorB, setColorB] = useState('#00ffff');
 
   useFrame((state, delta) => {
     setWAngle(prev => prev + delta * 0.2);
@@ -205,9 +275,12 @@ const TesseractRenderer: React.FC<TesseractRendererProps> = ({
         {useOrbitControls && <OrbitControls enableDamping />}
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
-        <Tesseract wAngle={wAngle} xwAngle={xwAngle} depthFactor={depthFactor} rotationSpeed={0.01} />
+        <Tesseract wAngle={wAngle} xwAngle={xwAngle} depthFactor={depthFactor} rotationSpeed={0.01} useShader={useShaders} colorA={colorA} colorB={colorB} />
         {showDoubleRotation && (
-          <DoubleRotationTesseract alpha={alpha} beta={beta} rotationSpeed={0.015} />
+          <DoubleRotationTesseract alpha={0.5} beta={0.7} rotationSpeed={0.015} useShader={useShaders} />
+        )}
+        {showIsoclinic && (
+          <IsoclinicTesseract rotationSpeed={0.02} useShader={useShaders} />
         )}
         <gridHelper args={[20, 20, 0x333333, 0x333333]} />
         <axesHelper args={[5]} />
@@ -240,12 +313,42 @@ const TesseractRenderer: React.FC<TesseractRendererProps> = ({
         </div>
         <div style={{ marginBottom: '10px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>
+            Color A: <input type="color" value={colorA} onChange={(e) => setColorA(e.target.value)} style={{ marginLeft: '10px' }} />
+          </label>
+        </div>
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            Color B: <input type="color" value={colorB} onChange={(e) => setColorB(e.target.value)} style={{ marginLeft: '10px' }} />
+          </label>
+        </div>
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
             <input
               type="checkbox"
               checked={showDoubleRotation}
               onChange={(e) => setShowDoubleRotation(e.target.checked)}
             />
-            Show Double Rotation (Isoclinic)
+            Show Double Rotation (XY + ZW)
+          </label>
+        </div>
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            <input
+              type="checkbox"
+              checked={showIsoclinic}
+              onChange={(e) => setShowIsoclinic(e.target.checked)}
+            />
+            Show Isoclinic Rotation (alpha=beta)
+          </label>
+        </div>
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>
+            <input
+              type="checkbox"
+              checked={useShaders}
+              onChange={(e) => setUseShaders(e.target.checked)}
+            />
+            Use Custom GLSL Shaders
           </label>
         </div>
         <div style={{ marginBottom: '10px' }}>
@@ -261,7 +364,8 @@ const TesseractRenderer: React.FC<TesseractRendererProps> = ({
         <div style={{ fontSize: '12px', color: '#aaa' }}>
           <p>Vertices: 16 | Edges: 32</p>
           <p>Projection: 4D to 3D (w as depth)</p>
-          <p>Rotations: XW plane + ZW plane</p>
+          <p>Rotations: XW plane + ZW plane + XY/ZW</p>
+          <p>Shaders: Custom GLSL with time-based effects</p>
         </div>
       </div>
       <div style={{
@@ -277,8 +381,7 @@ const TesseractRenderer: React.FC<TesseractRendererProps> = ({
       }}>
         <p style={{ margin: 0 }}>W Angle: {wAngle.toFixed(2)} rad</p>
         <p style={{ margin: 0 }}>XW Angle: {xwAngle.toFixed(2)} rad</p>
-        <p style={{ margin: 0 }}>alpha (XY): {alpha.toFixed(2)} rad</p>
-        <p style={{ margin: 0 }}>beta (ZW): {beta.toFixed(2)} rad</p>
+        <p style={{ margin: 0 }}>Isoclinic Alpha: {(wAngle * 0.4).toFixed(2)} rad</p>
       </div>
     </div>
   );
