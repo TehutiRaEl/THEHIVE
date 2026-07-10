@@ -6,6 +6,11 @@ name: Edge Health Probe
 
 on:
   workflow_dispatch: {}
+  # push-trigger on this file itself: lets the probe run from a feature
+  # branch before the workflow is registered on main (dispatch 404s until then)
+  push:
+    paths:
+      - .github/workflows/edge-health-probe.yml
 
 jobs:
   probe:
