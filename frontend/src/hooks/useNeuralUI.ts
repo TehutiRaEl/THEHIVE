@@ -11,7 +11,7 @@ interface NeuralBehavior {
   predictionConfidence: number
 }
 
-export function useNeuralUI(componentId: string): NeuralBehavior {
+export function useNeuralUI(componentId: string): { behavior: NeuralBehavior; learnFromInteraction: (action: string, metadata?: Record<string, unknown>) => void } {
   const [behavior, setBehavior] = useState<NeuralBehavior>({
     preferredActions: [],
     avoidancePatterns: [],
@@ -34,7 +34,7 @@ export function useNeuralUI(componentId: string): NeuralBehavior {
     localStorage.setItem('neural:' + componentId, JSON.stringify(behavior))
   }, [componentId, behavior])
 
-  const learnFromInteraction = (action: string, metadata: any = {}) => {
+  const learnFromInteraction = (action: string, _metadata: Record<string, unknown> = {}) => {
     setBehavior(prev => {
       const newBehavior = { ...prev }
       
@@ -53,5 +53,5 @@ export function useNeuralUI(componentId: string): NeuralBehavior {
     })
   }
 
-  return behavior
+  return { behavior, learnFromInteraction }
 }

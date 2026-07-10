@@ -93,3 +93,23 @@ export interface GameState {
   camera: { position: { x: number; y: number; z: number }; mode: string }
   selectedColony: ColonyId | null
 }
+
+export type Theme = 'dark' | 'light' | 'cosmic'
+
+export interface UserPreferences {
+  theme: Theme
+  language: string
+  notifications: boolean
+  soundEnabled: boolean
+  animationsEnabled: boolean
+  compactMode: boolean
+}
+
+export interface Modal {
+  id: string
+  title: string
+  content: React.ReactNode
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  onClose?: () => void
+  isOpen: boolean
+}
