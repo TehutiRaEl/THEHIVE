@@ -6,6 +6,10 @@ name: Edge Health Probe
 
 on:
   workflow_dispatch: {}
+  # the hive checks its own pulse four times a day; a red X in Actions
+  # (plus GitHub's failure email) is the alarm that production degraded
+  schedule:
+    - cron: '17 */6 * * *'
   # push-trigger on this file itself: lets the probe run from a feature
   # branch before the workflow is registered on main (dispatch 404s until then)
   push:
