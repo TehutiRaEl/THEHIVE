@@ -582,6 +582,24 @@ const COLONY_BASE_URLS = {
 };
 function colonyConsoleUrl(id){const c=COLONY_BASE_URLS[id];return c?c.url+c.path:null;}
 
+async function loadColonyURLs() {
+  if (!window.BACKEND_BASE || window.HIVE_DEMO) return;
+  try {
+    const resp = await fetch(window.BACKEND_BASE + '/hive/status', {signal: AbortSignal.timeout(6000)});
+    if (!resp.ok) return;
+    const data = await resp.json();
+    for (const [id, info] of Object.entries(data.colonies || {})) {
+      if (!info || !info.url) continue;
+      // match by exact id or case-insensitive key
+      const key = Object.keys(COLONY_BASE_URLS).find(
+        k => k.toLowerCase() === id.toLowerCase()
+      );
+      if (key) COLONY_BASE_URLS[key].url = info.url.replace(/\/$/, '');
+    }
+  } catch (_) {}
+}
+window.addEventListener('hive-boot-done', () => { if (!window.HIVE_DEMO) loadColonyURLs(); });
+
 const COLONY_GRAPH = {
   nodes:[
     {id:"THEHIVE",role:"core",size:20},{id:"aether",role:"revenue",size:14},
