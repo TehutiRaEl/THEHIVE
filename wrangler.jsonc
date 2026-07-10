@@ -9,6 +9,12 @@
   "compatibility_date": "2026-06-01",
   "observability": { "enabled": true },
   "assets": { "directory": "docs", "binding": "ASSETS" },
+  // the heartbeat: every 30 minutes the Queen acts on her own —
+  // resolves pending arena challenges, projects the battle, spawns the next
+  "triggers": { "crons": ["*/30 * * * *"] },
+  // Workers AI (free allocation) writes the propositions; code falls back
+  // to canned ones if the binding is absent or the model errors
+  "ai": { "binding": "AI" },
   "d1_databases": [
     {
       "binding": "DB",
