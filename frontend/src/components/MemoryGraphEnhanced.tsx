@@ -1,15 +1,17 @@
 /**
  * MemoryGraphEnhanced.tsx
  * Enhanced memory graph with philosophy node treatment
- * Source: memory/_graph.json + philosophy node treatment
+ * Source: /v11/memory/graph + philosophy node treatment
  */
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import * as d3 from 'd3';
 import { useUiStore } from '../stores/uiStore';
 import { MemoryNode, MemoryLink } from '../types';
+import { getMemoryGraph } from '../services/api';
 
-function generateMemoryGraphData() {
+// Fallback mock data in case API fails
+function generateFallbackMemoryGraphData(): { nodes: MemoryNode[]; links: MemoryLink[] } {
   const nodes: MemoryNode[] = [
     { id: 'THEHIVE', type: 'colony', name: 'THEHIVE', x: 0, y: 0, z: 0, size: 40, color: '#FFD700' },
     { id: 'NAR2', type: 'colony', name: 'NAR2', x: 100, y: -50, z: 0, size: 30, color: '#FF6B35' },
@@ -26,6 +28,29 @@ function generateMemoryGraphData() {
   ];
   return { nodes, links };
 }
+
+// Function to normalize API memory graph data
+const normalizeMemoryGraphData = (apiData: any): { nodes: MemoryNode[]; links: MemoryLink[] } => {
+  if (!apiData) return generateFallbackMemoryGraphData();
+  
+  // Handle different API response formats
+  if (apiData.nodes && apiData.links) {
+    // Already in the expected format
+    const nodes = Array.isArray(apiData.nodes) ? apiData.nodes : [apiData.nodes];
+    const links = Array.isArray(apiData.links) ? apiData.links : [apiData.links];
+    return { nodes, links };
+  } else if (Array.isArray(apiData)) {
+    // Array of nodes - try to extract links or create from relationships
+    return { nodes: apiData, links: [] };
+  } else if (typeof apiData === 'object') {
+    // Single object - try to extract nodes and links
+    const nodes = apiData.nodes || apiData.data || [apiData];
+    const links = apiData.links || apiData.edges || [];
+    return { nodes: Array.isArray(nodes) ? nodes : [nodes], links: Array.isArray(links) ? links : [links] };
+  }
+  
+  return generateFallbackMemoryGraphData();
+};
 
 const NODE_CONFIG = {
   colony: { icon: '🏰', baseSize: 30 },
@@ -48,11 +73,40 @@ interface MemoryGraphEnhancedProps {
 const MemoryGraphEnhanced: React.FC<MemoryGraphEnhancedProps> = ({ data }) => {
   const { theme } = useUiStore();
   const svgRef = useRef<SVGSVGElement>(null);
+  const [graphData, setGraphData] = useState<{ nodes: MemoryNode[]; links: MemoryLink[] }>(generateFallbackMemoryGraphData());
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<MemoryNode | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string | null>(null);
 
-  const graphData = data || generateMemoryGraphData();
+  // Fetch memory graph data from API
+  useEffect(() => {
+    const fetchMemoryGraphData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // If data is provided via props, use it
+        if (data) {
+          setGraphData(normalizeMemoryGraphData(data));
+        } else {
+          // Fetch from API
+          const apiData = await getMemoryGraph();
+          setGraphData(normalizeMemoryGraphData(apiData));
+        }
+        
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch memory graph data');
+        console.error('Error fetching memory graph data:', err);
+        // Keep fallback data on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemoryGraphData();
+  }, [data]);
 
   const filteredData = useMemo(() => {
     let filteredNodes = graphData.nodes;
@@ -165,18 +219,30 @@ const MemoryGraphEnhanced: React.FC<MemoryGraphEnhancedProps> = ({ data }) => {
         </select>
       </div>
       <div style={{ flex: 1, display: 'flex', minHeight: '500px' }}>
-        <div ref={svgRef} style={{ flex: 1, background: theme.surface, borderRight: '1px solid ' + theme.border }} />
-        {selectedNode && <div style={{ width: '350px', padding: '20px', background: theme.background, overflowY: 'auto', borderLeft: '1px solid ' + theme.border }}>
-          <h3 style={{ margin: '0 0 15px 0', color: theme.text }}>{NODE_CONFIG[selectedNode.type as keyof typeof NODE_CONFIG]?.icon} {selectedNode.name}</h3>
-          <div style={{ marginBottom: '15px', padding: '10px', background: theme.surface, borderRadius: '6px' }}><p style={{ margin: '0 0 5px 0', color: theme.textSecondary, fontSize: '0.85em' }}>Type</p><p style={{ margin: 0, color: theme.text, fontWeight: 'bold' }}>{selectedNode.type}</p></div>
-          <div style={{ marginBottom: '15px', padding: '10px', background: theme.surface, borderRadius: '6px' }}><p style={{ margin: '0 0 5px 0', color: theme.textSecondary, fontSize: '0.85em' }}>ID</p><p style={{ margin: 0, color: theme.text, fontSize: '0.85em', wordBreak: 'break-all' }}>{selectedNode.id}</p></div>
-          {selectedNode.type === 'philosophy' && <div style={{ marginTop: '20px', padding: '15px', background: 'linear-gradient(135deg, ' + selectedNode.color + ' 0%, #AAAAAA 100%)', borderRadius: '8px', color: '#000' }}><p style={{ margin: 0, fontStyle: 'italic' }}><strong>Philosophical Principle:</strong> This is a foundational concept that guides the Hive operations.</p></div>}
-        </div>}
+        {loading ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary }}>
+            Loading memory graph from API...
+          </div>
+        ) : error ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF4444' }}>
+            API Error: {error} (using fallback data)
+          </div>
+        ) : (
+          <>
+            <div ref={svgRef} style={{ flex: 1, background: theme.surface, borderRight: '1px solid ' + theme.border }} />
+            {selectedNode && <div style={{ width: '350px', padding: '20px', background: theme.background, overflowY: 'auto', borderLeft: '1px solid ' + theme.border }}>
+              <h3 style={{ margin: '0 0 15px 0', color: theme.text }}>{NODE_CONFIG[selectedNode.type as keyof typeof NODE_CONFIG]?.icon} {selectedNode.name}</h3>
+              <div style={{ marginBottom: '15px', padding: '10px', background: theme.surface, borderRadius: '6px' }}><p style={{ margin: '0 0 5px 0', color: theme.textSecondary, fontSize: '0.85em' }}>Type</p><p style={{ margin: 0, color: theme.text, fontWeight: 'bold' }}>{selectedNode.type}</p></div>
+              <div style={{ marginBottom: '15px', padding: '10px', background: theme.surface, borderRadius: '6px' }}><p style={{ margin: '0 0 5px 0', color: theme.textSecondary, fontSize: '0.85em' }}>ID</p><p style={{ margin: 0, color: theme.text, fontSize: '0.85em', wordBreak: 'break-all' }}>{selectedNode.id}</p></div>
+              {selectedNode.type === 'philosophy' && <div style={{ marginTop: '20px', padding: '15px', background: 'linear-gradient(135deg, ' + selectedNode.color + ' 0%, #AAAAAA 100%)', borderRadius: '8px', color: '#000' }}><p style={{ margin: 0, fontStyle: 'italic' }}><strong>Philosophical Principle:</strong> This is a foundational concept that guides the Hive operations.</p></div>}
+            </div>}
+          </>
+        )}
       </div>
       <footer style={{ padding: '20px', borderTop: '1px solid ' + theme.border, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', color: theme.textSecondary, fontSize: '0.85em' }}>
         <div><p><strong>Nodes:</strong> {filteredData.nodes.length} / {graphData.nodes.length} | <strong>Links:</strong> {filteredData.links.length} / {graphData.links.length}</p></div>
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>{Object.entries(nodeTypeCounts).map(([type, count]) => <span key={type}>{NODE_CONFIG[type as keyof typeof NODE_CONFIG]?.icon} {type}: {count}</span>)}</div>
-        <div><p><strong>Data Source:</strong> memory/_graph.json + philosophy node treatment</p></div>
+        <div><p><strong>Data Source:</strong> /v11/memory/graph + philosophy node treatment</p></div>
       </footer>
     </div>
   );
