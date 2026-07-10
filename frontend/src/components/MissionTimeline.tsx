@@ -4,8 +4,9 @@
  * Source: /v11/genesis/missions + status history
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useUiStore } from '../stores/uiStore';
+import { getMissions } from '../services/api';
 
 interface Mission {
   id: string;
@@ -52,7 +53,8 @@ const PRIORITY_CONFIG = {
   critical: { color: '#FF0000', label: 'Critical' }
 };
 
-function generateMissionData(): Mission[] {
+// Fallback mock data in case API fails
+function generateFallbackMissionData(): Mission[] {
   return [
     { id: 'm-001', title: 'Implement Constitution Visualizer', description: 'Create interactive visualization of the Sovereign Hive constitution', type: 'main', status: 'completed', progress: 100, startDate: '2026-07-08', endDate: '2026-07-10', assignedAgent: 'Mistral', reward: { xp: 500, gold: 100 }, priority: 'high', tags: ['frontend', 'constitution'], history: [{ date: '2026-07-08', status: 'pending', progress: 0, notes: 'Mission created' }, { date: '2026-07-10', status: 'completed', progress: 100, notes: 'All features implemented' }] },
     { id: 'm-002', title: 'Enhanced Memory Graph', description: 'Create enhanced memory graph with philosophy node treatment', type: 'main', status: 'in-progress', progress: 65, startDate: '2026-07-09', dueDate: '2026-07-12', assignedAgent: 'Mistral', reward: { xp: 450, gold: 90 }, priority: 'high', tags: ['frontend', 'memory'], history: [{ date: '2026-07-09', status: 'pending', progress: 0, notes: 'Mission created' }, { date: '2026-07-10', status: 'in-progress', progress: 65, notes: 'Core graph implemented' }] },
@@ -63,6 +65,26 @@ function generateMissionData(): Mission[] {
     { id: 'm-007', title: 'Entry Points Setup', description: 'Create main.tsx, App.tsx, and index.css entry points', type: 'main', status: 'completed', progress: 100, startDate: '2026-07-08', endDate: '2026-07-09', assignedAgent: 'Mistral', reward: { xp: 300, gold: 60 }, priority: 'critical', tags: ['frontend', 'entry-points'], history: [{ date: '2026-07-08', status: 'pending', progress: 0, notes: 'Mission created' }, { date: '2026-07-09', status: 'completed', progress: 100, notes: 'All entry points created' }] }
   ];
 }
+
+// Function to normalize API mission data to our Mission interface
+const normalizeMissionData = (apiMission: any): Mission => {
+  return {
+    id: apiMission.id || apiMission.mission_id || 'mission-' + Math.random().toString(36).substr(2, 9),
+    title: apiMission.title || apiMission.name || 'Untitled Mission',
+    description: apiMission.description || '',
+    type: apiMission.type || 'main',
+    status: apiMission.status || 'pending',
+    progress: apiMission.progress || 0,
+    startDate: apiMission.startDate || apiMission.start_date || new Date().toISOString().split('T')[0],
+    endDate: apiMission.endDate || apiMission.end_date,
+    dueDate: apiMission.dueDate || apiMission.due_date,
+    assignedAgent: apiMission.assignedAgent || apiMission.assigned_agent || apiMission.agent,
+    reward: apiMission.reward || { xp: 0, gold: 0 },
+    priority: apiMission.priority || 'medium',
+    tags: apiMission.tags || [],
+    history: apiMission.history || []
+  };
+};
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -79,6 +101,9 @@ function getDaysRemaining(dueDate: string | undefined) {
 
 const MissionTimeline: React.FC = () => {
   const { theme } = useUiStore();
+  const [missions, setMissions] = useState<Mission[]>(generateFallbackMissionData());
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [layout, setLayout] = useState<'horizontal' | 'vertical' | 'compact'>('horizontal');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedMission, setExpandedMission] = useState<string | null>(null);
@@ -86,10 +111,40 @@ const MissionTimeline: React.FC = () => {
   const [showInProgress, setShowInProgress] = useState(true);
   const [showPending, setShowPending] = useState(true);
 
-  const allMissions = generateMissionData();
+  // Fetch missions data from API
+  useEffect(() => {
+    const fetchMissionsData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const apiMissions = await getMissions();
+        
+        // Normalize API data
+        if (Array.isArray(apiMissions)) {
+          const processedMissions = apiMissions.map(normalizeMissionData);
+          setMissions(processedMissions);
+        } else if (apiMissions && typeof apiMissions === 'object') {
+          // Handle case where API returns an object with missions property
+          const missionsArray = apiMissions.missions || apiMissions.data || [apiMissions];
+          const processedMissions = Array.isArray(missionsArray) ? missionsArray.map(normalizeMissionData) : [normalizeMissionData(missionsArray)];
+          setMissions(processedMissions);
+        }
+        
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch missions data');
+        console.error('Error fetching missions data:', err);
+        // Keep fallback data on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMissionsData();
+  }, []);
 
   const filteredMissions = useMemo(() => {
-    return allMissions.filter(mission => {
+    return missions.filter(mission => {
       if (!showCompleted && mission.status === 'completed') return false;
       if (!showInProgress && mission.status === 'in-progress') return false;
       if (!showPending && mission.status === 'pending') return false;
@@ -101,7 +156,7 @@ const MissionTimeline: React.FC = () => {
       }
       return true;
     });
-  }, [allMissions, showCompleted, showInProgress, showPending, searchQuery]);
+  }, [missions, showCompleted, showInProgress, showPending, searchQuery]);
 
   const missionStats = useMemo(() => {
     const stats = { total: filteredMissions.length, completed: 0, inProgress: 0, pending: 0, failed: 0, paused: 0 };
@@ -148,7 +203,7 @@ const MissionTimeline: React.FC = () => {
                 <p style={{ margin: 0, color: theme.textSecondary }}>XP: {mission.reward.xp} | Gold: {mission.reward.gold}</p>
               </div>
               {mission.tags.length > 0 && <div style={{ marginBottom: '15px' }}><p style={{ margin: '0 0 5px 0', color: theme.text }}><strong>Tags:</strong></p><div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>{mission.tags.map(tag => <span key={tag} style={{ padding: '2px 8px', background: theme.primary, color: theme.secondaryColor, borderRadius: '12px', fontSize: '0.8em' }}>{tag}</span>)}</div></div>}
-              {mission.history.length > 0 && <div><p style={{ margin: '0 0 10px 0', color: theme.text }}><strong>History:</strong></p><div style={{ maxHeight: '200px', overflowY: 'auto', background: theme.background, padding: '10px', borderRadius: '6px' }}>{mission.history.map((entry, index) => <div key={index} style={{ padding: '8px', marginBottom: '8px', background: theme.surface, borderRadius: '4px', borderLeft: '3px solid ' + (STATUS_CONFIG[entry.status as keyof typeof STATUS_CONFIG]?.color || '#666666') }}><p style={{ margin: '0 0 2px 0', color: theme.textSecondary, fontSize: '0.8em' }}>{formatDate(entry.date)}</p><p style={{ margin: '0 0 2px 0', color: theme.text, fontSize: '0.9em' }}>{entry.status} - {entry.progress}%</p><p style={{ margin: 0, color: theme.textSecondary, fontSize: '0.85em' }}>{entry.notes}</p></div>)}</div></div>}
+              {mission.history.length > 0 && <div><p style={{ margin: '0 0 10px 0', color: theme.text }}><strong>History:</strong></p><div style={{ maxHeight: '200px', overflowY: 'auto', background: theme.background, padding: '10px', borderRadius: '6px' }}>{mission.history.map((entry, index) => <div key={index} style={{ padding: '8px', marginBottom: '8px', background: theme.surface, borderRadius: '4px', borderLeft: '3px solid ' + (STATUS_CONFIG as any)[entry.status]?.color || '#666666' }}><p style={{ margin: '0 0 2px 0', color: theme.textSecondary, fontSize: '0.8em' }}>{formatDate(entry.date)}</p><p style={{ margin: '0 0 2px 0', color: theme.text, fontSize: '0.9em' }}>{entry.status} - {entry.progress}%</p><p style={{ margin: 0, color: theme.textSecondary, fontSize: '0.85em' }}>{entry.notes}</p></div>)}</div></div>}
             </div>}
           </div>
           <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'conic-gradient(' + statusConfig.color + ' ' + mission.progress + '%, ' + theme.border + ' ' + mission.progress + '%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.85em', fontWeight: 'bold', color: theme.text }}>{mission.progress}%</div>
@@ -232,7 +287,17 @@ const MissionTimeline: React.FC = () => {
         </div>
       </div>
       <main style={{ flex: 1 }}>
-        {filteredMissions.length === 0 ? <div style={{ textAlign: 'center', padding: '40px', color: theme.textSecondary }}><p>No missions match the current filters</p></div> : renderCurrentView()}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: theme.textSecondary }}>
+            <p>Loading missions from API...</p>
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#FF4444' }}>
+            <p>API Error: {error} (using fallback data)</p>
+          </div>
+        ) : filteredMissions.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: theme.textSecondary }}><p>No missions match the current filters</p></div>
+        ) : renderCurrentView()}
       </main>
       <footer style={{ padding: '20px', borderTop: '1px solid ' + theme.border, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', color: theme.textSecondary, fontSize: '0.85em' }}>
         <div><p><strong>Total:</strong> {missionStats.total} | <strong style={{ color: '#00C851' }}>✅ {missionStats.completed}</strong> | <strong style={{ color: '#33B5E5' }}>🔄 {missionStats.inProgress}</strong> | <strong style={{ color: '#666666' }}>⏳ {missionStats.pending}</strong></p></div>
