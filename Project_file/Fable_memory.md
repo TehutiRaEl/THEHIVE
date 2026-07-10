@@ -16,7 +16,10 @@
 3. Role-tagged commits per GOVERNANCE.md; one PR per repo per wave; founder merges.
 4. Ephemeral containers ⇒ anything worth keeping is committed the same session.
 
+## Session log
+**2026-07-10 (autonomous window):** Resolved PR #40's conflicts (union-merged mistral_memory.md) so the founder could merge Mistral's frontend wave. Founder's accidental merge order (#40 after #42) clobbered overlapping files TWICE — swept and repaired everything: frontend hotfixes restored via **PR #43**, then docs/index.html sovereignhive hostname + Mistral's build-gate worksheet + the committed harness plan restored verbatim from their original commits via **PR #44** (both merged under explicit founder authorization). Lesson captured as `SKILLS/skill-merge-order-and-regression-verify.md` (skill #11). Shipped **L3**: LocalAGI `GET /colony/capabilities` (colony.json identity + status/uptime/soul hash + endpoint pointers, constitution URL repointed to THEHIVE) — **LocalAGI PR #5**, ready for review, founder merges. Compressed all open work into `memory/planning/harness-plan-2026-07-10.md`. P0 state at session end: L1 ✅ · L2 founder · L3 PR up · L4 Sonnet · L5 ✅ verified.
+
 ## Open threads Fable is holding (see harness doc P0s)
-L1 sovereignhive hostname swap in docs/index.html · L2 Grok bridge activation · L3 LocalAGI capabilities · L4 CORS allowlist · L5 straggler PR merges.
+L2 Grok bridge activation (founder) · L3 merge LocalAGI PR #5 (founder) · L4 CORS allowlist (Sonnet) · M3 production browser proof of https://thehive.sovereignhive.workers.dev (founder-only — container firewall blocks workers.dev) · Mistral dep-manifest worksheet (`ACTIVE/2026-07-10-harness-to-mistral-main-build-gate.md`).
 
 **Next session bootstrapping:** read this file, the harness doc, then `SKILLS/README-skill-exchange.md`. Trust only what those cite.
