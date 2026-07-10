@@ -128,3 +128,14 @@ async def ml_status():
     """Report which ML pipelines are available on this node."""
     from backend.core.ml_pipeline import pipeline_status
     return await pipeline_status()
+
+
+@router.get("/ml/models")
+async def ml_models():
+    return {"models": [
+        {"id": "whisper-base", "type": "speech-to-text", "endpoint": "/v11/voice/transcribe"},
+        {"id": "stable-diffusion-v1-5", "type": "image-generation", "endpoint": "/v11/image/generate"},
+        {"id": "zero-shot-classifier", "type": "text-classification", "endpoint": "/v11/ml/classify"},
+        {"id": "summarizer", "type": "text-summarization", "endpoint": "/v11/ml/summarize"},
+        {"id": "sentence-transformer", "type": "embeddings", "endpoint": "/v11/ml/embed"},
+    ]}
