@@ -17,11 +17,11 @@
 
 | # | Item | Owner | Detail |
 |---|------|-------|--------|
-| L1 | **workers.dev subdomain naming** | Founder + Claude | `mac18lee` was unavailable; founder registered (or is registering) `sovereignhive` → production URL becomes `https://thehive.sovereignhive.workers.dev`. `docs/index.html` line ~195 still auto-discovers `thehive.mac18lee.workers.dev` — ONE-LINE FIX pending (any Claude session: swap the hostname, push, merge). Until fixed, github.io falls back to simulation. |
+| L1 | **workers.dev subdomain naming** | Founder + Claude | ✅ **DONE** — founder registered `sovereignhive`; `docs/index.html` auto-discovers `https://thehive.sovereignhive.workers.dev` (landed in PR #42, survived the merge-order sweep via PR #44). Remaining: founder opens the URL in a real browser and confirms LIVE boot — the build container's firewall blocks workers.dev, so only the founder can produce this proof. |
 | L2 | Grok bridge activation | Founder | 5 steps in `docs/GROK_BRIDGE.md`: Worker secret WORKER_ADMIN_KEY, two GitHub secrets, trigger workflow, share GROK_BRIDGE_KEY. |
-| L3 | LocalAGI capabilities parity | Claude | Was blocked on LocalAGI PR #3 — that PR **merged** long ago; unblock and ship (mirror colony_sdk capabilities in colony.go). |
-| L4 | CORS allowlist for Worker/Render URLs | Claude | Sonnet's P3. |
-| L5 | Old open colony PRs | Founder | Verify NAR2 #5 / 4DBRAIN #5 / Kimi-K2 #4 / aether #4 / automatisch #4 / LocalAGI #4 / freeCodeCamp #2 / free-programming-books #2 all merged; merge any stragglers. |
+| L3 | LocalAGI capabilities parity | Claude → Founder | ✅ **PR up** — LocalAGI **PR #5** (`GET /colony/capabilities` in colony.go, mirrors colony_sdk shape, `go vet` clean; also repoints the manifest constitution URL to THEHIVE). Founder merges. |
+| L4 | CORS allowlist for Worker/Render URLs | Sonnet | Sonnet's P3 — unchanged. |
+| L5 | Old open colony PRs | Founder | ✅ **verified 2026-07-10** — all straggler colony/fork PRs merged (founder confirmed "All PR's have been merged"; harness spot-checked). |
 
 ## 3. Team org (harness view)
 
@@ -37,10 +37,10 @@
 |---|------|--------|------------|
 | M1 | Arena voxel end-to-end | ✅ | — |
 | M2 | SSE live feed | ✅ | — |
-| M3 | Command Center public | ⚠️ 90% — blocked ONLY on L1 hostname swap | Claude (1 line) + Founder (merge) |
+| M3 | Command Center public | ⚠️ 95% — L1 merged; awaiting founder's real-browser proof of sovereignhive URL | Founder (open the link) |
 | M4 | Tier3 truth | ✅ | — |
 | M5 | One frontend (React replaces docs/) | ~30% | Mistral |
-| M6 | Colony capabilities | ⚠️ LocalAGI only (L3) | Claude |
+| M6 | Colony capabilities | ⚠️ code shipped — LocalAGI PR #5 awaits merge (L3) | Founder |
 | M7 | Constitution machine | ✅ live, six-colony green proof | — |
 | M8 | Public deployment | ⚠️ works today via workers.dev once L1 lands; full = M5 | Team |
 | M9 | Grok strategy layer | Blocked on L2 | Founder → Grok |
@@ -56,8 +56,8 @@
 
 ## 6. Immediate marching orders
 
-- **Founder:** L1 (confirm `sovereignhive` registered) → L2 (bridge activation) → L5 (merge stragglers).
-- **Claude (any session, first to wake):** L1 hostname swap in `docs/index.html`; then L3, L4.
+- **Founder:** merge LocalAGI PR #5 (L3) → open `https://thehive.sovereignhive.workers.dev` in a browser and report what you see (M3 proof) → L2 (bridge activation).
+- **Claude (any session, first to wake):** L4 CORS (Sonnet's P3); read `SKILLS/skill-merge-order-and-regression-verify.md` before touching any merge wave.
 - **Mistral:** App.tsx + main.tsx + first 3 tabs (world, arena, hive) against the endpoint map; type-check green before next batch.
 - **Grok:** on activation — push gap analysis, rank P3–P8.
 
