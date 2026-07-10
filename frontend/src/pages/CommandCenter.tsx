@@ -1,35 +1,46 @@
 import React, { useState } from 'react';
 import SpaceNavigation from '../components/SpaceNavigation';
 import KaiChatBox from '../components/KaiChatBox';
-import TesseractRenderer from '../components/TesseractRenderer';
+import TabNavigator from '../components/command-center/TabNavigator';
 import ColonyZoomPanel from '../components/ColonyZoomPanel';
 import MemoryGraph from '../components/MemoryGraph';
-import PhaserScene from '../components/PhaserScene';
-import LiveArenaViewer from '../components/LiveArenaViewer';
+import HIVE from '../components/command-center/tabs/HIVE';
+import DREAM from '../components/command-center/tabs/DREAM';
+import ARCANE from '../components/command-center/tabs/ARCANE';
+import WORLD from '../components/command-center/tabs/WORLD';
+import SOUL from '../components/command-center/tabs/SOUL';
+import GOVERN from '../components/command-center/tabs/GOVERN';
+import MISSIONS from '../components/command-center/tabs/MISSIONS';
+import API from '../components/command-center/tabs/API';
+import FOUR_D from '../components/command-center/tabs/4D';
+import ARENA from '../components/command-center/tabs/ARENA';
+import WOW from '../components/command-center/tabs/WOW';
+import NO_MANS_SKY from '../components/command-center/tabs/NO_MANS_SKY';
+import SETTINGS from '../components/command-center/tabs/SETTINGS';
 
-// Tab configuration
-const TABS = [
-  { id: 'hive', label: 'HIVE', component: null },
-  { id: 'dream', label: 'DREAM', component: null },
-  { id: 'arcane', label: 'ARCANE', component: null },
-  { id: 'world', label: 'WORLD', component: null },
-  { id: 'soul', label: 'SOUL', component: null },
-  { id: 'govern', label: 'GOVERN', component: null },
-  { id: 'missions', label: 'MISSIONS', component: null },
-  { id: 'api', label: 'API', component: null },
-  { id: '4d', label: '4D', component: TesseractRenderer },
-  { id: 'arena', label: 'ARENA', component: LiveArenaViewer },
-  { id: 'wow', label: 'WOW', component: null },
-  { id: 'no-mans-sky', label: 'NO MAN`'S SKY', component: PhaserScene },
-  { id: 'settings', label: 'SETTINGS', component: null },
-];
+// Map tab IDs to components
+const TAB_COMPONENTS: Record<string, React.FC> = {
+  'hive': HIVE,
+  'dream': DREAM,
+  'arcane': ARCANE,
+  'world': WORLD,
+  'soul': SOUL,
+  'govern': GOVERN,
+  'missions': MISSIONS,
+  'api': API,
+  '4d': FOUR_D,
+  'arena': ARENA,
+  'wow': WOW,
+  'no-mans-sky': NO_MANS_SKY,
+  'settings': SETTINGS,
+};
 
 const CommandCenter: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('4d');
+  const [activeTab, setActiveTab] = useState('hive');
   const [showColonyPanel, setShowColonyPanel] = useState(false);
   const [showMemoryGraph, setShowMemoryGraph] = useState(false);
 
-  const ActiveComponent = TABS.find(tab => tab.id === activeTab)?.component;
+  const ActiveComponent = TAB_COMPONENTS[activeTab] || (() => <div>Tab content loading...</div>);
 
   return (
     <div className="command-center-container">
@@ -38,36 +49,28 @@ const CommandCenter: React.FC = () => {
       {/* Main Content Area */}
       <div className="command-center-main">
         {/* Tab Navigation */}
-        <nav className="tab-navigator">
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+        <TabNavigator 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+        />
 
         {/* Active Tab Content */}
         <div className="tab-content">
-          {ActiveComponent ? (
-            <ActiveComponent />
-          ) : (
-            <div className="tab-placeholder">
-              <h2>{TABS.find(tab => tab.id === activeTab)?.label} Tab</h2>
-              <p>Content coming soon...</p>
-              {activeTab === 'world' && (
-                <button onClick={() => setShowColonyPanel(true)}>
-                  Open Colony View
-                </button>
-              )}
-              {activeTab === 'soul' && (
-                <button onClick={() => setShowMemoryGraph(true)}>
-                  Open Memory Graph
-                </button>
-              )}
+          <ActiveComponent />
+          
+          {/* Special modal triggers for WORLD and SOUL tabs */}
+          {activeTab === 'world' && (
+            <div className="tab-actions">
+              <button onClick={() => setShowColonyPanel(true)} className="btn-primary">
+                Open Colony View
+              </button>
+            </div>
+          )}
+          {activeTab === 'soul' && (
+            <div className="tab-actions">
+              <button onClick={() => setShowMemoryGraph(true)} className="btn-primary">
+                Open Memory Graph
+              </button>
             </div>
           )}
         </div>
