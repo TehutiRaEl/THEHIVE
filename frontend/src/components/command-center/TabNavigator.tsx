@@ -15,7 +15,7 @@ const TAB_DEFINITIONS = [
   { id: '4d', label: '4D', path: '/command-center/4d', icon: '🔲', description: 'Tesseract visualization' },
   { id: 'arena', label: 'ARENA', path: '/command-center/arena', icon: '⚔️', description: 'Competition' },
   { id: 'wow', label: 'WOW', path: '/command-center/wow', icon: '🎮', description: 'World of Warcraft' },
-  { id: 'no-mans-sky', label: 'NO MAN`'S SKY', path: '/command-center/no-mans-sky', icon: '🚀', description: 'Space exploration' },
+  { id: 'no-mans-sky', label: "NO MAN'S SKY", path: '/command-center/no-mans-sky', icon: '🚀', description: 'Space exploration' },
   { id: 'settings', label: 'SETTINGS', path: '/command-center/settings', icon: '⚙️', description: 'Configuration' },
 ];
 
