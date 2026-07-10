@@ -1,0 +1,38 @@
+name: Edge Health Probe
+
+# Production smoke test for the Cloudflare Worker. Manual trigger only.
+# Exists because dev containers cannot reach *.workers.dev (egress proxy),
+# so GitHub runners are the hive's only automated eyes on production.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  probe:
+    name: Probe thehive.sovereignhive.workers.dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe /v11/health, root page, and /v11/agents
+        run: |
+          BASE="https://thehive.sovereignhive.workers.dev"
+          overall=0
+          probe () {
+            local path="$1" expect="$2"
+            echo "── GET ${BASE}${path}"
+            status=$(curl -sS -m 20 -o /tmp/body -w "%{http_code}" "${BASE}${path}") || { echo "curl failed (exit $?) — DNS/TLS/network"; overall=1; return; }
+            ctype=$(curl -sS -m 20 -o /dev/null -w "%{content_type}" "${BASE}${path}" 2>/dev/null || true)
+            echo "status=${status} content-type=${ctype}"
+            head -c 400 /tmp/body; echo
+            if [ "$status" != "200" ]; then
+              echo "::warning::${path} returned ${status} (expected 200 ${expect})"
+              overall=1
+            fi
+          }
+          probe /v11/health "JSON {status:healthy}"
+          probe / "HTML command center"
+          probe /v11/agents "JSON {agents:[...]}"
+          if [ "$overall" != "0" ]; then
+            echo "::error::One or more probes failed — see bodies above. JSON health failing while the root page serves = Worker deployed assets-only (build config ignoring wrangler.jsonc)."
+            exit 1
+          fi
+          echo "✅ Production edge is fully live: assets + /v11 API"
