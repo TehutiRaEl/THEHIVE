@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 
+import type { Colony } from './types'
+
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string
   readonly VITE_ARENA_WS_URL: string
@@ -26,3 +28,5 @@ declare global {
     colonyEnter: (colony: Colony) => void
   }
 }
+
+export {}

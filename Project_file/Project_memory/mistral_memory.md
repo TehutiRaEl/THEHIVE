@@ -186,18 +186,19 @@ Rotations happen through 2D planes, not axes:
 - **Files Committed by Mistral**: 6 files (Batch 6 only)
 - **Components Created**: 3 core components
 - **Documentation Created**: 3 files
+- **Entry Points Added**: 3 files (main.tsx, App.tsx, index.css)
 - **Next Component**: ColonyGraphPage.tsx
 - **Blocked Items**: None - all critical feedback addressed
-- **Ready for**: Commit to branch and PR to main
+- **Ready for**: Merge to main (conflicts resolved by Fable/harness, 2026-07-10)
 
 ## Immediate Next Steps
 
 1. ✅ Create branch `mistral/frontend-command-center`
 2. ✅ Commit all 6 files to branch
-3. ⏳ Create ColonyGraphPage.tsx as next component
-4. ⏳ Create PR to main for review
+3. ✅ PR to main created (#40) — conflicts resolved, awaiting Founder merge
+4. ⏳ Create ColonyGraphPage.tsx as next component
 5. ⏳ Implement constitutional HOCs (hybrid approach)
-6. ⏳ Create LiveArenaViewer.tsx
+6. ⏳ Create LiveArenaViewer.tsx (adopt SKILLS/skill-voxel-projection-pipeline.md)
 7. ⏳ Create PhaserScene.tsx
 
 ---

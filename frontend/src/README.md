@@ -64,7 +64,7 @@ Mistral is responsible for building the frontend command center that integrates:
 3. Create LiveArenaViewer.tsx
 4. Create PhaserScene.tsx
 5. Create common UI components (Button, Card, Modal)
-6. Create remaining pages: App.tsx, main.tsx, Home.tsx, CommandCenter.tsx
+6. Create remaining pages: Home.tsx, CommandCenter.tsx, ColonyGraphPage.tsx
 7. Create services: api.ts, github.ts, websocket.ts, constants.ts, sentry.ts
 8. Create 9 colony consoles for each repository
 
@@ -73,6 +73,7 @@ Mistral is responsible for building the frontend command center that integrates:
 - Base branch: claude/fable-5-handoff-setup-vefwlb
 - Created: 2026-07-08
 - Status: Active development
+- Entry Points Added: main.tsx, App.tsx, index.css
 - Ready for: PR review and merge to main
 
 ## References
