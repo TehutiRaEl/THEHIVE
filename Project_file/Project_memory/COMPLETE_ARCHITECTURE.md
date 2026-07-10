@@ -46,10 +46,70 @@ This document describes the complete technical architecture of the Sovereign Hiv
 - Zustand
 - Sentry
 
+## File Inventory (frontend/src/)
+
+### Entry Points (3 files)
+- main.tsx - React 18 entry with Sentry + BrowserRouter
+- App.tsx - Main app with comprehensive routing
+- index.css - Global styles
+
+### Pages (4 files)
+- 404.tsx - Error page
+- Home.tsx - Landing page
+- CommandCenter.tsx - Main command center with TabNavigator
+- ColonyGraphPage.tsx - Colony visualization
+
+### Command Center Components (14 files)
+- TabNavigator.tsx - Navigation for 13 SEE tabs
+- tabs/HIVE.tsx - Main dashboard tab
+- tabs/DREAM.tsx - Vision and planning tab
+- tabs/ARCANE.tsx - Advanced features tab
+- tabs/WORLD.tsx - Global state tab
+- tabs/SOUL.tsx - Constitutional governance tab
+- tabs/GOVERN.tsx - Administrative controls tab
+- tabs/MISSIONS.tsx - Task management tab
+- tabs/API.tsx - Integration endpoints with tester
+- tabs/4D.tsx - Tesseract visualization tab
+- tabs/ARENA.tsx - Competition tab
+- tabs/WOW.tsx - World of Warcraft colony exploration
+- tabs/NO_MANS_SKY.tsx - Space exploration tab
+- tabs/SETTINGS.tsx - Configuration tab
+
+### Colony Components (3 files) - Sprint 4B
+- ColonyHeader.tsx - Header with icon, name, description, actions
+- ColonyConsole.tsx - Interactive console with commands, history
+- HealthDashboard.tsx - Health metrics with charts, status indicators
+
+### Core Components (6 files)
+- TesseractRenderer.tsx - 4D visualization with Option B
+- SpaceNavigation.tsx - WASD + mouse navigation
+- KaiChatBox.tsx - Full keyboard support
+- ColonyZoomPanel.tsx - Colony zoom visualization
+- MemoryGraph.tsx - Memory graph visualization
+- ErrorBoundary.tsx - Error handling wrapper
+
+### Services (1 file)
+- sentry.ts - Error tracking setup
+
+### Stores (2 files)
+- uiStore.ts - UI state management
+- constitutionStore.ts - Constitutional state
+
+### Hooks (2 files)
+- useAsyncState.ts - Async state management
+- useNeuralUI.ts - Neural UI hooks
+
+### Types (2 files)
+- colony.ts - Colony type definitions
+- index.ts - General type definitions
+
 ## Key Components Created by Mistral
 - TesseractRenderer.tsx: 4D visualization with Option B
 - SpaceNavigation.tsx: WASD + mouse navigation
 - KaiChatBox.tsx: Full keyboard support
+- ColonyHeader.tsx: Colony view header
+- ColonyConsole.tsx: Interactive colony console
+- HealthDashboard.tsx: Health monitoring dashboard
 
 ## Constitutional Compliance
 - F-001 (Data Sovereignty): Implemented
@@ -60,8 +120,10 @@ This document describes the complete technical architecture of the Sovereign Hiv
 - F-006 (Non-Penalization): Implemented
 
 ## Next Steps
-1. ColonyGraphPage.tsx
-2. constitutional.tsx (hybrid HOCs)
-3. LiveArenaViewer.tsx
-4. PhaserScene.tsx
-5. Common UI components
+1. ConstitutionVisualizer.tsx (Batch 7)
+2. MemoryGraphEnhanced.tsx (Batch 7)
+3. MissionTimeline.tsx (Batch 7)
+4. constitutional.tsx (hybrid HOCs)
+5. LiveArenaViewer.tsx
+6. PhaserScene.tsx
+7. Common UI components
