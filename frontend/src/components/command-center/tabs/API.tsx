@@ -190,7 +190,7 @@ const API: React.FC = () => {
           <div className="docs-grid">
             <div className="docs-card">
               <h3>Authentication</h3>
-              <p>POST /v11/auth/token with {"agent_name": "ui-client"}</p>
+              <p>POST /v11/auth/token with {'{"agent_name": "ui-client"}'}</p>
             </div>
             <div className="docs-card">
               <h3>Real-time Events</h3>
