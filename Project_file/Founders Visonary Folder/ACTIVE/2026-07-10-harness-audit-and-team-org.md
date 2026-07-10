@@ -17,8 +17,8 @@
 
 | # | Item | Owner | Detail |
 |---|------|-------|--------|
-| L1 | **workers.dev subdomain naming** | Founder + Claude | ✅ **DONE** — founder registered `sovereignhive`; `docs/index.html` auto-discovers `https://thehive.sovereignhive.workers.dev` (landed in PR #42, survived the merge-order sweep via PR #44). Remaining: founder opens the URL in a real browser and confirms LIVE boot — the build container's firewall blocks workers.dev, so only the founder can produce this proof. |
-| L2 | Grok bridge activation | Founder | 5 steps in `docs/GROK_BRIDGE.md`: Worker secret WORKER_ADMIN_KEY, two GitHub secrets, trigger workflow, share GROK_BRIDGE_KEY. |
+| L1 | **workers.dev subdomain naming** | — | ✅ **DONE & PROVEN** — edge-health-probe runs 29121627631/29121765031 (GitHub runner, 2026-07-10): `/v11/health` + `/v11/agents` return live JSON at `thehive.sovereignhive.workers.dev`, and the github.io copy already discovers that hostname. "Simulation mode" on the founder's device = stale browser cache → hard refresh. |
+| L2 | Grok bridge activation | Founder (ONE secret) | ⚠️ **one step left** — harness re-ran the workflow (run 29121337650): PAT, WORKER_ADMIN_KEY, GROK_BRIDGE_KEY all present; **only `WORKER_URL` missing**. Add secret `WORKER_URL` = `https://thehive.sovereignhive.workers.dev` (no trailing slash), re-run "Distribute PAT to Grok Bridge", share GROK_BRIDGE_KEY with Grok. (Old failures: hard-coded `thehive.workers.dev` → DNS; fixed by PR #41.) |
 | L3 | LocalAGI capabilities parity | Claude → Founder | ✅ **PR up** — LocalAGI **PR #5** (`GET /colony/capabilities` in colony.go, mirrors colony_sdk shape, `go vet` clean; also repoints the manifest constitution URL to THEHIVE). Founder merges. |
 | L4 | CORS allowlist for Worker/Render URLs | Sonnet | Sonnet's P3 — unchanged. |
 | L5 | Old open colony PRs | Founder | ✅ **verified 2026-07-10** — all straggler colony/fork PRs merged (founder confirmed "All PR's have been merged"; harness spot-checked). |
@@ -37,7 +37,7 @@
 |---|------|--------|------------|
 | M1 | Arena voxel end-to-end | ✅ | — |
 | M2 | SSE live feed | ✅ | — |
-| M3 | Command Center public | ⚠️ 95% — L1 merged; awaiting founder's real-browser proof of sovereignhive URL | Founder (open the link) |
+| M3 | Command Center public | ✅ server-side PROVEN (edge-health-probe green: assets + API live at both origins) — founder hard-refreshes to see LIVE boot | Founder (hard refresh) |
 | M4 | Tier3 truth | ✅ | — |
 | M5 | One frontend (React replaces docs/) | ~30% | Mistral |
 | M6 | Colony capabilities | ⚠️ code shipped — LocalAGI PR #5 awaits merge (L3) | Founder |
@@ -56,7 +56,7 @@
 
 ## 6. Immediate marching orders
 
-- **Founder:** merge LocalAGI PR #5 (L3) → open `https://thehive.sovereignhive.workers.dev` in a browser and report what you see (M3 proof) → L2 (bridge activation).
+- **Founder:** ① merge LocalAGI PR #5 (still OPEN — it was confused with the already-merged PR #4) → ② add secret `WORKER_URL` = `https://thehive.sovereignhive.workers.dev` and re-run "Distribute PAT to Grok Bridge" (last blocker for L2/M9) → ③ hard-refresh the production URL (server side is proven live).
 - **Claude (any session, first to wake):** L4 CORS (Sonnet's P3); read `SKILLS/skill-merge-order-and-regression-verify.md` before touching any merge wave.
 - **Mistral:** App.tsx + main.tsx + first 3 tabs (world, arena, hive) against the endpoint map; type-check green before next batch.
 - **Grok:** on activation — push gap analysis, rank P3–P8.
