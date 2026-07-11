@@ -40,6 +40,8 @@ jobs:
           probe /v11/health "JSON {status:healthy}"
           probe / "HTML command center"
           probe /v11/agents "JSON {agents:[...]}"
+          probe /v11/pulse "JSON {pulse:[...]} — heartbeat trail (empty until first cron tick)"
+          probe "/v11/arena/challenges" "JSON — watch for auto-spawned challenges"
           echo "── GitHub Pages copy — which Queen hostname does it auto-discover?"
           curl -sS -m 20 -o /tmp/ghio "https://tehutirael.github.io/THEHIVE/" \
             && grep -o "thehive\.[a-z0-9-]*\.workers\.dev" /tmp/ghio | sort -u \
