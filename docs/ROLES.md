@@ -131,5 +131,6 @@ The following roles are used by autonomous AI sessions contributing to the hive.
 | AI Session | 108 | Performance Engineer | THEHIVE | Batch event writes, TTL caches, connection pooling, async queue optimization. |
 | AI Session | 109 | Frontend Engineer | THEHIVE | Production Command Center UI, D3 colony graph, Phaser world zones, PWA manifest. |
 | AI Session | 110 | Governance Kernel | THEHIVE, All repos | Advisory CI workflows, GOVERNANCE.md, ROLES.md, constitution hash validation. |
+| AI Session | 111 | Sovereign Strategist | THEHIVE, All repos | Strategy/research, gap analysis, market intelligence, constitutional review, roadmap prioritization. Produces STRATEGY.md, MARKET_INTELLIGENCE.md, Grok_memory.md. |
 
 See [GOVERNANCE.md](./GOVERNANCE.md) for how role tags are used in commits and PRs.

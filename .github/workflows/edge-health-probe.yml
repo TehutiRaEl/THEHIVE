@@ -1,0 +1,53 @@
+name: Edge Health Probe
+
+# Production smoke test for the Cloudflare Worker. Manual trigger only.
+# Exists because dev containers cannot reach *.workers.dev (egress proxy),
+# so GitHub runners are the hive's only automated eyes on production.
+
+on:
+  workflow_dispatch: {}
+  # the hive checks its own pulse four times a day; a red X in Actions
+  # (plus GitHub's failure email) is the alarm that production degraded
+  schedule:
+    - cron: '17 */6 * * *'
+  # push-trigger on this file itself: lets the probe run from a feature
+  # branch before the workflow is registered on main (dispatch 404s until then)
+  push:
+    paths:
+      - .github/workflows/edge-health-probe.yml
+
+jobs:
+  probe:
+    name: Probe thehive.sovereignhive.workers.dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe /v11/health, root page, and /v11/agents
+        run: |
+          BASE="https://thehive.sovereignhive.workers.dev"
+          overall=0
+          probe () {
+            local path="$1" expect="$2"
+            echo "── GET ${BASE}${path}"
+            status=$(curl -sS -m 20 -o /tmp/body -w "%{http_code}" "${BASE}${path}") || { echo "curl failed (exit $?) — DNS/TLS/network"; overall=1; return; }
+            ctype=$(curl -sS -m 20 -o /dev/null -w "%{content_type}" "${BASE}${path}" 2>/dev/null || true)
+            echo "status=${status} content-type=${ctype}"
+            head -c 400 /tmp/body; echo
+            if [ "$status" != "200" ]; then
+              echo "::warning::${path} returned ${status} (expected 200 ${expect})"
+              overall=1
+            fi
+          }
+          probe /v11/health "JSON {status:healthy}"
+          probe / "HTML command center"
+          probe /v11/agents "JSON {agents:[...]}"
+          probe /v11/pulse "JSON {pulse:[...]} — heartbeat trail (empty until first cron tick)"
+          probe "/v11/arena/challenges" "JSON — watch for auto-spawned challenges"
+          echo "── GitHub Pages copy — which Queen hostname does it auto-discover?"
+          curl -sS -m 20 -o /tmp/ghio "https://tehutirael.github.io/THEHIVE/" \
+            && grep -o "thehive\.[a-z0-9-]*\.workers\.dev" /tmp/ghio | sort -u \
+            || echo "::warning::github.io fetch failed"
+          if [ "$overall" != "0" ]; then
+            echo "::error::One or more probes failed — see bodies above. JSON health failing while the root page serves = Worker deployed assets-only (build config ignoring wrangler.jsonc)."
+            exit 1
+          fi
+          echo "✅ Production edge is fully live: assets + /v11 API"

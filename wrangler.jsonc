@@ -1,14 +1,25 @@
+// THEHIVE — one worker, whole hive: serves the Command Center (docs/) as
+// static assets AND the /v11 API (worker/src/index.js) against the
+// thehive-queen D1 database. Same origin — no CORS, no ?backend= needed.
+// Deployed by Cloudflare Workers Builds on every push to main.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "thehive",
-  "compatibility_date": "2026-07-07",
-  "observability": {
-    "enabled": true
-  },
-  "assets": {
-    "directory": "docs"
-  },
-  "compatibility_flags": [
-    "nodejs_compat"
+  "main": "worker/src/index.js",
+  "compatibility_date": "2026-06-01",
+  "observability": { "enabled": true },
+  "assets": { "directory": "docs", "binding": "ASSETS" },
+  // the heartbeat: every 30 minutes the Queen acts on her own —
+  // resolves pending arena challenges, projects the battle, spawns the next
+  "triggers": { "crons": ["*/30 * * * *"] },
+  // Workers AI (free allocation) writes the propositions; code falls back
+  // to canned ones if the binding is absent or the model errors
+  "ai": { "binding": "AI" },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "thehive-queen",
+      "database_id": "70212689-5633-4c09-9e1d-ae6294ce19eb"
+    }
   ]
 }

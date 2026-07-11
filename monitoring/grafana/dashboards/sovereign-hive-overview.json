@@ -1,0 +1,209 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {"type": "grafana", "id": "grafana", "name": "Grafana", "version": "7.0.0"},
+    {"type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0"}
+  ],
+  "annotations": {"list": []},
+  "description": "Sovereign Hive — system-wide observability: request rates, colony health, SOUL economy, arena activity, and event bus depth.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 1,
+      "title": "HTTP Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"lineWidth": 2, "fillOpacity": 10},
+          "unit": "reqps"
+        }
+      },
+      "options": {"tooltip": {"mode": "multi"}},
+      "targets": [
+        {
+          "expr": "sum by (handler) (rate(http_requests_total{job=\"thehive\"}[5m]))",
+          "legendFormat": "{{handler}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Response Latency p95 (s)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"lineWidth": 2, "fillOpacity": 10},
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, handler) (rate(http_request_duration_seconds_bucket{job=\"thehive\"}[5m])))",
+          "legendFormat": "p95 {{handler}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Colony Health",
+      "type": "stat",
+      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "green", "value": 1}
+            ]
+          },
+          "mappings": [
+            {"options": {"0": {"text": "OFFLINE"}, "1": {"text": "ONLINE"}}, "type": "value"}
+          ],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "orientation": "auto", "textMode": "auto", "colorMode": "background"},
+      "targets": [
+        {"expr": "up{job=~\"thehive|nar2|4dbrain|aether|automatisch|kimi-k2|localagi\"}", "legendFormat": "{{job}}", "refId": "A"}
+      ]
+    },
+    {
+      "id": 4,
+      "title": "SOUL Economy — Top Wallet Balances",
+      "type": "bargauge",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "blue", "value": 0},
+              {"color": "purple", "value": 100},
+              {"color": "gold", "value": 1000}
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "orientation": "horizontal", "displayMode": "gradient"},
+      "targets": [
+        {"expr": "topk(10, soul_wallet_balance{job=\"thehive\"})", "legendFormat": "{{agent}}", "refId": "A"}
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Arena — Active Challenges",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "orange", "value": 0}]},
+          "unit": "short"
+        }
+      },
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "textMode": "value_and_name", "colorMode": "value"},
+      "targets": [
+        {"expr": "arena_active_challenges{job=\"thehive\"}", "legendFormat": "Active Challenges", "refId": "A"}
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Arena — Challenges Resolved (total)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": 0}]},
+          "unit": "short"
+        }
+      },
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "textMode": "value_and_name", "colorMode": "value"},
+      "targets": [
+        {"expr": "arena_challenges_resolved_total{job=\"thehive\"}", "legendFormat": "Resolved", "refId": "A"}
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Event Bus Queue Depth",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 18},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "fixed", "fixedColor": "semi-dark-orange"},
+          "custom": {"lineWidth": 2, "fillOpacity": 20},
+          "unit": "short"
+        }
+      },
+      "options": {"tooltip": {"mode": "single"}},
+      "targets": [
+        {"expr": "hive_event_bus_queue_depth{job=\"thehive\"}", "legendFormat": "Queue depth", "refId": "A"}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Event Bus — Events Published (rate)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 18},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"lineWidth": 2, "fillOpacity": 10},
+          "unit": "reqps"
+        }
+      },
+      "targets": [
+        {"expr": "sum by (event_type) (rate(hive_events_published_total{job=\"thehive\"}[1m]))", "legendFormat": "{{event_type}}", "refId": "A"}
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["sovereign-hive", "overview"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource",
+        "label": "Datasource"
+      }
+    ]
+  },
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Sovereign Hive — Overview",
+  "uid": "sovereign-hive-overview",
+  "version": 1
+}

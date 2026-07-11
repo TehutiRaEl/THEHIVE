@@ -4,15 +4,10 @@
   "description": "Memory bridge server for Sovereign Hive",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "deploy": "wrangler deploy",
-    "preview": "wrangler dev"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "fs-extra": "^11.2.0"
-  },
-  "devDependencies": {
-    "wrangler": "^4.107.0"
   }
 }
