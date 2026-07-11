@@ -4,14 +4,13 @@
  */
 import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
-import * as THREE from 'three';
 
 export interface SpaceNavigationProps {
   movementMode?: 'free' | 'orbit' | 'firstPerson' | 'thirdPerson' | 'fly';
   speed?: number;
 }
 
-const SpaceNavigation = ({ movementMode = 'free', speed = 5 }: SpaceNavigationProps) => {
+const SpaceNavigation = ({ speed = 5 }: SpaceNavigationProps) => {
   const { camera } = useThree();
   
   useEffect(() => {

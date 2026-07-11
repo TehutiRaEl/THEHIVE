@@ -21,20 +21,20 @@ import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 
 // 4D rotation matrix functions
-const create4DRotationMatrix = (plane: string, angle: number): number[][] => {
+export const create4DRotationMatrix = (_plane: string, _angle: number): number[][] => {
   // Implementation of 4D rotation matrices for all 6 planes
   // XY, XZ, XW, YZ, YW, ZW
   return [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
 };
 
 // Double rotation for isoclinic rotations
-const doubleRotation = (alpha: number, beta: number): number[][] => {
+export const doubleRotation = (_alpha: number, _beta: number): number[][] => {
   // Implementation of double rotations with α=β for isoclinic
   return [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
 };
 
 // 4D to 3D projection
-const project4DTo3D = (x: number, y: number, z: number, w: number): [number, number, number] => {
+export const project4DTo3D = (x: number, y: number, z: number, w: number): [number, number, number] => {
   // Projection: treat w as depth (z + w*0.3)
   return [x, y, z + w * 0.3];
 };
@@ -52,7 +52,7 @@ const Tesseract = ({ rotationSpeed = 0.01 }: { rotationSpeed?: number }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const geometry = useMemo(() => createTesseractGeometry(), []);
 
-  useFrame((state, delta) => {
+  useFrame(() => {
     if (meshRef.current) {
       // Apply 4D rotations and project to 3D
       meshRef.current.rotation.x += rotationSpeed;

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
-import { useUiStore } from '../../../stores/uiStore';
+import { useUIStore } from '../../../stores/uiStore';
 
 const HIVE: React.FC = () => {
-  const { hiveData, isLoading } = useUiStore();
+  const { isLoading } = useUIStore();
+  // live hive metrics arrive with the API wiring batch; defaults render until then
+  const [hiveData] = useState<{ status?: string; version?: string; uptime?: string } | null>(null);
 
   return (
     <div className="tab-container hive-tab">

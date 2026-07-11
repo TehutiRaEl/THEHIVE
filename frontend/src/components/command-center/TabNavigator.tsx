@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useUiStore } from '../../stores/uiStore';
+import { useUIStore } from '../../stores/uiStore';
 
 // SEE Command Center - 13 Pages
 const TAB_DEFINITIONS = [
@@ -32,7 +32,7 @@ const TabNavigator: React.FC<TabNavigatorProps> = ({
   activeTab: externalActiveTab,
   onTabChange
 }) => {
-  const { activeTab: storeActiveTab, setActiveTab } = useUiStore();
+  const { activeTab: storeActiveTab, setActiveTab } = useUIStore();
   
   // Use external activeTab if provided, otherwise fall back to store
   const currentActiveTab = externalActiveTab || storeActiveTab;
@@ -42,7 +42,7 @@ const TabNavigator: React.FC<TabNavigatorProps> = ({
     if (onTabChange) {
       onTabChange(tabId);
     } else {
-      setActiveTab(tabId);
+      setActiveTab(tabId as Parameters<typeof setActiveTab>[0]);
     }
   };
 

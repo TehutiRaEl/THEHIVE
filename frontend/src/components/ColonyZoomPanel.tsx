@@ -9,11 +9,11 @@ interface CapabilitiesData {
 }
 
 interface Props {
-  colonyId: ColonyId | null
-  onClose: () => void
+  colonyId?: ColonyId | null
+  onClose?: () => void
 }
 
-export function ColonyZoomPanel({ colonyId, onClose }: Props) {
+export function ColonyZoomPanel({ colonyId = null, onClose = () => {} }: Props) {
   const [caps, setCaps] = useState<CapabilitiesData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

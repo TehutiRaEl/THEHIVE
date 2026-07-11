@@ -66,7 +66,7 @@ const SOUL: React.FC = () => {
           <div className="constitution-card">
             <h3>Sovereign Hive Constitution</h3>
             <p><strong>Version:</strong> {constitution?.version || '1.0.0'}</p>
-            <p><strong>Last Updated:</strong> {constitution?.updatedAt || '2026-07-08'}</p>
+            <p><strong>Last Updated:</strong> {constitution?.lastUpdated || '2026-07-08'}</p>
             <p><strong>Status:</strong> Active</p>
           </div>
         </section>

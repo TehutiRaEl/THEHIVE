@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useUiStore } from '../../stores/uiStore';
+import { useUIStore } from '../../stores/uiStore';
 import { ColonyId } from '../../types/colony';
 
 interface ConsoleCommand {
@@ -24,7 +24,7 @@ const PREDEFINED_COMMANDS = [
 ];
 
 const ColonyConsole: React.FC<ColonyConsoleProps> = ({ colonyId }) => {
-  const { theme } = useUiStore();
+  const { theme } = useUIStore();
   const [commands, setCommands] = useState<ConsoleCommand[]>([]);
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<string[]>([]);
@@ -64,7 +64,7 @@ const ColonyConsole: React.FC<ColonyConsoleProps> = ({ colonyId }) => {
   };
 
   const generateResponse = (cmd: string, id: ColonyId): string => {
-    const [command, ...args] = cmd.toLowerCase().split(' ');
+    const [command] = cmd.toLowerCase().split(' ');
     
     switch (command) {
       case 'status':
