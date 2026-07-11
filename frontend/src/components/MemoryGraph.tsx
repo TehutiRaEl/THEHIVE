@@ -128,7 +128,7 @@ export function MemoryGraph({ height = 500, onNodeClick }: Props) {
       label.attr('x', (d) => d.x ?? 0).attr('y', (d) => d.y ?? 0)
     })
 
-    return () => sim.stop()
+    return () => { sim.stop() }
   }, [graphData, height, onNodeClick])
 
   if (error) return <div style={{ color: '#ef4444', padding: '1rem' }}>{error}</div>

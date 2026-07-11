@@ -86,6 +86,7 @@ export interface Notification {
   title: string
   message: string
   timestamp: string
+  duration?: number
 }
 
 export interface GameState {
@@ -94,15 +95,31 @@ export interface GameState {
   selectedColony: ColonyId | null
 }
 
-export type Theme = 'dark' | 'light' | 'cosmic'
+export type ThemeMode = 'dark' | 'light' | 'cosmic'
+
+// The living theme object the UI store manages; mode is the user-facing switch
+export interface Theme {
+  mode: ThemeMode
+  primary: string
+  secondary: string
+  background: string
+  surface: string
+  text: string
+  textSecondary: string
+  border: string
+}
 
 export interface UserPreferences {
-  theme: Theme
+  theme: ThemeMode | 'system'
   language: string
   notifications: boolean
-  soundEnabled: boolean
-  animationsEnabled: boolean
-  compactMode: boolean
+  fontSize?: 'small' | 'medium' | 'large'
+  sound?: boolean
+  soundEnabled?: boolean
+  animations?: boolean
+  animationsEnabled?: boolean
+  compactMode?: boolean
+  timezone?: string
 }
 
 export interface Modal {

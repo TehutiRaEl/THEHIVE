@@ -45,7 +45,7 @@ export function PhaserScene({ width = '100%', height = '100%', onZoneClick }: Pr
             ellipse.on('pointerover', () => ellipse.setAlpha(0.25))
             ellipse.on('pointerout', () => ellipse.setAlpha(1))
 
-            const text = this.add.text(x * W, y * H, name, {
+            this.add.text(x * W, y * H, name, {
               fontSize: '9px', color: '#94a3b8', fontFamily: 'monospace'
             }).setOrigin(0.5)
 
@@ -74,7 +74,7 @@ export function PhaserScene({ width = '100%', height = '100%', onZoneClick }: Pr
           // Town hall at center
           const cx = W * 0.5, cy = H * 0.5
           this.add.rectangle(cx, cy + 15, 40, 30, 0x1e293b)
-          const tri = this.add.triangle(cx, cy - 5, 0, 20, 20, -15, -20, -15, 0x334155)
+          this.add.triangle(cx, cy - 5, 0, 20, 20, -15, -20, -15, 0x334155)
         }
       }
 

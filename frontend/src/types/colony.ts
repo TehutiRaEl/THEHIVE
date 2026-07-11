@@ -1,6 +1,8 @@
 // Sovereign Hive - Colony Types
 
-export type ColonyId = 
+import type { Workflow } from './index'
+
+export type ColonyId =
   | 'THEHIVE'
   | 'NAR2'
   | 'LocalAGI'

@@ -274,6 +274,11 @@ export default {
         return json({ github_token: row.github_token });
       }
 
+      // React Command Center preview lives under /app (assets in docs/app);
+      // client-routed deep links miss the asset matcher, so serve the shell
+      if (method === 'GET' && url.pathname.startsWith('/app') && env.ASSETS)
+        return env.ASSETS.fetch(new Request(new URL('/app/index.html', url.origin), request));
+
       return json({ detail: 'not found', path: url.pathname }, 404);
     } catch (e) {
       return json({ detail: String(e) }, 500);
