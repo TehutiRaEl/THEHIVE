@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
-import { getMissions } from '../../../services/api';
+import { getTasks } from '../../../services/api';
 
 interface Mission {
   id: string;
@@ -28,9 +28,12 @@ const MISSIONS: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch missions from the backend API
-        const data = await getMissions();
-        
+        // Fetch real tasks from the edge Queen (/v11/tasks). The old
+        // /genesis/missions endpoint existed only on the FastAPI origin, not on
+        // the live Cloudflare Worker — it 404'd, which is why this tab was empty.
+        const resp = await getTasks();
+        const data = resp?.tasks ?? [];
+
         // Transform API data to our Mission interface
         const transformedMissions: Mission[] = (Array.isArray(data) ? data : []).map((mission: any) => ({
           id: mission.id || `m-${Math.random().toString(36).substr(2, 4)}`,

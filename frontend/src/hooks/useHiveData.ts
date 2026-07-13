@@ -14,6 +14,10 @@ export interface Challenge {
 export interface Pulse { ts: string; action: string; detail: string }
 export interface GovEntry { action: string; article: string; ts?: string }
 export interface SoulEntry { agent: string; soul: number }
+export interface EloEntry { agent_name: string; rating: number }
+export interface TaskEntry { id: number; title?: string; status?: string; [k: string]: unknown }
+export interface FallenIdea { id: number; proposition?: string; challenger?: string; challenged?: string; [k: string]: unknown }
+export interface LlmStatus { active_provider: string; providers: string[] }
 
 export interface HiveData {
   online: boolean
@@ -24,7 +28,13 @@ export interface HiveData {
   pulse: Pulse[]
   governance: GovEntry[]
   soulBoard: SoulEntry[]
+  eloBoard: EloEntry[]
+  tasks: TaskEntry[]
+  fallen: FallenIdea[]
+  llm: LlmStatus | null
+  tier3: Record<string, unknown> | null
   memoryBound: boolean
+  aiBound: boolean
   refresh: () => void
 }
 
@@ -43,18 +53,25 @@ async function j<T>(path: string, timeoutMs = 6000): Promise<T | null> {
 export function useHiveData(pollMs = 30000): HiveData {
   const [state, setState] = useState<Omit<HiveData, 'refresh'>>({
     online: false, loading: true, health: null,
-    agents: [], challenges: [], pulse: [], governance: [], soulBoard: [], memoryBound: false,
+    agents: [], challenges: [], pulse: [], governance: [], soulBoard: [],
+    eloBoard: [], tasks: [], fallen: [], llm: null, tier3: null,
+    memoryBound: false, aiBound: false,
   })
 
   const load = useCallback(async () => {
-    const [health, agents, challenges, pulse, gov, soul, mem] = await Promise.all([
+    const [health, agents, challenges, pulse, gov, soul, mem, elo, tasks, fallen, llm, tier3] = await Promise.all([
       j<{ status: string; version: string; runtime: string }>('/health'),
       j<{ agents: Agent[] }>('/agents'),
       j<{ challenges: Challenge[] }>('/arena/challenges'),
       j<{ pulse: Pulse[] }>('/pulse'),
       j<GovEntry[]>('/governance/log'),
       j<{ leaderboard: SoulEntry[] }>('/wallet/leaderboard/soul'),
-      j<{ vectorize_bound: boolean }>('/memory/status'),
+      j<{ vectorize_bound: boolean; ai_bound: boolean }>('/memory/status'),
+      j<{ leaderboard: EloEntry[] }>('/grading/leaderboard'),
+      j<{ tasks: TaskEntry[] }>('/tasks'),
+      j<{ hall_of_fallen_ideas: FallenIdea[] }>('/arena/fallen'),
+      j<LlmStatus>('/llm/status'),
+      j<Record<string, unknown>>('/tier3/status'),
     ])
     setState({
       online: !!health,
@@ -65,7 +82,13 @@ export function useHiveData(pollMs = 30000): HiveData {
       pulse: pulse?.pulse ?? [],
       governance: Array.isArray(gov) ? gov : [],
       soulBoard: soul?.leaderboard ?? [],
+      eloBoard: elo?.leaderboard ?? [],
+      tasks: tasks?.tasks ?? [],
+      fallen: fallen?.hall_of_fallen_ideas ?? [],
+      llm: llm ?? null,
+      tier3: tier3 ?? null,
       memoryBound: !!mem?.vectorize_bound,
+      aiBound: !!mem?.ai_bound,
     })
   }, [])
 
