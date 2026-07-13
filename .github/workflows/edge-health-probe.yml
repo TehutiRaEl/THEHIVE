@@ -43,6 +43,16 @@ jobs:
           probe /v11/pulse "JSON {pulse:[...]} — heartbeat trail (empty until first cron tick)"
           probe "/v11/arena/challenges" "JSON — watch for auto-spawned challenges"
           probe /v11/memory/status "JSON {vectorize_bound,ai_bound} — memory layer wiring"
+          echo "── UI Debugger diagnostic suite (was 9× 404) ──"
+          probe /v11/debug/health "JSON subsystems — d1/ai/vectorize/heartbeat"
+          probe /v11/debug/env "JSON bindings — names/booleans only, never values"
+          probe /v11/debug/git "JSON deploy identity"
+          probe /v11/debug/logs "JSON pulse-as-logs"
+          probe /v11/debug/colony-ping "JSON federation roster"
+          probe /v11/debug/endpoints "JSON route map"
+          probe /v11/ml/status "JSON Workers AI pipeline"
+          probe /v11/browser/status "JSON available:false — CI-only"
+          probe /v11/knowledge/status "JSON Vectorize RAG"
           echo "── POST /v11/command_text (Kai El chat — was 404)"
            st=$(curl -sS -m 25 -o /tmp/kai -w "%{http_code}" -X POST "${BASE}/v11/command_text" -H "Content-Type: application/json" --data '{"command":"Who are you, Kai El?"}') || st=000
           echo "command_text status=$st"; head -c 300 /tmp/kai; echo
