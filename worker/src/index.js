@@ -200,7 +200,7 @@ export default {
     }
   },
 
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const p = url.pathname.replace(/^\/v11/, '');
     const method = request.method.toUpperCase();
@@ -235,7 +235,7 @@ export default {
         return json(results);
       }
       if (p === '/llm/status')
-        return json({ active_provider: env.AI ? 'cloudflare-workers-ai' : 'simulation', providers: env.AI ? ['@cf/meta/llama-3.1-8b-instruct'] : [] });
+        return json({ active_provider: env.AI ? 'cloudflare-workers-ai' : 'simulation', providers: env.AI ? ['@cf/meta/llama-3.2-1b-instruct'] : [] });
 
       // COMMUNE WITH KAI EL — the chat the Command Center calls (was 404).
       // Kai El answers in persona, grounded in live hive state + (when provisioned)
@@ -274,14 +274,18 @@ export default {
 
         if (env.AI) {
           try {
-            const r = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+            // Same model proven live by the heartbeat's aiProposition() on this
+            // exact account/binding. The larger 3.1-8b is not enabled here, so it
+            // threw and silently fell back to the canned reply — this is the fix.
+            const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
               messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: prompt }],
               max_tokens: 400,
             });
-            const result = (r?.response || '').toString().trim();
+            const result = String((r?.response ?? r?.result ?? '')).trim();
             if (result) {
               // remember the exchange so the hive's memory grows from conversation too
-              ctx.waitUntil(remember(env, 'chat-' + Date.now(), `Kai El on "${cmd.slice(0, 80)}": ${result.slice(0, 200)}`, { kind: 'chat', ts: new Date().toISOString() }));
+              // (ctx.waitUntil now that fetch carries ctx — was a latent ReferenceError)
+              ctx?.waitUntil?.(remember(env, 'chat-' + Date.now(), `Kai El on "${cmd.slice(0, 80)}": ${result.slice(0, 200)}`, { kind: 'chat', ts: new Date().toISOString() }));
               return json({ result });
             }
           } catch (e) { /* fall through to canned */ }
