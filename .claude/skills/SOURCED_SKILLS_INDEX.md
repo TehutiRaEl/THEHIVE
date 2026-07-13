@@ -33,3 +33,9 @@ All copies are MIT-licensed unless noted. Skills live in `THEHIVE/.claude/skills
 - `Project_file/Founders Visonary Folder/SKILLS/` — **the team Skill Exchange** (11 hive-native workflow skills): harness/backend/edge process knowledge. The two are cross-referenced; a session skims both.
 
 Origin: Fable (Harness), 2026-07-13, executing the founder's `Repo-skills-reverse` directive.
+
+## Wave 2 (2026-07-13) — GitHub-wide harvest
+- **anthropics/skills** (Apache-2.0): 13 official skills COPIED to .claude/skills (algorithmic-art, brand-guidelines, canvas-design, claude-api, doc-coauthoring, frontend-design, internal-comms, mcp-builder, skill-creator, slack-gif-creator, theme-factory, web-artifacts-builder, webapp-testing). Excluded docx/pdf/pptx/xlsx (source-available, not redistributable).
+- **alirezarezvani/claude-skills** (MIT): 357 skills → skills-library/ ON-DEMAND (not auto-loaded). Includes the real agent-harness (multi-level MCP harness). Upstream CLAUDE.md/GEMINI.md/.github stripped to avoid misdirecting hive sessions.
+- **skill-harvester** active skill: the repeatable discover→vet→import pipeline.
+- **architecture-gap-assessment-2026-07-13.md**: triage of the founder research briefing — neuromcp + uga-cli DO NOT EXIST (hallucinated); memory core → use real Cloudflare Vectorize; harness → use the real agent-harness. No fictional installs.
