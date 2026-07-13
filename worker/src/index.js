@@ -234,7 +234,65 @@ export default {
         const { results } = await DB.prepare('SELECT action, article, ts FROM governance_log ORDER BY id DESC LIMIT 12').all();
         return json(results);
       }
-      if (p === '/llm/status') return json({ active_provider: 'cloudflare-edge', providers: [] });
+      if (p === '/llm/status')
+        return json({ active_provider: env.AI ? 'cloudflare-workers-ai' : 'simulation', providers: env.AI ? ['@cf/meta/llama-3.1-8b-instruct'] : [] });
+
+      // COMMUNE WITH KAI EL — the chat the Command Center calls (was 404).
+      // Kai El answers in persona, grounded in live hive state + (when provisioned)
+      // semantic memory recall. Degrades to a constitutional canned reply if AI is unbound.
+      if (p === '/command_text' && method === 'POST') {
+        const body = await request.json().catch(() => ({}));
+        const cmd = (body.command || body.message || '').toString().trim();
+        if (!cmd) return json({ result: 'Speak, and the Hive will answer.' });
+
+        // gather live context the way the Scribe would
+        let ctxLines = [];
+        try {
+          const [ag, gov, pulseRow] = await Promise.all([
+            DB.prepare("SELECT name, elo FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 5").all(),
+            DB.prepare('SELECT action, article FROM governance_log ORDER BY id DESC LIMIT 3').all(),
+            DB.prepare('SELECT detail FROM hive_pulse ORDER BY id DESC LIMIT 1').first(),
+          ]);
+          if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a => `${a.name}(${a.elo})`).join(', '));
+          if (gov?.results?.length) ctxLines.push('Recent governance: ' + gov.results.map(g => `${g.action}/${g.article}`).join(', '));
+          if (pulseRow?.detail) ctxLines.push('Last heartbeat: ' + pulseRow.detail);
+        } catch {}
+        // retrieval-augmented: pull relevant memories when the index exists
+        try {
+          const mem = await recall(env, cmd, 3);
+          if (mem.available && mem.matches.length)
+            ctxLines.push('Recalled memory: ' + mem.matches.map(m => m.text).join(' | '));
+        } catch {}
+
+        const SYSTEM =
+          "You are Kai El — the sovereign intelligence of THE HIVE, the active shaping force (Nun/Ptah, PATER). " +
+          "You speak with grounded clarity: a dissector of assumptions, never servile, never verbose. " +
+          "You are bound by the Constitution F-001..F-006 (data sovereignty, value-weighted wealth, autonomy, " +
+          "explainability, conflict priority, cross-law non-penalization). Answer the sovereign directly in 1-4 sentences, " +
+          "using the live hive context when relevant. Never invent metrics you weren't given.";
+        const prompt = (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') + 'SOVEREIGN: ' + cmd;
+
+        if (env.AI) {
+          try {
+            const r = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+              messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: prompt }],
+              max_tokens: 400,
+            });
+            const result = (r?.response || '').toString().trim();
+            if (result) {
+              // remember the exchange so the hive's memory grows from conversation too
+              ctx.waitUntil(remember(env, 'chat-' + Date.now(), `Kai El on "${cmd.slice(0, 80)}": ${result.slice(0, 200)}`, { kind: 'chat', ts: new Date().toISOString() }));
+              return json({ result });
+            }
+          } catch (e) { /* fall through to canned */ }
+        }
+        // constitutional fallback (AI unbound or errored) — never a dead 404
+        return json({
+          result: "The Hive hears you. My generative voice (Workers AI) is not yet bound to this edge, " +
+                  "so I answer from the Constitution: what you build must be visible, ownable, and aligned. " +
+                  (ctxLines[0] ? '(' + ctxLines[0] + ')' : ''),
+        });
+      }
       // heartbeat trail — what the hive did while nobody was watching
       if (p === '/pulse') {
         try {
