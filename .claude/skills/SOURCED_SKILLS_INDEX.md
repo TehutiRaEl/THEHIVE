@@ -38,4 +38,15 @@ Origin: Fable (Harness), 2026-07-13, executing the founder's `Repo-skills-revers
 - **anthropics/skills** (Apache-2.0): 13 official skills COPIED to .claude/skills (algorithmic-art, brand-guidelines, canvas-design, claude-api, doc-coauthoring, frontend-design, internal-comms, mcp-builder, skill-creator, slack-gif-creator, theme-factory, web-artifacts-builder, webapp-testing). Excluded docx/pdf/pptx/xlsx (source-available, not redistributable).
 - **alirezarezvani/claude-skills** (MIT): 357 skills → skills-library/ ON-DEMAND (not auto-loaded). Includes the real agent-harness (multi-level MCP harness). Upstream CLAUDE.md/GEMINI.md/.github stripped to avoid misdirecting hive sessions.
 - **skill-harvester** active skill: the repeatable discover→vet→import pipeline.
+
+## Hive-native (2026-07-13) — the Fable genome
+- **`FABLE_DNA.md`** (repo root): the transmissible genome — Constitution (ethics),
+  Fable's debugging method, and the mycelial/cross-hive communication principle, written
+  in full to be copied into any hive lawfully and freely. Contains no model weights, no
+  third-party code, no data. The honest form of "give the hive Fable's DNA, not an imprint."
+- **`fable-debugger`** active skill: Chromosome II of FABLE_DNA as a runnable discipline —
+  the Fable-level self-debugger left persistently in the hive. Probe before claim, contrast
+  against a proven-working path, find the coupled latent bug, verify where it actually runs,
+  never fake a green. Model-agnostic (Workers AI, a Claude key, or a local model — swappable
+  organ, constant genome). Sits under `hive-conductor`.
 - **architecture-gap-assessment-2026-07-13.md**: triage of the founder research briefing — neuromcp + uga-cli DO NOT EXIST (hallucinated); memory core → use real Cloudflare Vectorize; harness → use the real agent-harness. No fictional installs.
