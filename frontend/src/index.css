@@ -1,3 +1,10 @@
+/* Imported styles must precede all other rules (CSS @import spec). Loaded first
+   so the local :root overrides below win by cascade order.
+   (Components.css was an orphan — a misnamed copy of ErrorBoundary.tsx, not CSS —
+   removed; the real component lives at components/ErrorBoundary.tsx.) */
+@import './assets/styles/variables.css';
+@import './assets/styles/global.css';
+
 /* Global Reset and Base Styles */
 *,
 *::before,
@@ -19,11 +26,6 @@
   --font-display: 'Orbitron', sans-serif;
   --font-heading: 'Rajdhani', sans-serif;
 }
-
-/* Import existing styles */
-@import './assets/styles/variables.css';
-@import './assets/styles/global.css';
-@import './assets/styles/Components.css';
 
 /* App Container */
 .app-container {
