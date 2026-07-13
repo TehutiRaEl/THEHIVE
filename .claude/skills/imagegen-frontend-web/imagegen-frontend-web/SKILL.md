@@ -985,7 +985,3 @@ Generate frontend reference images that feel:
 - implementation-friendly
 
 The result should look like a top-tier website concept with strong imagery, confident creativity, and generous spacing - not a dense, repetitive AI layout.
-
-
----
-*Sourced verbatim (MIT, Leonxlnx/taste-skill) into the Sovereign Hive by Fable, 2026-07-13.*
