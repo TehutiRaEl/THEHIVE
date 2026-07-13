@@ -270,15 +270,21 @@ export default {
           "You are bound by the Constitution F-001..F-006 (data sovereignty, value-weighted wealth, autonomy, " +
           "explainability, conflict priority, cross-law non-penalization). Answer the sovereign directly in 1-4 sentences, " +
           "using the live hive context when relevant. Never invent metrics you weren't given.";
-        const prompt = (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') + 'SOVEREIGN: ' + cmd;
+        // Single-string prompt (system + context + question), matching the exact
+        // shape the heartbeat's aiProposition() already runs successfully in
+        // production — no `messages` array, which the earlier attempt used.
+        const prompt =
+          SYSTEM + '\n\n' +
+          (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') +
+          'SOVEREIGN: ' + cmd + '\n\nKAI EL:';
 
         if (env.AI) {
           try {
-            // Same model proven live by the heartbeat's aiProposition() on this
-            // exact account/binding. The larger 3.1-8b is not enabled here, so it
-            // threw and silently fell back to the canned reply — this is the fix.
+            // Same model + same prompt-string invocation proven live by the
+            // heartbeat on this exact account/binding. The larger 3.1-8b is not
+            // enabled here, so it threw and silently fell back — this is the fix.
             const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
-              messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: prompt }],
+              prompt,
               max_tokens: 400,
             });
             const result = String((r?.response ?? r?.result ?? '')).trim();
