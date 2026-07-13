@@ -334,6 +334,113 @@ export default {
       if (p === '/tier3/status')
         return json({ arena_renderer: { available: true, status: 'Loaded — edge voxel simulation' } });
 
+      // ── DIAGNOSTICS ─────────────────────────────────────────────────────
+      // Honest answers for the UI Debugger. Every route below returns 200 with
+      // real state (or a clean {available:false, note} where a capability does
+      // not exist at the edge) — never a dead 404, never a secret value.
+
+      // A live probe of every subsystem the Queen depends on.
+      if (p === '/debug/health' || p === '/health/subsystems') {
+        let dbOk = false, pulseTs = null;
+        try { await DB.prepare('SELECT 1').first(); dbOk = true; } catch {}
+        try { const r = await DB.prepare('SELECT ts FROM hive_pulse ORDER BY id DESC LIMIT 1').first(); pulseTs = r?.ts ?? null; } catch {}
+        const subsystems = {
+          d1_database: { bound: !!DB, healthy: dbOk },
+          workers_ai: { bound: !!env.AI, model: '@cf/meta/llama-3.2-1b-instruct' },
+          vectorize_memory: { bound: !!env.VECTORIZE, model: EMBED_MODEL },
+          assets: { bound: !!env.ASSETS },
+          heartbeat: { last_pulse: pulseTs, alive: !!pulseTs },
+        };
+        const healthy = dbOk;
+        return json({ status: healthy ? 'healthy' : 'degraded', runtime: 'cloudflare-worker', version: '11.0-edge', subsystems });
+      }
+
+      // Which bindings/secrets are PRESENT — names and booleans only, never values (F-001).
+      if (p === '/debug/env') {
+        const known = ['DB', 'AI', 'VECTORIZE', 'ASSETS'];
+        const bindings = {}; for (const k of known) bindings[k] = !!env[k];
+        // report which expected secrets are set, by presence only
+        const expectedSecrets = ['GROK_BRIDGE_KEY', 'CLOUDFLARE_API_TOKEN'];
+        const secrets_present = expectedSecrets.filter((k) => typeof env[k] === 'string' && env[k].length > 0);
+        return json({ bindings, secrets_present, note: 'names and presence only — values are never exposed (F-001 data sovereignty)' });
+      }
+
+      // The edge has no git working tree; report the honest deploy identity.
+      if (p === '/debug/git') {
+        return json({
+          available: false, branch: 'main', status: 'deployed artifact (no live working tree)',
+          version: '11.0-edge', deployed_via: 'Cloudflare Workers Builds from main',
+          note: 'edge workers ship a built artifact; git state lives in the repo, not the runtime',
+        });
+      }
+
+      // Durable log = the heartbeat pulse trail (wrangler tail is the live stream).
+      if (p === '/debug/logs') {
+        const lines = Math.min(100, Math.max(1, +(url.searchParams.get('lines') || 20) || 20));
+        let rows = [];
+        try { const r = await DB.prepare('SELECT ts, action, detail FROM hive_pulse ORDER BY id DESC LIMIT ?').bind(lines).all(); rows = r.results || []; } catch {}
+        return json({
+          lines: rows.map((r) => `${r.ts} [${r.action}] ${r.detail || ''}`),
+          count: rows.length, source: 'hive_pulse',
+          note: 'the durable log is the heartbeat trail; live request logs stream via `wrangler tail`',
+        });
+      }
+
+      // Federation roster + reachability note.
+      if (p === '/debug/colony-ping' || p === '/colony/ping') {
+        const roster = ['NAR2', '4DBRAIN', 'aether', 'automatisch', 'Kimi-K2', 'LocalAGI'];
+        return json({
+          queen: { name: 'THEHIVE', healthy: true },
+          colonies: roster.map((name) => ({ name, reachable: 'checked-in-ci' })),
+          note: 'edge cannot reach colony origins directly; live colony health runs in the colony-health GitHub workflow (constitution-sync mesh)',
+        });
+      }
+
+      // The route map — everything the Queen serves (prefix each with /v11).
+      if (p === '/debug/endpoints' || p === '/routes') {
+        return json({
+          base: '/v11',
+          routes: [
+            'GET /health', 'GET /agents', 'GET /grading/leaderboard', 'GET /wallet/leaderboard/soul',
+            'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
+            'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
+            'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen', 'POST /arena/challenge',
+            'POST /arena/resolve/{id}', 'POST /auth/token',
+            'GET /debug/health', 'GET /debug/env', 'GET /debug/git', 'GET /debug/logs',
+            'GET /debug/colony-ping', 'GET /debug/endpoints',
+            'GET /ml/status', 'GET /browser/status', 'GET /knowledge/status',
+          ],
+        });
+      }
+
+      // ML pipeline = Workers AI (the hive's generative/inference layer).
+      if (p === '/ml/status') {
+        return json({
+          pipeline: env.AI ? 'cloudflare-workers-ai' : 'simulation',
+          ai_bound: !!env.AI,
+          models: env.AI ? ['@cf/meta/llama-3.2-1b-instruct', EMBED_MODEL] : [],
+          note: 'inference runs on Workers AI at the edge; no separate ML server is provisioned',
+        });
+      }
+
+      // No browser agent at the edge — automation lives in CI.
+      if (p === '/browser/status') {
+        return json({
+          available: false, runtime: 'cloudflare-worker',
+          note: 'browser automation (Playwright) runs in GitHub Actions, not in the edge Worker; bind Cloudflare Browser Rendering to enable at-edge browsing',
+        });
+      }
+
+      // Knowledge RAG = the Vectorize sovereign-memory layer.
+      if (p === '/knowledge/status') {
+        return json({
+          rag: 'cloudflare-vectorize',
+          vectorize_bound: !!env.VECTORIZE, ai_bound: !!env.AI, embed_model: EMBED_MODEL,
+          status: env.VECTORIZE ? 'active' : 'awaiting index (create hive-memory + uncomment binding)',
+          note: 'retrieval-augmented recall over the hive’s own history; see /v11/memory/search',
+        });
+      }
+
       if (p === '/arena/challenges') {
         const { results } = await DB.prepare('SELECT * FROM arena_challenges ORDER BY id DESC LIMIT 20').all();
         return json({ challenges: results });
