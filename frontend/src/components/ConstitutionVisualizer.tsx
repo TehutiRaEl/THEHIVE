@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useUiStore } from '../stores/uiStore';
+import { useUIStore } from '../stores/uiStore';
 import { getConstitutionLaws, getConstitutionHistory } from '../services/api';
 
 interface Law {
@@ -201,7 +201,7 @@ const normalizeVersionHistory = (apiHistory: any): VersionHistory => {
 };
 
 const ConstitutionVisualizer: React.FC = () => {
-  const { theme } = useUiStore();
+  const { theme } = useUIStore();
   const [laws, setLaws] = useState<Law[]>(FALLBACK_LAWS);
   const [versionHistory, setVersionHistory] = useState<VersionHistory[]>(FALLBACK_VERSION_HISTORY);
   const [loading, setLoading] = useState<boolean>(true);

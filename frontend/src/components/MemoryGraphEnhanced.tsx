@@ -6,7 +6,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import * as d3 from 'd3';
-import { useUiStore } from '../stores/uiStore';
+import { useUIStore } from '../stores/uiStore';
 import { MemoryNode, MemoryLink } from '../types';
 import { getMemoryGraph } from '../services/api';
 
@@ -71,7 +71,7 @@ interface MemoryGraphEnhancedProps {
 }
 
 const MemoryGraphEnhanced: React.FC<MemoryGraphEnhancedProps> = ({ data }) => {
-  const { theme } = useUiStore();
+  const { theme } = useUIStore();
   const svgRef = useRef<SVGSVGElement>(null);
   const [graphData, setGraphData] = useState<{ nodes: MemoryNode[]; links: MemoryLink[] }>(generateFallbackMemoryGraphData());
   const [loading, setLoading] = useState<boolean>(true);

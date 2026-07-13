@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useUiStore } from '../../stores/uiStore';
+import { useUIStore } from '../../stores/uiStore';
 import ColonyHeader from './ColonyHeader';
 import ColonyConsole from './ColonyConsole';
 import HealthDashboard from './HealthDashboard';
@@ -10,7 +10,7 @@ interface THEHIVEColonyConsoleProps {
 }
 
 const THEHIVEColonyConsole: React.FC<THEHIVEColonyConsoleProps> = ({ onBack }) => {
-  const { activeColony, setActiveColony } = useUiStore();
+  const { activeColony, setActiveColony } = useUIStore();
   const [activeTab, setActiveTab] = useState<'console' | 'health' | 'governance'>('console');
 
   // Set active colony to THEHIVE when mounted

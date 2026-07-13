@@ -151,7 +151,7 @@ interface ModalFooterProps {
 export const ModalFooter: React.FC<ModalFooterProps> = ({
   children,
   className = ''
-) => (
+}) => (
   <div className={`modal-footer p-4 border-t border-gray-200 bg-gray-50 ${className}`}>
     {children}
   </div>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useUiStore } from '../../stores/uiStore';
+import { useUIStore } from '../../stores/uiStore';
 import ColonyHeader from './ColonyHeader';
 import ColonyConsole from './ColonyConsole';
 import HealthDashboard from './HealthDashboard';
 
 const KimiK2ColonyConsole: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
-  const { setActiveColony } = useUiStore();
+  const { setActiveColony } = useUIStore();
   const [activeTab, setActiveTab] = useState<'console' | 'health' | 'security'>('console');
 
   useEffect(() => {

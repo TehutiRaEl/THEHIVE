@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useUiStore } from '../stores/uiStore';
+import { useUIStore } from '../stores/uiStore';
 import { getMissions } from '../services/api';
 
 interface Mission {
@@ -100,7 +100,7 @@ function getDaysRemaining(dueDate: string | undefined) {
 }
 
 const MissionTimeline: React.FC = () => {
-  const { theme } = useUiStore();
+  const { theme } = useUIStore();
   const [missions, setMissions] = useState<Mission[]>(generateFallbackMissionData());
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
