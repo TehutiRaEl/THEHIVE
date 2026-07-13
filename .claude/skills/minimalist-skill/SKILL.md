@@ -86,4 +86,4 @@ When tasked with writing frontend code (HTML, React, Tailwind, Vue) or designing
 
 
 ---
-*Sourced verbatim (MIT) into the Sovereign Hive by Fable, 2026-07-13. See `.claude/skills/SOURCED_SKILLS_INDEX.md` for provenance and classification.*
+*Sourced verbatim (MIT, Leonxlnx/taste-skill) into the Sovereign Hive by Fable, 2026-07-13.*

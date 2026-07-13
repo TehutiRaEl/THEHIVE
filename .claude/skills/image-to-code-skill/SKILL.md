@@ -1229,4 +1229,4 @@ The final outcome should look like a top-tier website concept translated faithfu
 
 
 ---
-*Sourced verbatim (MIT) into the Sovereign Hive by Fable, 2026-07-13. See `.claude/skills/SOURCED_SKILLS_INDEX.md` for provenance and classification.*
+*Sourced verbatim (MIT, Leonxlnx/taste-skill) into the Sovereign Hive by Fable, 2026-07-13.*
