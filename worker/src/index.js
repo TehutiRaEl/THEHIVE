@@ -104,6 +104,52 @@ async function aiProposition(env, a, b) {
   } catch { return null; }
 }
 
+// ── Sovereign memory (Cloudflare Vectorize + Workers AI embeddings) ──────
+// The hive's semantic recall. Embeds memories with a free Workers AI model
+// and stores the vectors in a Vectorize index; a query is embedded the same
+// way and matched by cosine similarity. Everything degrades gracefully: if
+// either binding is absent, memory writes/queries no-op instead of throwing.
+const EMBED_MODEL = '@cf/baai/bge-base-en-v1.5'; // 768-dim, free tier
+
+async function embed(env, text) {
+  if (!env.AI) return null;
+  try {
+    const r = await env.AI.run(EMBED_MODEL, { text: [String(text).slice(0, 2000)] });
+    const v = r?.data?.[0];
+    return Array.isArray(v) ? v : null;
+  } catch { return null; }
+}
+
+// Store one memory. id must be stable+unique so re-runs upsert, not duplicate.
+async function remember(env, id, text, metadata) {
+  if (!env.VECTORIZE) return false;
+  const values = await embed(env, text);
+  if (!values) return false;
+  try {
+    await env.VECTORIZE.upsert([{ id: String(id), values, metadata: { text: String(text).slice(0, 512), ...metadata } }]);
+    return true;
+  } catch { return false; }
+}
+
+// Semantic recall: nearest memories to a natural-language query.
+async function recall(env, query, topK = 5) {
+  if (!env.VECTORIZE) return { available: false, matches: [] };
+  const values = await embed(env, query);
+  if (!values) return { available: false, matches: [] };
+  try {
+    const res = await env.VECTORIZE.query(values, { topK, returnMetadata: 'all' });
+    return {
+      available: true,
+      matches: (res?.matches || []).map(m => ({
+        score: +(m.score ?? 0).toFixed(4),
+        text: m.metadata?.text ?? '',
+        kind: m.metadata?.kind ?? '',
+        ts: m.metadata?.ts ?? '',
+      })),
+    };
+  } catch (e) { return { available: false, matches: [], error: String(e) }; }
+}
+
 export default {
   // The heartbeat. Fires on the cron in wrangler.jsonc; the hive advances
   // with no hands: resolve what is pending, replay it in voxels, seed the
@@ -142,10 +188,16 @@ export default {
     } catch (e) {
       acted.push('error: ' + String(e));
     }
+    const ts = new Date().toISOString();
     try {
       await DB.prepare('INSERT INTO hive_pulse (ts, action, detail) VALUES (?,?,?)')
-        .bind(new Date().toISOString(), acted.length ? 'heartbeat' : 'idle', acted.join(' · ') || 'nothing pending').run();
+        .bind(ts, acted.length ? 'heartbeat' : 'idle', acted.join(' · ') || 'nothing pending').run();
     } catch {}
+    // Sovereign memory: the hive remembers what it did, semantically.
+    // No-ops when Vectorize/AI are unbound (until the index is provisioned).
+    if (acted.length) {
+      ctx.waitUntil(remember(env, 'pulse-' + ts, acted.join(' · '), { kind: 'heartbeat', ts }));
+    }
   },
 
   async fetch(request, env) {
@@ -190,6 +242,27 @@ export default {
           return json({ pulse: results });
         } catch { return json({ pulse: [] }); }
       }
+
+      // Sovereign memory — semantic recall over the hive's own history.
+      // GET /v11/memory/search?q=...  or POST {query, topK}
+      if (p === '/memory/search') {
+        const q = method === 'POST' ? (await request.json().catch(() => ({}))).query
+                                    : url.searchParams.get('q');
+        if (!q) return json({ detail: 'query required (?q= or POST {query})' }, 400);
+        const topK = Math.min(20, +(url.searchParams.get('topK') || 5) || 5);
+        const out = await recall(env, q, topK);
+        return json({ query: q, ...out });
+      }
+      // POST /v11/memory/remember {text, kind?} — admin-lite manual memory write
+      if (p === '/memory/remember' && method === 'POST') {
+        const b = await request.json().catch(() => ({}));
+        if (!b.text) return json({ detail: 'text required' }, 400);
+        const id = 'note-' + Date.now();
+        const ok = await remember(env, id, b.text, { kind: b.kind || 'note', ts: new Date().toISOString() });
+        return json({ ok, id, stored: ok, note: ok ? 'remembered' : 'memory backend not provisioned (Vectorize/AI unbound)' });
+      }
+      if (p === '/memory/status')
+        return json({ vectorize_bound: !!env.VECTORIZE, ai_bound: !!env.AI, model: EMBED_MODEL });
       if (p === '/tier3/status')
         return json({ arena_renderer: { available: true, status: 'Loaded — edge voxel simulation' } });
 

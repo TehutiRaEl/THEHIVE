@@ -12,9 +12,21 @@
   // the heartbeat: every 30 minutes the Queen acts on her own —
   // resolves pending arena challenges, projects the battle, spawns the next
   "triggers": { "crons": ["*/30 * * * *"] },
-  // Workers AI (free allocation) writes the propositions; code falls back
-  // to canned ones if the binding is absent or the model errors
+  // Workers AI (free allocation) writes the propositions AND the memory
+  // embeddings (@cf/baai/bge-base-en-v1.5); code falls back gracefully when unbound
   "ai": { "binding": "AI" },
+  // Sovereign memory: semantic recall over the hive's own history.
+  // ⚠️ BINDING IS COMMENTED OUT ON PURPOSE. A vectorize binding pointing at an
+  // index that doesn't exist yet FAILS the deploy at build time — which would
+  // take the live Queen (heartbeat + API) down. So the worker code ships now and
+  // no-ops (memory/status → vectorize_bound:false) until the index is created.
+  // TO ACTIVATE (founder, one time):
+  //   1) npx wrangler vectorize create hive-memory --dimensions=768 --metric=cosine
+  //   2) uncomment the "vectorize" block below, commit → Workers Builds redeploys
+  //   3) GET /v11/memory/status → vectorize_bound:true; memory fills on the next heartbeat
+  // "vectorize": [
+  //   { "binding": "VECTORIZE", "index_name": "hive-memory" }
+  // ],
   "d1_databases": [
     {
       "binding": "DB",
