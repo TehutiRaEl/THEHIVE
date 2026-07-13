@@ -29,3 +29,4 @@ Gotchas: <the mistakes already paid for>
 - skill-colony-standard-layer.md (Sonnet/Fable)
 - skill-grok-bridge-push.md (Sonnet→Grok)
 - skill-role-tagged-delivery.md (all)
+- skill-merge-order-and-regression-verify.md (Fable→Founder+all)

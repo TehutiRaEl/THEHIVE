@@ -1,0 +1,38 @@
+# Sovereign Hive — Harness Plan (revised & compressed, 2026-07-10)
+
+## Context
+All prior plans (hive-master-plan M1–M7, team-status M1–M10, workflow audit) are shipped or superseded; the team is now four seats (Founder, Fable=Harness, Sonnet=Backend/Edge, Mistral=Frontend, Grok=Strategy) coordinating through `Project_file/Founders Visonary Folder/` with the Skill Exchange (`SKILLS/`, 10 skills) and per-member charters. This plan compresses everything still open into one execution sheet. Canonical copies live in-repo (harness doc + Fable_memory.md).
+
+## Immediate merge queue (Founder)
+1. **PR #40** — Mistral frontend (conflicts resolved by harness; union-merged mistral_memory.md)
+2. **PR #42** — harness org + charters + Skill Exchange + **L1 hostname fix** (`thehive.sovereignhive.workers.dev`)
+
+## P0 register (live)
+| ID | Item | Owner | State |
+|----|------|-------|-------|
+| L1 | sovereignhive hostname in auto-discovery | Fable | ✅ fixed, in PR #42 |
+| L2 | Grok bridge activation (5 steps, docs/GROK_BRIDGE.md) | Founder | open |
+| L3 | LocalAGI /colony/capabilities (Go, mirror colony_sdk shape) | Sonnet/Fable | open |
+| L4 | CORS allowlist: Worker + Pages origins in backend config | Sonnet | open |
+| L5 | Merge stragglers: colony PRs (NAR2#5, 4DBRAIN#5, Kimi-K2#4, aether#4, automatisch#4, LocalAGI#4, fCC#2, FPB#2) | Founder | verify |
+
+## Phases forward (post-merge)
+**A — Production proof (Fable, first session with shell):**
+Curl `https://thehive.sovereignhive.workers.dev/v11/health` → healthy; page boots LIVE same-origin; github.io copy auto-discovers Queen. Evidence link into harness doc. If DNS still dead → subdomain not registered (skill-edge-worker-d1-deploy gotcha #2).
+
+**B — Backend queue (Sonnet):** P3 CORS (=L4) → P4 `GET /v11/constitution/history` (git log of soul.md) → P5 endpoint-drift audit (UI calls vs route table; reuse gap-#11 method) → L3 → P7 Grafana JSON → P8 dynamic COLONY_BASE_URLS. Every new endpoint: update services/api.ts + endpoint map + ACTIVE/ note.
+
+**C — Frontend M5 (Mistral):** batch order: ColonyGraphPage → constitutional HOCs → LiveArenaViewer (adopt skill-voxel-projection-pipeline; r128 setColorAt gotcha) → PhaserScene → remaining tabs. DoD per batch: `npm run type-check && lint && build` clean, committed with batch. M5 done = React app replaces docs/index.html as primary; docs/ becomes fallback.
+
+**D — Strategy M9 (Grok, unblocks on L2):** push gap analysis via skill-grok-bridge-push; rank Sonnet queue; external-positioning brief (constitution+EVW story). Debt noted: bridge PAT plaintext in D1 → AES-GCM upgrade ticket.
+
+**E — Observability & hardening (M10):** Grafana dashboard (P7); then tighten edge auth beyond visitor-tier; Worker rate limits; D1 backup/export workflow.
+
+## Standing rules (unchanged)
+Probe before claim · role-tagged commits · one writer per memory file · ACTIVE/ is the bus · plans live in the repo · free tier only · dual-lens on every decision.
+
+## Verification
+- A: live curls + browser boot (Playwright if in-sandbox; skill-playwright-real-ui-verification).
+- B: pytest suites green (65+ baseline) + curl per new endpoint.
+- C: build gates per batch + Playwright drive of each tab against live backend.
+- Whole-hive drill after any soul.md edit: six-colony Constitution Receive green (skill-constitution-sync-drill).

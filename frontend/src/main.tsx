@@ -19,7 +19,7 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 // Render the application
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <App />
     </BrowserRouter>
   </React.StrictMode>

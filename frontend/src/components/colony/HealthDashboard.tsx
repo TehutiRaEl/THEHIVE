@@ -1,6 +1,6 @@
 import React from 'react';
-import { useUiStore } from '../../stores/uiStore';
-import { ColonyId, COLONY_CONFIGS, ColonyHealth, ColonyStatus } from '../../types/colony';
+import { useUIStore } from '../../stores/uiStore';
+import { ColonyId, COLONY_CONFIGS, ColonyStatus } from '../../types/colony';
 
 interface HealthDashboardProps {
   colonyId: ColonyId;
@@ -56,7 +56,7 @@ const getStatusColor = (status: ColonyStatus, theme: any): string => {
 };
 
 const HealthDashboard: React.FC<HealthDashboardProps> = ({ colonyId }) => {
-  const { theme } = useUiStore();
+  const { theme } = useUIStore();
   const colony = COLONY_CONFIGS[colonyId];
   const health = generateHealthData(colonyId);
 
@@ -219,7 +219,7 @@ const HealthDashboard: React.FC<HealthDashboardProps> = ({ colonyId }) => {
           <button key={index} className="action-btn" style={{
             padding: '0.5rem 1rem',
             background: theme.primary,
-            color: theme.secondaryColor,
+            color: theme.secondary,
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',

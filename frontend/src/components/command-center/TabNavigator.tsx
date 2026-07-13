@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useUiStore } from '../../stores/uiStore';
+import { useUIStore } from '../../stores/uiStore';
 
 // SEE Command Center - 13 Pages
 const TAB_DEFINITIONS = [
@@ -15,7 +15,7 @@ const TAB_DEFINITIONS = [
   { id: '4d', label: '4D', path: '/command-center/4d', icon: '🔲', description: 'Tesseract visualization' },
   { id: 'arena', label: 'ARENA', path: '/command-center/arena', icon: '⚔️', description: 'Competition' },
   { id: 'wow', label: 'WOW', path: '/command-center/wow', icon: '🎮', description: 'World of Warcraft' },
-  { id: 'no-mans-sky', label: 'NO MAN`'S SKY', path: '/command-center/no-mans-sky', icon: '🚀', description: 'Space exploration' },
+  { id: 'no-mans-sky', label: "NO MAN'S SKY", path: '/command-center/no-mans-sky', icon: '🚀', description: 'Space exploration' },
   { id: 'settings', label: 'SETTINGS', path: '/command-center/settings', icon: '⚙️', description: 'Configuration' },
 ];
 
@@ -32,7 +32,7 @@ const TabNavigator: React.FC<TabNavigatorProps> = ({
   activeTab: externalActiveTab,
   onTabChange
 }) => {
-  const { activeTab: storeActiveTab, setActiveTab } = useUiStore();
+  const { activeTab: storeActiveTab, setActiveTab } = useUIStore();
   
   // Use external activeTab if provided, otherwise fall back to store
   const currentActiveTab = externalActiveTab || storeActiveTab;
@@ -42,7 +42,7 @@ const TabNavigator: React.FC<TabNavigatorProps> = ({
     if (onTabChange) {
       onTabChange(tabId);
     } else {
-      setActiveTab(tabId);
+      setActiveTab(tabId as Parameters<typeof setActiveTab>[0]);
     }
   };
 

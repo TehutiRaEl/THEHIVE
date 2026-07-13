@@ -1,5 +1,5 @@
 import React from 'react';
-import { useUiStore } from '../../stores/uiStore';
+import { useUIStore } from '../../stores/uiStore';
 import { ColonyId, COLONY_CONFIGS } from '../../types/colony';
 
 interface ColonyHeaderProps {
@@ -8,7 +8,7 @@ interface ColonyHeaderProps {
 }
 
 const ColonyHeader: React.FC<ColonyHeaderProps> = ({ colonyId, onBack }) => {
-  const { theme } = useUiStore();
+  const { theme } = useUIStore();
   const colony = COLONY_CONFIGS[colonyId];
 
   if (!colony) {
@@ -44,13 +44,13 @@ const ColonyHeader: React.FC<ColonyHeaderProps> = ({ colonyId, onBack }) => {
         <div className="colony-actions">
           <button className="colony-action-btn" style={{
             background: theme.primary,
-            color: theme.secondaryColor
+            color: theme.secondary
           }}>
             Settings
           </button>
           <button className="colony-action-btn" style={{
             background: theme.primary,
-            color: theme.secondaryColor
+            color: theme.secondary
           }}>
             Refresh
           </button>

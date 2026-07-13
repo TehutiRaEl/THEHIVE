@@ -10,7 +10,7 @@ interface Endpoint {
 }
 
 const API: React.FC = () => {
-  const [endpoints, setEndpoints] = useState<Endpoint[]>([
+  const [endpoints] = useState<Endpoint[]>([
     { path: '/v11/auth/token', method: 'POST', description: 'Get authentication token', status: 'available' },
     { path: '/v11/hive/status', method: 'GET', description: 'Get hive status', status: 'available' },
     { path: '/v11/colony/capabilities', method: 'GET', description: 'Get colony capabilities', status: 'available' },
@@ -190,7 +190,7 @@ const API: React.FC = () => {
           <div className="docs-grid">
             <div className="docs-card">
               <h3>Authentication</h3>
-              <p>POST /v11/auth/token with {"agent_name": "ui-client"}</p>
+              <p>POST /v11/auth/token with {'{"agent_name": "ui-client"}'}</p>
             </div>
             <div className="docs-card">
               <h3>Real-time Events</h3>

@@ -201,7 +201,7 @@ window._BACKEND_CANDIDATES = [
   window.JASPER_BACKEND,
   window.location.origin !== 'null' && !window.location.origin.includes('github.io')
     ? window.location.origin : null,
-  'https://thehive.mac18lee.workers.dev',  // production Queen (Cloudflare edge)
+  'https://thehive.sovereignhive.workers.dev',  // production Queen (Cloudflare edge)
   'http://localhost:8080',
   'http://localhost:8181',
 ].filter(Boolean);
@@ -581,6 +581,24 @@ const COLONY_BASE_URLS = {
   "LocalAGI":    {url:"http://localhost:8081", path:"/"},
 };
 function colonyConsoleUrl(id){const c=COLONY_BASE_URLS[id];return c?c.url+c.path:null;}
+
+async function loadColonyURLs() {
+  if (!window.BACKEND_BASE || window.HIVE_DEMO) return;
+  try {
+    const resp = await fetch(window.BACKEND_BASE + '/hive/status', {signal: AbortSignal.timeout(6000)});
+    if (!resp.ok) return;
+    const data = await resp.json();
+    for (const [id, info] of Object.entries(data.colonies || {})) {
+      if (!info || !info.url) continue;
+      // match by exact id or case-insensitive key
+      const key = Object.keys(COLONY_BASE_URLS).find(
+        k => k.toLowerCase() === id.toLowerCase()
+      );
+      if (key) COLONY_BASE_URLS[key].url = info.url.replace(/\/$/, '');
+    }
+  } catch (_) {}
+}
+window.addEventListener('hive-boot-done', () => { if (!window.HIVE_DEMO) loadColonyURLs(); });
 
 const COLONY_GRAPH = {
   nodes:[

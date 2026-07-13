@@ -1,17 +1,27 @@
 import { create } from 'zustand'
-import type { Constitution, Wealth } from '../types'
+import type { Wealth } from '../types'
+import type { Constitution } from '../types/constitution'
 import { calculateWealth } from '../types/constitution'
+
+export interface Violation {
+  id: string
+  law: string
+  message: string
+  severity: 'low' | 'medium' | 'high'
+}
 
 interface ConstitutionActions {
   setConstitution: (constitution: Constitution) => void
   updateWealth: (time: number, value: number) => void
   addFixedLaw: (law: { id: string; title: string; description: string }) => void
   addMutableLaw: (law: { id: string; title: string; description: string }) => void
+  checkLaw: (lawId: string) => boolean
 }
 
 type ConstitutionStore = {
   constitution: Constitution | null
   wealth: Wealth
+  violations: Violation[]
 } & ConstitutionActions
 
 const initialWealth: Wealth = {
@@ -34,9 +44,10 @@ const initialConstitution: Constitution = {
   lastUpdated: new Date().toISOString()
 }
 
-export const useConstitutionStore = create<ConstitutionStore>((set) => ({
-  constitution: null,
+export const useConstitutionStore = create<ConstitutionStore>((set, get) => ({
+  constitution: initialConstitution,
   wealth: initialWealth,
+  violations: [],
   
   setConstitution: (constitution) => set({ constitution }),
   
@@ -61,5 +72,23 @@ export const useConstitutionStore = create<ConstitutionStore>((set) => ({
       mutableLaws: [...state.constitution.mutableLaws, law],
       lastUpdated: new Date().toISOString()
     } : null
-  }))
+  })),
+
+  // a law "checks out" when it exists in the living constitution;
+  // a failed check is recorded as a violation the SOUL tab renders
+  checkLaw: (lawId) => {
+    const c = get().constitution
+    const known = !!c && [...c.fixedLaws, ...c.mutableLaws].some(l => l.id === lawId)
+    if (!known) {
+      set(state => ({
+        violations: [...state.violations, {
+          id: 'v-' + Date.now(),
+          law: lawId,
+          message: 'Law not present in the living constitution',
+          severity: 'medium'
+        }]
+      }))
+    }
+    return known
+  }
 }))
