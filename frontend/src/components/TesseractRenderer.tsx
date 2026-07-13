@@ -21,7 +21,7 @@
 
 import { useRef, useMemo, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Line } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 
 type Matrix4D = [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
@@ -154,7 +154,7 @@ const Tesseract: React.FC<TesseractProps> = ({
   
   const geometry = useMemo(() => createTesseractGeometry(vertices3D), [vertices3D]);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.x += rotationSpeed * 0.5;
       meshRef.current.rotation.y += rotationSpeed * 0.7;
@@ -165,16 +165,16 @@ const Tesseract: React.FC<TesseractProps> = ({
   });
 
   return (
-    <Line ref={meshRef} geometry={geometry}>
+    <lineSegments ref={meshRef} geometry={geometry}>
       {useShader ? (
         <primitive
           object={createTesseractShaderMaterial(new THREE.Color(colorA), new THREE.Color(colorB))}
           ref={shaderMaterialRef}
         />
       ) : (
-        <THREE.LineBasicMaterial color="hotpink" linewidth={2} />
+        <lineBasicMaterial color="hotpink" linewidth={2} />
       )}
-    </Line>
+    </lineSegments>
   );
 };
 
@@ -206,7 +206,7 @@ const DoubleRotationTesseract: React.FC<DoubleRotationTesseractProps> = ({
   
   const geometry = useMemo(() => createTesseractGeometry(vertices3D), [vertices3D]);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.x += rotationSpeed * 0.5;
       meshRef.current.rotation.y += rotationSpeed * 0.7;
@@ -217,16 +217,16 @@ const DoubleRotationTesseract: React.FC<DoubleRotationTesseractProps> = ({
   });
 
   return (
-    <Line ref={meshRef} geometry={geometry}>
+    <lineSegments ref={meshRef} geometry={geometry}>
       {useShader ? (
         <primitive
           object={createTesseractShaderMaterial(new THREE.Color('#00ffff'), new THREE.Color('#ff1493'))}
           ref={shaderMaterialRef}
         />
       ) : (
-        <THREE.LineBasicMaterial color="cyan" linewidth={2} />
+        <lineBasicMaterial color="cyan" linewidth={2} />
       )}
-    </Line>
+    </lineSegments>
   );
 };
 
@@ -237,7 +237,7 @@ const IsoclinicTesseract: React.FC<{ rotationSpeed?: number; useShader?: boolean
 }) => {
   const [alpha, setAlpha] = useState(0);
   
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     setAlpha(prev => prev + delta * 0.4);
   });
 
@@ -251,10 +251,9 @@ interface TesseractRendererProps {
   showIsoclinic?: boolean;
 }
 
-const TesseractRenderer: React.FC<TesseractRendererProps> = ({
-  showDoubleRotation = false,
-  showIsoclinic = true
-}) => {
+const TesseractRenderer: React.FC<TesseractRendererProps> = () => {
+  const [showDoubleRotation, setShowDoubleRotation] = useState(false);
+  const [showIsoclinic, setShowIsoclinic] = useState(true);
   const [wAngle, setWAngle] = useState(0);
   const [xwAngle, setXwAngle] = useState(0);
   const [depthFactor, setDepthFactor] = useState(0.3);
@@ -263,7 +262,7 @@ const TesseractRenderer: React.FC<TesseractRendererProps> = ({
   const [colorA, setColorA] = useState('#ff1493');
   const [colorB, setColorB] = useState('#00ffff');
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     setWAngle(prev => prev + delta * 0.2);
     setXwAngle(prev => prev + delta * 0.3);
   });

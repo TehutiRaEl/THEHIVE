@@ -157,7 +157,3 @@ export const ModalFooter: React.FC<ModalFooterProps> = ({
   </div>
 );
 
-// Index file for common components
-export { Button } from './Button';
-export { Card, CardHeader } from './Card';
-export { Modal, ModalFooter };

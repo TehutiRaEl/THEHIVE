@@ -1,5 +1,16 @@
 // Colony Console Components Index
 // Batch 10 - One console component per repository/colony
+import React from 'react';
+import THEHIVEColonyConsole from './THEHIVEColonyConsole';
+import NAR2ColonyConsole from './NAR2ColonyConsole';
+import LocalAGIColonyConsole from './LocalAGIColonyConsole';
+import AutomatischColonyConsole from './AutomatischColonyConsole';
+import DBRAINColonyConsole from './4DBRAINColonyConsole';
+import KimiK2ColonyConsole from './KimiK2ColonyConsole';
+import AetherColonyConsole from './AetherColonyConsole';
+import FreeCodeCampColonyConsole from './FreeCodeCampColonyConsole';
+import FreeProgrammingBooksColonyConsole from './FreeProgrammingBooksColonyConsole';
+import BuildYourOwnXColonyConsole from './BuildYourOwnXColonyConsole';
 
 export { default as THEHIVEColonyConsole } from './THEHIVEColonyConsole';
 export { default as NAR2ColonyConsole } from './NAR2ColonyConsole';

@@ -3,14 +3,14 @@ import { useUIStore } from '../../stores/uiStore';
 import ColonyHeader from './ColonyHeader';
 import ColonyConsole from './ColonyConsole';
 import HealthDashboard from './HealthDashboard';
-import { ColonyId } from '../../types/colony';
+
 
 interface THEHIVEColonyConsoleProps {
   onBack?: () => void;
 }
 
 const THEHIVEColonyConsole: React.FC<THEHIVEColonyConsoleProps> = ({ onBack }) => {
-  const { activeColony, setActiveColony } = useUIStore();
+  const { setActiveColony } = useUIStore();
   const [activeTab, setActiveTab] = useState<'console' | 'health' | 'governance'>('console');
 
   // Set active colony to THEHIVE when mounted

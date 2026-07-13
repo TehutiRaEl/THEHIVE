@@ -145,36 +145,36 @@ const MemoryGraphEnhanced: React.FC<MemoryGraphEnhancedProps> = ({ data }) => {
     svg.call(zoom);
 
     const simulation = d3.forceSimulation<MemoryNode>(filteredData.nodes as any)
-      .force('link', d3.forceLink<MemoryNode, MemoryLink>(filteredData.links as any).id(d => d.id).distance(100))
+      .force('link', d3.forceLink<MemoryNode, MemoryLink>(filteredData.links as any).id((d: any) => d.id).distance(100))
       .force('charge', d3.forceManyBody<MemoryNode>().strength(-200))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide<MemoryNode>().radius(d => (d.size || 20) + 5));
+      .force('collision', d3.forceCollide<MemoryNode>().radius((d: any) => (d.size || 20) + 5));
 
     const link = g.append('g').selectAll('line').data(filteredData.links as any).enter().append('line')
-      .attr('stroke', d => (LINK_CONFIG[d.type as keyof typeof LINK_CONFIG] || LINK_CONFIG.workflow).color)
-      .attr('stroke-width', d => (LINK_CONFIG[d.type as keyof typeof LINK_CONFIG] || LINK_CONFIG.workflow).width * (d.weight || 1))
+      .attr('stroke', (d: any) => (LINK_CONFIG[d.type as keyof typeof LINK_CONFIG] || LINK_CONFIG.workflow).color)
+      .attr('stroke-width', (d: any) => (LINK_CONFIG[d.type as keyof typeof LINK_CONFIG] || LINK_CONFIG.workflow).width * (d.weight || 1))
       .attr('stroke-opacity', 0.6);
 
     const node = g.append('g').selectAll('g').data(filteredData.nodes as any).enter().append('g')
-      .call(d3.drag<SVGGElement, MemoryNode>().on('start', dragstarted).on('drag', dragged).on('end', dragended));
+      .call((d3.drag<SVGGElement, MemoryNode>() as any).on('start', dragstarted).on('drag', dragged).on('end', dragended));
 
     node.append('circle')
-      .attr('r', d => {
+      .attr('r', (d: any) => {
         const config = NODE_CONFIG[d.type as keyof typeof NODE_CONFIG] || { baseSize: 20 };
         return (d.size || config.baseSize);
       })
-      .attr('fill', d => d.type === 'philosophy' ? 'url(#philosophy-gradient-' + d.id + ')' : (d.color || theme.primary))
-      .attr('stroke', d => d.type === 'philosophy' ? '#FFFFFF' : (selectedNode?.id === d.id ? theme.primary : (d3.color(d.color || theme.primary)?.brighter(0.5) || theme.border)))
-      .attr('stroke-width', d => d.type === 'philosophy' ? 2 : (selectedNode?.id === d.id ? 3 : 1))
-      .on('click', (event, d) => { event.stopPropagation(); setSelectedNode(selectedNode?.id === d.id ? null : d); });
+      .attr('fill', (d: any) => d.type === 'philosophy' ? 'url(#philosophy-gradient-' + d.id + ')' : (d.color || theme.primary))
+      .attr('stroke', (d: any) => d.type === 'philosophy' ? '#FFFFFF' : (selectedNode?.id === d.id ? theme.primary : String(d3.color(d.color || theme.primary)?.brighter(0.5) || theme.border)))
+      .attr('stroke-width', (d: any) => d.type === 'philosophy' ? 2 : (selectedNode?.id === d.id ? 3 : 1))
+      .on('click', (event: any, d: any) => { event.stopPropagation(); setSelectedNode(selectedNode?.id === d.id ? null : d); });
 
     node.append('text')
-      .text(d => (d.size || 0) > 25 ? d.name : (d.name.length > 10 ? d.name.substring(0, 8) + '...' : d.name))
-      .attr('x', d => { const config = NODE_CONFIG[d.type as keyof typeof NODE_CONFIG] || { baseSize: 20 }; const r = (d.size || config.baseSize) + 5; return d.name.length > 6 ? -r / 2 : r + 5; })
+      .text((d: any) => (d.size || 0) > 25 ? d.name : (d.name.length > 10 ? d.name.substring(0, 8) + '...' : d.name))
+      .attr('x', (d: any) => { const config = NODE_CONFIG[d.type as keyof typeof NODE_CONFIG] || { baseSize: 20 }; const r = (d.size || config.baseSize) + 5; return d.name.length > 6 ? -r / 2 : r + 5; })
       .attr('y', 4)
-      .attr('font-size', d => Math.min(12, (d.size || 20) / 2))
-      .attr('fill', d => d.type === 'philosophy' ? '#000' : (theme.text === '#F8F9FA' ? '#000' : theme.text))
-      .attr('text-anchor', d => d.name.length > 6 ? 'middle' : 'start');
+      .attr('font-size', (d: any) => Math.min(12, (d.size || 20) / 2))
+      .attr('fill', (d: any) => d.type === 'philosophy' ? '#000' : (theme.text === '#F8F9FA' ? '#000' : theme.text))
+      .attr('text-anchor', (d: any) => d.name.length > 6 ? 'middle' : 'start');
 
     const defs = svg.append('defs');
     filteredData.nodes.forEach(n => {
@@ -185,9 +185,9 @@ const MemoryGraphEnhanced: React.FC<MemoryGraphEnhancedProps> = ({ data }) => {
       }
     });
 
-    function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
-    function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
-    function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
+    function dragstarted(event: any, d: any) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+    function dragged(event: any, d: any) { d.fx = event.x; d.fy = event.y; }
+    function dragended(event: any, d: any) { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
 
     simulation.on('tick', () => {
       link.attr('x1', (d: any) => d.source.x).attr('y1', (d: any) => d.source.y).attr('x2', (d: any) => d.target.x).attr('y2', (d: any) => d.target.y);
@@ -198,7 +198,7 @@ const MemoryGraphEnhanced: React.FC<MemoryGraphEnhancedProps> = ({ data }) => {
   }, [filteredData, theme, selectedNode]);
 
   const resetView = () => {
-    if (svgRef.current) { const svg = d3.select(svgRef.current); svg.transition().duration(750).call(d3.zoom<SVGSVGElement, unknown>().transform.to(svgRef.current, d3.zoomIdentity)); }
+    if (svgRef.current) { const svg = d3.select(svgRef.current); svg.transition().duration(750).call(d3.zoom<SVGSVGElement, unknown>().transform as any, d3.zoomIdentity); }
     setSelectedNode(null); setSearchQuery(''); setFilterType(null);
   };
 
@@ -208,7 +208,7 @@ const MemoryGraphEnhanced: React.FC<MemoryGraphEnhancedProps> = ({ data }) => {
         <span style={{ fontSize: '2em' }}>🧠</span>
         <div><h1 style={{ margin: 0, fontSize: '1.8em' }}>Memory Graph Enhanced</h1><p style={{ margin: '5px 0 0 0', color: theme.textSecondary }}>Philosophy-aware memory visualization</p></div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-          <button style={{ padding: '8px 16px', background: theme.primary, color: theme.secondaryColor, border: 'none', borderRadius: '6px', cursor: 'pointer' }} onClick={resetView}>Reset View</button>
+          <button style={{ padding: '8px 16px', background: theme.primary, color: theme.secondary, border: 'none', borderRadius: '6px', cursor: 'pointer' }} onClick={resetView}>Reset View</button>
         </div>
       </header>
       <div style={{ display: 'flex', padding: '20px', gap: '20px', borderBottom: '1px solid ' + theme.border }}>
@@ -229,7 +229,7 @@ const MemoryGraphEnhanced: React.FC<MemoryGraphEnhancedProps> = ({ data }) => {
           </div>
         ) : (
           <>
-            <div ref={svgRef} style={{ flex: 1, background: theme.surface, borderRight: '1px solid ' + theme.border }} />
+            <svg ref={svgRef} style={{ flex: 1, background: theme.surface, borderRight: '1px solid ' + theme.border }} />
             {selectedNode && <div style={{ width: '350px', padding: '20px', background: theme.background, overflowY: 'auto', borderLeft: '1px solid ' + theme.border }}>
               <h3 style={{ margin: '0 0 15px 0', color: theme.text }}>{NODE_CONFIG[selectedNode.type as keyof typeof NODE_CONFIG]?.icon} {selectedNode.name}</h3>
               <div style={{ marginBottom: '15px', padding: '10px', background: theme.surface, borderRadius: '6px' }}><p style={{ margin: '0 0 5px 0', color: theme.textSecondary, fontSize: '0.85em' }}>Type</p><p style={{ margin: 0, color: theme.text, fontWeight: 'bold' }}>{selectedNode.type}</p></div>

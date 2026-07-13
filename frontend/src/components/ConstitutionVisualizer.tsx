@@ -227,7 +227,7 @@ const ConstitutionVisualizer: React.FC = () => {
         // Process laws data
         let processedLaws = FALLBACK_LAWS;
         if (lawsResponse.status === 'fulfilled') {
-          const apiLaws = lawsResponse.value;
+          const apiLaws = lawsResponse.value as any;
           if (Array.isArray(apiLaws)) {
             processedLaws = apiLaws.map(normalizeLawData);
           } else if (apiLaws && typeof apiLaws === 'object') {
@@ -239,7 +239,7 @@ const ConstitutionVisualizer: React.FC = () => {
         // Process version history data
         let processedHistory = FALLBACK_VERSION_HISTORY;
         if (historyResponse.status === 'fulfilled') {
-          const apiHistory = historyResponse.value;
+          const apiHistory = historyResponse.value as any;
           if (Array.isArray(apiHistory)) {
             processedHistory = apiHistory.map(normalizeVersionHistory);
           } else if (apiHistory && typeof apiHistory === 'object') {
@@ -355,13 +355,13 @@ const ConstitutionVisualizer: React.FC = () => {
           onClick={() => toggleTier(tier)}
         >
           <span style={{ fontSize: '1.5em' }}>{TIER_ICONS[tier]}</span>
-          <h3 style={{ margin: 0, color: theme.secondaryColor }}>
+          <h3 style={{ margin: 0, color: theme.secondary }}>
             {TIER_LABELS[tier]}
           </h3>
-          <span style={{ marginLeft: 'auto', color: theme.secondaryColor }}>
+          <span style={{ marginLeft: 'auto', color: theme.secondary }}>
             {laws.length} laws
           </span>
-          <span style={{ color: theme.secondaryColor, fontSize: '1.2em' }}>
+          <span style={{ color: theme.secondary, fontSize: '1.2em' }}>
             {isExpanded ? '▼' : '▶'}
           </span>
         </div>
@@ -409,7 +409,7 @@ const ConstitutionVisualizer: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: theme.secondaryColor,
+                    color: theme.secondary,
                     fontSize: '0.8em',
                     fontWeight: 'bold'
                   }}>
@@ -549,7 +549,7 @@ const ConstitutionVisualizer: React.FC = () => {
             style={{
               padding: '8px 16px',
               background: viewMode === 'tree' ? theme.primary : theme.surface,
-              color: viewMode === 'tree' ? theme.secondaryColor : theme.text,
+              color: viewMode === 'tree' ? theme.secondary : theme.text,
               border: '1px solid ' + theme.border,
               borderRadius: '6px',
               cursor: 'pointer'
@@ -562,7 +562,7 @@ const ConstitutionVisualizer: React.FC = () => {
             style={{
               padding: '8px 16px',
               background: viewMode === 'list' ? theme.primary : theme.surface,
-              color: viewMode === 'list' ? theme.secondaryColor : theme.text,
+              color: viewMode === 'list' ? theme.secondary : theme.text,
               border: '1px solid ' + theme.border,
               borderRadius: '6px',
               cursor: 'pointer'
@@ -575,7 +575,7 @@ const ConstitutionVisualizer: React.FC = () => {
             style={{
               padding: '8px 16px',
               background: viewMode === 'timeline' ? theme.primary : theme.surface,
-              color: viewMode === 'timeline' ? theme.secondaryColor : theme.text,
+              color: viewMode === 'timeline' ? theme.secondary : theme.text,
               border: '1px solid ' + theme.border,
               borderRadius: '6px',
               cursor: 'pointer'

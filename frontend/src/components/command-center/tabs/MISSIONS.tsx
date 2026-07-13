@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
-import { getMissions } from '../../services/api';
+import { getMissions } from '../../../services/api';
 
 interface Mission {
   id: string;
@@ -23,8 +23,7 @@ const MISSIONS: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'pending'>('all');
 
   // Fetch real missions data from API
-  useEffect(() => {
-    const fetchMissions = async () => {
+  const fetchMissions = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -33,7 +32,7 @@ const MISSIONS: React.FC = () => {
         const data = await getMissions();
         
         // Transform API data to our Mission interface
-        const transformedMissions: Mission[] = (Array.isArray(data) ? data : []).map(mission => ({
+        const transformedMissions: Mission[] = (Array.isArray(data) ? data : []).map((mission: any) => ({
           id: mission.id || `m-${Math.random().toString(36).substr(2, 4)}`,
           name: mission.name || mission.title || 'Untitled Mission',
           description: mission.description || mission.details || 'No description provided',
@@ -60,10 +59,10 @@ const MISSIONS: React.FC = () => {
       } finally {
         setLoading(false);
       }
-    };
-    
+  };
+
+  useEffect(() => {
     fetchMissions();
-    
     // Refresh every 30 seconds
     const interval = setInterval(fetchMissions, 30000);
     return () => clearInterval(interval);

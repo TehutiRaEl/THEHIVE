@@ -12,6 +12,7 @@ interface ConsoleCommand {
 
 interface ColonyConsoleProps {
   colonyId: ColonyId;
+  predefinedCommands?: { id: string; command: string; description: string }[];
 }
 
 const PREDEFINED_COMMANDS = [
@@ -23,7 +24,7 @@ const PREDEFINED_COMMANDS = [
   { cmd: 'help', desc: 'Show available commands' },
 ];
 
-const ColonyConsole: React.FC<ColonyConsoleProps> = ({ colonyId }) => {
+const ColonyConsole: React.FC<ColonyConsoleProps> = ({ colonyId, predefinedCommands: _predefinedCommands }) => {
   const { theme } = useUIStore();
   const [commands, setCommands] = useState<ConsoleCommand[]>([]);
   const [input, setInput] = useState('');

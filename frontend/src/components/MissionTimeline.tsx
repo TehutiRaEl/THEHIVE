@@ -118,7 +118,7 @@ const MissionTimeline: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        const apiMissions = await getMissions();
+        const apiMissions = await getMissions() as any;
         
         // Normalize API data
         if (Array.isArray(apiMissions)) {
@@ -202,7 +202,7 @@ const MissionTimeline: React.FC = () => {
                 <p style={{ margin: '0 0 5px 0', color: theme.text }}><strong>Reward:</strong></p>
                 <p style={{ margin: 0, color: theme.textSecondary }}>XP: {mission.reward.xp} | Gold: {mission.reward.gold}</p>
               </div>
-              {mission.tags.length > 0 && <div style={{ marginBottom: '15px' }}><p style={{ margin: '0 0 5px 0', color: theme.text }}><strong>Tags:</strong></p><div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>{mission.tags.map(tag => <span key={tag} style={{ padding: '2px 8px', background: theme.primary, color: theme.secondaryColor, borderRadius: '12px', fontSize: '0.8em' }}>{tag}</span>)}</div></div>}
+              {mission.tags.length > 0 && <div style={{ marginBottom: '15px' }}><p style={{ margin: '0 0 5px 0', color: theme.text }}><strong>Tags:</strong></p><div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>{mission.tags.map(tag => <span key={tag} style={{ padding: '2px 8px', background: theme.primary, color: theme.secondary, borderRadius: '12px', fontSize: '0.8em' }}>{tag}</span>)}</div></div>}
               {mission.history.length > 0 && <div><p style={{ margin: '0 0 10px 0', color: theme.text }}><strong>History:</strong></p><div style={{ maxHeight: '200px', overflowY: 'auto', background: theme.background, padding: '10px', borderRadius: '6px' }}>{mission.history.map((entry, index) => <div key={index} style={{ padding: '8px', marginBottom: '8px', background: theme.surface, borderRadius: '4px', borderLeft: '3px solid ' + (STATUS_CONFIG as any)[entry.status]?.color || '#666666' }}><p style={{ margin: '0 0 2px 0', color: theme.textSecondary, fontSize: '0.8em' }}>{formatDate(entry.date)}</p><p style={{ margin: '0 0 2px 0', color: theme.text, fontSize: '0.9em' }}>{entry.status} - {entry.progress}%</p><p style={{ margin: 0, color: theme.textSecondary, fontSize: '0.85em' }}>{entry.notes}</p></div>)}</div></div>}
             </div>}
           </div>
@@ -270,9 +270,9 @@ const MissionTimeline: React.FC = () => {
       <div style={{ display: 'flex', padding: '20px', gap: '20px', borderBottom: '1px solid ' + theme.border, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '250px' }}><input type="text" placeholder="Search missions..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '10px', background: theme.surface, border: '1px solid ' + theme.border, borderRadius: '6px', color: theme.text, fontSize: '1em' }} /></div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button style={{ padding: '10px 16px', background: layout === 'horizontal' ? theme.primary : theme.surface, color: layout === 'horizontal' ? theme.secondaryColor : theme.text, border: '1px solid ' + theme.border, borderRadius: '6px', cursor: 'pointer' }} onClick={() => setLayout('horizontal')}>↔ Horizontal</button>
-          <button style={{ padding: '10px 16px', background: layout === 'vertical' ? theme.primary : theme.surface, color: layout === 'vertical' ? theme.secondaryColor : theme.text, border: '1px solid ' + theme.border, borderRadius: '6px', cursor: 'pointer' }} onClick={() => setLayout('vertical')}>↕ Vertical</button>
-          <button style={{ padding: '10px 16px', background: layout === 'compact' ? theme.primary : theme.surface, color: layout === 'compact' ? theme.secondaryColor : theme.text, border: '1px solid ' + theme.border, borderRadius: '6px', cursor: 'pointer' }} onClick={() => setLayout('compact')}>□ Compact</button>
+          <button style={{ padding: '10px 16px', background: layout === 'horizontal' ? theme.primary : theme.surface, color: layout === 'horizontal' ? theme.secondary : theme.text, border: '1px solid ' + theme.border, borderRadius: '6px', cursor: 'pointer' }} onClick={() => setLayout('horizontal')}>↔ Horizontal</button>
+          <button style={{ padding: '10px 16px', background: layout === 'vertical' ? theme.primary : theme.surface, color: layout === 'vertical' ? theme.secondary : theme.text, border: '1px solid ' + theme.border, borderRadius: '6px', cursor: 'pointer' }} onClick={() => setLayout('vertical')}>↕ Vertical</button>
+          <button style={{ padding: '10px 16px', background: layout === 'compact' ? theme.primary : theme.surface, color: layout === 'compact' ? theme.secondary : theme.text, border: '1px solid ' + theme.border, borderRadius: '6px', cursor: 'pointer' }} onClick={() => setLayout('compact')}>□ Compact</button>
         </div>
       </div>
       <div style={{ padding: '0 20px 20px 20px', borderBottom: '1px solid ' + theme.border, display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
