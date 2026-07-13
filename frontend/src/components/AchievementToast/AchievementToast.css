@@ -1,0 +1,76 @@
+/* AchievementToast specific styles */
+
+.achievement-toast {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.achievement-container {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.achievement-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.achievement-icon {
+  box-shadow: 0 0 15px rgba(147, 51, 234, 0.3);
+}
+
+.achievement-progress {
+  height: 2px;
+}
+
+.achievement-progress-bar {
+  height: 100%;
+  border-radius: 1px;
+}
+
+/* Rarity colors */
+.achievement-common {
+  background: linear-gradient(135deg, #475569, #64748b);
+  border-color: #64748b;
+  box-shadow: 0 10px 30px rgba(100, 116, 139, 0.3);
+}
+
+.achievement-rare {
+  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  border-color: #3b82f6;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+}
+
+.achievement-epic {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  border-color: #a855f7;
+  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.3);
+}
+
+.achievement-legendary {
+  background: linear-gradient(135deg, #ea580c, #dc2626);
+  border-color: #f97316;
+  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.3);
+}
+
+/* Rarity badge */
+.rarity-badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.rarity-common { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+.rarity-rare { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+.rarity-epic { background: rgba(168, 85, 247, 0.2); color: #c4b5fd; }
+.rarity-legendary { background: rgba(249, 115, 22, 0.2); color: #fbbf24; }
+
+/* Close button */
+.achievement-close {
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+}
+
+.achievement-close:hover {
+  color: white;
+  transform: scale(1.1);
+}

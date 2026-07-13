@@ -1,0 +1,42 @@
+/* TesseractChamber specific styles */
+
+.tesseract-chamber {
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(147, 51, 234, 0.2);
+}
+
+.tesseract-header {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(79, 70, 229, 0.2) 100%);
+  border-bottom: 1px solid rgba(147, 51, 234, 0.2);
+}
+
+.tesseract-canvas {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+}
+
+.tesseract-overlay {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
+}
+
+.tesseract-stats {
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+/* Control buttons */
+.tesseract-control {
+  background: rgba(51, 65, 85, 0.4);
+  border: 1px solid rgba(147, 51, 234, 0.1);
+  transition: all 0.2s ease;
+}
+
+.tesseract-control:hover {
+  background: rgba(51, 65, 85, 0.6);
+  border-color: rgba(147, 51, 234, 0.3);
+}
+
+.tesseract-control.active {
+  background: rgba(147, 51, 234, 0.3);
+  border-color: rgba(147, 51, 234, 0.4);
+}
