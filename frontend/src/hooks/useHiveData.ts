@@ -12,6 +12,8 @@ export interface Challenge {
   proposition: string; status: string; winner: string | null; created_at?: string
 }
 export interface Pulse { ts: string; action: string; detail: string }
+export interface GovEntry { action: string; article: string; ts?: string }
+export interface SoulEntry { agent: string; soul: number }
 
 export interface HiveData {
   online: boolean
@@ -20,6 +22,8 @@ export interface HiveData {
   agents: Agent[]
   challenges: Challenge[]
   pulse: Pulse[]
+  governance: GovEntry[]
+  soulBoard: SoulEntry[]
   memoryBound: boolean
   refresh: () => void
 }
@@ -39,15 +43,17 @@ async function j<T>(path: string, timeoutMs = 6000): Promise<T | null> {
 export function useHiveData(pollMs = 30000): HiveData {
   const [state, setState] = useState<Omit<HiveData, 'refresh'>>({
     online: false, loading: true, health: null,
-    agents: [], challenges: [], pulse: [], memoryBound: false,
+    agents: [], challenges: [], pulse: [], governance: [], soulBoard: [], memoryBound: false,
   })
 
   const load = useCallback(async () => {
-    const [health, agents, challenges, pulse, mem] = await Promise.all([
+    const [health, agents, challenges, pulse, gov, soul, mem] = await Promise.all([
       j<{ status: string; version: string; runtime: string }>('/health'),
       j<{ agents: Agent[] }>('/agents'),
       j<{ challenges: Challenge[] }>('/arena/challenges'),
       j<{ pulse: Pulse[] }>('/pulse'),
+      j<GovEntry[]>('/governance/log'),
+      j<{ leaderboard: SoulEntry[] }>('/wallet/leaderboard/soul'),
       j<{ vectorize_bound: boolean }>('/memory/status'),
     ])
     setState({
@@ -57,6 +63,8 @@ export function useHiveData(pollMs = 30000): HiveData {
       agents: agents?.agents ?? [],
       challenges: challenges?.challenges ?? [],
       pulse: pulse?.pulse ?? [],
+      governance: Array.isArray(gov) ? gov : [],
+      soulBoard: soul?.leaderboard ?? [],
       memoryBound: !!mem?.vectorize_bound,
     })
   }, [])
