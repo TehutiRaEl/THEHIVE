@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import MissionCard from '../MissionCard/MissionCard';
 import { Mission } from '../../types/mission';

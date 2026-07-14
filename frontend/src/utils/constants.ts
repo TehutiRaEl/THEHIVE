@@ -34,7 +34,7 @@ export const TAB_DEFS: TabDef[] = [
   { id: '4d', label: '4D', icon: '⬡' },
   { id: 'arena', label: 'ARENA', icon: '⚔' },
   { id: 'wow', label: 'WOW', icon: '🗺' },
-  { id: 'nomanssky', label: 'NMS', icon: '🚀' },
+  { id: 'no-mans-sky', label: 'NMS', icon: '🚀' },
   { id: 'settings', label: 'SETTINGS', icon: '⚙' },
 ]
 
