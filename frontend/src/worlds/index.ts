@@ -8,3 +8,6 @@ export * from './NPCManager';
 export * from './NPC';
 export * from './PortalManager';
 export * from './Portal';
+export * from './colony-types';
+export * from './ColonyManager';
+export * from './Colony';
