@@ -50,6 +50,14 @@ Origin: Fable (Harness), 2026-07-13, executing the founder's `Repo-skills-revers
   never fake a green. Model-agnostic (Workers AI, a Claude key, or a local model — swappable
   organ, constant genome). Sits under `hive-conductor`.
 
+## Hive-native (2026-07-13) — session-harvest
+- **`session-harvest`** active skill: the close-of-session half of the Recall/Harvest loop
+  (`hive-conductor` Phase 0 RECALL is the start-of-session half). Distills the session's own
+  verified work into memory/FABLE_DNA/skills — never external "logs" or third-party code,
+  regardless of subscription or gray-area framing. Every candidate lesson passes an
+  ownership/license gate before inscription; declines are logged, not hidden. See
+  `FABLE_DNA.md` Chromosome VI for the rule this skill implements.
+
 ## Wave 3 (2026-07-13) — the HORDE research triage
 
 The founder's HORDE + Pocket Dimensions research named ten external tools. Verified by
