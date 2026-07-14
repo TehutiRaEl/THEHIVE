@@ -72,7 +72,10 @@ jobs:
           # The App.tsx merge-order regression (2026-07-14, fixed in PR #87) made this
           # exact check necessary: confirm /app/ itself serves the CURRENT built bundle,
           # not just that root/API endpoints are healthy.
-          curl -sS -m 20 -o /tmp/app_index.html "${BASE}/app/"
+          # Each workflow step is its own shell — $BASE from the earlier step's script
+          # does not carry over, so it's restated here (same root cause class as the
+          # bug this step exists to catch: an assumption that didn't hold at runtime).
+          curl -sS -m 20 -o /tmp/app_index.html "https://thehive.sovereignhive.workers.dev/app/"
           echo "── /app/ index.html asset references ──"
           grep -oE "assets/index-[A-Za-z0-9]+\.js" /tmp/app_index.html || echo "::error::no index-*.js asset reference found in /app/"
 
