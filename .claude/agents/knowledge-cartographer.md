@@ -29,7 +29,7 @@ Given a topic or concept name, you:
    g = json.load(open('memory/_graph.json'))
    # find node and its neighbors
    target = "SOUL"
-   edges = [e for e in g['edges'] if target in (e['source'], e['target'])]
+   links = [l for l in g['links'] if target in (l.get('source',''), l.get('target',''))]
    ```
 
 3. **Cross-reference documentation** — grep the `memory/` vault for wiki-links to the concept:
