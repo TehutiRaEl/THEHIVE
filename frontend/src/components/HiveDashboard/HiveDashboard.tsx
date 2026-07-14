@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import ColonyCard from '../ColonyCard/ColonyCard';
 import QuickStats from '../QuickStats/QuickStats';
@@ -12,12 +12,15 @@ import { colonies } from '../../data/colonies';
 import { missions } from '../../data/missions';
 import { memories } from '../../data/memories';
 import { constitution } from '../../data/constitution';
-import { Colony, Mission, Memory, Law } from '../../types';
+import type { Colony, Mission } from '../../types';
 
 export default function HiveDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'colonies' | 'missions' | 'memory' | 'constitution' | 'tesseract'>('overview');
-  const [selectedColony, setSelectedColony] = useState<Colony | null>(null);
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  // Colony/mission click-through is captured but not yet rendered anywhere
+  // (no detail view consumes it) — setters kept for the click handlers below,
+  // getters intentionally not bound until a detail view exists to read them.
+  const [, setSelectedColony] = useState<Colony | null>(null);
+  const [, setSelectedMission] = useState<Mission | null>(null);
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '🏠' },

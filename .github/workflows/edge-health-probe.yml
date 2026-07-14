@@ -66,3 +66,19 @@ jobs:
             exit 1
           fi
           echo "✅ Production edge is fully live: assets + /v11 API"
+
+      - name: Informational — is the FastAPI backend (render.yaml, System A) actually deployed?
+        continue-on-error: true
+        run: |
+          # Soft probe only — never fails the job. Answers a real open question
+          # (CLAUDE.md "not yet reconciled" list) about whether System A's
+          # backend/ is live anywhere, or just unprovisioned blueprint code.
+          echo "── GET https://thehive-queen.onrender.com/v11/health (render.yaml default slug)"
+          status=$(curl -sS -m 15 -o /tmp/render_body -w "%{http_code}" "https://thehive-queen.onrender.com/v11/health") || { echo "curl failed — not reachable (DNS/TLS/network, or simply never deployed)"; exit 0; }
+          echo "status=${status}"
+          head -c 300 /tmp/render_body; echo
+          if [ "$status" = "200" ]; then
+            echo "::notice::System A (FastAPI backend) IS live at the default Render slug."
+          else
+            echo "::notice::System A (FastAPI backend) is NOT live at the default Render slug (status=${status}) — render.yaml is an undeployed blueprint, not a running service."
+          fi

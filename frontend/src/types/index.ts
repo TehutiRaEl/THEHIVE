@@ -4,3 +4,4 @@ export * from './memory';
 export * from './constitution';
 export * from './resource';
 export * from './agent';
+export * from './ui';

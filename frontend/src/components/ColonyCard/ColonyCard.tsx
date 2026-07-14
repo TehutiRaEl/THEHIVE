@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Colony } from '../../types/colony';
 
@@ -26,7 +25,9 @@ export default function ColonyCard({ colony, onClick }: ColonyCardProps) {
   const colors = tierColors[colony.tier] || tierColors[1];
   const status = statusColors[colony.status] || statusColors.active;
 
-  const totalResources = Object.values(colony.resources).reduce((sum, val) => sum + (val || 0), 0);
+  const totalResources = Object.values(colony.resources).reduce(
+    (sum: number, val: number | undefined) => sum + (val ?? 0), 0
+  );
   const resourcePercentage = Math.min((totalResources / 30000) * 100, 100);
 
   return (
