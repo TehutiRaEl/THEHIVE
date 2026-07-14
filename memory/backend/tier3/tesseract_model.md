@@ -23,3 +23,7 @@ TESSERACT MODEL — TesserAct 4D World Model
 - `generate()`
 - `forward()` — x: (B, T, X, Y, C) → pred: (B, X, Y, C)
 - `curvature_loss()`
+
+## Links
+
+[[core.config]]

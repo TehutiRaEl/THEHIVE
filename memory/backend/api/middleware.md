@@ -19,4 +19,4 @@ Middleware Module — Sovereign Hive v11.0
 
 ## Links
 
-[[core.config]] · [[core.constitution]] · [[core.db]]
+[[core.config]] · [[core.constitution]] · [[core.db]] · [[core.validator]]

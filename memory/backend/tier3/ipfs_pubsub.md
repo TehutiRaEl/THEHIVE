@@ -24,3 +24,7 @@ IPFS PUBSUB — Sovereign Hive v11.0 Tier 3
 - `unsubscribe()`
 - `get_messages()`
 - `get_peer_colonies()` — List other colonies the given colony is aware of.
+
+## Links
+
+[[core.config]]
