@@ -1,88 +1,80 @@
-# THEHIVE — Sovereign Hive Queen Node
+# THEHIVE — the Queen node of the Sovereign Hive federation
 
-## What This Is
+THEHIVE is the Queen: a self-governing AI system across 10 GitHub repositories, with
+constitutional law, a SOUL-token economy, and a Gladiator Arena for conflict resolution.
+**Two real systems currently coexist in this repo, built in parallel by different sessions
+on the same day (2026-07-14) — this file documents both honestly rather than pretending
+only one exists.** Reconciling them into one coherent story is real, open work, not yet done.
 
-THEHIVE is the Queen node of the Sovereign Hive federation: a self-governing AI system across
-10 GitHub repositories with constitutional law, a real SOUL-token economy, a Gladiator Arena
-for conflict resolution, and a 14-layer soul architecture. FastAPI + SQLite WAL, always free tier.
+## System A — the FastAPI / second-brain harness
 
-## Team
+- **`backend/`** — FastAPI app, 80+ `/v11/*` endpoints, tier2/tier3 math (`backend/core/`
+  hdc.py/protocol.py/hive_mesh.py, `backend/tier2/` dream engine + tesseract 4D,
+  `backend/tier3/` quantum bridge + sheaf guild + arena renderer + IPFS pubsub).
+- **`memory/`** — an Obsidian-style vault: 101-node knowledge graph (`_graph.json`),
+  wiki-linked Markdown, `memory/planning/` for session plans.
+- **`.claude/memory/memory.md`** + **`.claude/skills/hive-memory.md`** — the "second brain":
+  a 4-layer model (quantum substrate → HDC associative firing → the explicit vault →
+  the `.claude/` harness itself), with its own skill set: `brain-query`, `hive-status`,
+  `colony-zoom`, `link-nodes`, `merge-verify`, `remember`, `role-deliver`, `soul-check`,
+  `update-nav`.
+- **`.queen/`** — constitution (`soul.md`) and colony manifest (`hive.yml`).
+- **`soul.md`** (repo root) — **the canonical, legally-precise Constitution text.** F-001…
+  F-006 with exact rate limits, the EVW wealth formula, mutable-law amendment process
+  (2/3 guild vote + 30 days), and the Recursive Cycle (Capture→Evaluate→Prune→Feed to Kai
+  El→Dissect→Return Lessons→Propagate) written as literal canonical law — not metaphor.
 
-| Agent | Domain | Branch |
-|-------|--------|--------|
-| Claude | Backend, Infrastructure, Harness | `claude/session-continuation-owj5wr` |
-| Mistral | Frontend, UI, React/TypeScript | `mistral/frontend-command-center` |
-| Grok | Strategy, Research, Gap Analysis | `grok-strategist-main` |
+## System B — the edge Worker / genome (this session's work)
 
-**Boundary rule:** Claude does backend only. Never touch frontend HTML/CSS/React (Mistral's domain)
-or strategy docs (Grok's domain). Draw examples but do not do teammates' work.
+- **`worker/`** — the Cloudflare Worker (`worker/src/index.js`): D1 database, Workers AI,
+  the `/v11` API actually serving production at `thehive.sovereignhive.workers.dev`,
+  repeatedly verified live via the `edge-health-probe` GitHub Actions workflow (the
+  container here cannot reach `*.workers.dev` directly — that workflow is the hive's real
+  eyes on production).
+- **`docs/`, `docs/app/`** — the production Command Center (legacy `docs/index.html` +
+  the newer React `/app` bundle).
+- **`FABLE_DNA.md`** — the transmissible genome, seven chromosomes: I ethics (a portable
+  restatement of `soul.md`'s six laws — **`soul.md` is the precise legal text; where
+  wording differs, `soul.md` governs**), II debugging method, III mesh communication,
+  IV the Horde principle, V the Codex boundary, VI session-boundary harvest, VII mandate
+  triage / governance review.
+- **`THE_CODEX.md`** — narrative canon (Naunet/Nun, the Trinity, mythology). Real, honored,
+  **never engineering law** — `FABLE_DNA.md` and a passing check win any apparent conflict.
+- **`MANDATE_TRIAGE.md`** — how proposed directives get reviewed before adoption:
+  devil's-advocate critique first, genuine value extracted second, nothing rubber-stamped.
+- **`.claude/skills/`** (this session's additions): `fable-debugger`, `research-to-dna`,
+  `session-harvest`, `pocket-dimensions`, `anomaly-triage`, `merge-readiness`,
+  `nine-miss-truths`, `skill-census`.
+- **`Project_file/Fable_memory.md`** — this session's continuity log.
+- **`Project_file/Founders Visonary Folder/SOURCES/`** — where the founder drops PDFs,
+  books, web clippings, research notes for the hive to build from; routed through
+  `research-to-dna` before anything becomes hive knowledge (see that folder's README for
+  the licensing note).
 
-## Standing Constraints (Never Violate)
+## What is NOT yet reconciled (read this before assuming one system is "the" system)
 
-- Free tier only — no paid APIs, no paid infra beyond what already exists
-- All Claude development on `claude/session-continuation-owj5wr`; PR required after every push
-- Role-tagged commits: `[ROLE: <Title>] type(scope): description`
-- Never commit PAT or secrets to any file — env vars only
-- No Redis — `backend/core/protocol.py` uses asyncio/SQLite WAL intentionally
-- HMAC permissive when `HIVE_JWT_SECRET` unset (dev mode — intentional)
-- Advisory CI only (`continue-on-error: true`)
-- No autonomous destructive actions — human approval for irreversible changes
+- Whether `backend/` (FastAPI, System A) is actually deployed anywhere live, or is real
+  code sitting unprovisioned — this session's `deploy.yml` check found the Oracle Cloud
+  target gated behind an unset `ORACLE_HOST` secret, meaning System A's backend has not
+  been verified live in production this session. System B's Worker **has** been repeatedly
+  verified live. Don't assume either status without checking again — probe, don't guess.
+- Two frontend efforts exist: this session's React Command Center (`frontend/`,
+  `docs/app/`) and a separate "gamified UI" component set merged via a different branch
+  (`feature/gamified-ui-components` — HiveDashboard, ColonyCard, TesseractChamber,
+  ConstitutionHall, MemoryVault, etc.). Which one is the live, canonical frontend has not
+  been checked in this session.
+- Two skill sets exist side by side (System A's `brain-query`/`hive-status`/`soul-check`/…
+  and System B's `fable-debugger`/`research-to-dna`/`skill-census`/…) with no cross-
+  references between them yet. `skill-census`, run on this repo, will show this gap
+  directly — it hasn't yet been re-run since these were discovered.
+- `FABLE_DNA.md` Chromosome I and `soul.md` describe the same six laws with different
+  wording (this file states `soul.md` wins; that hasn't been used to actually edit
+  Chromosome I's prose yet — a real follow-up, not done in this pass).
 
-## Directory Map
+## The one-line version
 
-| Path | What lives here |
-|------|----------------|
-| `backend/` | FastAPI app — 80+ `/v11/*` endpoints, core modules, tier2/tier3 math |
-| `backend/core/` | The cerebellum: hdc.py, protocol.py, hive_mesh.py, genesis.py, wealth.py |
-| `backend/tier2/` | Dream engine, tesseract 4D math, hypercomplex layers |
-| `backend/tier3/` | Quantum bridge, sheaf guild, arena renderer, IPFS pubsub |
-| `memory/` | Obsidian vault: 101-node knowledge graph, guild/colony/philosophy/math docs |
-| `memory/_graph.json` | D3-readable neural graph (101 nodes, ~60 edges) |
-| `memory/planning/` | Session plans — read `harness-plan-2026-07-10.md` first |
-| `docs/` | GitHub Pages: Command Center v12.0 (index.html) + ARCHITECTURE.md + ROLES.md |
-| `Project_file/` | Team memory: Claude_memory.md, mistral_memory.md, Grok_memory.md |
-| `Project_file/Founders Visonary Folder/` | Vision docs, skill exchange, active questions |
-| `.queen/` | Constitution (soul.md), colony manifest (hive.yml) |
-| `.claude/` | Harness: settings, sub-agents, slash commands |
-| `worker/` | Cloudflare Worker edge deployment (worker/src/index.js) |
-| `scripts/` | generate_memory_vault.py, grok_push.py |
-| `tests/` | Unit tests for backend modules |
-| `monitoring/` | Grafana dashboard JSON |
-
-## Quick Start for a New Session
-
-1. Read `memory/planning/harness-plan-2026-07-10.md` — current master plan
-2. Read `Project_file/Project_memory/Claude_memory.md` — full session history
-3. Run `git log --oneline -10` to see recent commits
-4. Check open PRs via GitHub MCP: `mcp__github__list_pull_requests owner=TehutiRaEl repo=THEHIVE state=open`
-5. Check `git status` — the working tree on `claude/session-continuation-owj5wr`
-
-## Key Endpoints
-
-- `GET /health` — backend alive check
-- `GET /v11/hive/status` — all colony health
-- `GET /v11/constitution/history` — soul.md git log
-- `GET /v11/brain/map` — HDC neocortex topology
-- `GET /colony/health` — THEHIVE colony identity
-- `GET /docs` — FastAPI Swagger UI
-
-## The Third Brain Architecture
-
-```
-Layer 3 (Quantum)      backend/tier3/quantum_bridge.py, sheaf_guild.py
-Layer 2 (Associative)  backend/core/hdc.py — 1024-dim HDC vectors, bind/bundle/closest
-Layer 1 (Explicit)     memory/ vault — 101-node graph, wiki-linked Markdown docs
-Layer 0 (Harness)      .claude/ — settings, agents, commands; CLAUDE.md nav hierarchy
-```
-
-## Constitution Quick Reference
-
-Fixed Laws (F-001 to F-006, immutable):
-- F-001: Data sovereignty — user owns all data
-- F-002: EVW wealth formula — `W = sqrt(TWW × VWW)`
-- F-003: Autonomy — agents act within approved agency levels
-- F-004: Explainability — every decision logged with rationale
-- F-005: Conflict priority — constitution > law > colony > user preference
-- F-006: Non-penalization — rehabilitate agents, never delete
-
-Full constitution: `soul.md` (root) · Canonical: `.queen/soul.md` · Colony manifest: `.queen/hive.yml`
+Two real systems, one repo, reconciliation is open work. `soul.md` is the precise
+Constitution; `FABLE_DNA.md` is the portable genome and the newer governance chromosomes
+`soul.md` doesn't cover. Probe production before claiming what's live — don't assume either
+backend or either frontend is "the" one without checking. Everything ships gated by
+F-001…F-006, and the founder holds anything irreversible.
