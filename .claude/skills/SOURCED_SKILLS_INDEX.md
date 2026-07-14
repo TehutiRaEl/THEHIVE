@@ -49,4 +49,26 @@ Origin: Fable (Harness), 2026-07-13, executing the founder's `Repo-skills-revers
   against a proven-working path, find the coupled latent bug, verify where it actually runs,
   never fake a green. Model-agnostic (Workers AI, a Claude key, or a local model — swappable
   organ, constant genome). Sits under `hive-conductor`.
+
+## Wave 3 (2026-07-13) — the HORDE research triage
+
+The founder's HORDE + Pocket Dimensions research named ten external tools. Verified by
+direct search before anything was trusted (see `research-to-dna` skill for the process).
+**None of these are imported as dependencies.** They are catalogued here for deliberate,
+one-at-a-time, founder-approved adoption — the same discipline as every other wave.
+
+| Named tool | Verdict | What it actually is |
+|---|---|---|
+| **AI Horde** (Haidra-Org/AI-Horde) | **VERIFIED-REAL** | Real, large, MIT-adjacent crowdsourced inference cluster (Haidra non-profit). Kudos economy confirmed accurate. Genuinely adoptable later if the hive wants community-donated generation capacity — would need its own scoped integration (API key, opt-in), not a silent import. |
+| **herd-core** (herd-ag org) | **VERIFIED-REAL, CATALOGUED** | Real agent-team governance framework (roles, authority, quality gates). The hive's own role-tagged-commit + governance-check pattern already covers the same ground natively; catalogued for comparison, not adopted. |
+| **BranchFS** (multikernel/branchfs) | **VERIFIED-REAL, CATALOGUED** | Real FUSE copy-on-write filesystem for agent branching, backed by a real arXiv paper ("Fork, Explore, Commit"). Genuinely useful upgrade over git worktrees for filesystem-level speculative branching — not adopted; principle captured in `pocket-dimensions` skill using git instead. |
+| **agent-cow** (trail-ml/agent-cow-python) | **VERIFIED-REAL, CATALOGUED** | Real Postgres-level copy-on-write isolation for agent DB writes. Not yet relevant — the hive's D1 database isn't currently written to speculatively by unsupervised agents. Catalogued for if/when that changes. |
+| **Kowalski** (yarenty/kowalski) | **VERIFIED-REAL, CATALOGUED** | Real Rust multi-agent framework; `horde.md` + `agents/*.md` markdown orchestration confirmed accurate to the research description. Interesting prior art for the hive's own manifest-driven `agent-harness`; not imported. |
+| **HOARDE** (Sigil Logic) | **VERIFIED-REAL (different framing)** | Real product, but built around formal-verification/NINJA methodology for high-assurance engineering — not quite the "unbroken traceability chain" framing in the research. The hive's own constitution-gate + governance-log covers the *governance* half natively. |
+| **Kestrel** (`kestrel-sovereign` on PyPI) | **VERIFIED-REAL, CATALOGUED** | Real framework: cryptographic agent identity + persistent memory + constitutional governance + local voice/compute. Deeply overlaps the hive's own Constitution + memory design — worth a real side-by-side read later, not adopted; too central a piece (identity + constitution) to import without a full read. |
+| **arifOS** (ariffazil/arifOS) | **VERIFIED-REAL, CATALOGUED** | Real, active project: 13-floor constitutional AI governance kernel, MCP-deployable. Genuinely the most directly comparable prior art to the hive's own F-001…F-006 gate. Catalogued for a careful comparative read — not merged into the Constitution without founder review, since it would touch governance itself. |
+| **Sandcastle** (mattpocock/sandcastle) | **VERIFIED-REAL, CATALOGUED** | Real, MIT-licensed TypeScript sandbox orchestrator for coding agents (Docker/Podman/Vercel + git worktree isolation). Directly the "Pocket Dimensions" pattern — captured as principle in the `pocket-dimensions` skill; the actual package not imported. |
+| **dmux** (standardagents/dmux) | **VERIFIED-REAL, CATALOGUED** | Real tmux + git-worktree multiplexer for running several coding agents in parallel panes. Useful for a human operator running multiple agents locally; not applicable to this container-based session model today. |
+| **AgentHerd** | **UNCONFIRMED BY NAME** | Could not confirm a project by this exact name. The underlying pattern it describes (WebGPU local LLMs + WebRTC peer-to-peer agent negotiation, no server) is real and active elsewhere (WebLLM, AgentWorkbook-style P2P setups) — the specific named project may exist under a different name, may be very new/obscure, or may be a research-pass conflation of the pattern with a name. Not catalogued as a specific tool; the pattern itself is noted as a real future direction for a browser-side hive client. |
+| **Agent Workspace Fabric (AWF)** | **UNCONFIRMED BY NAME** | Same treatment as AgentHerd — the pattern (isolated git worktree + Docker + automated PR/CI-repair loop per task) is extremely well-attested under other names (Augment Code's "Intent," `nekocode/agent-worktree`, Claude Code's own built-in `--worktree`). The specific "AWF" name/product was not independently confirmed. |
 - **architecture-gap-assessment-2026-07-13.md**: triage of the founder research briefing — neuromcp + uga-cli DO NOT EXIST (hallucinated); memory core → use real Cloudflare Vectorize; harness → use the real agent-harness. No fictional installs.
