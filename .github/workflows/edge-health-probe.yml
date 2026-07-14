@@ -67,6 +67,15 @@ jobs:
           fi
           echo "✅ Production edge is fully live: assets + /v11 API"
 
+      - name: Verify /app serves the restored 13-tab Command Center bundle
+        run: |
+          # The App.tsx merge-order regression (2026-07-14, fixed in PR #87) made this
+          # exact check necessary: confirm /app/ itself serves the CURRENT built bundle,
+          # not just that root/API endpoints are healthy.
+          curl -sS -m 20 -o /tmp/app_index.html "${BASE}/app/"
+          echo "── /app/ index.html asset references ──"
+          grep -oE "assets/index-[A-Za-z0-9]+\.js" /tmp/app_index.html || echo "::error::no index-*.js asset reference found in /app/"
+
       - name: Informational — is the FastAPI backend (render.yaml, System A) actually deployed?
         continue-on-error: true
         run: |
