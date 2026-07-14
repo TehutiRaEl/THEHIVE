@@ -58,6 +58,18 @@ Origin: Fable (Harness), 2026-07-13, executing the founder's `Repo-skills-revers
   ownership/license gate before inscription; declines are logged, not hidden. See
   `FABLE_DNA.md` Chromosome VI for the rule this skill implements.
 
+## Hive-native (2026-07-13) — the Mandate Triage
+Full devil's-advocate/childlike-wonder dissection of 23 proposed directives in
+`MANDATE_TRIAGE.md` (FABLE_DNA Chromosome VII). Three new skills resulted:
+- **`anomaly-triage`** — severity-tiered response to unexpected events; real security
+  threats are explicitly never treated as "just a lesson," corrected from the founder's
+  Immune System framing.
+- **`merge-readiness`** — the verify→PR→CI-autofix→merge loop, formalized with the
+  founder-authorization boundary stated explicitly (never expands self-merge scope).
+- **`nine-miss-truths`** — generate the competing explanations before committing to a
+  root-cause or interpretation, from the founder's own "for every one truth, nine
+  miss-truths" instinct. Pairs with `fable-debugger`'s proven-path contrast.
+
 ## Wave 3 (2026-07-13) — the HORDE research triage
 
 The founder's HORDE + Pocket Dimensions research named ten external tools. Verified by
