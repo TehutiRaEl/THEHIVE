@@ -24,10 +24,20 @@ FOUNDER DIRECTIVE
         → else ESCALATE to the founder (never fake success)
 ```
 
-## Phase 0 — Recall before you plan (retrieval-augmented orchestration)
-The Conductor does not plan cold. Before decomposing any directive it asks the hive's own
-memory what it has already done that relates — so it builds on prior work instead of
-re-deciding settled questions or duplicating effort.
+## Phase 0 — Read the genome, then recall before you plan
+
+Before anything else, the Conductor is bound by `FABLE_DNA.md` — the Constitution
+(Chromosome I), the debugging method (II), the mesh principle (III), the Horde principle
+(IV), the Codex boundary (V — narrative never overrides engineering), session-boundary
+harvest (VI), and how proposals get reviewed before becoming canon (VII, see
+`MANDATE_TRIAGE.md`). This is not optional background reading; it is what "governed by the
+Constitution" in this skill's own description actually means in practice. A session that
+skips it is planning against a Constitution it never opened.
+
+Then, retrieval-augmented orchestration: the Conductor does not plan cold. Before
+decomposing any directive it asks the hive's own memory what it has already done that
+relates — so it builds on prior work instead of re-deciding settled questions or
+duplicating effort.
 
 ```bash
 python3 .claude/skills/hive-conductor/scripts/recall_context.py --goal "<directive>" --brief
