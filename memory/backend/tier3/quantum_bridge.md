@@ -33,3 +33,7 @@ QUANTUM BRIDGE — Sovereign Hive v11.0 Tier 3
 - `fidelity()`
 - `to_dict()`
 - `random_bits()`
+
+## Links
+
+[[core.config]]

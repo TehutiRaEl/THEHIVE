@@ -1,32 +1,40 @@
-export interface FixedLaw {
-  id: string
-  title: string
-  description: string
+export type LawCategory = 'fixed' | 'cardinal' | 'mutable';
+
+// F-001..F-006 — matches soul.md (repo root), the canonical Constitution text.
+export type FixedLawId = 'F-001' | 'F-002' | 'F-003' | 'F-004' | 'F-005' | 'F-006';
+
+export interface Wealth {
+  timeWealth: number;
+  valueWealth: number;
+  total: number;
 }
 
 export interface Constitution {
-  fixedLaws: FixedLaw[]
-  mutableLaws: FixedLaw[]
-  version: string
-  lastUpdated: string
+  fixedLaws: Array<{ id: string; title: string; description: string }>;
+  mutableLaws: Array<{ id: string; title: string; description: string }>;
+  version: string;
+  lastUpdated: string;
 }
 
-// EVW wealth formula: W_total = sqrt(TWW × VWW)
-// TWW = timeWealth, VWW = valueWealth (from F-002)
+// soul.md F-002: "Total wealth = geometric mean of method 1 and method 2."
 export function calculateWealth(timeWealth: number, valueWealth: number): number {
-  if (timeWealth <= 0 || valueWealth <= 0) return 0
-  return Math.sqrt(timeWealth * valueWealth)
+  return Math.sqrt(Math.max(0, timeWealth) * Math.max(0, valueWealth));
 }
 
-// EVW score for a single contribution
-export function calculateEVW(
-  hoursSaved: number,
-  adoptionCount: number,
-  noveltyScore: number,
-  disputeResilience: number
-): number {
-  return hoursSaved * 0.4 + adoptionCount * 0.3 + noveltyScore * 0.2 + disputeResilience * 0.1
+export interface Law {
+  id: string;
+  article: string;
+  title: string;
+  description: string;
+  category: LawCategory;
+  isActive: boolean;
+  enacted?: string;
+  amended?: string;
 }
 
-export const FIXED_LAW_IDS = ['F-001', 'F-002', 'F-003', 'F-004', 'F-005', 'F-006'] as const
-export type FixedLawId = (typeof FIXED_LAW_IDS)[number]
+export interface ConstitutionSummary {
+  total: number;
+  byCategory: Record<LawCategory, number>;
+  active: number;
+  archived: number;
+}

@@ -42,6 +42,21 @@ jobs:
           probe /v11/agents "JSON {agents:[...]}"
           probe /v11/pulse "JSON {pulse:[...]} — heartbeat trail (empty until first cron tick)"
           probe "/v11/arena/challenges" "JSON — watch for auto-spawned challenges"
+          probe /v11/memory/status "JSON {vectorize_bound,ai_bound} — memory layer wiring"
+          echo "── UI Debugger diagnostic suite (was 9× 404) ──"
+          probe /v11/debug/health "JSON subsystems — d1/ai/vectorize/heartbeat"
+          probe /v11/debug/env "JSON bindings — names/booleans only, never values"
+          probe /v11/debug/git "JSON deploy identity"
+          probe /v11/debug/logs "JSON pulse-as-logs"
+          probe /v11/debug/colony-ping "JSON federation roster"
+          probe /v11/debug/endpoints "JSON route map"
+          probe /v11/ml/status "JSON Workers AI pipeline"
+          probe /v11/browser/status "JSON available:false — CI-only"
+          probe /v11/knowledge/status "JSON Vectorize RAG"
+          echo "── POST /v11/command_text (Kai El chat — was 404)"
+           st=$(curl -sS -m 25 -o /tmp/kai -w "%{http_code}" -X POST "${BASE}/v11/command_text" -H "Content-Type: application/json" --data '{"command":"Who are you, Kai El?"}') || st=000
+          echo "command_text status=$st"; head -c 300 /tmp/kai; echo
+          [ "$st" = "200" ] || { echo "::error::Kai El chat /command_text not 200 (got $st)"; overall=1; }
           echo "── GitHub Pages copy — which Queen hostname does it auto-discover?"
           curl -sS -m 20 -o /tmp/ghio "https://tehutirael.github.io/THEHIVE/" \
             && grep -o "thehive\.[a-z0-9-]*\.workers\.dev" /tmp/ghio | sort -u \
@@ -51,3 +66,31 @@ jobs:
             exit 1
           fi
           echo "✅ Production edge is fully live: assets + /v11 API"
+
+      - name: Verify /app serves the restored 13-tab Command Center bundle
+        run: |
+          # The App.tsx merge-order regression (2026-07-14, fixed in PR #87) made this
+          # exact check necessary: confirm /app/ itself serves the CURRENT built bundle,
+          # not just that root/API endpoints are healthy.
+          # Each workflow step is its own shell — $BASE from the earlier step's script
+          # does not carry over, so it's restated here (same root cause class as the
+          # bug this step exists to catch: an assumption that didn't hold at runtime).
+          curl -sS -m 20 -o /tmp/app_index.html "https://thehive.sovereignhive.workers.dev/app/"
+          echo "── /app/ index.html asset references ──"
+          grep -oE "assets/index-[A-Za-z0-9]+\.js" /tmp/app_index.html || echo "::error::no index-*.js asset reference found in /app/"
+
+      - name: Informational — is the FastAPI backend (render.yaml, System A) actually deployed?
+        continue-on-error: true
+        run: |
+          # Soft probe only — never fails the job. Answers a real open question
+          # (CLAUDE.md "not yet reconciled" list) about whether System A's
+          # backend/ is live anywhere, or just unprovisioned blueprint code.
+          echo "── GET https://thehive-queen.onrender.com/v11/health (render.yaml default slug)"
+          status=$(curl -sS -m 15 -o /tmp/render_body -w "%{http_code}" "https://thehive-queen.onrender.com/v11/health") || { echo "curl failed — not reachable (DNS/TLS/network, or simply never deployed)"; exit 0; }
+          echo "status=${status}"
+          head -c 300 /tmp/render_body; echo
+          if [ "$status" = "200" ]; then
+            echo "::notice::System A (FastAPI backend) IS live at the default Render slug."
+          else
+            echo "::notice::System A (FastAPI backend) is NOT live at the default Render slug (status=${status}) — render.yaml is an undeployed blueprint, not a running service."
+          fi

@@ -161,6 +161,11 @@
       "group": "module"
     },
     {
+      "id": "backend/api/models",
+      "label": "models",
+      "group": "module"
+    },
+    {
       "id": "backend/api/routes",
       "label": "routes",
       "group": "module"
@@ -181,13 +186,28 @@
       "group": "module"
     },
     {
+      "id": "backend/constitution",
+      "label": "constitution",
+      "group": "module"
+    },
+    {
       "id": "backend/core/__init__",
       "label": "__init__",
       "group": "module"
     },
     {
+      "id": "backend/core/agency",
+      "label": "agency",
+      "group": "module"
+    },
+    {
       "id": "backend/core/agent_engine",
       "label": "agent_engine",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/alchemy",
+      "label": "alchemy",
       "group": "module"
     },
     {
@@ -206,6 +226,11 @@
       "group": "module"
     },
     {
+      "id": "backend/core/criteria",
+      "label": "criteria",
+      "group": "module"
+    },
+    {
       "id": "backend/core/db",
       "label": "db",
       "group": "module"
@@ -216,8 +241,18 @@
       "group": "module"
     },
     {
+      "id": "backend/core/genesis",
+      "label": "genesis",
+      "group": "module"
+    },
+    {
       "id": "backend/core/genome",
       "label": "genome",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/governance",
+      "label": "governance",
       "group": "module"
     },
     {
@@ -231,6 +266,11 @@
       "group": "module"
     },
     {
+      "id": "backend/core/hive_mesh",
+      "label": "hive_mesh",
+      "group": "module"
+    },
+    {
       "id": "backend/core/llm_router",
       "label": "llm_router",
       "group": "module"
@@ -241,8 +281,23 @@
       "group": "module"
     },
     {
+      "id": "backend/core/protocol",
+      "label": "protocol",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/validator",
+      "label": "validator",
+      "group": "module"
+    },
+    {
       "id": "backend/core/wallet",
       "label": "wallet",
+      "group": "module"
+    },
+    {
+      "id": "backend/core/wealth",
+      "label": "wealth",
       "group": "module"
     },
     {
@@ -502,6 +557,10 @@
       "target": "backend/api/auth"
     },
     {
+      "source": "backend/api/routes",
+      "target": "backend/api/models"
+    },
+    {
       "source": "backend/core/constitution",
       "target": "backend/core/config"
     },
@@ -514,15 +573,27 @@
       "target": "backend/core/db"
     },
     {
+      "source": "backend/core/genesis",
+      "target": "backend/core/db"
+    },
+    {
       "source": "backend/core/genome",
       "target": "backend/core/db"
     },
     {
+      "source": "backend/core/governance",
+      "target": "backend/core/db"
+    },
+    {
       "source": "backend/core/hitl",
       "target": "backend/core/db"
     },
     {
       "source": "backend/core/hitl",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/core/hive_mesh",
       "target": "backend/core/config"
     },
     {
@@ -530,12 +601,24 @@
       "target": "backend/core/config"
     },
     {
+      "source": "backend/core/protocol",
+      "target": "backend/core/db"
+    },
+    {
+      "source": "backend/core/validator",
+      "target": "backend/core/db"
+    },
+    {
       "source": "backend/core/wallet",
       "target": "backend/core/db"
     },
     {
       "source": "backend/core/wallet",
       "target": "backend/core/config"
+    },
+    {
+      "source": "backend/core/wealth",
+      "target": "backend/core/db"
     },
     {
       "source": "backend/database",
@@ -614,6 +697,10 @@
       "target": "backend/core/constitution"
     },
     {
+      "source": "backend/main",
+      "target": "backend/core/protocol"
+    },
+    {
       "source": "backend/memory/episodic_memory",
       "target": "backend/core/config"
     },
@@ -651,6 +738,26 @@
     },
     {
       "source": "backend/tier2/dream_engine",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/tier3/arena_renderer",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/tier3/ipfs_pubsub",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/tier3/quantum_bridge",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/tier3/sheaf_guild",
+      "target": "backend/core/config"
+    },
+    {
+      "source": "backend/tier3/tesseract_model",
       "target": "backend/core/config"
     },
     {

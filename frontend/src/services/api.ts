@@ -77,7 +77,11 @@ export const getGradingLeaderboard = () =>
 
 // Constitution
 export const getConstitution = () => apiFetch<unknown>('/constitution/soul')
+export const getConstitutionLaws = () => apiFetch<unknown>('/constitution')
 export const getConstitutionHistory = () => apiFetch<unknown[]>('/constitution/history')
+
+// Memory Graph
+export const getMemoryGraph = () => apiFetch<unknown>('/memory/graph')
 
 // Tesseract
 export const getTesseractProject = (wAngle = 0, xwAngle = 0) =>

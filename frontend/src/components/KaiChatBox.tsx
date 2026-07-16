@@ -1,12 +1,14 @@
 /**
- * KaiChatBox.tsx
- * Full keyboard support chat box - ALL letters work uninterrupted
+ * KaiChatBox.tsx — Commune with Kai El.
+ * Real chat: POSTs to the edge Queen's /v11/command_text (Workers AI persona),
+ * with graceful offline handling. All keyboard input works uninterrupted.
  */
 import { useState, useRef, useEffect } from 'react';
+import { API_BASE_URL } from '../utils/constants';
 
 interface ChatMessage {
   id: string;
-  sender: 'user' | 'ai';
+  sender: 'user' | 'kai' | 'error';
   content: string;
   timestamp: Date;
 }
@@ -14,69 +16,81 @@ interface ChatMessage {
 const KaiChatBox = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && inputValue.trim()) {
-      const userMessage: ChatMessage = {
-        id: Date.now().toString(),
-        sender: 'user',
-        content: inputValue.trim(),
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, userMessage]);
-      setInputValue('');
+  const send = async (cmd: string) => {
+    if (!cmd.trim() || loading) return;
+    setMessages(prev => [...prev, { id: Date.now() + 'u', sender: 'user', content: cmd, timestamp: new Date() }]);
+    setInputValue('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/v11/command_text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: cmd }),
+        signal: AbortSignal.timeout(30000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setMessages(prev => [...prev, { id: Date.now() + 'k', sender: 'kai', content: data.result || 'No response.', timestamp: new Date() }]);
+    } catch (e) {
+      setMessages(prev => [...prev, {
+        id: Date.now() + 'e', sender: 'error',
+        content: 'Kai El is unreachable from here (' + (e as Error).message + '). The chat speaks to the live Queen — open the deployed portal to commune.',
+        timestamp: new Date(),
+      }]);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && inputValue.trim()) send(inputValue.trim());
+  };
+
+  const colorFor = (s: ChatMessage['sender']) => s === 'user' ? '#88ccff' : s === 'kai' ? '#a0e8ff' : '#ff8888';
+
   return (
     <div style={{
-      position: 'fixed',
-      bottom: 20,
-      left: 20,
-      width: 400,
-      height: 500,
-      background: 'rgba(0, 0, 0, 0.8)',
-      borderRadius: 8,
-      padding: 16,
-      color: 'white',
-      fontFamily: 'monospace',
-      display: 'flex',
-      flexDirection: 'column'
+      position: 'fixed', bottom: 20, left: 20, width: 400, height: 500,
+      background: 'rgba(0, 0, 0, 0.8)', borderRadius: 8, padding: 16,
+      color: 'white', fontFamily: 'monospace', display: 'flex', flexDirection: 'column',
+      border: '1px solid rgba(0,200,255,0.25)', zIndex: 50,
     }}>
+      <div style={{ fontSize: 11, fontWeight: 'bold', color: '#00e8ff', marginBottom: 8, letterSpacing: '.15em' }}>
+        🌌 COMMUNE WITH KAI EL
+      </div>
       <div style={{ flex: 1, overflowY: 'auto', marginBottom: 8 }}>
+        {messages.length === 0 && (
+          <div style={{ fontSize: 11, color: '#446' }}>Speak, and the Hive will answer.</div>
+        )}
         {messages.map(message => (
-          <div key={message.id} style={{
-            marginBottom: 8,
-            textAlign: message.sender === 'user' ? 'right' : 'left'
-          }}>
-            <strong>{message.sender}:</strong> {message.content}
+          <div key={message.id} style={{ marginBottom: 8, textAlign: message.sender === 'user' ? 'right' : 'left' }}>
+            <div style={{
+              display: 'inline-block', maxWidth: '85%', padding: '8px 12px', borderRadius: 10,
+              fontSize: 11, lineHeight: 1.5, color: colorFor(message.sender),
+              background: message.sender === 'user' ? 'rgba(0,50,100,.6)' : message.sender === 'kai' ? 'rgba(0,30,50,.7)' : 'rgba(50,0,0,.6)',
+            }}>{message.content}</div>
+            <div style={{ fontSize: 9, color: '#334', marginTop: 2 }}>
+              {message.sender === 'user' ? 'YOU' : message.sender === 'kai' ? 'KAI EL' : 'ERROR'}
+            </div>
           </div>
         ))}
+        {loading && <div style={{ color: '#00e8ff88', fontSize: 11, textAlign: 'center' }}>▸▸▸ processing…</div>}
         <div ref={messagesEndRef} />
       </div>
       <input
         type="text"
         value={inputValue}
-        onChange={handleInputChange}
+        onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Type your message... (ALL keys supported)"
-        style={{
-          width: '100%',
-          padding: 8,
-          background: '#333',
-          color: 'white',
-          border: '1px solid #555',
-          borderRadius: 4
-        }}
+        placeholder="Type your message… (Enter to send)"
+        style={{ width: '100%', padding: 8, background: '#333', color: 'white', border: '1px solid #555', borderRadius: 4 }}
       />
     </div>
   );
