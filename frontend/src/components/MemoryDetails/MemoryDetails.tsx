@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Memory } from '../../types/memory';
 
@@ -191,7 +190,7 @@ export default function MemoryDetails({ memory, onClose, onEdit, onDelete }: Mem
                 {memory.id}
               </code>
               <button
-                onClick={onCopy}
+                onClick={() => navigator.clipboard?.writeText(memory.id)}
                 className="flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-slate-700/50 transition-colors text-sm text-slate-300"
               >
                 <span>📋</span>

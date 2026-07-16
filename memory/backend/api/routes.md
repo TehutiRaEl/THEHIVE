@@ -18,6 +18,10 @@ API Routes — Sovereign Hive v11.0
 - `WalletCreditRequest`
 - `ReproduceRequest`
 - `SimulateRequest`
+- `ValidateRequest`
+- `ContributionRequest`
+- `TransmuteRequest`
+- `ChildProposalRequest`
 - `ChatMessage`
 - `ChatCompletionRequest`
 - `AgentRunRequest`
@@ -29,4 +33,4 @@ API Routes — Sovereign Hive v11.0
 
 ## Links
 
-[[api.auth]] · [[core.agent_engine]] · [[core.arena]] · [[core.config]] · [[core.constitution]] · [[core.db]] · [[core.frequency_guild]] · [[core.genome]] · [[core.hdc]] · [[core.hitl]] · [[core.llm_router]] · [[core.wallet]] · [[economy.staking]] · [[economy.utility_economy]] · [[governance.patterns]] · [[simulator.twin]]
+[[api.auth]] · [[api.models]] · [[core.agency]] · [[core.agent_engine]] · [[core.alchemy]] · [[core.arena]] · [[core.config]] · [[core.constitution]] · [[core.criteria]] · [[core.db]] · [[core.frequency_guild]] · [[core.genesis]] · [[core.genome]] · [[core.governance]] · [[core.hdc]] · [[core.hitl]] · [[core.hive_mesh]] · [[core.llm_router]] · [[core.protocol]] · [[core.validator]] · [[core.wallet]] · [[core.wealth]] · [[economy.staking]] · [[economy.utility_economy]] · [[governance.patterns]] · [[simulator.twin]] · [[tier2.dream_engine]] · [[tier3]] · [[tier3.arena_renderer]]

@@ -1,0 +1,35 @@
+name: Memory Vault Update
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'memory/**'
+      - '.claude/**'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install minimal deps for AST scan
+        run: pip install pyyaml
+
+      - name: Regenerate memory vault
+        run: python3 scripts/generate_memory_vault.py
+
+      - name: Commit updated vault
+        run: |
+          git config user.name "memory-librarian[bot]"
+          git config user.email "memory@sovereign-hive"
+          git add memory/
+          git diff --cached --quiet || git commit -m \
+            "[ROLE: Memory Architect] chore(memory): auto-update vault from AST scan"
+          git push

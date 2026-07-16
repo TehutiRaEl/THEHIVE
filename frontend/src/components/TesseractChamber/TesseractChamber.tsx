@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment, Center } from '@react-three/drei';
 import * as THREE from 'three';
@@ -92,7 +92,10 @@ export default function TesseractChamber({ isActive = true, dimensions = [400, 4
         </div>
       </div>
 
-      <div className="relative h-[500px] w-full bg-gradient-to-br from-slate-900 to-purple-900/20">
+      <div
+        className="relative w-full bg-gradient-to-br from-slate-900 to-purple-900/20"
+        style={{ height: dimensions[1] || 500 }}
+      >
         <TesseractScene isActive={isActive && autoRotate} />
         
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/40 to-transparent" />

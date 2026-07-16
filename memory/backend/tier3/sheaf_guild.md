@@ -26,3 +26,7 @@ SHEAF GUILD — Sovereign Hive v11.0 Tier 3
 - `list_topics()` — Public ledger: topics only, no content.
 - `request_cross_guild()` — City Hall consent mechanism for cross-guild queries.
 - `approve_cross_guild()` — City Hall approves or denies cross-guild access.
+
+## Links
+
+[[core.config]]

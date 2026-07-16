@@ -1278,3 +1278,90 @@ async def dream_status():
         }
     except Exception as exc:
         return {"status": "unavailable", "error": str(exc)}
+
+
+# ── Neocortex Brain API (/v11/brain/*) ──────────────────────────────────────
+# Exposes backend/core/hdc.py (1024-dim HDC/VSA) as the third-brain layer.
+# bind/bundle/closest = synaptic wiring, associative firing, working memory.
+
+@router.post("/brain/remember")
+async def brain_remember(concept: str, description: str = "", auth: Dict = Depends(verify_auth)):
+    """Encode a new concept into the HDC lexicon."""
+    vec = hdc.get(concept)
+    if description and concept not in hdc.list_concepts():
+        hdc.add_concept(concept, metadata={"description": description, "source": "brain/remember"})
+    return {
+        "concept": concept,
+        "vector_dim": hdc.dim,
+        "lexicon_size": hdc.concept_count(),
+        "description": description,
+    }
+
+
+@router.get("/brain/query")
+async def brain_query(q: str, top_k: int = 5):
+    """Find nearest concepts in HDC space — associative firing through the neocortex."""
+    vec = hdc.get(q)
+    results = hdc.closest(vec, top_k=top_k)
+    return {
+        "query": q,
+        "nearest": [{"concept": c, "similarity": float(s)} for c, s in results],
+        "lexicon_size": hdc.concept_count(),
+    }
+
+
+@router.post("/brain/associate")
+async def brain_associate(concept_a: str, concept_b: str, auth: Dict = Depends(verify_auth)):
+    """Bind two concepts — wires a new synaptic association in the neocortex."""
+    va = hdc.get(concept_a)
+    vb = hdc.get(concept_b)
+    bound = hdc.bind(va, vb)
+    key = f"{concept_a}:{concept_b}"
+    hdc.lexicon[key] = bound
+    return {
+        "association": key,
+        "similarity_to_a": float(hdc.similarity(bound, va)),
+        "similarity_to_b": float(hdc.similarity(bound, vb)),
+        "lexicon_size": hdc.concept_count(),
+    }
+
+
+@router.get("/brain/recall/{concept}")
+async def brain_recall(concept: str, depth: int = 2):
+    """Trace the context chain from a concept through the HDC neocortex."""
+    vec = hdc.get(concept)
+    top_k = min(10 * depth, 50)
+    chain = hdc.closest(vec, top_k=top_k)
+    return {
+        "concept": concept,
+        "chain": [{"concept": c, "similarity": float(s)} for c, s in chain],
+        "depth": depth,
+        "lexicon_size": hdc.concept_count(),
+    }
+
+
+@router.get("/brain/map")
+async def brain_map():
+    """Return the HDC lexicon as a graph — the full neocortex topology for visualization."""
+    all_concepts = hdc.list_concepts()
+    nodes = [{"id": k} for k in all_concepts]
+    edges = []
+    # cap to 60 concepts for performance; include pre-built concepts first
+    sample = all_concepts[:60]
+    for i, a in enumerate(sample):
+        va = hdc.lexicon.get(a)
+        if va is None:
+            continue
+        for b in sample[i + 1:]:
+            vb = hdc.lexicon.get(b)
+            if vb is None:
+                continue
+            sim = float(hdc.similarity(va, vb))
+            if sim > 0.3:
+                edges.append({"source": a, "target": b, "weight": round(sim, 3)})
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "total_concepts": hdc.concept_count(),
+        "sampled_for_edges": len(sample),
+    }
