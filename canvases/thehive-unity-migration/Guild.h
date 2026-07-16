@@ -14,3 +14,20 @@ public:
     UFUNCTION(BlueprintCallable) void ClaimTerritory(const FString& TerritoryId);
     UFUNCTION(BlueprintCallable) void BuildCastle(const FVector& Location);
 };
+Project Structure
+THEHIVE-Unreal/
+├── Content/
+│   ├── Characters/ (MetaHumans, Animations)
+│   ├── Environments/ (Worlds, Buildings, Props)
+│   ├── Items/ (Weapons, Armor, Consumables)
+│   ├── Effects/ (Particles, Materials)
+│   ├── UI/ (Widgets, Styles, Textures)
+│   ├── Sounds/ (Music, SFX, Voice)
+│   └── Maps/ (World_HIVE, Dungeons)
+├── Source/THEHIVE/
+│   ├── THEHIVEGameModeBase.h/cpp
+│   ├── THEHIVECharacter.h/cpp
+│   ├── Systems/ (World, Combat, Network, etc.)
+│   ├── Components/ (Health, Mana, Inventory, etc.)
+│   └── Actors/ (Player, NPC, Buildings, Items)
+└── Plugins/ (FishNet, AdvancedSessions, Steamworks)
