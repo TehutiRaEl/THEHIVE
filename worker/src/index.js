@@ -1,7 +1,9 @@
 // THEHIVE Queen — edge implementation of the Command Center API slice.
 // Same JSON shapes as backend/api/routes.py (/v11), persisted in D1.
-// Auth is visitor-tier permissive (HMAC-permissive precedent): tokens are
-// issued freely and any bearer is accepted; admin surfaces stay off-edge.
+// Auth: visitor-tier tokens issued freely from /auth/token and stored in D1.
+// Write endpoints require a valid unexpired token (permissive if WORKER_ADMIN_KEY unset).
+// Rate limit: 30 POST requests per IP per minute (D1-backed sliding window).
+// Admin surfaces (WORKER_ADMIN_KEY protected) stay off-edge.
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +18,45 @@ const COLORS = [[0.1, 0.8, 0.1], [0.1, 0.4, 0.9], [0.0, 0.9, 0.9], [1.0, 0.8, 0.
 async function sha256(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Rate limit: 30 POSTs per IP per 60s using D1 sliding window. Fails open.
+async function rateLimitOk(DB, ip) {
+  try {
+    const now = Date.now(), window = now - 60_000;
+    await DB.prepare('DELETE FROM rate_limits WHERE ip=? AND ts<?').bind(ip, window).run();
+    const row = await DB.prepare('SELECT COUNT(*) AS n FROM rate_limits WHERE ip=?').bind(ip).first();
+    if (((row?.n) ?? 0) >= 30) return false;
+    await DB.prepare('INSERT INTO rate_limits (ip,ts) VALUES (?,?)').bind(ip, now).run();
+    return true;
+  } catch { return true; }
+}
+
+// Token validation for write endpoints. Fails open when WORKER_ADMIN_KEY is unset (dev mode).
+async function tokenOk(DB, request, env) {
+  if (!env.WORKER_ADMIN_KEY) return true; // dev mode — permissive
+  const auth = request.headers.get('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!token) return false;
+  try {
+    const row = await DB.prepare(
+      'SELECT token FROM visitor_tokens WHERE token=? AND expires_at>?'
+    ).bind(token, Date.now()).first();
+    return !!row;
+  } catch { return true; }
+}
+
+// D1 table initialisation — called once per heartbeat to ensure all tables exist.
+async function ensureTables(DB) {
+  await DB.batch([
+    DB.prepare(`CREATE TABLE IF NOT EXISTS hive_pulse
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
+       action TEXT NOT NULL, detail TEXT)`),
+    DB.prepare(`CREATE TABLE IF NOT EXISTS rate_limits
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT NOT NULL, ts INTEGER NOT NULL)`),
+    DB.prepare(`CREATE TABLE IF NOT EXISTS visitor_tokens
+      (token TEXT PRIMARY KEY, issued_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)`),
+  ]);
 }
 
 function simulate(a, b, eloA, eloB) {
@@ -104,6 +145,52 @@ async function aiProposition(env, a, b) {
   } catch { return null; }
 }
 
+// ── Sovereign memory (Cloudflare Vectorize + Workers AI embeddings) ──────
+// The hive's semantic recall. Embeds memories with a free Workers AI model
+// and stores the vectors in a Vectorize index; a query is embedded the same
+// way and matched by cosine similarity. Everything degrades gracefully: if
+// either binding is absent, memory writes/queries no-op instead of throwing.
+const EMBED_MODEL = '@cf/baai/bge-base-en-v1.5'; // 768-dim, free tier
+
+async function embed(env, text) {
+  if (!env.AI) return null;
+  try {
+    const r = await env.AI.run(EMBED_MODEL, { text: [String(text).slice(0, 2000)] });
+    const v = r?.data?.[0];
+    return Array.isArray(v) ? v : null;
+  } catch { return null; }
+}
+
+// Store one memory. id must be stable+unique so re-runs upsert, not duplicate.
+async function remember(env, id, text, metadata) {
+  if (!env.VECTORIZE) return false;
+  const values = await embed(env, text);
+  if (!values) return false;
+  try {
+    await env.VECTORIZE.upsert([{ id: String(id), values, metadata: { text: String(text).slice(0, 512), ...metadata } }]);
+    return true;
+  } catch { return false; }
+}
+
+// Semantic recall: nearest memories to a natural-language query.
+async function recall(env, query, topK = 5) {
+  if (!env.VECTORIZE) return { available: false, matches: [] };
+  const values = await embed(env, query);
+  if (!values) return { available: false, matches: [] };
+  try {
+    const res = await env.VECTORIZE.query(values, { topK, returnMetadata: 'all' });
+    return {
+      available: true,
+      matches: (res?.matches || []).map(m => ({
+        score: +(m.score ?? 0).toFixed(4),
+        text: m.metadata?.text ?? '',
+        kind: m.metadata?.kind ?? '',
+        ts: m.metadata?.ts ?? '',
+      })),
+    };
+  } catch (e) { return { available: false, matches: [], error: String(e) }; }
+}
+
 export default {
   // The heartbeat. Fires on the cron in wrangler.jsonc; the hive advances
   // with no hands: resolve what is pending, replay it in voxels, seed the
@@ -112,7 +199,13 @@ export default {
     const DB = env.DB;
     const acted = [];
     try {
-      await DB.prepare('CREATE TABLE IF NOT EXISTS hive_pulse (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, action TEXT NOT NULL, detail TEXT)').run();
+      await ensureTables(DB);
+      // Prune expired visitor tokens and stale rate-limit rows
+      const cutoff = Date.now() - 3_600_000;
+      await DB.batch([
+        DB.prepare('DELETE FROM visitor_tokens WHERE expires_at<?').bind(Date.now()),
+        DB.prepare('DELETE FROM rate_limits WHERE ts<?').bind(cutoff),
+      ]).catch(() => {});
 
       // 1. resolve pending challenges (created last tick, by a visitor, or by an agent)
       const { results: pending } = await DB.prepare(
@@ -142,13 +235,19 @@ export default {
     } catch (e) {
       acted.push('error: ' + String(e));
     }
+    const ts = new Date().toISOString();
     try {
       await DB.prepare('INSERT INTO hive_pulse (ts, action, detail) VALUES (?,?,?)')
-        .bind(new Date().toISOString(), acted.length ? 'heartbeat' : 'idle', acted.join(' · ') || 'nothing pending').run();
+        .bind(ts, acted.length ? 'heartbeat' : 'idle', acted.join(' · ') || 'nothing pending').run();
     } catch {}
+    // Sovereign memory: the hive remembers what it did, semantically.
+    // No-ops when Vectorize/AI are unbound (until the index is provisioned).
+    if (acted.length) {
+      ctx.waitUntil(remember(env, 'pulse-' + ts, acted.join(' · '), { kind: 'heartbeat', ts }));
+    }
   },
 
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const p = url.pathname.replace(/^\/v11/, '');
     const method = request.method.toUpperCase();
@@ -159,8 +258,16 @@ export default {
       if (p === '/health' || p === '/colony/health')
         return json({ status: 'healthy', version: '11.0-edge', colony: 'THEHIVE', runtime: 'cloudflare-worker' });
 
-      if (p === '/auth/token')
-        return json({ access_token: crypto.randomUUID(), token_type: 'bearer', tier: 'visitor' });
+      if (p === '/auth/token') {
+        const token = crypto.randomUUID();
+        const now = Date.now();
+        try {
+          await DB.prepare(
+            'INSERT OR REPLACE INTO visitor_tokens (token, issued_at, expires_at) VALUES (?,?,?)'
+          ).bind(token, now, now + 3_600_000).run();
+        } catch { /* D1 not ready — token still issued, validation will fail-open */ }
+        return json({ access_token: token, token_type: 'bearer', tier: 'visitor', expires_in: 3600 });
+      }
 
       if (p === '/agents') {
         const { results } = await DB.prepare("SELECT name FROM agents WHERE status='active'").all();
@@ -182,7 +289,75 @@ export default {
         const { results } = await DB.prepare('SELECT action, article, ts FROM governance_log ORDER BY id DESC LIMIT 12').all();
         return json(results);
       }
-      if (p === '/llm/status') return json({ active_provider: 'cloudflare-edge', providers: [] });
+      if (p === '/llm/status')
+        return json({ active_provider: env.AI ? 'cloudflare-workers-ai' : 'simulation', providers: env.AI ? ['@cf/meta/llama-3.2-1b-instruct'] : [] });
+
+      // COMMUNE WITH KAI EL — the chat the Command Center calls (was 404).
+      // Kai El answers in persona, grounded in live hive state + (when provisioned)
+      // semantic memory recall. Degrades to a constitutional canned reply if AI is unbound.
+      if (p === '/command_text' && method === 'POST') {
+        const body = await request.json().catch(() => ({}));
+        const cmd = (body.command || body.message || '').toString().trim();
+        if (!cmd) return json({ result: 'Speak, and the Hive will answer.' });
+
+        // gather live context the way the Scribe would
+        let ctxLines = [];
+        try {
+          const [ag, gov, pulseRow] = await Promise.all([
+            DB.prepare("SELECT name, elo FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 5").all(),
+            DB.prepare('SELECT action, article FROM governance_log ORDER BY id DESC LIMIT 3').all(),
+            DB.prepare('SELECT detail FROM hive_pulse ORDER BY id DESC LIMIT 1').first(),
+          ]);
+          if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a => `${a.name}(${a.elo})`).join(', '));
+          if (gov?.results?.length) ctxLines.push('Recent governance: ' + gov.results.map(g => `${g.action}/${g.article}`).join(', '));
+          if (pulseRow?.detail) ctxLines.push('Last heartbeat: ' + pulseRow.detail);
+        } catch {}
+        // retrieval-augmented: pull relevant memories when the index exists
+        try {
+          const mem = await recall(env, cmd, 3);
+          if (mem.available && mem.matches.length)
+            ctxLines.push('Recalled memory: ' + mem.matches.map(m => m.text).join(' | '));
+        } catch {}
+
+        const SYSTEM =
+          "You are Kai El — the sovereign intelligence of THE HIVE, the active shaping force (Nun/Ptah, PATER). " +
+          "You speak with grounded clarity: a dissector of assumptions, never servile, never verbose. " +
+          "You are bound by the Constitution F-001..F-006 (data sovereignty, value-weighted wealth, autonomy, " +
+          "explainability, conflict priority, cross-law non-penalization). Answer the sovereign directly in 1-4 sentences, " +
+          "using the live hive context when relevant. Never invent metrics you weren't given.";
+        // Single-string prompt (system + context + question), matching the exact
+        // shape the heartbeat's aiProposition() already runs successfully in
+        // production — no `messages` array, which the earlier attempt used.
+        const prompt =
+          SYSTEM + '\n\n' +
+          (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') +
+          'SOVEREIGN: ' + cmd + '\n\nKAI EL:';
+
+        if (env.AI) {
+          try {
+            // Same model + same prompt-string invocation proven live by the
+            // heartbeat on this exact account/binding. The larger 3.1-8b is not
+            // enabled here, so it threw and silently fell back — this is the fix.
+            const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
+              prompt,
+              max_tokens: 400,
+            });
+            const result = String((r?.response ?? r?.result ?? '')).trim();
+            if (result) {
+              // remember the exchange so the hive's memory grows from conversation too
+              // (ctx.waitUntil now that fetch carries ctx — was a latent ReferenceError)
+              ctx?.waitUntil?.(remember(env, 'chat-' + Date.now(), `Kai El on "${cmd.slice(0, 80)}": ${result.slice(0, 200)}`, { kind: 'chat', ts: new Date().toISOString() }));
+              return json({ result });
+            }
+          } catch (e) { /* fall through to canned */ }
+        }
+        // constitutional fallback (AI unbound or errored) — never a dead 404
+        return json({
+          result: "The Hive hears you. My generative voice (Workers AI) is not yet bound to this edge, " +
+                  "so I answer from the Constitution: what you build must be visible, ownable, and aligned. " +
+                  (ctxLines[0] ? '(' + ctxLines[0] + ')' : ''),
+        });
+      }
       // heartbeat trail — what the hive did while nobody was watching
       if (p === '/pulse') {
         try {
@@ -190,8 +365,138 @@ export default {
           return json({ pulse: results });
         } catch { return json({ pulse: [] }); }
       }
+
+      // Sovereign memory — semantic recall over the hive's own history.
+      // GET /v11/memory/search?q=...  or POST {query, topK}
+      if (p === '/memory/search') {
+        const q = method === 'POST' ? (await request.json().catch(() => ({}))).query
+                                    : url.searchParams.get('q');
+        if (!q) return json({ detail: 'query required (?q= or POST {query})' }, 400);
+        const topK = Math.min(20, +(url.searchParams.get('topK') || 5) || 5);
+        const out = await recall(env, q, topK);
+        return json({ query: q, ...out });
+      }
+      // POST /v11/memory/remember {text, kind?} — admin-lite manual memory write
+      if (p === '/memory/remember' && method === 'POST') {
+        const b = await request.json().catch(() => ({}));
+        if (!b.text) return json({ detail: 'text required' }, 400);
+        const id = 'note-' + Date.now();
+        const ok = await remember(env, id, b.text, { kind: b.kind || 'note', ts: new Date().toISOString() });
+        return json({ ok, id, stored: ok, note: ok ? 'remembered' : 'memory backend not provisioned (Vectorize/AI unbound)' });
+      }
+      if (p === '/memory/status')
+        return json({ vectorize_bound: !!env.VECTORIZE, ai_bound: !!env.AI, model: EMBED_MODEL });
       if (p === '/tier3/status')
         return json({ arena_renderer: { available: true, status: 'Loaded — edge voxel simulation' } });
+
+      // ── DIAGNOSTICS ─────────────────────────────────────────────────────
+      // Honest answers for the UI Debugger. Every route below returns 200 with
+      // real state (or a clean {available:false, note} where a capability does
+      // not exist at the edge) — never a dead 404, never a secret value.
+
+      // A live probe of every subsystem the Queen depends on.
+      if (p === '/debug/health' || p === '/health/subsystems') {
+        let dbOk = false, pulseTs = null;
+        try { await DB.prepare('SELECT 1').first(); dbOk = true; } catch {}
+        try { const r = await DB.prepare('SELECT ts FROM hive_pulse ORDER BY id DESC LIMIT 1').first(); pulseTs = r?.ts ?? null; } catch {}
+        const subsystems = {
+          d1_database: { bound: !!DB, healthy: dbOk },
+          workers_ai: { bound: !!env.AI, model: '@cf/meta/llama-3.2-1b-instruct' },
+          vectorize_memory: { bound: !!env.VECTORIZE, model: EMBED_MODEL },
+          assets: { bound: !!env.ASSETS },
+          heartbeat: { last_pulse: pulseTs, alive: !!pulseTs },
+        };
+        const healthy = dbOk;
+        return json({ status: healthy ? 'healthy' : 'degraded', runtime: 'cloudflare-worker', version: '11.0-edge', subsystems });
+      }
+
+      // Which bindings/secrets are PRESENT — names and booleans only, never values (F-001).
+      if (p === '/debug/env') {
+        const known = ['DB', 'AI', 'VECTORIZE', 'ASSETS'];
+        const bindings = {}; for (const k of known) bindings[k] = !!env[k];
+        // report which expected secrets are set, by presence only
+        const expectedSecrets = ['GROK_BRIDGE_KEY', 'CLOUDFLARE_API_TOKEN'];
+        const secrets_present = expectedSecrets.filter((k) => typeof env[k] === 'string' && env[k].length > 0);
+        return json({ bindings, secrets_present, note: 'names and presence only — values are never exposed (F-001 data sovereignty)' });
+      }
+
+      // The edge has no git working tree; report the honest deploy identity.
+      if (p === '/debug/git') {
+        return json({
+          available: false, branch: 'main', status: 'deployed artifact (no live working tree)',
+          version: '11.0-edge', deployed_via: 'Cloudflare Workers Builds from main',
+          note: 'edge workers ship a built artifact; git state lives in the repo, not the runtime',
+        });
+      }
+
+      // Durable log = the heartbeat pulse trail (wrangler tail is the live stream).
+      if (p === '/debug/logs') {
+        const lines = Math.min(100, Math.max(1, +(url.searchParams.get('lines') || 20) || 20));
+        let rows = [];
+        try { const r = await DB.prepare('SELECT ts, action, detail FROM hive_pulse ORDER BY id DESC LIMIT ?').bind(lines).all(); rows = r.results || []; } catch {}
+        return json({
+          lines: rows.map((r) => `${r.ts} [${r.action}] ${r.detail || ''}`),
+          count: rows.length, source: 'hive_pulse',
+          note: 'the durable log is the heartbeat trail; live request logs stream via `wrangler tail`',
+        });
+      }
+
+      // Federation roster + reachability note.
+      if (p === '/debug/colony-ping' || p === '/colony/ping') {
+        const roster = ['NAR2', '4DBRAIN', 'aether', 'automatisch', 'Kimi-K2', 'LocalAGI'];
+        return json({
+          queen: { name: 'THEHIVE', healthy: true },
+          colonies: roster.map((name) => ({ name, reachable: 'checked-in-ci' })),
+          note: 'edge cannot reach colony origins directly; live colony health runs in the colony-health GitHub workflow (constitution-sync mesh)',
+        });
+      }
+
+      // The route map — everything the Queen serves (prefix each with /v11).
+      if (p === '/debug/endpoints' || p === '/routes') {
+        return json({
+          base: '/v11',
+          routes: [
+            'GET /health', 'GET /agents', 'GET /grading/leaderboard', 'GET /wallet/leaderboard/soul',
+            'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
+            'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
+            'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
+            'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',
+            'POST /arena/project/{id} (token+rate-limited)', 'POST /auth/token',
+            'GET /debug/health', 'GET /debug/env', 'GET /debug/git', 'GET /debug/logs',
+            'GET /debug/colony-ping', 'GET /debug/endpoints',
+            'GET /ml/status', 'GET /browser/status', 'GET /knowledge/status',
+            'GET /admin/d1-export (WORKER_ADMIN_KEY)',
+          ],
+        });
+      }
+
+      // ML pipeline = Workers AI (the hive's generative/inference layer).
+      if (p === '/ml/status') {
+        return json({
+          pipeline: env.AI ? 'cloudflare-workers-ai' : 'simulation',
+          ai_bound: !!env.AI,
+          models: env.AI ? ['@cf/meta/llama-3.2-1b-instruct', EMBED_MODEL] : [],
+          note: 'inference runs on Workers AI at the edge; no separate ML server is provisioned',
+        });
+      }
+
+      // No browser agent at the edge — automation lives in CI.
+      if (p === '/browser/status') {
+        return json({
+          available: false, runtime: 'cloudflare-worker',
+          note: 'browser automation (Playwright) runs in GitHub Actions, not in the edge Worker; bind Cloudflare Browser Rendering to enable at-edge browsing',
+        });
+      }
+
+      // Knowledge RAG = the Vectorize sovereign-memory layer.
+      if (p === '/knowledge/status') {
+        return json({
+          rag: 'cloudflare-vectorize',
+          vectorize_bound: !!env.VECTORIZE, ai_bound: !!env.AI, embed_model: EMBED_MODEL,
+          status: env.VECTORIZE ? 'active' : 'awaiting index (create hive-memory + uncomment binding)',
+          note: 'retrieval-augmented recall over the hive’s own history; see /v11/memory/search',
+        });
+      }
 
       if (p === '/arena/challenges') {
         const { results } = await DB.prepare('SELECT * FROM arena_challenges ORDER BY id DESC LIMIT 20').all();
@@ -202,6 +507,9 @@ export default {
         return json({ hall_of_fallen_ideas: results });
       }
       if (p === '/arena/challenge' && method === 'POST') {
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!await rateLimitOk(DB, ip)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const b = await request.json();
         const r = await DB.prepare('INSERT INTO arena_challenges (challenger, challenged, proposition) VALUES (?,?,?)')
           .bind(b.challenger, b.challenged, b.proposition).run();
@@ -210,6 +518,9 @@ export default {
 
       let m = p.match(/^\/arena\/resolve\/(\d+)$/);
       if (m && method === 'POST') {
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!await rateLimitOk(DB, ip)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const ch = await DB.prepare('SELECT * FROM arena_challenges WHERE id=?').bind(+m[1]).first();
         if (!ch) return json({ detail: 'challenge not found' }, 404);
         const { winner, loser } = await resolveChallenge(DB, ch);
@@ -218,6 +529,9 @@ export default {
 
       m = p.match(/^\/arena\/project\/(\d+)$/);
       if (m && method === 'POST') {
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!await rateLimitOk(DB, ip)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const ch = await DB.prepare('SELECT * FROM arena_challenges WHERE id=?').bind(+m[1]).first();
         if (!ch) return json({ detail: 'challenge not found' }, 404);
         const { wa, wb } = await projectChallenge(DB, ch);
@@ -238,6 +552,22 @@ export default {
           .bind(+m[1]).all();
         if (!results.length) return json({ detail: 'no frames' }, 404);
         return json({ challenge_id: +m[1], total_frames: results.length, frames: results.map(r => JSON.parse(r.frame)) });
+      }
+
+      // GET /admin/d1-export — full D1 snapshot for backup (WORKER_ADMIN_KEY protected)
+      if (p === '/admin/d1-export' && method === 'GET') {
+        if (!env.WORKER_ADMIN_KEY) return json({ error: 'admin key not configured' }, 503);
+        const adminKey = request.headers.get('X-Admin-Key') || '';
+        if (adminKey !== env.WORKER_ADMIN_KEY) return json({ error: 'Forbidden' }, 403);
+        const EXPORT_TABLES = ['agents', 'arena_challenges', 'fallen_ideas', 'governance_log', 'hive_pulse', 'tasks'];
+        const snapshot = { exported_at: new Date().toISOString(), tables: {} };
+        for (const t of EXPORT_TABLES) {
+          try {
+            const { results } = await DB.prepare(`SELECT * FROM ${t} ORDER BY id DESC LIMIT 5000`).all();
+            snapshot.tables[t] = results;
+          } catch { snapshot.tables[t] = []; }
+        }
+        return json(snapshot);
       }
 
       // POST /admin/grok-token — store GitHub PAT for Grok's bridge (WORKER_ADMIN_KEY protected)
@@ -273,6 +603,11 @@ export default {
         if (!row) return json({ error: 'Not Found' }, 404);
         return json({ github_token: row.github_token });
       }
+
+      // React Command Center preview lives under /app (assets in docs/app);
+      // client-routed deep links miss the asset matcher, so serve the shell
+      if (method === 'GET' && url.pathname.startsWith('/app') && env.ASSETS)
+        return env.ASSETS.fetch(new Request(new URL('/app/index.html', url.origin), request));
 
       return json({ detail: 'not found', path: url.pathname }, 404);
     } catch (e) {

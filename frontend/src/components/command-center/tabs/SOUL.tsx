@@ -2,9 +2,11 @@ import React from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
 import { useConstitutionStore } from '../../../stores/constitutionStore';
+import { useHiveData } from '../../../hooks/useHiveData';
 
 const SOUL: React.FC = () => {
   const { constitution, violations, checkLaw } = useConstitutionStore();
+  const hive = useHiveData();
 
   const constitutionalLaws = [
     {
@@ -66,7 +68,7 @@ const SOUL: React.FC = () => {
           <div className="constitution-card">
             <h3>Sovereign Hive Constitution</h3>
             <p><strong>Version:</strong> {constitution?.version || '1.0.0'}</p>
-            <p><strong>Last Updated:</strong> {constitution?.updatedAt || '2026-07-08'}</p>
+            <p><strong>Last Updated:</strong> {constitution?.lastUpdated || '2026-07-08'}</p>
             <p><strong>Status:</strong> Active</p>
           </div>
         </section>
@@ -91,6 +93,22 @@ const SOUL: React.FC = () => {
               </div>
             ))}
           </div>
+        </section>
+
+        <section className="soul-leaderboard">
+          <h2>💎 Soul Ledger <span style={{ opacity: 0.6, fontSize: 13 }}>(live)</span></h2>
+          {hive.soulBoard.length === 0 ? (
+            <p style={{ opacity: 0.6 }}>{hive.loading ? 'loading…' : 'no soul data reachable'}</p>
+          ) : (
+            <ol style={{ paddingLeft: 20, margin: 0 }}>
+              {hive.soulBoard.slice(0, 8).map((s) => (
+                <li key={s.agent} style={{ padding: '3px 0', fontSize: 13 }}>
+                  <strong style={{ color: '#a0e8ff' }}>{s.agent}</strong>
+                  <span style={{ marginLeft: 8, color: '#00cc88' }}>{(s.soul ?? 0).toFixed(1)} Ψ</span>
+                </li>
+              ))}
+            </ol>
+          )}
         </section>
 
         <section className="violations-section">

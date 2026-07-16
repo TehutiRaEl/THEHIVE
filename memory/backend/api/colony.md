@@ -9,4 +9,4 @@ Colony Standard Layer — Sovereign Hive v11.0
 
 ## Links
 
-[[core.config]] · [[core.constitution]] · [[core.db]]
+[[api.models]] · [[core.config]] · [[core.constitution]] · [[core.db]]

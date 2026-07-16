@@ -1,6 +1,6 @@
 # Claude Memory — System Architect & Backend Builder
 
-**Last Updated:** 2026-07-08
+**Last Updated:** 2026-07-14
 **Author:** Claude (Sonnet 4.6) — System Architect & Backend Builder
 **Branch:** `claude/session-continuation-owj5wr`
 **Team:** Claude (Backend) · Mistral (Frontend/UI) · Grok (Strategy/Research)
@@ -652,6 +652,59 @@ Static UI:
   ui/hive-status.html — Federation Status Dashboard
   frontend/see-app.html — SEE metaphysical architecture viewer
 ```
+
+---
+
+## Session 2026-07-14 — P3–P8 Backend Queue + Second/Third Brain Harness
+
+### P3–P8 Backend Fixes (commit `3901814`, PR #48)
+
+| Priority | What | Files |
+|---|---|---|
+| P3 | CORS: added GitHub Pages + Render origins to allowlist | `backend/core/config.py`, `render.yaml` |
+| P4 | `/v11/constitution/history`: git log subprocess + DB fallback | `backend/api/routes.py:276` |
+| BUG | `hitl_timeout_seconds` AttributeError fix | `backend/core/config.py` |
+| P5 | Added 4 missing routes: `/agents`, `/llm/status`, `/wallet/leaderboard/soul`, `/dream/status` | `backend/api/routes.py` |
+| P5 | Added `GET /v11/ml/models` | `backend/api/ml.py` |
+| P7 | Grafana dashboard JSON (8 panels) | `monitoring/grafana/dashboards/sovereign-hive-overview.json` |
+| P8 | Dynamic `COLONY_BASE_URLS` on `hive-boot-done` event | `docs/index.html` |
+
+LocalAGI `/colony/capabilities` endpoint added (commit `8f8f15c`, PR #6).
+
+### Second/Third Brain Harness (commits `e3ad056`, `feac02e`, PR #80)
+
+The full Claude Code harness for THEHIVE as a self-hosted second/third brain — free rebuild of
+LangGraph, Obsidian Copilot, and Meta's 60k-worker pattern. No paid services.
+
+**Layer 0 — `.claude/` Harness:**
+- `.claude/settings.json` — model pin
+- `.claude/agents/` — 4 sub-agents: `memory-librarian`, `constitutional-validator`, `knowledge-cartographer`, `colony-health-monitor`
+- `.claude/commands/` — 9 slash commands: `/remember`, `/link-nodes`, `/brain-query`, `/update-nav`, `/soul-check`, `/hive-status`, `/colony-zoom`, `/role-deliver`, `/merge-verify`
+- `.claude/memory/memory.md` — comprehensive in-session reference: LangGraph→THEHIVE and Obsidian→THEHIVE rebuild maps, memory cycle, full API/command/agent reference, HDC lexicon groups
+- `.claude/skills/hive-memory.md` — formalized skill (ID: `hive-memory`, v1.0.0): Capture→Link→Query→Recall→Evolve cycle, tool selection guide, 2 worked examples
+
+**Layer 1 — Navigation (9 CLAUDE.md nav docs):**
+`CLAUDE.md` (root) + `memory/`, `memory/planning/`, `memory/colonies/`, `memory/guilds/`,
+`backend/`, `backend/core/`, `Project_file/`, `.queen/`
+
+**Layer 2 — Neocortex API (5 new `/v11/brain/*` routes in `backend/api/routes.py:1287`):**
+- `POST /brain/remember` — encode concept into HDC lexicon
+- `GET  /brain/query?q=X&top_k=N` — HDC `closest()` associative firing
+- `POST /brain/associate` — `hdc.bind(A,B)` stored as `A:B` key
+- `GET  /brain/recall/{concept}` — context chain at configurable depth
+- `GET  /brain/map` — full HDC topology as nodes+edges (sim > 0.3)
+
+**CI — `.github/workflows/memory-vault-update.yml`:** Runs `generate_memory_vault.py` on every push to `main`, commits as `memory-librarian[bot]`.
+
+**Key correction:** `memory/_graph.json` uses `"links"` key (D3 convention), not `"edges"`. Fixed in `knowledge-cartographer.md`.
+
+### Session 2026-07-14 — HDC Test Coverage (this commit)
+
+Added `tests/unit/test_hdc.py` — 18 tests covering:
+- `HyperDimensionalComputing` core operations: `make_base_vector`, `bundle`, `bind`, `unbind`, `similarity`, `closest`, `permute`
+- Lexicon management: `get`, `add_concept`, `remove_concept`, `list_concepts`, `concept_count`
+- Compound operations: `encode_sequence`, `encode_message`, `encode_role_filler`, `bind_sequence`
+- Invariants: deterministic seeding, bipolar vectors (-1/+1), bind reversal via `unbind`, similarity of self = 1.0
 
 ---
 

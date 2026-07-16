@@ -1,8 +1,10 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { TabId, Notification, Modal, Theme, UserPreferences } from '../types'
+import type { TabId, ColonyId, Notification, Modal, Theme, UserPreferences } from '../types'
 
 interface UIState {
+  activeTab: TabId
+  activeColony: ColonyId | null
   theme: Theme
   preferences: UserPreferences
   notifications: Notification[]
@@ -19,6 +21,8 @@ interface UIState {
 }
 
 interface UIActions {
+  setActiveTab: (tab: TabId) => void
+  setActiveColony: (colony: ColonyId | null) => void
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
   setPreferences: (preferences: Partial<UserPreferences>) => void
@@ -67,6 +71,8 @@ const INITIAL_THEME: Theme = {
 }
 
 const INITIAL_STATE: UIState = {
+  activeTab: 'hive',
+  activeColony: null,
   theme: INITIAL_THEME,
   preferences: INITIAL_PREFERENCES,
   notifications: [],
@@ -86,6 +92,8 @@ export const useUIStore = create<UIStore>()(
   devtools(
     (set, get) => ({
       ...INITIAL_STATE,
+      setActiveTab: (tab) => set({ activeTab: tab }),
+      setActiveColony: (colony) => set({ activeColony: colony }),
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set(state => ({
         theme: { ...state.theme, mode: state.theme.mode === 'dark' ? 'light' : 'dark' }

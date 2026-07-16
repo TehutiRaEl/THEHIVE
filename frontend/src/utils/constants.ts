@@ -13,7 +13,7 @@ export const COLONY_BASE_URLS: Record<ColonyId, string> = {
   'build-your-own-x': '',
 }
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
 export const WS_URL = import.meta.env.VITE_ARENA_WS_URL || 'ws://localhost:8080'
 
 export interface TabDef {
@@ -34,7 +34,7 @@ export const TAB_DEFS: TabDef[] = [
   { id: '4d', label: '4D', icon: '⬡' },
   { id: 'arena', label: 'ARENA', icon: '⚔' },
   { id: 'wow', label: 'WOW', icon: '🗺' },
-  { id: 'nomanssky', label: 'NMS', icon: '🚀' },
+  { id: 'no-mans-sky', label: 'NMS', icon: '🚀' },
   { id: 'settings', label: 'SETTINGS', icon: '⚙' },
 ]
 

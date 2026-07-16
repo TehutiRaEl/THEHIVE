@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
+import { API_BASE_URL } from '../../../utils/constants';
 
 interface Endpoint {
   path: string;
@@ -10,15 +11,25 @@ interface Endpoint {
 }
 
 const API: React.FC = () => {
-  const [endpoints, setEndpoints] = useState<Endpoint[]>([
-    { path: '/v11/auth/token', method: 'POST', description: 'Get authentication token', status: 'available' },
-    { path: '/v11/hive/status', method: 'GET', description: 'Get hive status', status: 'available' },
-    { path: '/v11/colony/capabilities', method: 'GET', description: 'Get colony capabilities', status: 'available' },
-    { path: '/v11/memory/graph', method: 'GET', description: 'Get memory graph data', status: 'available' },
-    { path: '/v11/genesis/missions', method: 'GET', description: 'Get missions', status: 'available' },
-    { path: '/v11/constitution', method: 'GET', description: 'Get constitution', status: 'available' },
-    { path: '/v11/feed', method: 'GET', description: 'SSE event feed', status: 'available' },
-    { path: '/v11/arena/projection', method: 'GET', description: 'Get arena projection', status: 'available' },
+  // The REAL surface the edge Queen (Cloudflare Worker) implements today. The
+  // previous list advertised endpoints (/hive/status, /genesis/missions,
+  // /memory/graph, /feed…) that only ever existed on the FastAPI origin and 404
+  // on production — replaced with the live routes so "Test" actually returns 200.
+  const [endpoints] = useState<Endpoint[]>([
+    { path: '/v11/health', method: 'GET', description: 'Queen liveness + version', status: 'available' },
+    { path: '/v11/agents', method: 'GET', description: 'Active agents of the hive', status: 'available' },
+    { path: '/v11/arena/challenges', method: 'GET', description: 'Arena challenges (live + resolved)', status: 'available' },
+    { path: '/v11/arena/fallen', method: 'GET', description: 'Hall of fallen ideas', status: 'available' },
+    { path: '/v11/pulse', method: 'GET', description: 'Heartbeat trail (every 30 min)', status: 'available' },
+    { path: '/v11/governance/log', method: 'GET', description: 'Constitutional governance events', status: 'available' },
+    { path: '/v11/grading/leaderboard', method: 'GET', description: 'Agent ELO leaderboard', status: 'available' },
+    { path: '/v11/wallet/leaderboard/soul', method: 'GET', description: 'Soul (value) leaderboard', status: 'available' },
+    { path: '/v11/tasks', method: 'GET', description: 'Hive task queue', status: 'available' },
+    { path: '/v11/memory/status', method: 'GET', description: 'Memory + AI binding status', status: 'available' },
+    { path: '/v11/llm/status', method: 'GET', description: 'Generative provider status', status: 'available' },
+    { path: '/v11/tier3/status', method: 'GET', description: 'Tier-3 engine status', status: 'available' },
+    { path: '/v11/command_text', method: 'POST', description: 'Commune with Kai El', status: 'available' },
+    { path: '/v11/auth/token', method: 'POST', description: 'Visitor auth token', status: 'available' },
   ]);
 
   const [selectedEndpoint, setSelectedEndpoint] = useState<Endpoint | null>(null);
@@ -32,20 +43,36 @@ const API: React.FC = () => {
 
   const handleTestRequest = async () => {
     if (!selectedEndpoint) return;
-    
+
     setResponse({ data: null, loading: true, error: null });
-    
+
+    // Real call against the live Queen — no more mock. GET goes straight; POST
+    // sends the request body (or a sensible default for /command_text).
     try {
-      // Mock API call - replace with actual implementation
-      const mockResponse = {
-        success: true,
-        data: { message: 'Mock response for ' + selectedEndpoint.path },
-        timestamp: new Date().toISOString()
+      const url = `${API_BASE_URL}${selectedEndpoint.path}`;
+      const init: RequestInit = {
+        method: requestMethod,
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(20000),
       };
-      
-      setResponse({ data: mockResponse, loading: false, error: null });
+      if (requestMethod !== 'GET' && requestMethod !== 'DELETE') {
+        init.body = requestBody?.trim()
+          ? requestBody
+          : selectedEndpoint.path.endsWith('/command_text')
+            ? JSON.stringify({ command: 'Who are you, Kai El?' })
+            : '{}';
+      }
+      const res = await fetch(url, init);
+      const text = await res.text();
+      let data: any;
+      try { data = JSON.parse(text); } catch { data = text; }
+      if (!res.ok) {
+        setResponse({ data, loading: false, error: `HTTP ${res.status} ${res.statusText}` });
+      } else {
+        setResponse({ data, loading: false, error: null });
+      }
     } catch (error) {
-      setResponse({ data: null, loading: false, error: 'Request failed' });
+      setResponse({ data: null, loading: false, error: `Request failed: ${(error as Error).message}` });
     }
   };
 
