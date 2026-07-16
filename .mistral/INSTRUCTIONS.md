@@ -6,7 +6,7 @@ This document establishes the workflow for Mistral role in THEHIVE repository.
 ## Session Start Protocol
 1. Load Session Memory
    - Primary: Project_file/Project_memory/mistral_memory.md
-   - Fallback: /home/user/mistral-memory.md
+   - Fallback: /THEHIVE/.mistral/mistral-memory.md
    - Purpose: Bootstrap user identity, project state, pending actions
 
 2. Check Vision Repository
