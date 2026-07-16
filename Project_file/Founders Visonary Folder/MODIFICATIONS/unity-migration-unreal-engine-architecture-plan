@@ -1,0 +1,3047 @@
+# THE HIVE: Unity Migration &amp; Unreal Engine Architecture Plan
+
+## 🎯 Executive Summary
+
+**Goal:** Transform THE HIVE from a React/Three.js web-based sandbox into a **full-scale MMORPG** with PvP, PvE, guild systems, castles, enclaves, and persistent worlds.
+
+**Recommended Path:**
+
+1. **Unity First** (3-6 months) - Launch scalable MMORPG
+2. **Unreal Engine** (6-12 months) - AAA-quality upgrade
+
+**Target Launch:** Full MMORPG with 1,000+ concurrent players
+
+---
+
+## 📊 Part 1: Unity Migration Details
+
+### 1.1 Current State Assessment
+
+#### What We Have (React/Three.js)
+
+```
+✅ 11 Manager Systems (World, NPC, Portal, Colony, Multiplayer, etc.)
+✅ 3D Voxel World Rendering
+✅ Avatar Customization
+✅ XP Economy
+✅ Mission & Achievement Systems
+✅ Conversation System
+✅ Floating Menu UI
+✅ TypeScript Architecture
+
+❌ No Native Physics
+❌ Limited Performance (~60fps, <50K polygons)
+❌ Basic Lighting/Shaders
+❌ WebSocket Multiplayer (No Authority)
+❌ No Persistent Storage
+❌ No Terrain System
+❌ No Animation System
+❌ No AI Navigation
+```
+
+#### What We Need for MMORPG
+
+```
+✅ High Performance (120+ fps)
+✅ 100K+ Polygons per scene
+✅ Advanced Physics
+✅ HDRP/URP Lighting
+✅ Native Multiplayer (Authority Server)
+✅ Persistent World Storage
+✅ Terrain & Foliage Systems
+✅ Animation State Machines
+✅ AI Pathfinding (NavMesh)
+✅ Asset Streaming
+✅ Modding Support
+✅ Anti-Cheat Systems
+```
+
+### 1.2 Unity Migration Strategy
+
+#### Phase 1: Foundation (Month 1-2)
+
+**Objective:** Set up Unity project and core infrastructure
+
+**Tasks:**
+
+1. **Project Setup**
+  - Unity 2023 LTS (Long Term Support)
+  - URP (Universal Render Pipeline) for cross-platform
+  - Input System (New Input System)
+  - Addressables for asset loading
+  - Version Control (Git LFS for large assets)
+2. **Asset Pipeline**
+  ```
+   React/Three.js → glTF → Unity
+   - Export all 3D models as glTF
+   - Use GLTFUtility or glTFast for import
+   - Convert materials to URP shaders
+   - Optimize meshes (LOD groups)
+   - Set up animation rigs
+  ```
+3. **Core Architecture**
+  ```
+   THEHIVE-Unity/
+   ├── Assets/
+   │   ├── Scripts/
+   │   │   ├── Managers/          (Singleton managers)
+   │   │   ├── Systems/          (Combat, Crafting, etc.)
+   │   │   ├── Network/          (Multiplayer)
+   │   │   ├── UI/               (UMG/Unity UI)
+   │   │   └── Data/             (ScriptableObjects)
+   │   ├── Models/
+   │   ├── Materials/
+   │   ├── Animations/
+   │   ├── Scenes/
+   │   └── Prefabs/
+   ├── Packages/
+   └── ProjectSettings/
+  ```
+4. **Scripting Standards**
+  - C# with .NET 6.0
+  - Singleton pattern for managers
+  - Event-based communication
+  - Dependency injection
+  - Async/await for networking
+
+**Deliverables:**
+
+- Unity project with all assets imported
+- Core manager system framework
+- Basic scene navigation
+- Input handling
+
+#### Phase 2: Core Systems (Month 2-4)
+
+**Objective:** Implement MMORPG foundation systems
+
+**A. World System**
+
+```csharp
+// WorldManager.cs
+public class WorldManager : MonoBehaviour
+{
+    public static WorldManager Instance { get; private set; }
+    
+    public List<World> Worlds = new List<World>();
+    public World CurrentWorld { get; private set; }
+    
+    public void SwitchWorld(string worldId)
+    {
+        // Unload current world
+        // Load new world
+        // Teleport player
+    }
+    
+    public void SpawnEntity(Entity entity)
+    {
+        // Instantiate prefab
+        // Register with network
+    }
+}
+```
+
+**World Types:**
+
+- **THE HIVE Core** (Central hub, safe zone)
+- **Sandbox Worlds** (Player-created, instanced)
+- **PvE Dungeons** (Instanced, 5-20 players)
+- **PvP Arenas** (Instanced, 2-10 players)
+- **Guild Castles** (Persistent, guild-owned)
+- **Enclaves** (Persistent, faction-controlled)
+
+**B. Network Architecture**
+
+**Option 1: Mirror Networking (Simpler)**
+
+```
+✅ Easy to set up
+✅ Good for prototyping
+✅ Built-in authority
+❌ Limited to ~100 players per server
+❌ No built-in scaling
+```
+
+**Option 2: Fish-Net (Recommended)**
+
+```
+✅ High performance
+✅ Scalable architecture
+✅ Predictive client-side prediction
+✅ Lag compensation
+✅ Built-in anti-cheat hooks
+✅ Supports dedicated servers
+✅ 1,000+ concurrent players
+```
+
+**Option 3: Netcode for GameObjects (Unity Official)**
+
+```
+✅ Unity-supported
+✅ Good documentation
+✅ Integrates with Unity services
+❌ Less flexible
+❌ Limited to 100-200 players
+```
+
+**Recommended: Fish-Net**
+
+- Better performance
+- More scalable
+- Active development
+- Community support
+
+**Network Topology:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     DEDICATED SERVER                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
+│  │  World      │  │  Combat     │  │  Social     │          │
+│  │  Manager   │  │  System     │  │  System     │          │
+│  └─────────────┘  └─────────────┘  └─────────────┘          │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                    NETWORK MANAGER                       │  │
+│  │  - Authentication                                      │  │
+│  │  - Session Management                                  │  │
+│  │  - Entity Replication                                  │  │
+│  │  - RPC Handling                                        │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+         │              │              │
+         ▼              ▼              ▼
+   ┌──────────┐    ┌──────────┐    ┌──────────┐
+   │  Client  │    │  Client  │    │  Client  │
+   │   1      │    │   2      │    │   N      │
+   └──────────┘    └──────────┘    └──────────┘
+```
+
+**C. Entity System**
+
+```csharp
+// Base Entity Class
+[Serializable]
+public abstract class Entity : NetworkBehaviour
+{
+    [SyncVar] public string Id;
+    [SyncVar] public string Name;
+    [SyncVar] public EntityType Type;
+    [SyncVar] public Vector3 Position;
+    [SyncVar] public Quaternion Rotation;
+    
+    public virtual void Initialize() { }
+    public virtual void Update() { }
+    public virtual void OnNetworkSpawn() { }
+}
+
+// Player Entity
+public class Player : Entity
+{
+    [SyncVar] public string UserId;
+    [SyncVar] public int Level;
+    [SyncVar] public string Class;
+    [SyncVar] public int Health;
+    [SyncVar] public int Mana;
+    [SyncVar] public int Stamina;
+    
+    public CharacterController Controller;
+    public Animator Animator;
+    public PlayerInventory Inventory;
+    public PlayerEquipment Equipment;
+    public PlayerSkills Skills;
+    
+    [Command]
+    public void CmdMove(Vector3 direction)
+    {
+        // Server-side movement validation
+        // Anti-cheat checks
+        // Broadcast to other clients
+    }
+    
+    [Command]
+    public void CmdUseSkill(string skillId, string targetId)
+    {
+        // Server-side skill validation
+        // Cooldown checks
+        // Target validation
+        // Damage calculation
+    }
+}
+
+// NPC Entity
+public class NPC : Entity
+{
+    [SyncVar] public string NpcId;
+    [SyncVar] public string DialogueId;
+    [SyncVar] public string QuestId;
+    [SyncVar] public string Faction;
+    [SyncVar] public int Health;
+    
+    public NavMeshAgent Agent;
+    public NPCStateMachine StateMachine;
+    
+    public enum NPCType { Merchant, QuestGiver, Enemy, Friendly }
+}
+```
+
+**D. Combat System**
+
+```csharp
+// CombatManager.cs
+public class CombatManager : NetworkBehaviour
+{
+    [ServerRpc]
+    public void AttackServerRpc(string attackerId, string targetId, string skillId)
+    {
+        var attacker = GetEntity(attackerId);
+        var target = GetEntity(targetId);
+        var skill = SkillDatabase.Get(skillId);
+        
+        // Validate
+        if (!CanAttack(attacker, target, skill)) return;
+        
+        // Calculate damage
+        int damage = CalculateDamage(attacker, target, skill);
+        
+        // Apply effects
+        ApplyEffects(target, skill.Effects);
+        
+        // Sync to clients
+        Clients.ReceiveDamage(targetId, damage);
+        
+        // Check for kill
+        if (target.Health <= 0)
+        {
+            OnDeath(target, attacker);
+        }
+    }
+    
+    private int CalculateDamage(Entity attacker, Entity target, Skill skill)
+    {
+        // Base damage
+        int damage = skill.BaseDamage;
+        
+        // Attacker stats
+        damage += attacker.Stats.Attack;
+        
+        // Target defense
+        damage = Mathf.Max(1, damage - target.Stats.Defense / 2);
+        
+        // Random variation
+        damage = Mathf.RoundToInt(damage * UnityEngine.Random.Range(0.9f, 1.1f));
+        
+        // Critical hit
+        if (UnityEngine.Random.value < attacker.Stats.CriticalRate)
+        {
+            damage = Mathf.RoundToInt(damage * attacker.Stats.CriticalMultiplier);
+        }
+        
+        return damage;
+    }
+}
+
+// Damage Types
+public enum DamageType
+{
+    Physical,
+    Magic,
+    Fire,
+    Ice,
+    Lightning,
+    Poison,
+    Holy,
+    Dark
+}
+
+// Combat Stats
+[Serializable]
+public class CombatStats
+{
+    public int Health = 100;
+    public int MaxHealth = 100;
+    public int Mana = 50;
+    public int MaxMana = 50;
+    public int Stamina = 100;
+    public int MaxStamina = 100;
+    
+    public int Attack = 10;
+    public int Defense = 10;
+    public int MagicAttack = 10;
+    public int MagicDefense = 10;
+    public float CriticalRate = 0.05f;
+    public float CriticalMultiplier = 1.5f;
+    public float AttackSpeed = 1.0f;
+    public float MoveSpeed = 5.0f;
+}
+```
+
+**E. Guild &amp; Faction System**
+
+```csharp
+// Guild.cs
+[Serializable]
+public class Guild : NetworkBehaviour
+{
+    [SyncVar] public string Id;
+    [SyncVar] public string Name;
+    [SyncVar] public string Tag;
+    [SyncVar] public string LeaderId;
+    [SyncVar] public List<string> Members = new List<string>();
+    [SyncVar] public List<string> Officers = new List<string>();
+    [SyncVar] public int Level;
+    [SyncVar] public long Experience;
+    [SyncVar] public string Motd;
+    
+    [SyncVar] public string CastleId; // Guild hall/castle
+    [SyncVar] public List<string> Claims = new List<string>(); // Territories
+    
+    public GuildRank GetMemberRank(string userId)
+    {
+        if (userId == LeaderId) return GuildRank.Leader;
+        if (Officers.Contains(userId)) return GuildRank.Officer;
+        if (Members.Contains(userId)) return GuildRank.Member;
+        return GuildRank.None;
+    }
+}
+
+public enum GuildRank
+{
+    None,
+    Recruit,
+    Member,
+    Officer,
+    Leader
+}
+
+// GuildManager.cs
+public class GuildManager : NetworkBehaviour
+{
+    public Dictionary<string, Guild> Guilds = new Dictionary<string, Guild>();
+    public Dictionary<string, string> PlayerGuild = new Dictionary<string, string>();
+    
+    [ServerRpc]
+    public void CreateGuildServerRpc(string name, string tag, string leaderId)
+    {
+        var guild = new Guild
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = name,
+            Tag = tag,
+            LeaderId = leaderId
+        };
+        
+        guild.Members.Add(leaderId);
+        Guilds.Add(guild.Id, guild);
+        PlayerGuild.Add(leaderId, guild.Id);
+        
+        // Spawn guild hall
+        SpawnGuildHall(guild);
+    }
+    
+    [ServerRpc]
+    public void InviteToGuildServerRpc(string guildId, string leaderId, string targetId)
+    {
+        // Validate leader
+        var guild = Guilds[guildId];
+        if (guild.LeaderId != leaderId && !guild.Officers.Contains(leaderId))
+            return;
+        
+        // Send invite to target
+        var target = GetPlayer(targetId);
+        target.ReceiveGuildInvite(guildId);
+    }
+    
+    [ServerRpc]
+    public void ClaimTerritoryServerRpc(string guildId, string leaderId, string territoryId)
+    {
+        // Validate
+        var guild = Guilds[guildId];
+        if (guild.LeaderId != leaderId) return;
+        
+        // Check requirements
+        if (!CanClaimTerritory(guild, territoryId)) return;
+        
+        // Claim
+        guild.Claims.Add(territoryId);
+        
+        // Broadcast
+        Clients.TerritoryClaimed(guildId, territoryId);
+    }
+}
+```
+
+**F. Castle &amp; Enclave System**
+
+```csharp
+// Castle.cs
+[Serializable]
+public class Castle : NetworkBehaviour
+{
+    [SyncVar] public string Id;
+    [SyncVar] public string Name;
+    [SyncVar] public string GuildId;
+    [SyncVar] public Vector3 Position;
+    [SyncVar] public int Level;
+    [SyncVar] public CastleType Type;
+    
+    [SyncVar] public int Health;
+    [SyncVar] public int MaxHealth;
+    [SyncVar] public List<string> Defenses = new List<string>();
+    [SyncVar] public List<string> Resources = new List<string>();
+    [SyncVar] public List<string> Upgrades = new List<string>();
+    
+    public enum CastleType
+    {
+        Outpost,    // Small, basic defenses
+        Fortress,   // Medium, walls, towers
+        Citadel,    // Large, multiple buildings
+        Capital     // Massive, city-scale
+    }
+    
+    public void TakeDamage(int amount)
+    {
+        Health = Mathf.Clamp(Health - amount, 0, MaxHealth);
+        
+        if (Health <= 0)
+        {
+            OnDestroyed();
+        }
+    }
+    
+    public void Upgrade(CastleUpgrade upgrade)
+    {
+        Level++;
+        MaxHealth += upgrade.HealthBonus;
+        Health = MaxHealth;
+        Upgrades.Add(upgrade.Id);
+    }
+}
+
+// Enclave.cs
+[Serializable]
+public class Enclave : NetworkBehaviour
+{
+    [SyncVar] public string Id;
+    [SyncVar] public string Name;
+    [SyncVar] public string FactionId;
+    [SyncVar] public Vector3 Position;
+    [SyncVar] public int Level;
+    
+    [SyncVar] public int Influence;
+    [SyncVar] public List<string> Buildings = new List<string>();
+    [SyncVar] public List<string> Resources = new List<string>();
+    [SyncVar] public List<string> Buffs = new List<string>();
+    
+    // Enclave provides bonuses to faction members
+    public List<EnclaveBuff> GetBuffs()
+    {
+        return Buffs.Select(id => BuffDatabase.Get(id)).ToList();
+    }
+}
+
+// CastleManager.cs
+public class CastleManager : NetworkBehaviour
+{
+    public Dictionary<string, Castle> Castles = new Dictionary<string, Castle>();
+    public Dictionary<string, Enclave> Enclaves = new Dictionary<string, Enclave>();
+    
+    public List<CastleUpgrade> Upgrades = new List<CastleUpgrade>();
+    public List<EnclaveBuff> Buffs = new List<EnclaveBuff>();
+    
+    [ServerRpc]
+    public void BuildCastleServerRpc(string guildId, string leaderId, Vector3 position, CastleType type)
+    {
+        var guild = GuildManager.Instance.Guilds[guildId];
+        
+        // Validate leader
+        if (guild.LeaderId != leaderId) return;
+        
+        // Check requirements
+        if (!CanBuildCastle(guild, type)) return;
+        
+        // Check position
+        if (!IsValidCastlePosition(position)) return;
+        
+        // Build
+        var castle = new Castle
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = $"{guild.Name}'s {type}",
+            GuildId = guildId,
+            Position = position,
+            Type = type,
+            Level = 1,
+            Health = 1000 * (int)type,
+            MaxHealth = 1000 * (int)type
+        };
+        
+        Castles.Add(castle.Id, castle);
+        guild.CastleId = castle.Id;
+        
+        // Spawn in world
+        SpawnCastle(castle);
+    }
+    
+    [ServerRpc]
+    public void AttackCastleServerRpc(string attackerGuildId, string defenderCastleId)
+    {
+        var castle = Castles[defenderCastleId];
+        var attackerGuild = GuildManager.Instance.Guilds[attackerGuildId];
+        
+        // Validate
+        if (!CanAttackCastle(attackerGuild, castle)) return;
+        
+        // Start siege
+        StartSiege(attackerGuildId, defenderCastleId);
+    }
+}
+```
+
+**G. PvP &amp; PvE Systems**
+
+```csharp
+// PvPManager.cs
+public class PvPManager : NetworkBehaviour
+{
+    public enum PvPMode
+    {
+        Peaceful,      // No PvP
+        Faction,       // Only faction enemies
+        Guild,         // Only guild enemies  
+        Open,          // Anyone
+        Arena          // Instanced PvP
+    }
+    
+    [SyncVar] public PvPMode CurrentMode = PvPMode.Faction;
+    
+    [ServerRpc]
+    public void RequestDuelServerRpc(string challengerId, string targetId)
+    {
+        var challenger = GetPlayer(challengerId);
+        var target = GetPlayer(targetId);
+        
+        // Validate
+        if (!CanDuel(challenger, target)) return;
+        
+        // Send duel request
+        target.ReceiveDuelRequest(challengerId);
+    }
+    
+    [ServerRpc]
+    public void AcceptDuelServerRpc(string challengerId, string targetId)
+    {
+        // Create arena instance
+        var arena = ArenaManager.Instance.CreateArena();
+        
+        // Teleport players
+        var challenger = GetPlayer(challengerId);
+        var target = GetPlayer(targetId);
+        
+        challenger.TeleportTo(arena.ChallengerSpawn);
+        target.TeleportTo(arena.DefenderSpawn);
+        
+        // Start duel
+        StartDuel(arena.Id, challengerId, targetId);
+    }
+    
+    [ServerRpc]
+    public void FlagForPvPServerRpc(string playerId)
+    {
+        var player = GetPlayer(playerId);
+        player.IsPvPFlagged = !player.IsPvPFlagged;
+        
+        // Notify
+        Clients.PlayerPvPStatusChanged(playerId, player.IsPvPFlagged);
+    }
+}
+
+// PvEManager.cs
+public class PvEManager : NetworkBehaviour
+{
+    public Dictionary<string, Dungeon> Dungeons = new Dictionary<string, Dungeon>();
+    public Dictionary<string, WorldBoss> Bosses = new Dictionary<string, WorldBoss>();
+    public Dictionary<string, PublicEvent> Events = new Dictionary<string, PublicEvent>();
+    
+    [ServerRpc]
+    public void EnterDungeonServerRpc(string playerId, string dungeonId, int difficulty)
+    {
+        var player = GetPlayer(playerId);
+        var dungeon = Dungeons[dungeonId];
+        
+        // Validate
+        if (!CanEnterDungeon(player, dungeon, difficulty)) return;
+        
+        // Create instance
+        var instance = CreateDungeonInstance(dungeonId, difficulty);
+        
+        // Teleport player
+        player.TeleportTo(instance.Entrance);
+        
+        // Add to instance
+        instance.AddPlayer(playerId);
+    }
+    
+    [ServerRpc]
+    public void StartWorldBossServerRpc(string bossId)
+    {
+        var boss = Bosses[bossId];
+        
+        // Validate spawn conditions
+        if (!CanSpawnBoss(boss)) return;
+        
+        // Spawn boss
+        var instance = SpawnWorldBoss(boss);
+        
+        // Announce
+        AnnounceBossSpawn(bossId, instance.Position);
+    }
+}
+
+// Dungeon Types
+public enum DungeonType
+{
+    Solo,          // 1 player
+    Party,         // 2-5 players
+    Raid,          // 10-20 players
+    Open,          // Public instance
+    Guild,         // Guild-only
+    PvPvE          // PvP enabled
+}
+```
+
+**H. Persistent Storage**
+
+```csharp
+// Database Architecture
+
+// Option 1: SQLite (Single Server)
+// ✅ Simple setup
+// ✅ Good for testing
+// ❌ No scaling
+// ❌ No high availability
+
+// Option 2: MongoDB (Recommended for Unity)
+// ✅ JSON-like documents
+// ✅ Flexible schema
+// ✅ Good performance
+// ✅ Horizontal scaling
+// ✅ Unity has good drivers
+
+// Option 3: PostgreSQL
+// ✅ Relational data
+// ✅ ACID compliance
+// ✅ Complex queries
+// ❌ More rigid schema
+
+// Option 4: Firebase Realtime Database
+// ✅ Real-time sync
+// ✅ Easy setup
+// ✅ Google infrastructure
+// ❌ Cost at scale
+// ❌ Limited query capabilities
+
+// Recommended: MongoDB
+// - Player data as documents
+// - Inventory as embedded arrays
+// - Guilds as separate collection
+// - World state as separate collection
+
+// Data Models
+
+// Player Data
+[Serializable]
+[BsonCollection("players")]
+public class PlayerData
+{
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string Id { get; set; }
+    
+    public string UserId { get; set; }
+    public string Username { get; set; }
+    public string Email { get; set; }
+    
+    // Character
+    public CharacterData Character { get; set; }
+    
+    // Progress
+    public int Level { get; set; }
+    public long Experience { get; set; }
+    public List<Achievement> Achievements { get; set; }
+    public List<Mission> CompletedMissions { get; set; }
+    
+    // Inventory
+    public InventoryData Inventory { get; set; }
+    public EquipmentData Equipment { get; set; }
+    
+    // Skills
+    public Dictionary<string, SkillData> Skills { get; set; }
+    
+    // Social
+    public List<string> Friends { get; set; }
+    public List<string> Blocked { get; set; }
+    public string GuildId { get; set; }
+    
+    // Settings
+    public PlayerSettings Settings { get; set; }
+    
+    // Last login
+    public DateTime LastLogin { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+// World Data
+[Serializable]
+[BsonCollection("worlds")]
+public class WorldData
+{
+    [BsonId]
+    public string Id { get; set; }
+    
+    public string Name { get; set; }
+    public WorldType Type { get; set; }
+    public string OwnerId { get; set; } // For sandbox worlds
+    public string GuildId { get; set; } // For guild worlds
+    
+    // Persistent entities
+    public List<PersistentEntity> Entities { get; set; }
+    public List<Building> Buildings { get; set; }
+    public List<Voxel> Voxels { get; set; }
+    
+    // World state
+    public Dictionary<string, string> Metadata { get; set; }
+    public DateTime LastUpdated { get; set; }
+}
+
+// Database Manager
+public class DatabaseManager : MonoBehaviour
+{
+    public static DatabaseManager Instance { get; private set; }
+    
+    private IMongoDatabase _database;
+    
+    public void Initialize(string connectionString, string databaseName)
+    {
+        var client = new MongoClient(connectionString);
+        _database = client.GetDatabase(databaseName);
+    }
+    
+    public async Task<PlayerData> GetPlayerData(string playerId)
+    {
+        var collection = _database.GetCollection<PlayerData>("players");
+        return await collection.Find(p => p.Id == playerId).FirstOrDefaultAsync();
+    }
+    
+    public async Task UpdatePlayerData(PlayerData player)
+    {
+        var collection = _database.GetCollection<PlayerData>("players");
+        await collection.ReplaceOneAsync(p => p.Id == player.Id, player);
+    }
+    
+    public async Task<WorldData> GetWorldData(string worldId)
+    {
+        var collection = _database.GetCollection<WorldData>("worlds");
+        return await collection.Find(w => w.Id == worldId).FirstOrDefaultAsync();
+    }
+    
+    public async Task UpdateWorldData(WorldData world)
+    {
+        var collection = _database.GetCollection<WorldData>("worlds");
+        await collection.ReplaceOneAsync(w => w.Id == world.Id, world);
+    }
+}
+```
+
+#### Phase 3: Content &amp; Polish (Month 4-6)
+
+**A. World Building**
+
+- Terrain generation (Unity Terrain + HDRP)
+- Foliage system (Unity Vegetation)
+- Biome system (Forest, Desert, Mountain, etc.)
+- Day/Night cycle
+- Weather system
+
+**B. Asset Creation**
+
+- Character models (Mixamo + custom)
+- Animations (Idle, Walk, Run, Attack, etc.)
+- Buildings (Modular system)
+- Weapons &amp; Armor
+- VFX (Particle systems)
+- SFX (FMOD or Unity Audio)
+
+**C. UI/UX**
+
+- Main menu
+- Character creation
+- Inventory system
+- Crafting interface
+- Social panels
+- World map
+- Minimap
+- Damage numbers
+- Cooldown timers
+
+**D. Gameplay Systems**
+
+- Loot system
+- Trading system
+- Housing system
+- Pet system
+- Mount system
+- Title system
+- Emote system
+
+**E. Testing &amp; Optimization**
+
+- Performance profiling
+- Memory management
+- Network optimization
+- Anti-cheat implementation
+- Stress testing (100+ players)
+
+#### Phase 4: Launch Preparation (Month 6)
+
+**A. Beta Testing**
+
+- Closed beta (100 players)
+- Open beta (1,000 players)
+- Bug fixing
+- Balance adjustments
+
+**B. Server Infrastructure**
+
+- Dedicated server hosting
+- Load balancing
+- Database scaling
+- Backup systems
+- Monitoring
+
+**C. Community Systems**
+
+- Discord integration
+- Forums
+- Wiki
+- Bug reporting
+- Feedback system
+
+**D. Monetization**
+
+- Cosmetic shop
+- Battle pass
+- Subscription model
+- Donation system
+
+**E. Marketing**
+
+- Trailer
+- Website
+- Social media
+- Influencer partnerships
+- Press releases
+
+### 1.3 Unity Project Structure
+
+```
+THEHIVE-Unity/
+├── Assets/
+│   ├── _Scripts/
+│   │   ├── Core/
+│   │   │   ├── GameManager.cs          # Main game controller
+│   │   │   ├── NetworkManager.cs       # Fish-Net setup
+│   │   │   ├── SceneManager.cs         # Scene transitions
+│   │   │   └── AudioManager.cs         # Sound system
+│   │   │
+│   │   ├── Managers/
+│   │   │   ├── WorldManager.cs
+│   │   │   ├── EntityManager.cs
+│   │   │   ├── PlayerManager.cs
+│   │   │   ├── CombatManager.cs
+│   │   │   ├── GuildManager.cs
+│   │   │   ├── CastleManager.cs
+│   │   │   ├── PvPManager.cs
+│   │   │   ├── PvEManager.cs
+│   │   │   ├── InventoryManager.cs
+│   │   │   ├── CraftingManager.cs
+│   │   │   ├── QuestManager.cs
+│   │   │   ├── SocialManager.cs
+│   │   │   └── DatabaseManager.cs
+│   │   │
+│   │   ├── Entities/
+│   │   │   ├── Player/
+│   │   │   │   ├── Player.cs
+│   │   │   │   ├── PlayerMovement.cs
+│   │   │   │   ├── PlayerCombat.cs
+│   │   │   │   ├── PlayerInventory.cs
+│   │   │   │   └── PlayerEquipment.cs
+│   │   │   │
+│   │   │   ├── NPC/
+│   │   │   │   ├── NPC.cs
+│   │   │   │   ├── NPCStateMachine.cs
+│   │   │   │   ├── NPCDialogue.cs
+│   │   │   │   └── NPCQuest.cs
+│   │   │   │
+│   │   │   ├── Buildings/
+│   │   │   │   ├── Building.cs
+│   │   │   │   ├── Castle.cs
+│   │   │   │   └── Enclave.cs
+│   │   │   │
+│   │   │   └── Items/
+│   │   │       ├── Item.cs
+│   │   │       ├── Weapon.cs
+│   │   │       ├── Armor.cs
+│   │   │       ├── Consumable.cs
+│   │   │       └── CraftingMaterial.cs
+│   │   │
+│   │   ├── Network/
+│   │   │   ├── NetworkEntity.cs
+│   │   │   ├── NetworkPlayer.cs
+│   │   │   ├── NetworkNPC.cs
+│   │   │   └── RPCs/
+│   │   │       ├── CombatRPCs.cs
+│   │   │       ├── MovementRPCs.cs
+│   │   │       ├── SocialRPCs.cs
+│   │   │       └── WorldRPCs.cs
+│   │   │
+│   │   ├── Systems/
+│   │   │   ├── Combat/
+│   │   │   │   ├── DamageCalculator.cs
+│   │   │   │   ├── HitDetection.cs
+│   │   │   │   └── SkillSystem.cs
+│   │   │   │
+│   │   │   ├── Inventory/
+│   │   │   │   ├── InventorySlot.cs
+│   │   │   │   ├── EquipmentSlot.cs
+│   │   │   │   └── LootSystem.cs
+│   │   │   │
+│   │   │   ├── Crafting/
+│   │   │   │   ├── Recipe.cs
+│   │   │   │   ├── CraftingStation.cs
+│   │   │   │   └── RecipeDatabase.cs
+│   │   │   │
+│   │   │   ├── Quests/
+│   │   │   │   ├── Quest.cs
+│   │   │   │   ├── QuestObjective.cs
+│   │   │   │   └── QuestDatabase.cs
+│   │   │   │
+│   │   │   └── Social/
+│   │   │       ├── GuildSystem.cs
+│   │   │       ├── PartySystem.cs
+│   │   │       ├── FriendSystem.cs
+│   │   │       └── ChatSystem.cs
+│   │   │
+│   │   ├── UI/
+│   │   │   ├── Screens/
+│   │   │   │   ├── MainMenuScreen.cs
+│   │   │   │   ├── CharacterCreationScreen.cs
+│   │   │   │   ├── GameScreen.cs
+│   │   │   │   └── LoadingScreen.cs
+│   │   │   │
+│   │   │   ├── Panels/
+│   │   │   │   ├── InventoryPanel.cs
+│   │   │   │   ├── CharacterPanel.cs
+│   │   │   │   ├── QuestPanel.cs
+│   │   │   │   ├── SocialPanel.cs
+│   │   │   │   ├── CraftingPanel.cs
+│   │   │   │   ├── ShopPanel.cs
+│   │   │   │   └── SettingsPanel.cs
+│   │   │   │
+│   │   │   ├── HUD/
+│   │   │   │   ├── HealthBar.cs
+│   │   │   │   ├── ManaBar.cs
+│   │   │   │   ├── StaminaBar.cs
+│   │   │   │   ├── XPBar.cs
+│   │   │   │   ├── Minimap.cs
+│   │   │   │   ├── ActionBar.cs
+│   │   │   │   ├── DamageText.cs
+│   │   │   │   └── Tooltip.cs
+│   │   │   │
+│   │   │   └── Widgets/
+│   │   │       ├── Button.cs
+│   │   │       ├── Slider.cs
+│   │   │       ├── Toggle.cs
+│   │   │       └── ProgressBar.cs
+│   │   │
+│   │   ├── Data/
+│   │   │   ├── ScriptableObjects/
+│   │   │   │   ├── ItemDatabase.so
+│   │   │   │   ├── SkillDatabase.so
+│   │   │   │   ├── QuestDatabase.so
+│   │   │   │   ├── RecipeDatabase.so
+│   │   │   │   └── NPCDatabase.so
+│   │   │   │
+│   │   │   └── JSON/
+│   │   │       ├── Items.json
+│   │   │       ├── Skills.json
+│   │   │       ├── Quests.json
+│   │   │       └── Recipes.json
+│   │   │
+│   │   └── Utilities/
+│   │       ├── Extensions.cs
+│   │       ├── Helpers.cs
+│   │       ├── Pooling.cs
+│   │       └── SaveSystem.cs
+│   │
+│   ├── _Models/
+│   │   ├── Characters/
+│   │   │   ├── Player/
+│   │   │   │   ├── Male/
+│   │   │   │   │   ├── Body.fbx
+│   │   │   │   │   ├── Head.fbx
+│   │   │   │   │   └── Animations/
+│   │   │   │   └── Female/
+│   │   │   └── NPCs/
+│   │   │       ├── Humanoid/
+│   │   │       └── Creatures/
+│   │   │
+│   │   ├── Buildings/
+│   │   │   ├── Houses/
+│   │   │   ├── Castles/
+│   │   │   └── Dungeons/
+│   │   │
+│   │   ├── Items/
+│   │   │   ├── Weapons/
+│   │   │   ├── Armor/
+│   │   │   └── Consumables/
+│   │   │
+│   │   └── Environment/
+│   │       ├── Terrain/
+│   │       ├── Props/
+│   │       └── VFX/
+│   │
+│   ├── _Materials/
+│   │   ├── Character/
+│   │   ├── Building/
+│   │   ├── Item/
+│   │   └── Environment/
+│   │
+│   ├── _Animations/
+│   │   ├── Humanoid/
+│   │   │   ├── Locomotion.controller
+│   │   │   ├── Combat.controller
+│   │   │   └── Skills.controller
+│   │   └── Generic/
+│   │
+│   ├── _Prefabs/
+│   │   ├── Characters/
+│   │   ├── Buildings/
+│   │   ├── Items/
+│   │   ├── NPCs/
+│   │   ├── UI/
+│   │   └── VFX/
+│   │
+│   ├── _Scenes/
+│   │   ├── MainMenu.unity
+│   │   ├── CharacterCreation.unity
+│   │   ├── World_HIVE.unity
+│   │   ├── World_Sandbox.unity
+│   │   └── Dungeons/
+│   │
+│   └── _Textures/
+│       ├── Characters/
+│       ├── Buildings/
+│       ├── Items/
+│       └── UI/
+│
+├── Packages/
+│   ├── Fish-Net/
+│   ├── Odin Inspector/        (Optional, for better editor)
+│   ├── DOTween/              (For animations)
+│   ├── Addressables/         (For asset loading)
+│   └── FMOD/                 (For audio)
+│
+├── ProjectSettings/
+│   ├── Audio/
+│   ├── Graphics/
+│   ├── Input/
+│   ├── Network/
+│   ├── Physics/
+│   └── Player/
+│
+├── Server/
+│   ├── DedicatedServer/
+│   │   ├── ServerBuild/
+│   │   └── Server.cs
+│   └── Dockerfile
+│
+└── Documentation/
+    ├── Architecture.md
+    ├── API.md
+    ├── Database.md
+    └── Setup.md
+```
+
+### 1.4 Technical Specifications
+
+#### Hardware Requirements
+
+**Development Machines:**
+
+- OS: Windows 10/11 or macOS
+- CPU: Intel i7 / Ryzen 7 or better
+- RAM: 32GB minimum (64GB recommended)
+- GPU: RTX 3060 / RX 6700 XT or better
+- Storage: 1TB NVMe SSD (2TB recommended)
+
+**Server Requirements:**
+
+
+| Player Count | CPU     | RAM  | GPU  | Storage | Bandwidth |
+| ------------ | ------- | ---- | ---- | ------- | --------- |
+| 1-100        | 4 Core  | 8GB  | None | 100GB   | 100 Mbps  |
+| 100-500      | 8 Core  | 16GB | None | 500GB   | 1 Gbps    |
+| 500-1000     | 16 Core | 32GB | None | 1TB     | 2 Gbps    |
+| 1000-5000    | 32 Core | 64GB | None | 2TB     | 10 Gbps   |
+
+
+#### Software Requirements
+
+- Unity 2023 LTS
+- Visual Studio 2022 (Windows) or Rider (macOS)
+- Git + Git LFS
+- MongoDB 6.0+
+- Node.js (for build tools)
+- Docker (for server deployment)
+
+### 1.5 Team Requirements
+
+**Minimum Team (5 people):**
+
+1. **Technical Director** - Architecture, systems design
+2. **Unity Developer** - Core gameplay, systems
+3. **Network Engineer** - Multiplayer, server, database
+4. **3D Artist** - Models, textures, animations
+5. **UI/UX Designer** - Interface, user experience
+
+**Recommended Team (10 people):**
+
+1. Technical Director
+2. Lead Unity Developer
+3. Unity Developer x2
+4. Network Engineer
+5. Backend Engineer (Database, API)
+6. 3D Artist x2
+7. 2D Artist (UI, textures)
+8. Animator
+9. Sound Designer
+10. QA Tester
+
+**Extended Team (15+ people):**
+
+- All above +
+- Level Designer x2
+- VFX Artist
+- Technical Artist
+- Community Manager
+- Producer
+
+### 1.6 Timeline &amp; Milestones
+
+
+| Phase                     | Duration  | Milestones                                       | Deliverables                                     |
+| ------------------------- | --------- | ------------------------------------------------ | ------------------------------------------------ |
+| **Phase 1: Foundation**   | Month 1-2 | Project setup, asset pipeline, core architecture | Unity project, basic movement, simple networking |
+| **Phase 2: Core Systems** | Month 2-4 | Combat, inventory, guilds, castles, PvP/PvE      | Playable prototype, all core systems             |
+| **Phase 3: Content**      | Month 4-5 | World building, assets, UI/UX                    | Complete game world, polished systems            |
+| **Phase 4: Polish**       | Month 5-6 | Testing, optimization, balance                   | Beta-ready build                                 |
+| **Phase 5: Launch**       | Month 6   | Beta testing, server setup, marketing            | Live game                                        |
+
+
+**Detailed Timeline:**
+
+**Month 1:**
+
+- Week 1-2: Project setup, Unity installation, version control
+- Week 3-4: Asset import pipeline, basic scene setup
+
+**Month 2:**
+
+- Week 1-2: Network architecture (Fish-Net), basic multiplayer
+- Week 3-4: Entity system, player movement, basic combat
+
+**Month 3:**
+
+- Week 1-2: Inventory, equipment, loot systems
+- Week 3-4: Guild system, social features
+
+**Month 4:**
+
+- Week 1-2: Castle &amp; enclave systems
+- Week 3-4: PvP &amp; PvE systems, dungeons
+
+**Month 5:**
+
+- Week 1-2: World building, terrain, foliage
+- Week 3-4: Asset creation, animations, VFX
+
+**Month 6:**
+
+- Week 1-2: UI/UX polish, HUD, menus
+- Week 3-4: Testing, optimization, launch prep
+
+### 1.7 Budget Estimate
+
+
+| Category              | Cost (USD)            | Notes                      |
+| --------------------- | --------------------- | -------------------------- |
+| **Software Licenses** | $2,000-5,000          | Unity Pro, plugins, tools  |
+| **Hardware**          | $5,000-15,000         | Dev machines, servers      |
+| **Cloud Hosting**     | $500-5,000/month      | Depends on player count    |
+| **Asset Store**       | $1,000-5,000          | Models, animations, sounds |
+| **Team Salaries**     | $30,000-100,000/month | Depends on team size       |
+| **Marketing**         | $5,000-50,000         | Trailers, ads, influencers |
+| **Miscellaneous**     | $5,000-10,000         | Contingency                |
+| **Total (6 months)**  | **$150,000-500,000**  | Varies by scope            |
+
+
+**Cost-Saving Tips:**
+
+- Use free Unity Personal for development
+- Use free assets from Unity Asset Store
+- Use open-source plugins (Fish-Net is free)
+- Use MongoDB Atlas (free tier available)
+- Start with small team, scale up
+
+---
+
+## 🏗️ Part 2: Unreal Engine Architecture Plan
+
+### 2.1 Why Unreal Engine?
+
+**Unreal Engine 5 Advantages:**
+
+1. **Nanite** - Virtualized geometry
+  - Millions of polygons on screen
+  - No LOD management needed
+  - Automatic streaming
+2. **Lumen** - Dynamic global illumination
+  - Real-time ray tracing
+  - No bake times
+  - Reacts to scene changes
+3. **Niagara** - Advanced VFX
+  - Particle systems
+  - Fluid simulations
+  - Destruction effects
+4. **MetaHuman** - Photorealistic characters
+  - High-fidelity digital humans
+  - Realistic animations
+  - Emotion capture
+5. **World Partition** - Open world streaming
+  - Automatic level streaming
+  - Only loads visible areas
+  - Infinite world size
+6. **Mass Entity** - Large-scale simulations
+  - 1000s of AI entities
+  - Efficient crowd simulation
+  - Low CPU overhead
+7. **Replication Graph** - Scalable multiplayer
+  - Intelligent network replication
+  - Bandwidth optimization
+  - Distance-based culling
+8. **Blueprints** - Visual scripting
+  - Rapid prototyping
+  - No coding required
+  - C++ integration
+
+### 2.2 Unreal Engine Architecture
+
+#### Core Systems
+
+**A. Project Structure**
+
+```
+THEHIVE-Unreal/
+├── Config/
+│   ├── DefaultEngine.ini
+│   ├── DefaultGame.ini
+│   └── DefaultInput.ini
+│
+├── Content/
+│   ├── Characters/
+│   │   ├── Mannequins/
+│   │   ├── MetaHumans/
+│   │   ├── Animations/
+│   │   └── Materials/
+│   │
+│   ├── Environments/
+│   │   ├── Worlds/
+│   │   ├── Buildings/
+│   │   ├── Props/
+│   │   └── Foliage/
+│   │
+│   ├── Items/
+│   │   ├── Weapons/
+│   │   ├── Armor/
+│   │   └── Consumables/
+│   │
+│   ├── Effects/
+│   │   ├── Particles/
+│   │   ├── Materials/
+│   │   └── Decals/
+│   │
+│   ├── UI/
+│   │   ├── Widgets/
+│   │   ├── Styles/
+│   │   └── Textures/
+│   │
+│   ├── Sounds/
+│   │   ├── Music/
+│   │   ├── SFX/
+│   │   └── Voice/
+│   │
+│   ├── Blueprints/
+│   │   ├── Characters/
+│   │   ├── Systems/
+│   │   └── UI/
+│   │
+│   └── Maps/
+│       ├── World_HIVE.umap
+│       ├── World_Sandbox.umap
+│       └── Dungeons/
+│
+├── Source/
+│   └── THEHIVE/
+│       ├── THEHIVEGameModeBase.h/cpp
+│       ├── THEHIVEPlayerController.h/cpp
+│       ├── THEHIVECharacter.h/cpp
+│       ├── THEHIVEGameState.h/cpp
+│       ├── Systems/
+│       │   ├── World/
+│       │   ├── Combat/
+│       │   ├── Network/
+│       │   ├── Inventory/
+│       │   ├── Guild/
+│       │   ├── Castle/
+│       │   └── PvP/
+│       │
+│       ├── Components/
+│       │   ├── HealthComponent.h/cpp
+│       │   ├── ManaComponent.h/cpp
+│       │   ├── InventoryComponent.h/cpp
+│       │   ├── CombatComponent.h/cpp
+│       │   └── NetworkComponent.h/cpp
+│       │
+│       └── Actors/
+│           ├── Player/
+│           ├── NPC/
+│           ├── Buildings/
+│           └── Items/
+│
+├── Plugins/
+│   ├── FishNet/           (If using Fish-Net for UE)
+│   ├── AdvancedSessions/ (For session management)
+│   └── Steamworks/       (For Steam integration)
+│
+├── Build/
+│   ├── WindowsNoEditor/
+│   ├── LinuxNoEditor/
+│   └── DedicatedServer/
+│
+└── README.md
+```
+
+**B. Game Mode &amp; Game State**
+
+```cpp
+// THEHIVEGameModeBase.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/GameModeBase.h"
+#include "THEHIVEGameModeBase.generated.h"
+
+class ATHEHIVEGameState;
+class ATHEHIVEPlayerController;
+
+UCLASS()
+class THEHIVE_API ATHEHIVEGameModeBase : public AGameModeBase
+{
+    GENERATED_BODY()
+
+public:
+    ATHEHIVEGameModeBase();
+    
+    virtual void StartPlay() override;
+    virtual void Tick(float DeltaTime) override;
+    
+    // World management
+    UFUNCTION(BlueprintCallable, Category = "World")
+    void SwitchWorld(APlayerController* Player, const FString& WorldName);
+    
+    // Player management
+    UFUNCTION(BlueprintCallable, Category = "Player")
+    void SpawnPlayer(APlayerController* Player, const FVector& Location, const FRotator& Rotation);
+    
+    // Entity management
+    UFUNCTION(BlueprintCallable, Category = "Entity")
+    ATHEHIVECharacter* SpawnNPC(const FString& NPCId, const FVector& Location);
+    
+    // Combat
+    UFUNCTION(BlueprintCallable, Category = "Combat")
+    void HandleCombat(ATHEHIVECharacter* Attacker, ATHEHIVECharacter* Target, const FString& SkillId);
+    
+    // Guild management
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    void CreateGuild(APlayerController* Player, const FString& GuildName, const FString& GuildTag);
+    
+    // Castle management
+    UFUNCTION(BlueprintCallable, Category = "Castle")
+    void BuildCastle(APlayerController* Player, const FString& GuildId, const FVector& Location);
+
+protected:
+    UPROPERTY()
+    ATHEHIVEGameState* HIVEGameState;
+    
+    // World data
+    UPROPERTY()
+    TMap<FString, UWorld*> LoadedWorlds;
+    
+    // Entity data
+    UPROPERTY()
+    TMap<FString, ATHEHIVECharacter*> NPCs;
+};
+
+// THEHIVEGameModeBase.cpp
+#include "THEHIVEGameModeBase.h"
+#include "THEHIVEGameState.h"
+#include "THEHIVEPlayerController.h"
+#include "THEHIVECharacter.h"
+
+ATHEHIVEGameModeBase::ATHEHIVEGameModeBase()
+{
+    // Set default pawn class
+    DefaultPawnClass = ATHEHIVECharacter::StaticClass();
+    PlayerControllerClass = ATHEHIVEPlayerController::StaticClass();
+    GameStateClass = ATHEHIVEGameState::StaticClass();
+}
+
+void ATHEHIVEGameModeBase::StartPlay()
+{
+    Super::StartPlay();
+    
+    HIVEGameState = Cast<ATHEHIVEGameState>(GameState);
+    
+    // Initialize systems
+    InitializeWorlds();
+    InitializeNPCs();
+    InitializeGuilds();
+    
+    UE_LOG(LogTemp, Warning, TEXT("THE HIVE Game Mode Started"));
+}
+
+void ATHEHIVEGameModeBase::SwitchWorld(APlayerController* Player, const FString& WorldName)
+{
+    // Save current state
+    // Unload current world
+    // Load new world
+    // Teleport player
+    
+    UE_LOG(LogTemp, Warning, TEXT("Switching to world: %s"), *WorldName);
+}
+```
+
+**C. Game State**
+
+```cpp
+// THEHIVEGameState.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/GameStateBase.h"
+#include "THEHIVEGameState.generated.h"
+
+class ATHEHIVECharacter;
+class AGuild;
+class ACastle;
+
+USTRUCT(BlueprintType)
+struct FWorldData
+{
+    GENERATED_BODY()
+    
+    UPROPERTY(BlueprintReadWrite, Category = "World")
+    FString WorldId;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "World")
+    FString WorldName;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "World")
+    FString OwnerId;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "World")
+    TArray<FString> Players;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "World")
+    TArray<FString> NPCs;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "World")
+    TArray<FString> Buildings;
+};
+
+USTRUCT(BlueprintType)
+struct FGuildData
+{
+    GENERATED_BODY()
+    
+    UPROPERTY(BlueprintReadWrite, Category = "Guild")
+    FString GuildId;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "Guild")
+    FString Name;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "Guild")
+    FString Tag;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "Guild")
+    FString LeaderId;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "Guild")
+    TArray<FString> Members;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "Guild")
+    TArray<FString> Officers;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "Guild")
+    FString CastleId;
+    
+    UPROPERTY(BlueprintReadWrite, Category = "Guild")
+    TArray<FString> Claims;
+};
+
+UCLASS()
+class THEHIVE_API ATHEHIVEGameState : public AGameStateBase
+{
+    GENERATED_BODY()
+
+public:
+    ATHEHIVEGameState();
+    
+    // World data
+    UPROPERTY(BlueprintReadWrite, Replicated, Category = "World")
+    TMap<FString, FWorldData> Worlds;
+    
+    // Player data
+    UPROPERTY(BlueprintReadWrite, Replicated, Category = "Player")
+    TMap<FString, ATHEHIVECharacter*> Players;
+    
+    // Guild data
+    UPROPERTY(BlueprintReadWrite, Replicated, Category = "Guild")
+    TMap<FString, FGuildData> Guilds;
+    
+    // Castle data
+    UPROPERTY(BlueprintReadWrite, Replicated, Category = "Castle")
+    TMap<FString, ACastle*> Castles;
+    
+    // Get world by ID
+    UFUNCTION(BlueprintCallable, Category = "World")
+    FWorldData GetWorldData(const FString& WorldId);
+    
+    // Get guild by ID
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    FGuildData GetGuildData(const FString& GuildId);
+    
+    // Get player by ID
+    UFUNCTION(BlueprintCallable, Category = "Player")
+    ATHEHIVECharacter* GetPlayer(const FString& PlayerId);
+
+protected:
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+};
+
+// THEHIVEGameState.cpp
+#include "THEHIVEGameState.h"
+#include "THEHIVECharacter.h"
+#include "Guild.h"
+#include "Castle.h"
+
+ATHEHIVEGameState::ATHEHIVEGameState()
+{
+    // Enable replication
+    bReplicates = true;
+}
+
+FWorldData ATHEHIVEGameState::GetWorldData(const FString& WorldId)
+{
+    if (Worlds.Contains(WorldId))
+    {
+        return Worlds[WorldId];
+    }
+    return FWorldData();
+}
+
+FGuildData ATHEHIVEGameState::GetGuildData(const FString& GuildId)
+{
+    if (Guilds.Contains(GuildId))
+    {
+        return Guilds[GuildId];
+    }
+    return FGuildData();
+}
+
+ATHEHIVECharacter* ATHEHIVEGameState::GetPlayer(const FString& PlayerId)
+{
+    if (Players.Contains(PlayerId))
+    {
+        return Players[PlayerId];
+    }
+    return nullptr;
+}
+
+void ATHEHIVEGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    
+    DOREPLIFETIME(ATHEHIVEGameState, Worlds);
+    DOREPLIFETIME(ATHEHIVEGameState, Players);
+    DOREPLIFETIME(ATHEHIVEGameState, Guilds);
+    DOREPLIFETIME(ATHEHIVEGameState, Castles);
+}
+```
+
+**D. Network Architecture**
+
+```cpp
+// Network Architecture Options
+
+// Option 1: Unreal's Built-in Replication
+// ✅ Simple to set up
+// ✅ Good for small-scale (100-200 players)
+// ✅ Tightly integrated with engine
+// ❌ Limited to ~100 players per server
+// ❌ No built-in scaling
+
+// Option 2: Steamworks
+// ✅ Steam integration
+// ✅ Matchmaking
+// ✅ Lobby system
+// ❌ Limited to Steam users
+// ❌ No authority server
+
+// Option 3: Fish-Net for Unreal (Recommended)
+// ✅ High performance
+// ✅ Scalable architecture
+// ✅ Predictive client-side prediction
+// ✅ Lag compensation
+// ✅ Supports dedicated servers
+// ✅ 1,000+ concurrent players
+// ❌ Third-party plugin
+
+// Option 4: Custom Solution
+// ✅ Full control
+// ✅ Custom architecture
+// ❌ High development cost
+// ❌ Maintenance overhead
+
+// Recommended: Fish-Net for Unreal
+// - Best performance
+// - Most scalable
+// - Active development
+// - Good community support
+
+// Network Topology (Same as Unity, but with Unreal-specific components)
+┌─────────────────────────────────────────────────────────────┐
+│                 DEDICATED SERVER (Unreal)                       │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
+│  │  THEHIVE    │  │  Combat     │  │  Social     │          │
+│  │  GameMode   │  │  System     │  │  System     │          │
+│  └─────────────┘  └─────────────┘  └─────────────┘          │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │              UNREAL NETWORK MANAGER                        │  │
+│  │  - Replication                                              │  │
+│  │  - RPCs                                                     │  │
+│  │  - Actor Spawning                                           │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+         │              │              │
+         ▼              ▼              ▼
+   ┌──────────┐    ┌──────────┐    ┌──────────┐
+   │  Client  │    │  Client  │    │  Client  │
+   │  (UE5)   │    │  (UE5)   │    │  (UE5)   │
+   └──────────┘    └──────────┘    └──────────┘
+```
+
+**E. Entity System**
+
+```cpp
+// THEHIVECharacter.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Character.h"
+#include "Components/HealthComponent.h"
+#include "Components/ManaComponent.h"
+#include "Components/InventoryComponent.h"
+#include "THEHIVECharacter.generated.h"
+
+class UHealthComponent;
+class UManaComponent;
+class UInventoryComponent;
+class USkeletalMeshComponent;
+
+UCLASS()
+class THEHIVE_API ATHEHIVECharacter : public ACharacter
+{
+    GENERATED_BODY()
+
+public:
+    ATHEHIVECharacter();
+    
+    virtual void BeginPlay() override;
+    virtual void Tick(float DeltaTime) override;
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    
+    // Components
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UHealthComponent* HealthComponent;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UManaComponent* ManaComponent;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UInventoryComponent* InventoryComponent;
+    
+    // Character data
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Character")
+    FString CharacterId;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Character")
+    FString UserId;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Character")
+    FString CharacterName;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Character")
+    int32 Level;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Character")
+    FString Class;
+    
+    // Movement
+    UFUNCTION(Server, Reliable, WithValidation)
+    void ServerMove(const FVector& InputVector, float DeltaTime);
+    
+    // Combat
+    UFUNCTION(Server, Reliable, WithValidation)
+    void ServerAttack(const FString& SkillId, ATHEHIVECharacter* Target);
+    
+    UFUNCTION(Server, Reliable)
+    void ServerTakeDamage(int32 Damage, ATHEHIVECharacter* Attacker, const FString& SkillId);
+    
+    // Inventory
+    UFUNCTION(Server, Reliable)
+    void ServerUseItem(const FString& ItemId);
+    
+    UFUNCTION(Server, Reliable)
+    void ServerEquipItem(const FString& ItemId, EEquipmentSlot Slot);
+    
+    // Network
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+protected:
+    // Movement
+    void Move(const FVector& InputVector, float DeltaTime);
+    
+    // Combat
+    void Attack(const FString& SkillId, ATHEHIVECharacter* Target);
+    void TakeDamage(int32 Damage, ATHEHIVECharacter* Attacker, const FString& SkillId);
+    
+    // Animation
+    void UpdateAnimation();
+};
+
+// THEHIVECharacter.cpp
+#include "THEHIVECharacter.h"
+#include "Components/HealthComponent.h"
+#include "Components/ManaComponent.h"
+#include "Components/InventoryComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
+
+ATHEHIVECharacter::ATHEHIVECharacter()
+{
+    PrimaryActorTick.bCanEverTick = true;
+    bReplicates = true;
+    SetReplicateMovement(true);
+    
+    // Create components
+    HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+    ManaComponent = CreateDefaultSubobject<UManaComponent>(TEXT("ManaComponent"));
+    InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+    
+    // Camera
+    CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+    CameraBoom->SetupAttachment(RootComponent);
+    CameraBoom->TargetArmLength = 800.f;
+    CameraBoom->bUsePawnControlRotation = true;
+    
+    FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+    FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+    FollowCamera->bUsePawnControlRotation = false;
+}
+
+void ATHEHIVECharacter::BeginPlay()
+{
+    Super::BeginPlay();
+    
+    // Initialize components
+    if (HealthComponent)
+    {
+        HealthComponent->Initialize(this);
+    }
+    if (ManaComponent)
+    {
+        ManaComponent->Initialize(this);
+    }
+    if (InventoryComponent)
+    {
+        InventoryComponent->Initialize(this);
+    }
+}
+
+void ATHEHIVECharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
+    
+    // Movement
+    PlayerInputComponent->BindAxis("MoveForward", this, &ATHEHIVECharacter::MoveForward);
+    PlayerInputComponent->BindAxis("MoveRight", this, &ATHEHIVECharacter::MoveRight);
+    PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+    PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+    
+    // Actions
+    PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+    PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ATHEHIVECharacter::StartAttack);
+    PlayerInputComponent->BindAction("UseItem", IE_Pressed, this, &ATHEHIVECharacter::UseItem);
+    PlayerInputComponent->BindAction("OpenMenu", IE_Pressed, this, &ATHEHIVECharacter::OpenMenu);
+}
+
+void ATHEHIVECharacter::ServerMove_Implementation(const FVector& InputVector, float DeltaTime)
+{
+    Move(InputVector, DeltaTime);
+}
+
+bool ATHEHIVECharacter::ServerMove_Validate(const FVector& InputVector, float DeltaTime)
+{
+    // Anti-cheat validation
+    // Check if input is valid
+    // Check if player is moving too fast
+    return true;
+}
+
+void ATHEHIVECharacter::ServerAttack_Implementation(const FString& SkillId, ATHEHIVECharacter* Target)
+{
+    if (!HasAuthority() || !IsValid(Target)) return;
+    
+    Attack(SkillId, Target);
+}
+
+bool ATHEHIVECharacter::ServerAttack_Validate(const FString& SkillId, ATHEHIVECharacter* Target)
+{
+    // Validate skill
+    // Validate target
+    // Check cooldowns
+    return true;
+}
+
+void ATHEHIVECharacter::ServerTakeDamage_Implementation(int32 Damage, ATHEHIVECharacter* Attacker, const FString& SkillId)
+{
+    if (!HasAuthority()) return;
+    
+    TakeDamage(Damage, Attacker, SkillId);
+}
+
+void ATHEHIVECharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    
+    DOREPLIFETIME(ATHEHIVECharacter, CharacterId);
+    DOREPLIFETIME(ATHEHIVECharacter, UserId);
+    DOREPLIFETIME(ATHEHIVECharacter, CharacterName);
+    DOREPLIFETIME(ATHEHIVECharacter, Level);
+    DOREPLIFETIME(ATHEHIVECharacter, Class);
+}
+```
+
+**F. Component System**
+
+```cpp
+// HealthComponent.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "HealthComponent.generated.h"
+
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+class THEHIVE_API UHealthComponent : public UActorComponent
+{
+    GENERATED_BODY()
+
+public:
+    UHealthComponent();
+    
+    virtual void BeginPlay() override;
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+    
+    // Health properties
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+    float MaxHealth;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Health")
+    float CurrentHealth;
+    
+    // Functions
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    void Initialize(ATHEHIVECharacter* Character);
+    
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    void TakeDamage(float Amount, ATHEHIVECharacter* Attacker);
+    
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    void Heal(float Amount);
+    
+    UFUNCTION(BlueprintCallable, Category = "Health")
+    void Revive();
+    
+    // Events
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, UHealthComponent*, float);
+    UPROPERTY(BlueprintAssignable, Category = "Health")
+    FOnHealthChanged OnHealthChanged;
+    
+    DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeath, UHealthComponent*);
+    UPROPERTY(BlueprintAssignable, Category = "Health")
+    FOnDeath OnDeath;
+
+protected:
+    UPROPERTY()
+    ATHEHIVECharacter* OwnerCharacter;
+    
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+};
+
+// HealthComponent.cpp
+#include "HealthComponent.h"
+#include "THEHIVECharacter.h"
+
+UHealthComponent::UHealthComponent()
+{
+    PrimaryComponentTick.bCanEverTick = false;
+    bReplicates = true;
+    
+    MaxHealth = 100.f;
+    CurrentHealth = MaxHealth;
+}
+
+void UHealthComponent::BeginPlay()
+{
+    Super::BeginPlay();
+}
+
+void UHealthComponent::Initialize(ATHEHIVECharacter* Character)
+{
+    OwnerCharacter = Character;
+    CurrentHealth = MaxHealth;
+}
+
+void UHealthComponent::TakeDamage(float Amount, ATHEHIVECharacter* Attacker)
+{
+    if (CurrentHealth <= 0.f) return;
+    
+    CurrentHealth = FMath::Clamp(CurrentHealth - Amount, 0.f, MaxHealth);
+    
+    // Broadcast health changed
+    OnHealthChanged.Broadcast(this, CurrentHealth);
+    
+    // Check death
+    if (CurrentHealth <= 0.f)
+    {
+        OnDeath.Broadcast(this);
+    }
+}
+
+void UHealthComponent::Heal(float Amount)
+{
+    CurrentHealth = FMath::Clamp(CurrentHealth + Amount, 0.f, MaxHealth);
+    OnHealthChanged.Broadcast(this, CurrentHealth);
+}
+
+void UHealthComponent::Revive()
+{
+    CurrentHealth = MaxHealth;
+    OnHealthChanged.Broadcast(this, CurrentHealth);
+}
+
+void UHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    
+    DOREPLIFETIME(UHealthComponent, CurrentHealth);
+}
+```
+
+**G. Guild &amp; Castle System**
+
+```cpp
+// Guild.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Guild.generated.h"
+
+class ATHEHIVECharacter;
+class ACastle;
+
+UCLASS()
+class THEHIVE_API AGuild : public AActor
+{
+    GENERATED_BODY()
+
+public:
+    AGuild();
+    
+    virtual void BeginPlay() override;
+    
+    // Guild properties
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    FString GuildId;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    FString Name;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    FString Tag;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    FString LeaderId;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    TArray<FString> Members;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    TArray<FString> Officers;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    int32 Level;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    int64 Experience;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    FString Motd;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    FString CastleId;
+    
+    UPROPERTY(Replicated, BlueprintReadWrite, Category = "Guild")
+    TArray<FString> Claims;
+    
+    // Functions
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    void AddMember(const FString& UserId);
+    
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    void RemoveMember(const FString& UserId);
+    
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    void PromoteToOfficer(const FString& UserId);
+    
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    void DemoteOfficer(const FString& UserId);
+    
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    void TransferLeadership(const FString& NewLeaderId);
+    
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    void ClaimTerritory(const FString& TerritoryId);
+    
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    void BuildCastle(const FVector& Location);
+    
+    // Get member rank
+    UFUNCTION(BlueprintCallable, Category = "Guild")
+    EGuildRank GetMemberRank(const FString& UserId);
+
+protected:
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+};
+
+UENUM(BlueprintType)
+enum class EGuildRank
+{
+    None,
+    Recruit,
+    Member,
+    Officer,
+    Leader
+};
+
+// Guild.cpp
+#include "Guild.h"
+#include "THEHIVECharacter.h"
+#include "Castle.h"
+
+AGuild::AGuild()
+{
+    PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
+    
+    Level = 1;
+    Experience = 0;
+}
+
+void AGuild::BeginPlay()
+{
+    Super::BeginPlay();
+}
+
+void AGuild::AddMember(const FString& UserId)
+{
+    if (!Members.Contains(UserId) && !Officers.Contains(UserId) && LeaderId != UserId)
+    {
+        Members.Add(UserId);
+    }
+}
+
+void AGuild::RemoveMember(const FString& UserId)
+{
+    Members.Remove(UserId);
+    Officers.Remove(UserId);
+}
+
+void AGuild::PromoteToOfficer(const FString& UserId)
+{
+    if (Members.Contains(UserId))
+    {
+        Members.Remove(UserId);
+        Officers.Add(UserId);
+    }
+}
+
+void AGuild::DemoteOfficer(const FString& UserId)
+{
+    if (Officers.Contains(UserId))
+    {
+        Officers.Remove(UserId);
+        Members.Add(UserId);
+    }
+}
+
+void AGuild::TransferLeadership(const FString& NewLeaderId)
+{
+    if (Officers.Contains(NewLeaderId) || Members.Contains(NewLeaderId))
+    {
+        Officers.Remove(NewLeaderId);
+        Members.Remove(NewLeaderId);
+        
+        FString OldLeader = LeaderId;
+        LeaderId = NewLeaderId;
+        Officers.Add(OldLeader);
+    }
+}
+
+void AGuild::ClaimTerritory(const FString& TerritoryId)
+{
+    if (!Claims.Contains(TerritoryId))
+    {
+        Claims.Add(TerritoryId);
+    }
+}
+
+void AGuild::BuildCastle(const FVector& Location)
+{
+    // Spawn castle
+    UWorld* World = GetWorld();
+    if (World)
+    {
+        ACastle* Castle = World->SpawnActor<ACastle>(Location, FRotator::ZeroRotator);
+        if (Castle)
+        {
+            Castle->GuildId = GuildId;
+            CastleId = Castle->CastleId;
+        }
+    }
+}
+
+EGuildRank AGuild::GetMemberRank(const FString& UserId)
+{
+    if (UserId == LeaderId) return EGuildRank::Leader;
+    if (Officers.Contains(UserId)) return EGuildRank::Officer;
+    if (Members.Contains(UserId)) return EGuildRank::Member;
+    return EGuildRank::None;
+}
+
+void AGuild::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    
+    DOREPLIFETIME(AGuild, GuildId);
+    DOREPLIFETIME(AGuild, Name);
+    DOREPLIFETIME(AGuild, Tag);
+    DOREPLIFETIME(AGuild, LeaderId);
+    DOREPLIFETIME(AGuild, Members);
+    DOREPLIFETIME(AGuild, Officers);
+    DOREPLIFETIME(AGuild, Level);
+    DOREPLIFETIME(AGuild, Experience);
+    DOREPLIFETIME(AGuild, Motd);
+    DOREPLIFETIME(AGuild, CastleId);
+    DOREPLIFETIME(AGuild, Claims);
+}
+```
+
+**H. World Streaming System**
+
+```cpp
+// WorldStreamingManager.h
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "WorldStreamingManager.generated.h"
+
+class UWorld;
+
+UCLASS()
+class THEHIVE_API AWorldStreamingManager : public AActor
+{
+    GENERATED_BODY()
+
+public:
+    AWorldStreamingManager();
+    
+    virtual void BeginPlay() override;
+    virtual void Tick(float DeltaTime) override;
+    
+    // Load world
+    UFUNCTION(BlueprintCallable, Category = "World")
+    void LoadWorld(const FString& WorldName, APlayerController* Player);
+    
+    // Unload world
+    UFUNCTION(BlueprintCallable, Category = "World")
+    void UnloadWorld(const FString& WorldName);
+    
+    // Check if world is loaded
+    UFUNCTION(BlueprintCallable, Category = "World")
+    bool IsWorldLoaded(const FString& WorldName);
+    
+    // Get current world
+    UFUNCTION(BlueprintCallable, Category = "World")
+    UWorld* GetCurrentWorld(APlayerController* Player);
+
+protected:
+    UPROPERTY()
+    TMap<FString, UWorld*> LoadedWorlds;
+    
+    UPROPERTY()
+    TMap<FString, UWorld*> AvailableWorlds;
+    
+    // Load world from disk
+    UWorld* LoadWorldFromDisk(const FString& WorldName);
+    
+    // Unload world from memory
+    void UnloadWorldFromMemory(const FString& WorldName);
+};
+
+// WorldStreamingManager.cpp
+#include "WorldStreamingManager.h"
+#include "Engine/World.h"
+
+AWorldStreamingManager::AWorldStreamingManager()
+{
+    PrimaryActorTick.bCanEverTick = true;
+    bReplicates = true;
+}
+
+void AWorldStreamingManager::BeginPlay()
+{
+    Super::BeginPlay();
+    
+    // Load available worlds
+    LoadAvailableWorlds();
+}
+
+void AWorldStreamingManager::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    
+    // Check for worlds to unload
+    CheckForUnusedWorlds();
+}
+
+void AWorldStreamingManager::LoadWorld(const FString& WorldName, APlayerController* Player)
+{
+    if (!AvailableWorlds.Contains(WorldName)) return;
+    if (LoadedWorlds.Contains(WorldName)) return;
+    
+    UWorld* World = LoadWorldFromDisk(WorldName);
+    if (World)
+    {
+        LoadedWorlds.Add(WorldName, World);
+        
+        // Teleport player
+        if (Player)
+        {
+            APawn* Pawn = Player->GetPawn();
+            if (Pawn)
+            {
+                // Find spawn point in new world
+                FVector SpawnLocation = FindSpawnLocation(World);
+                Pawn->SetActorLocation(SpawnLocation);
+            }
+        }
+    }
+}
+
+void AWorldStreamingManager::UnloadWorld(const FString& WorldName)
+{
+    if (LoadedWorlds.Contains(WorldName))
+    {
+        // Check if any players are in this world
+        if (!HasPlayersInWorld(WorldName))
+        {
+            UnloadWorldFromMemory(WorldName);
+            LoadedWorlds.Remove(WorldName);
+        }
+    }
+}
+
+bool AWorldStreamingManager::IsWorldLoaded(const FString& WorldName)
+{
+    return LoadedWorlds.Contains(WorldName);
+}
+
+UWorld* AWorldStreamingManager::GetCurrentWorld(APlayerController* Player)
+{
+    if (!Player) return nullptr;
+    
+    APawn* Pawn = Player->GetPawn();
+    if (!Pawn) return nullptr;
+    
+    UWorld* World = Pawn->GetWorld();
+    for (const auto& Pair : LoadedWorlds)
+    {
+        if (Pair.Value == World)
+        {
+            return World;
+        }
+    }
+    
+    return nullptr;
+}
+
+UWorld* AWorldStreamingManager::LoadWorldFromDisk(const FString& WorldName)
+{
+    // Load world from disk
+    // This is a simplified version
+    // In practice, you would use UGameplayStatics::OpenLevel or similar
+    
+    FString LevelName = WorldName + ".umap";
+    
+    // Try to load the level
+    FString FullPath = FPaths::ProjectContentDir() / "Maps" / LevelName;
+    if (FPaths::FileExists(FullPath))
+    {
+        // Load the level
+        // Note: This is simplified. Actual implementation would use level streaming
+        return nullptr; // Placeholder
+    }
+    
+    return nullptr;
+}
+
+void AWorldStreamingManager::LoadAvailableWorlds()
+{
+    // Scan Maps directory for available worlds
+    FString MapsDir = FPaths::ProjectContentDir() / "Maps";
+    
+    // This is simplified. In practice, you would use FPlatformFileManager
+    // to scan the directory and find all .umap files
+}
+
+void AWorldStreamingManager::CheckForUnusedWorlds()
+{
+    // Check which worlds have no players
+    // Unload them after a delay
+}
+```
+
+### 2.3 Unreal Engine Implementation Timeline
+
+
+| Phase                          | Duration    | Milestones                                    | Deliverables                                    |
+| ------------------------------ | ----------- | --------------------------------------------- | ----------------------------------------------- |
+| **Phase 1: Foundation**        | Month 1-3   | Project setup, core systems, basic networking | UE5 project, basic movement, simple multiplayer |
+| **Phase 2: Content Migration** | Month 3-6   | Migrate all systems from Unity                | All core systems in UE5                         |
+| **Phase 3: Visual Polish**     | Month 6-9   | Nanite, Lumen, Niagara, MetaHumans            | AAA-quality visuals                             |
+| **Phase 4: Content Creation**  | Month 9-12  | World building, assets, animations            | Complete game world                             |
+| **Phase 5: Optimization**      | Month 12-15 | Performance, scaling, testing                 | Production-ready build                          |
+| **Phase 6: Launch**            | Month 15-18 | Beta testing, server setup, marketing         | Live game                                       |
+
+
+**Detailed Timeline:**
+
+**Month 1-3: Foundation**
+
+- Week 1-2: UE5 project setup, version control, plugins
+- Week 3-4: Core architecture (GameMode, GameState, PlayerController)
+- Week 5-6: Basic networking (Fish-Net or Unreal replication)
+- Week 7-8: Entity system (Character, NPC, Items)
+- Week 9-12: World streaming system
+
+**Month 3-6: Content Migration**
+
+- Week 1-4: Migrate combat, inventory, skills
+- Week 5-8: Migrate guild, castle, enclave systems
+- Week 9-12: Migrate PvP, PvE, dungeons
+
+**Month 6-9: Visual Polish**
+
+- Week 1-4: Nanite geometry (millions of polys)
+- Week 5-8: Lumen lighting (dynamic GI)
+- Week 9-12: Niagara VFX (particles, fluids)
+- Ongoing: MetaHuman characters
+
+**Month 9-12: Content Creation**
+
+- Week 1-4: Terrain and world building
+- Week 5-8: Buildings, props, environment
+- Week 9-12: Animations, VFX, SFX
+
+**Month 12-15: Optimization**
+
+- Week 1-4: Performance profiling
+- Week 5-8: Network optimization
+- Week 9-12: Memory management
+- Ongoing: Stress testing
+
+**Month 15-18: Launch**
+
+- Week 1-4: Closed beta
+- Week 5-8: Open beta
+- Week 9-12: Marketing campaign
+- Week 13-16: Launch preparation
+
+### 2.4 Unreal Engine Team Requirements
+
+**Minimum Team (8 people):**
+
+1. **Technical Director** - Architecture, systems design
+2. **Unreal Engineer x2** - Core systems, networking
+3. **3D Artist x2** - Models, textures, animations
+4. **VFX Artist** - Particles, effects
+5. **UI/UX Designer** - Interface, user experience
+6. **Sound Designer** - Audio, music
+
+**Recommended Team (15 people):**
+
+1. Technical Director
+2. Lead Unreal Engineer
+3. Unreal Engineer x3
+4. Network Engineer
+5. Backend Engineer
+6. 3D Artist x3
+7. 2D Artist
+8. VFX Artist x2
+9. Animator
+10. Level Designer x2
+11. UI/UX Designer
+12. Sound Designer
+13. QA Tester x2
+
+**Extended Team (20+ people):**
+
+- All above +
+- Technical Artist x2
+- Tools Programmer
+- Narrative Designer
+- Community Manager
+- Producer x2
+- DevOps Engineer
+
+### 2.5 Unreal Engine Budget Estimate
+
+
+| Category                 | Cost (USD)             | Notes                                       |
+| ------------------------ | ---------------------- | ------------------------------------------- |
+| **Software Licenses**    | $0-5,000               | UE5 is free until revenue, plugins may cost |
+| **Hardware**             | $10,000-30,000         | High-end dev machines, servers              |
+| **Cloud Hosting**        | $1,000-10,000/month    | Depends on player count                     |
+| **Asset Store**          | $5,000-20,000          | MetaHumans, models, animations              |
+| **Team Salaries**        | $50,000-150,000/month  | Depends on team size                        |
+| **Marketing**            | $10,000-100,000        | Trailers, ads, influencers                  |
+| **Miscellaneous**        | $10,000-20,000         | Contingency                                 |
+| **Total (12-18 months)** | **$500,000-2,000,000** | Varies by scope                             |
+
+
+**Cost-Saving Tips for Unreal:**
+
+- UE5 is free for development (5% royalty after $1M revenue)
+- Use free assets from Quixel Megascans
+- Use MetaHumans (free with UE5)
+- Use Unreal's built-in tools (no need for many plugins)
+- Start with small team, scale up
+
+### 2.6 Unreal Engine Hardware Requirements
+
+**Development Machines:**
+
+- OS: Windows 10/11 (64-bit)
+- CPU: Intel i9 / Ryzen 9 or better
+- RAM: 64GB minimum (128GB recommended for Nanite)
+- GPU: RTX 3080 / RX 6800 XT or better (RTX 4090 recommended)
+- Storage: 2TB NVMe SSD (4TB recommended)
+- Monitor: 4K or dual 1440p
+
+**Server Requirements:**
+
+
+| Player Count | CPU     | RAM   | GPU      | Storage | Bandwidth |
+| ------------ | ------- | ----- | -------- | ------- | --------- |
+| 1-200        | 8 Core  | 16GB  | None     | 500GB   | 1 Gbps    |
+| 200-1000     | 16 Core | 32GB  | None     | 2TB     | 2 Gbps    |
+| 1000-5000    | 32 Core | 64GB  | RTX 3060 | 4TB     | 10 Gbps   |
+| 5000-10000   | 64 Core | 128GB | RTX 4090 | 8TB     | 20 Gbps   |
+
+
+---
+
+## 🔄 Part 3: Migration Path Comparison
+
+### 3.1 Unity vs. Unreal Engine Comparison
+
+
+| Feature                           | Unity              | Unreal Engine 5   | Winner |
+| --------------------------------- | ------------------ | ----------------- | ------ |
+| **Ease of Use**                   | ⭐⭐⭐⭐⭐              | ⭐⭐⭐⭐              | Unity  |
+| **Learning Curve**                | Easy               | Moderate          | Unity  |
+| **C# vs C++**                     | C# (easier)        | C++ (harder)      | Unity  |
+| **Blueprint Visual Scripting**    | No                 | Yes               | Unreal |
+| **Graphics Quality**              | Good               | AAA               | Unreal |
+| **Nanite (Virtualized Geometry)** | No                 | Yes               | Unreal |
+| **Lumen (Dynamic GI)**            | No                 | Yes               | Unreal |
+| **Niagara (VFX)**                 | Particles          | Advanced          | Unreal |
+| **MetaHuman**                     | No                 | Yes               | Unreal |
+| **World Partition**               | Manual             | Automatic         | Unreal |
+| **Mass Entity**                   | No                 | Yes               | Unreal |
+| **Replication Graph**             | Manual             | Automatic         | Unreal |
+| **Built-in Multiplayer**          | Basic              | Advanced          | Unreal |
+| **Asset Store**                   | Large              | Largest           | Unreal |
+| **Cost**                          | $2,000/month (Pro) | Free (5% royalty) | Unreal |
+| **Web Export**                    | Yes                | Limited           | Unity  |
+| **Mobile Support**                | Excellent          | Good              | Unity  |
+| **VR Support**                    | Good               | Excellent         | Unreal |
+| **Performance**                   | Good               | Excellent         | Unreal |
+| **Scalability**                   | Good               | Excellent         | Unreal |
+| **Community**                     | Large              | Largest           | Unreal |
+| **Documentation**                 | Good               | Excellent         | Unreal |
+| **Plugin Ecosystem**              | Large              | Largest           | Unreal |
+| **Indie Friendly**                | Yes                | Yes               | Tie    |
+| **AAA Capable**                   | Limited            | Yes               | Unreal |
+
+
+### 3.2 Recommended Migration Path
+
+#### **Option A: Unity First, Then Unreal (Recommended)**
+
+**Phase 1: Unity (Month 1-6)**
+
+- Launch MMORPG with 1,000+ players
+- Prove game concept
+- Build community
+- Generate revenue
+
+**Phase 2: Unreal Upgrade (Month 6-18)**
+
+- Migrate to UE5 for AAA quality
+- Keep Unity version as fallback
+- Gradual migration (world by world)
+- Enhanced visuals, performance, features
+
+**Pros:**
+
+- Faster time to market
+- Lower initial risk
+- Revenue to fund Unreal migration
+- Community feedback during development
+
+**Cons:**
+
+- Double development effort
+- Migration complexity
+- Longer timeline to AAA quality
+
+#### **Option B: Unreal Only (Aggressive)**
+
+**Phase 1: Unreal Foundation (Month 1-3)**
+
+- Set up UE5 project
+- Core systems
+- Basic networking
+
+**Phase 2: Full Development (Month 3-18)**
+
+- All systems in Unreal
+- AAA quality from start
+- Direct to launch
+
+**Pros:**
+
+- Single codebase
+- AAA quality from day one
+- No migration needed
+- Better long-term architecture
+
+**Cons:**
+
+- Longer time to market (18 months)
+- Higher initial cost
+- More risk
+- Requires larger team
+
+#### **Option C: Hybrid Approach (Best of Both)**
+
+**Unity for:**
+
+- Web-based sandbox (current system)
+- Mobile companion app
+- Admin tools
+- UI prototyping
+
+**Unreal for:**
+
+- Main MMORPG client
+- High-end visuals
+- Console versions (PS5, Xbox)
+
+**Pros:**
+
+- Best visual quality
+- Web accessibility
+- Mobile support
+- Console support
+- Flexible architecture
+
+**Cons:**
+
+- Complex integration
+- Two codebases to maintain
+- Higher development cost
+- Network synchronization challenges
+
+### 3.3 Final Recommendation
+
+**🎯 Recommended: Option A (Unity First, Then Unreal)**
+
+**Rationale:**
+
+1. **Faster Launch:** Get to market in 6 months vs 18 months
+2. **Lower Risk:** Prove concept before heavy investment
+3. **Community Building:** Start growing player base early
+4. **Revenue Generation:** Fund Unreal migration with game revenue
+5. **Iterative Improvement:** Gradually enhance quality
+
+**Timeline:**
+
+- **Month 0-6:** Unity MMORPG launch
+- **Month 6-12:** Revenue generation, community growth
+- **Month 12-18:** Unreal migration, AAA upgrade
+- **Month 18:** Full AAA MMORPG
+
+**Budget:**
+
+- **Phase 1 (Unity):** $150,000-500,000
+- **Phase 2 (Unreal):** $500,000-2,000,000
+- **Total:** $650,000-2,500,000
+
+**Revenue Projections:**
+
+- **Month 6:** 1,000-5,000 players, $10,000-50,000/month
+- **Month 12:** 10,000-50,000 players, $100,000-500,000/month
+- **Month 18:** 50,000-100,000 players, $500,000-2,000,000/month
+
+---
+
+## 📋 Part 4: Implementation Checklists
+
+### 4.1 Unity Migration Checklist
+
+#### Pre-Migration
+
+- [ ] Assess all existing systems
+- [ ] Document current architecture
+- [ ] Identify dependencies
+- [ ] Create migration plan
+- [ ] Set up Unity project
+- [ ] Configure version control (Git LFS)
+- [ ] Set up CI/CD pipeline
+- [ ] Configure build system
+
+#### Phase 1: Foundation
+
+- [ ] Import all 3D models
+- [ ] Convert materials to URP
+- [ ] Set up animation rigs
+- [ ] Create ScriptableObjects for data
+- [ ] Implement GameManager
+- [ ] Implement NetworkManager (Fish-Net)
+- [ ] Implement SceneManager
+- [ ] Implement AudioManager
+- [ ] Set up input system
+- [ ] Configure Addressables
+
+#### Phase 2: Core Systems
+
+- [ ] Player character system
+- [ ] NPC system
+- [ ] World system (THE HIVE + Sandbox)
+- [ ] Combat system
+- [ ] Inventory system
+- [ ] Equipment system
+- [ ] Skill system
+- [ ] XP &amp; Leveling system
+- [ ] Mission/Quest system
+- [ ] Achievement system
+- [ ] Guild system
+- [ ] Castle system
+- [ ] Enclave system
+- [ ] PvP system
+- [ ] PvE system
+- [ ] Dungeon system
+- [ ] World boss system
+
+#### Phase 3: Content
+
+- [ ] Terrain generation
+- [ ] Foliage system
+- [ ] Biome system
+- [ ] Day/night cycle
+- [ ] Weather system
+- [ ] Character models
+- [ ] Animations
+- [ ] Buildings
+- [ ] Weapons &amp; Armor
+- [ ] VFX
+- [ ] SFX
+
+#### Phase 4: Polish
+
+- [ ] UI/UX design
+- [ ] Main menu
+- [ ] Character creation
+- [ ] Inventory interface
+- [ ] Crafting interface
+- [ ] Social panels
+- [ ] World map
+- [ ] Minimap
+- [ ] Damage numbers
+- [ ] Cooldown timers
+- [ ] Performance optimization
+- [ ] Network optimization
+- [ ] Memory management
+- [ ] Anti-cheat system
+
+#### Phase 5: Launch
+
+- [ ] Closed beta testing
+- [ ] Open beta testing
+- [ ] Bug fixing
+- [ ] Balance adjustments
+- [ ] Server infrastructure
+- [ ] Database setup
+- [ ] Backup systems
+- [ ] Monitoring
+- [ ] Marketing campaign
+- [ ] Community building
+
+### 4.2 Unreal Engine Checklist
+
+#### Pre-Migration
+
+- [ ] Assess Unity systems
+- [ ] Document architecture
+- [ ] Create migration plan
+- [ ] Set up UE5 project
+- [ ] Configure version control (Git LFS)
+- [ ] Set up CI/CD pipeline
+- [ ] Configure build system
+
+#### Phase 1: Foundation
+
+- [ ] Set up UE5 project
+- [ ] Configure plugins (Fish-Net, etc.)
+- [ ] Create core architecture
+- [ ] Implement GameModeBase
+- [ ] Implement GameStateBase
+- [ ] Implement PlayerController
+- [ ] Implement Character base class
+- [ ] Set up networking
+- [ ] Configure replication
+- [ ] Set up input system
+
+#### Phase 2: Content Migration
+
+- [ ] Migrate player system
+- [ ] Migrate NPC system
+- [ ] Migrate combat system
+- [ ] Migrate inventory system
+- [ ] Migrate guild system
+- [ ] Migrate castle system
+- [ ] Migrate PvP system
+- [ ] Migrate PvE system
+
+#### Phase 3: Visual Polish
+
+- [ ] Implement Nanite
+- [ ] Implement Lumen
+- [ ] Implement Niagara
+- [ ] Implement MetaHumans
+- [ ] Configure World Partition
+- [ ] Configure Mass Entity
+- [ ] Configure Replication Graph
+
+#### Phase 4: Content Creation
+
+- [ ] Terrain and world building
+- [ ] Buildings and props
+- [ ] Character models
+- [ ] Animations
+- [ ] VFX
+- [ ] SFX
+
+#### Phase 5: Optimization
+
+- [ ] Performance profiling
+- [ ] Network optimization
+- [ ] Memory management
+- [ ] Stress testing
+
+#### Phase 6: Launch
+
+- [ ] Closed beta
+- [ ] Open beta
+- [ ] Marketing
+- [ ] Server setup
+
+---
+
+## 🎯 Part 5: Next Steps &amp; Action Plan
+
+### 5.1 Immediate Actions (Next 2 Weeks)
+
+1. **Finalize Migration Decision**
+  - Review Unity vs. Unreal comparison
+  - Assess team skills and resources
+  - Choose migration path (Recommended: Unity First)
+2. **Set Up Development Environment**
+  - Install Unity 2023 LTS
+  - Install Visual Studio/Rider
+  - Set up Git + Git LFS
+  - Configure project structure
+3. **Asset Pipeline**
+  - Export all 3D models as glTF
+  - Set up import pipeline
+  - Test model imports
+  - Optimize materials
+4. **Core Architecture**
+  - Create GameManager
+  - Create NetworkManager (Fish-Net)
+  - Create SceneManager
+  - Create basic entity system
+5. **Team Assembly**
+  - Hire Unity Developer
+  - Hire Network Engineer
+  - Hire 3D Artist
+  - Hire UI/UX Designer
+
+### 5.2 Month 1 Goals
+
+**Unity Foundation:**
+
+- [ ] Unity project fully set up
+- [ ] All assets imported
+- [ ] Basic scene navigation
+- [ ] Simple multiplayer (2-4 players)
+- [ ] Player movement
+- [ ] Basic combat
+- [ ] Simple UI
+
+**Deliverable:** Playable prototype with 2-4 players in a test world
+
+### 5.3 Month 2 Goals
+
+**Core Systems:**
+
+- [ ] Full networking (Fish-Net)
+- [ ] Entity system (Players, NPCs, Items)
+- [ ] Combat system
+- [ ] Inventory system
+- [ ] Guild system (basic)
+- [ ] Castle system (basic)
+
+**Deliverable:** Playable prototype with all core systems, 10-20 players
+
+### 5.4 Month 3 Goals
+
+**World Building:**
+
+- [ ] THE HIVE Core world
+- [ ] 2-3 Sandbox worlds
+- [ ] Basic terrain
+- [ ] Basic buildings
+- [ ] NPC spawning
+- [ ] Quest system
+
+**Deliverable:** Playable alpha with THE HIVE + sandbox worlds, 50-100 players
+
+### 5.5 Month 4-6 Goals
+
+**Content &amp; Polish:**
+
+- [ ] All gameplay systems
+- [ ] Full world content
+- [ ] All assets
+- [ ] Polished UI
+- [ ] Performance optimization
+- [ ] Beta testing
+
+**Deliverable:** Beta-ready MMORPG with 1,000+ players
+
+---
+
+## 📞 Contact &amp; Support
+
+**Need Help?**
+
+- Unity Documentation: [https://docs.unity3d.com/](https://docs.unity3d.com/)
+- Fish-Net Documentation: [https://github.com/FirstGearGames/FishNet](https://github.com/FirstGearGames/FishNet)
+- Unreal Engine Documentation: [https://docs.unrealengine.com/](https://docs.unrealengine.com/)
+- THE HIVE Discord: \[Join our community\]
+
+**Resources:**
+
+- Unity Asset Store: [https://assetstore.unity.com/](https://assetstore.unity.com/)
+- Unreal Marketplace: [https://www.unrealengine.com/marketplace/](https://www.unrealengine.com/marketplace/)
+- Quixel Megascans: [https://quixel.com/megascans](https://quixel.com/megascans) (Free with UE5)
+- Mixamo: [https://www.mixamo.com/](https://www.mixamo.com/) (Free animations)
+
+---
+
+## 🚀 Conclusion
+
+You have **two excellent paths** to launch your MMORPG:
+
+1. **Unity (6 months)** - Faster, lower risk, proven technology
+2. **Unreal (18 months)** - AAA quality, but longer timeline
+
+**Recommendation:** Start with **Unity** to launch quickly, then migrate to **Unreal** for AAA quality.
+
+This gives you:
+
+- ✅ Fast time to market
+- ✅ Revenue generation
+- ✅ Community building
+- ✅ Lower initial risk
+- ✅ Path to AAA quality
+
+**Ready to begin?** The Unity migration checklist is your starting point. Let's build THE HIVE MMORPG!
