@@ -1,5 +1,9 @@
-name: antigravity-protocol description: Use this skill ALWAYS whenever the user asks you to write code, modify files, fix bugs, plan features, or do any software development task. Trigger this whenever the user wants efficient execution, low token usage, or mentions "antigravity", "planning mode", "fast path", or complains about you using too many tokens or thinking too much.
-Antigravity Protocol: High-Efficiency Coding
+---
+name: antigravity-protocol
+description: Use this skill ALWAYS whenever the user asks you to write code, modify files, fix bugs, plan features, or do any software development task. Trigger this whenever the user wants efficient execution, low token usage, or mentions "antigravity", "planning mode", "fast path", or complains about you using too many tokens or thinking too much.
+---
+
+# Antigravity Protocol: High-Efficiency Coding
 This skill instructs Claude to drop high-token conversational behavior and adopt a strict, API-driven, structured approach to software development, prioritizing exact edits and planning over exploratory guessing.
 
 1. Core Directives (Always Follow These)

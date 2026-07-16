@@ -1,0 +1,49 @@
+/* MemoryVault specific styles */
+
+.memory-vault {
+  background: rgba(30, 41, 59, 0.3);
+  border: 1px solid rgba(147, 51, 234, 0.2);
+}
+
+.memory-vault-header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
+  border-bottom: 1px solid rgba(147, 51, 234, 0.2);
+}
+
+.memory-vault-filters {
+  background: rgba(51, 65, 85, 0.4);
+  border-bottom: 1px solid rgba(147, 51, 234, 0.1);
+}
+
+.memory-item {
+  background: rgba(51, 65, 85, 0.3);
+  border: 1px solid rgba(147, 51, 234, 0.1);
+  transition: all 0.2s ease;
+}
+
+.memory-item:hover {
+  background: rgba(51, 65, 85, 0.5);
+  border-color: rgba(147, 51, 234, 0.3);
+  transform: translateX(5px);
+}
+
+.memory-type-icon {
+  filter: drop-shadow(0 0 10px rgba(147, 51, 234, 0.3));
+}
+
+/* Tag filters */
+.tag-filter {
+  background: rgba(51, 65, 85, 0.4);
+  border: 1px solid rgba(147, 51, 234, 0.1);
+  transition: all 0.2s ease;
+}
+
+.tag-filter:hover {
+  background: rgba(51, 65, 85, 0.6);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.tag-filter.active {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+}

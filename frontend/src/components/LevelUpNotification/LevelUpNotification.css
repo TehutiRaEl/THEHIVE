@@ -1,0 +1,77 @@
+/* LevelUpNotification specific styles */
+
+.level-up-notification {
+  box-shadow: 0 25px 50px -12px rgba(147, 51, 234, 0.3);
+}
+
+.level-up-container {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.9) 0%, rgba(79, 70, 229, 0.8) 50%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(147, 51, 234, 0.5);
+}
+
+.level-up-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.level-up-icon {
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+}
+
+.level-up-level {
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #9333ea, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.level-up-progress {
+  height: 2px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.level-up-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #9333ea, #f97316);
+  border-radius: 1px;
+}
+
+/* Reward badges */
+.reward-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  color: #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.reward-badge:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+/* Star animation */
+.level-up-stars {
+  position: absolute;
+  pointer-events: none;
+}
+
+.level-up-star {
+  color: #f97316;
+  text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-20px);
+  }
+}
