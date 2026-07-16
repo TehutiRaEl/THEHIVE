@@ -3,6 +3,7 @@
  * Enables travel between THE HIVE world and sandbox worlds
  */
 
+import { useState, useCallback } from 'react';
 import { Position3D, WorldEntity, EntityType } from './types';
 import { worldManager } from './WorldManager';
 

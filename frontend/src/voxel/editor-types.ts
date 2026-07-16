@@ -141,7 +141,7 @@ export const PALETTES: Record<string, VoxelPalette> = {
   },
   noMansSky: {
     id: 'noMansSky',
-    name: 'No Man's Sky',
+    name: "No Man's Sky",
     types: ['ground', 'stone', 'wood', 'metal', 'glass', 'grass', 'sand'],
     colors: {
       ground: [0x32CD32, 0x9ACD32, 0x90EE90],
