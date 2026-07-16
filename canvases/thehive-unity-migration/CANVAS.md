@@ -102,3 +102,110 @@ public class WorldManager : MonoBehaviour {
     public void SwitchWorld(string worldId) { /* ... */ }
     public void SpawnEntity(Entity entity) { /* ... */ }
 }
+
+
+
+
+###1.4 Project Structure
+THEHIVE-Unity/
+├── Assets/
+│   ├── Scripts/
+│   │   ├── Managers/          (WorldManager, GuildManager, CastleManager, etc.)
+│   │   ├── Systems/          (Combat, Crafting, Inventory, etc.)
+│   │   ├── Network/          (Fish-Net setup, RPCs)
+│   │   ├── Entities/         (Player, NPC, Buildings, Items)
+│   │   ├── UI/               (Screens, Panels, HUD, Widgets)
+│   │   └── Data/             (ScriptableObjects, JSON)
+│   ├── Models/
+│   ├── Materials/
+│   ├── Animations/
+│   ├── Scenes/
+│   └── Prefabs/
+├── Packages/
+│   ├── Fish-Net/
+│   ├── Odin Inspector/
+│   ├── DOTween/
+│   └── Addressables/
+└── Server/
+    └── DedicatedServer/
+1.5 Technical Specifications
+Hardware Requirements
+
+  
+    
+      Player Count
+      CPU
+      RAM
+      Storage
+      Bandwidth
+    
+  
+  
+    
+      1-100
+      4 Core
+      8GB
+      100GB
+      100 Mbps
+    
+    
+      100-500
+      8 Core
+      16GB
+      500GB
+      1 Gbps
+    
+    
+      500-1000
+      16 Core
+      32GB
+      1TB
+      2 Gbps
+    
+    
+      1000-5000
+      32 Core
+      64GB
+      2TB
+      10 Gbps
+    
+  
+
+
+
+
+Software Requirements
+
+Unity 2023 LTS
+Visual Studio 2022 / Rider
+Git + Git LFS
+MongoDB 6.0+
+Node.js
+Docker
+
+1.6 Team & Budget
+Team (5-15 people):
+
+Technical Director
+Unity Developer x2-3
+Network Engineer
+Backend Engineer
+3D Artist x2
+2D Artist
+Animator
+Sound Designer
+QA Tester
+Community Manager
+Budget (6 months): $150,000-500,000
+🏗️ PART 2: UNREAL ENGINE ARCHITECTURE PLAN
+2.1 Why Unreal Engine 5?
+
+Nanite - Virtualized geometry (millions of polygons)
+Lumen - Dynamic global illumination
+Niagara - Advanced VFX
+MetaHuman - Photorealistic characters
+World Partition - Open world streaming
+Mass Entity - Large-scale simulations
+Replication Graph - Scalable multiplayer
+Blueprints - Visual scripting
+2.2 Complete Code Examples (C++)
