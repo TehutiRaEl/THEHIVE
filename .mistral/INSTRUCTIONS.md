@@ -20,7 +20,7 @@ This document establishes the workflow for Mistral role in THEHIVE repository.
    - Purpose: Activate project-specific capabilities
 
 4. Check Team Skills
-   - Locations: team/*/.mistral/skills/
+   - Locations: .mistral/skills/
    - Action: Scan for new or updated skill files
    - Purpose: Incorporate team contributions
 
