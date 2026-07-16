@@ -1,7 +1,9 @@
 // THEHIVE Queen — edge implementation of the Command Center API slice.
 // Same JSON shapes as backend/api/routes.py (/v11), persisted in D1.
-// Auth is visitor-tier permissive (HMAC-permissive precedent): tokens are
-// issued freely and any bearer is accepted; admin surfaces stay off-edge.
+// Auth: visitor-tier tokens issued freely from /auth/token and stored in D1.
+// Write endpoints require a valid unexpired token (permissive if WORKER_ADMIN_KEY unset).
+// Rate limit: 30 POST requests per IP per minute (D1-backed sliding window).
+// Admin surfaces (WORKER_ADMIN_KEY protected) stay off-edge.
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +18,45 @@ const COLORS = [[0.1, 0.8, 0.1], [0.1, 0.4, 0.9], [0.0, 0.9, 0.9], [1.0, 0.8, 0.
 async function sha256(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Rate limit: 30 POSTs per IP per 60s using D1 sliding window. Fails open.
+async function rateLimitOk(DB, ip) {
+  try {
+    const now = Date.now(), window = now - 60_000;
+    await DB.prepare('DELETE FROM rate_limits WHERE ip=? AND ts<?').bind(ip, window).run();
+    const row = await DB.prepare('SELECT COUNT(*) AS n FROM rate_limits WHERE ip=?').bind(ip).first();
+    if (((row?.n) ?? 0) >= 30) return false;
+    await DB.prepare('INSERT INTO rate_limits (ip,ts) VALUES (?,?)').bind(ip, now).run();
+    return true;
+  } catch { return true; }
+}
+
+// Token validation for write endpoints. Fails open when WORKER_ADMIN_KEY is unset (dev mode).
+async function tokenOk(DB, request, env) {
+  if (!env.WORKER_ADMIN_KEY) return true; // dev mode — permissive
+  const auth = request.headers.get('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!token) return false;
+  try {
+    const row = await DB.prepare(
+      'SELECT token FROM visitor_tokens WHERE token=? AND expires_at>?'
+    ).bind(token, Date.now()).first();
+    return !!row;
+  } catch { return true; }
+}
+
+// D1 table initialisation — called once per heartbeat to ensure all tables exist.
+async function ensureTables(DB) {
+  await DB.batch([
+    DB.prepare(`CREATE TABLE IF NOT EXISTS hive_pulse
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
+       action TEXT NOT NULL, detail TEXT)`),
+    DB.prepare(`CREATE TABLE IF NOT EXISTS rate_limits
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT NOT NULL, ts INTEGER NOT NULL)`),
+    DB.prepare(`CREATE TABLE IF NOT EXISTS visitor_tokens
+      (token TEXT PRIMARY KEY, issued_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)`),
+  ]);
 }
 
 function simulate(a, b, eloA, eloB) {
@@ -158,7 +199,13 @@ export default {
     const DB = env.DB;
     const acted = [];
     try {
-      await DB.prepare('CREATE TABLE IF NOT EXISTS hive_pulse (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, action TEXT NOT NULL, detail TEXT)').run();
+      await ensureTables(DB);
+      // Prune expired visitor tokens and stale rate-limit rows
+      const cutoff = Date.now() - 3_600_000;
+      await DB.batch([
+        DB.prepare('DELETE FROM visitor_tokens WHERE expires_at<?').bind(Date.now()),
+        DB.prepare('DELETE FROM rate_limits WHERE ts<?').bind(cutoff),
+      ]).catch(() => {});
 
       // 1. resolve pending challenges (created last tick, by a visitor, or by an agent)
       const { results: pending } = await DB.prepare(
@@ -211,8 +258,16 @@ export default {
       if (p === '/health' || p === '/colony/health')
         return json({ status: 'healthy', version: '11.0-edge', colony: 'THEHIVE', runtime: 'cloudflare-worker' });
 
-      if (p === '/auth/token')
-        return json({ access_token: crypto.randomUUID(), token_type: 'bearer', tier: 'visitor' });
+      if (p === '/auth/token') {
+        const token = crypto.randomUUID();
+        const now = Date.now();
+        try {
+          await DB.prepare(
+            'INSERT OR REPLACE INTO visitor_tokens (token, issued_at, expires_at) VALUES (?,?,?)'
+          ).bind(token, now, now + 3_600_000).run();
+        } catch { /* D1 not ready — token still issued, validation will fail-open */ }
+        return json({ access_token: token, token_type: 'bearer', tier: 'visitor', expires_in: 3600 });
+      }
 
       if (p === '/agents') {
         const { results } = await DB.prepare("SELECT name FROM agents WHERE status='active'").all();
@@ -404,11 +459,13 @@ export default {
             'GET /health', 'GET /agents', 'GET /grading/leaderboard', 'GET /wallet/leaderboard/soul',
             'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
-            'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen', 'POST /arena/challenge',
-            'POST /arena/resolve/{id}', 'POST /auth/token',
+            'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
+            'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',
+            'POST /arena/project/{id} (token+rate-limited)', 'POST /auth/token',
             'GET /debug/health', 'GET /debug/env', 'GET /debug/git', 'GET /debug/logs',
             'GET /debug/colony-ping', 'GET /debug/endpoints',
             'GET /ml/status', 'GET /browser/status', 'GET /knowledge/status',
+            'GET /admin/d1-export (WORKER_ADMIN_KEY)',
           ],
         });
       }
@@ -450,6 +507,9 @@ export default {
         return json({ hall_of_fallen_ideas: results });
       }
       if (p === '/arena/challenge' && method === 'POST') {
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!await rateLimitOk(DB, ip)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const b = await request.json();
         const r = await DB.prepare('INSERT INTO arena_challenges (challenger, challenged, proposition) VALUES (?,?,?)')
           .bind(b.challenger, b.challenged, b.proposition).run();
@@ -458,6 +518,9 @@ export default {
 
       let m = p.match(/^\/arena\/resolve\/(\d+)$/);
       if (m && method === 'POST') {
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!await rateLimitOk(DB, ip)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const ch = await DB.prepare('SELECT * FROM arena_challenges WHERE id=?').bind(+m[1]).first();
         if (!ch) return json({ detail: 'challenge not found' }, 404);
         const { winner, loser } = await resolveChallenge(DB, ch);
@@ -466,6 +529,9 @@ export default {
 
       m = p.match(/^\/arena\/project\/(\d+)$/);
       if (m && method === 'POST') {
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!await rateLimitOk(DB, ip)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const ch = await DB.prepare('SELECT * FROM arena_challenges WHERE id=?').bind(+m[1]).first();
         if (!ch) return json({ detail: 'challenge not found' }, 404);
         const { wa, wb } = await projectChallenge(DB, ch);
@@ -486,6 +552,22 @@ export default {
           .bind(+m[1]).all();
         if (!results.length) return json({ detail: 'no frames' }, 404);
         return json({ challenge_id: +m[1], total_frames: results.length, frames: results.map(r => JSON.parse(r.frame)) });
+      }
+
+      // GET /admin/d1-export — full D1 snapshot for backup (WORKER_ADMIN_KEY protected)
+      if (p === '/admin/d1-export' && method === 'GET') {
+        if (!env.WORKER_ADMIN_KEY) return json({ error: 'admin key not configured' }, 503);
+        const adminKey = request.headers.get('X-Admin-Key') || '';
+        if (adminKey !== env.WORKER_ADMIN_KEY) return json({ error: 'Forbidden' }, 403);
+        const EXPORT_TABLES = ['agents', 'arena_challenges', 'fallen_ideas', 'governance_log', 'hive_pulse', 'tasks'];
+        const snapshot = { exported_at: new Date().toISOString(), tables: {} };
+        for (const t of EXPORT_TABLES) {
+          try {
+            const { results } = await DB.prepare(`SELECT * FROM ${t} ORDER BY id DESC LIMIT 5000`).all();
+            snapshot.tables[t] = results;
+          } catch { snapshot.tables[t] = []; }
+        }
+        return json(snapshot);
       }
 
       // POST /admin/grok-token — store GitHub PAT for Grok's bridge (WORKER_ADMIN_KEY protected)

@@ -1,0 +1,53 @@
+name: D1 Backup Export
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'   # weekly, Sunday 03:00 UTC
+  workflow_dispatch: {}   # manual trigger
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify secrets
+        run: |
+          missing=""
+          [ -z "${{ secrets.WORKER_URL }}" ]      && missing="$missing WORKER_URL"
+          [ -z "${{ secrets.WORKER_ADMIN_KEY }}" ] && missing="$missing WORKER_ADMIN_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing secrets:$missing"
+            exit 1
+          fi
+
+      - name: Export D1 snapshot
+        run: |
+          HTTP_STATUS=$(curl -s -w "%{http_code}" \
+            -H "X-Admin-Key: ${{ secrets.WORKER_ADMIN_KEY }}" \
+            "${{ secrets.WORKER_URL }}/v11/admin/d1-export" \
+            -o d1-snapshot.json)
+          echo "HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::error::Export returned HTTP $HTTP_STATUS"
+            cat d1-snapshot.json || true
+            exit 1
+          fi
+          SIZE=$(wc -c < d1-snapshot.json)
+          echo "Snapshot size: $SIZE bytes"
+          echo "Exported at: $(date -u)"
+
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: d1-snapshot-${{ github.run_id }}
+          path: d1-snapshot.json
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Summary
+        run: |
+          echo "## D1 Backup Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Exported**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Size**: $(wc -c < d1-snapshot.json) bytes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Artifact**: \`d1-snapshot-${{ github.run_id }}\` (90-day retention)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tables**: agents, arena_challenges, fallen_ideas, governance_log, hive_pulse, tasks" >> $GITHUB_STEP_SUMMARY
