@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {},
+  "include": ["src"],
+  "exclude": [
+    "src/worlds",
+    "src/voxel",
+    "src/xp",
+    "src/avatars",
+    "src/conversation"
+  ]
+}
