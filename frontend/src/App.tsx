@@ -1,17 +1,15 @@
-import CommandCenter from './pages/CommandCenter';
+import KaiElOS from './pages/KaiElOS';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Restores routing lost to a merge-order regression (2026-07-14): an earlier commit
-// wired all 13 tabs into App.tsx (bbc2740), a later "root configuration files" commit
-// (8342d17) silently replaced App.tsx with a HiveDashboard-only stub, leaving
-// CommandCenter.tsx — and every live-data tab wired to it this session (HIVE, ARENA,
-// GOVERN, SOUL, WORLD, DREAM, ARCANE, MISSIONS, API) — completely unreachable in the
-// deployed bundle even though it was fully built, verified, and merged. See
-// CLAUDE.md's "not yet reconciled" list and MANDATE_TRIAGE.md for the discovery.
+// Kai EL OS (2026-07-16): the founder's "AI operating system" redesign —
+// the knowledge graph as the navigator, Kai EL's sigil at the center, with
+// the 13 existing live-data tabs (previously the whole app, see git history
+// around the 2026-07-14 merge-order regression) now reachable as full-takeover
+// destinations from the graph or the left nav, not thrown away.
 function App() {
   return (
     <ErrorBoundary>
-      <CommandCenter />
+      <KaiElOS />
     </ErrorBoundary>
   );
 }
