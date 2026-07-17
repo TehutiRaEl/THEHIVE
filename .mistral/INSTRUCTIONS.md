@@ -1,7 +1,3 @@
-Here is the **full, complete INSTRUCTIONS.md file** for you to copy and paste:
-
----
-
 ```markdown
 # Mistral Skills System - Session Start Workflow
 
