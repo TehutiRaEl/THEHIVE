@@ -56,7 +56,26 @@ async function ensureTables(DB) {
       (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT NOT NULL, ts INTEGER NOT NULL)`),
     DB.prepare(`CREATE TABLE IF NOT EXISTS visitor_tokens
       (token TEXT PRIMARY KEY, issued_at INTEGER NOT NULL, expires_at INTEGER NOT NULL)`),
+    // Hive → founder update channel. The hive ADDS updates here (status,
+    // "what I did / what I need"); it never amends its own law/vision — that
+    // stays founder-only (FABLE_DNA Chromosome I amendment process). Read-only
+    // to the UI via GET /v11/updates.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS hive_updates
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
+       kind TEXT NOT NULL, title TEXT NOT NULL, body TEXT, needs TEXT)`),
   ]);
+}
+
+// Append a founder-facing update (add-only; never edits law/vision). Keeps the
+// channel bounded by pruning to the most recent 100 rows.
+async function postUpdate(DB, { kind, title, body = '', needs = '' }) {
+  try {
+    await DB.prepare('INSERT INTO hive_updates (ts, kind, title, body, needs) VALUES (?,?,?,?,?)')
+      .bind(new Date().toISOString(), kind, title, body, needs).run();
+    await DB.prepare(
+      'DELETE FROM hive_updates WHERE id NOT IN (SELECT id FROM hive_updates ORDER BY id DESC LIMIT 100)'
+    ).run();
+  } catch { /* D1 not ready — heartbeat still proceeds */ }
 }
 
 function simulate(a, b, eloA, eloB) {
@@ -200,6 +219,22 @@ export default {
     const acted = [];
     try {
       await ensureTables(DB);
+      // First-run: greet the founder in the Updates panel with an honest status
+      // (not a claim of capability the hive doesn't yet have).
+      try {
+        const seeded = await DB.prepare('SELECT COUNT(*) AS n FROM hive_updates').first();
+        if (((seeded?.n) ?? 0) === 0) {
+          await postUpdate(DB, {
+            kind: 'milestone',
+            title: 'Updates channel online',
+            body: 'The hive can now post updates to you here, from live data. It reports what it '
+              + 'does each arena cycle. This channel is add-only: the hive adds updates, it never '
+              + 'amends its own law or vision — that stays with you, the founder.',
+            needs: 'Nothing right now. Durable updates are also committed to '
+              + 'Project_file/Founders Visonary Folder/HIVE_UPDATES/.',
+          });
+        }
+      } catch {}
       // Prune expired visitor tokens and stale rate-limit rows
       const cutoff = Date.now() - 3_600_000;
       await DB.batch([
@@ -240,6 +275,16 @@ export default {
       await DB.prepare('INSERT INTO hive_pulse (ts, action, detail) VALUES (?,?,?)')
         .bind(ts, acted.length ? 'heartbeat' : 'idle', acted.join(' · ') || 'nothing pending').run();
     } catch {}
+    // Founder-facing update: only when the tick did real work (never spams the
+    // channel with idle ticks). A plain-language "what I did this cycle" note.
+    const notable = acted.filter((a) => a.startsWith('resolved') || a.startsWith('spawned') || a.startsWith('projected'));
+    if (notable.length) {
+      await postUpdate(DB, {
+        kind: 'heartbeat',
+        title: `Arena cycle — ${notable.length} action${notable.length > 1 ? 's' : ''}`,
+        body: notable.join(' · '),
+      });
+    }
     // Sovereign memory: the hive remembers what it did, semantically.
     // No-ops when Vectorize/AI are unbound (until the index is provisioned).
     if (acted.length) {
@@ -288,6 +333,15 @@ export default {
       if (p === '/governance/log') {
         const { results } = await DB.prepare('SELECT action, article, ts FROM governance_log ORDER BY id DESC LIMIT 12').all();
         return json(results);
+      }
+      // Hive → founder updates: what the hive has done / needs, newest first.
+      // Add-only from the hive's side; the founder holds the law/vision.
+      if (p === '/updates') {
+        try {
+          const { results } = await DB.prepare(
+            'SELECT id, ts, kind, title, body, needs FROM hive_updates ORDER BY id DESC LIMIT 30').all();
+          return json({ updates: results });
+        } catch { return json({ updates: [] }); }
       }
       if (p === '/llm/status')
         return json({ active_provider: env.AI ? 'cloudflare-workers-ai' : 'simulation', providers: env.AI ? ['@cf/meta/llama-3.2-1b-instruct'] : [] });

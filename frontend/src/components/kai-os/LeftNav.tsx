@@ -9,6 +9,7 @@ interface NavItem {
 }
 
 const PRIMARY: NavItem[] = [
+  { id: 'updates', label: 'Updates', icon: '📣', wired: true },
   { id: 'settings', label: 'Settings', icon: '⚙', wired: true },
   { id: 'govern', label: 'Govern', icon: '🏛', wired: true },
   { id: 'hive', label: 'Hive', icon: '🐝', wired: true },

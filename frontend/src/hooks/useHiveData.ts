@@ -18,6 +18,7 @@ export interface EloEntry { agent_name: string; rating: number }
 export interface TaskEntry { id: number; title?: string; status?: string; [k: string]: unknown }
 export interface FallenIdea { id: number; proposition?: string; challenger?: string; challenged?: string; [k: string]: unknown }
 export interface LlmStatus { active_provider: string; providers: string[] }
+export interface HiveUpdate { id: number; ts: string; kind: string; title: string; body?: string; needs?: string }
 
 export interface HiveData {
   online: boolean
@@ -33,6 +34,7 @@ export interface HiveData {
   fallen: FallenIdea[]
   llm: LlmStatus | null
   tier3: Record<string, unknown> | null
+  updates: HiveUpdate[]
   memoryBound: boolean
   aiBound: boolean
   refresh: () => void
@@ -54,12 +56,12 @@ export function useHiveData(pollMs = 30000): HiveData {
   const [state, setState] = useState<Omit<HiveData, 'refresh'>>({
     online: false, loading: true, health: null,
     agents: [], challenges: [], pulse: [], governance: [], soulBoard: [],
-    eloBoard: [], tasks: [], fallen: [], llm: null, tier3: null,
+    eloBoard: [], tasks: [], fallen: [], llm: null, tier3: null, updates: [],
     memoryBound: false, aiBound: false,
   })
 
   const load = useCallback(async () => {
-    const [health, agents, challenges, pulse, gov, soul, mem, elo, tasks, fallen, llm, tier3] = await Promise.all([
+    const [health, agents, challenges, pulse, gov, soul, mem, elo, tasks, fallen, llm, tier3, updates] = await Promise.all([
       j<{ status: string; version: string; runtime: string }>('/health'),
       j<{ agents: Agent[] }>('/agents'),
       j<{ challenges: Challenge[] }>('/arena/challenges'),
@@ -72,6 +74,7 @@ export function useHiveData(pollMs = 30000): HiveData {
       j<{ hall_of_fallen_ideas: FallenIdea[] }>('/arena/fallen'),
       j<LlmStatus>('/llm/status'),
       j<Record<string, unknown>>('/tier3/status'),
+      j<{ updates: HiveUpdate[] }>('/updates'),
     ])
     setState({
       online: !!health,
@@ -87,6 +90,7 @@ export function useHiveData(pollMs = 30000): HiveData {
       fallen: fallen?.hall_of_fallen_ideas ?? [],
       llm: llm ?? null,
       tier3: tier3 ?? null,
+      updates: updates?.updates ?? [],
       memoryBound: !!mem?.vectorize_bound,
       aiBound: !!mem?.ai_bound,
     })
