@@ -1,7 +1,3 @@
-Here is **File 2 of 2** - The Team Updates File:
-
----
-
 ```markdown
 # THEHIVE Team Updates & Session Log
 
