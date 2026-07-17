@@ -70,6 +70,16 @@ Full devil's-advocate/childlike-wonder dissection of 23 proposed directives in
   root-cause or interpretation, from the founder's own "for every one truth, nine
   miss-truths" instinct. Pairs with `fable-debugger`'s proven-path contrast.
 
+## Hive-native (2026-07-16) — pr-retrospective (recursive PR-learning)
+- **`pr-retrospective`** active skill + **`PR_LESSONS.md`** (repo root) + **FABLE_DNA
+  Chromosome VIII**: the hive learns from every previous PR. Each real failure class from a
+  shipped PR (merge-order regression, invisible parallel-session collision, missing build
+  config compiling to nothing, stale deploy passing a naive health check, WIP tree blocking
+  the deploy gate, fabricated/undeclared dependency, backend assumed-live-not-probed) becomes
+  a *forward check* run as a pre-flight before the next PR — so no failure class is paid for
+  twice. The engineering-layer instance of soul.md's Recursive Cycle. Captured uncensored and
+  unabridged on purpose (a tidied-away near-miss is a lesson deleted).
+
 ## Wave 3 (2026-07-13) — the HORDE research triage
 
 The founder's HORDE + Pocket Dimensions research named ten external tools. Verified by
