@@ -30,27 +30,32 @@ export default function TopStatusBar({ hive }: TopStatusBarProps) {
   const topElo = hive.eloBoard[0]?.rating;
 
   return (
-    <div className="flex items-center gap-6 px-5 h-11 bg-void-900/90 border-b border-white/5 backdrop-blur-xs text-xs font-body overflow-x-auto whitespace-nowrap">
+    <div className="relative flex items-center gap-6 px-5 h-11 bg-void-900/80 backdrop-blur-xs text-xs font-body overflow-x-auto whitespace-nowrap">
+      {/* neon underline — the live wire under the status bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(0,229,255,0.55) 20%, rgba(139,92,246,0.55) 60%, rgba(255,209,102,0.4) 85%, transparent)' }} />
       <span className="flex items-center gap-1.5 font-display tracking-wider">
-        <span className={`h-1.5 w-1.5 rounded-full ${hive.online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
-        {hive.online ? 'LIVE' : 'OFFLINE'}
+        <span className={`h-1.5 w-1.5 rounded-full ${hive.online ? 'bg-emerald-400 animate-pulse shadow-neon-cyan' : 'bg-slate-600'}`} />
+        <span className={hive.online ? 'text-emerald-300' : 'text-slate-500'} style={hive.online ? { textShadow: '0 0 10px rgba(52,211,153,0.7)' } : undefined}>
+          {hive.online ? 'LIVE' : 'OFFLINE'}
+        </span>
       </span>
-      <span className="text-slate-500">|</span>
+      <span className="text-slate-600">|</span>
       <span className="text-slate-400">
-        Soul <span className="text-gold font-semibold">{topSoul != null ? topSoul.toFixed(1) : '—'}</span>
-      </span>
-      <span className="text-slate-400">
-        ELO <span className="text-cyan-glow font-semibold">{topElo != null ? Math.round(topElo) : '—'}</span>
-      </span>
-      <span className="text-slate-400">{KAI_FREQUENCY_HZ}Hz</span>
-      <span className="text-slate-400">
-        Hive <span className="text-slate-200">{hive.agents.length} agents</span>
+        Soul <span className="text-gold-neon font-semibold" style={{ textShadow: '0 0 10px rgba(255,209,102,0.5)' }}>{topSoul != null ? topSoul.toFixed(1) : '—'}</span>
       </span>
       <span className="text-slate-400">
-        Models <span className="text-slate-200">{hive.aiBound ? (hive.llm?.active_provider ?? 'bound') : 'simulation'}</span>
+        ELO <span className="text-cyan-neon font-semibold" style={{ textShadow: '0 0 10px rgba(0,229,255,0.5)' }}>{topElo != null ? Math.round(topElo) : '—'}</span>
+      </span>
+      <span className="text-violet-bright" style={{ textShadow: '0 0 10px rgba(139,92,246,0.5)' }}>{KAI_FREQUENCY_HZ}Hz</span>
+      <span className="text-slate-400">
+        Hive <span className="text-slate-100">{hive.agents.length} agents</span>
+      </span>
+      <span className="text-slate-400">
+        Models <span className="text-slate-100">{hive.aiBound ? (hive.llm?.active_provider ?? 'bound') : 'simulation'}</span>
       </span>
       <span className="ml-auto text-slate-500">
-        Latency <span className="text-slate-300">{latencyMs != null ? `${latencyMs}ms` : '—'}</span>
+        Latency <span className="text-emerald-300">{latencyMs != null ? `${latencyMs}ms` : '—'}</span>
       </span>
     </div>
   );

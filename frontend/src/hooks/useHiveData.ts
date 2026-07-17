@@ -17,7 +17,8 @@ export interface SoulEntry { agent: string; soul: number }
 export interface EloEntry { agent_name: string; rating: number }
 export interface TaskEntry { id: number; title?: string; status?: string; [k: string]: unknown }
 export interface FallenIdea { id: number; proposition?: string; challenger?: string; challenged?: string; [k: string]: unknown }
-export interface LlmStatus { active_provider: string; providers: string[] }
+export interface ProviderInfo { id: string; label: string; role: string; bound: boolean; how?: string }
+export interface LlmStatus { active_provider: string; providers: string[]; roster?: ProviderInfo[] }
 export interface HiveUpdate { id: number; ts: string; kind: string; title: string; body?: string; needs?: string }
 
 export interface HiveData {

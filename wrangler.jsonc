@@ -27,6 +27,16 @@
   // "vectorize": [
   //   { "binding": "VECTORIZE", "index_name": "hive-memory" }
   // ],
+  // Files store (the real backend for the Files panel). Same flip-the-switch
+  // pattern as Vectorize: a binding to a bucket that doesn't exist fails the
+  // deploy, so it ships commented and /v11/files reports available:false.
+  // TO ACTIVATE (founder, one time):
+  //   1) npx wrangler r2 bucket create hive-files
+  //   2) uncomment the "r2_buckets" block below, commit → Workers Builds redeploys
+  //   3) GET /v11/files → available:true; the Files panel upload/list goes live
+  // "r2_buckets": [
+  //   { "binding": "FILES", "bucket_name": "hive-files" }
+  // ],
   "d1_databases": [
     {
       "binding": "DB",

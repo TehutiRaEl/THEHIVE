@@ -173,6 +173,105 @@ async function aiProposition(env, a, b) {
   } catch { return null; }
 }
 
+// ── Multi-provider generative voice (the swappable organ, FABLE_DNA) ─────
+// Waterfall: Claude → Groq → Mistral → Workers AI. Each external provider
+// activates the moment its API key exists as a Worker secret — the founder
+// flips the switch (wrangler secret put <NAME>); no code change needed.
+// Secret PRESENCE is reported (names/booleans only, F-001) — never values.
+const PROVIDERS = [
+  { id: 'claude', label: 'Claude', role: 'Reasoning', secret: 'ANTHROPIC_API_KEY' },
+  { id: 'groq', label: 'Groq', role: 'Speed', secret: 'GROQ_API_KEY' },
+  { id: 'mistral', label: 'Mistral', role: 'Local intelligence', secret: 'MISTRAL_API_KEY' },
+  { id: 'workers-ai', label: 'Cloudflare Workers AI', role: 'Deployment + runtime inference', secret: null },
+];
+
+function providerRoster(env) {
+  return PROVIDERS.map((pr) => ({
+    id: pr.id,
+    label: pr.label,
+    role: pr.role,
+    bound: pr.secret ? !!env[pr.secret] : !!env.AI,
+    how: pr.secret ? `wrangler secret put ${pr.secret}` : 'ai binding in wrangler.jsonc',
+  }));
+}
+
+// One generation call, first bound provider wins; returns {text, provider} or null.
+// External calls use each provider's plain HTTP API with a hard timeout so a
+// down provider degrades to the next, never hangs the commune.
+async function generate(env, { system, prompt, maxTokens = 400 }) {
+  const timeout = (ms) => AbortSignal.timeout(ms);
+  if (env.ANTHROPIC_API_KEY) {
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-5', max_tokens: maxTokens,
+          system, messages: [{ role: 'user', content: prompt }],
+        }),
+        signal: timeout(20000),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        const text = (d?.content || []).map((c) => c.text || '').join('').trim();
+        if (text) return { text, provider: 'claude' };
+      }
+    } catch { /* next provider */ }
+  }
+  if (env.GROQ_API_KEY) {
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile', max_tokens: maxTokens,
+          messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
+        }),
+        signal: timeout(15000),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        const text = (d?.choices?.[0]?.message?.content || '').trim();
+        if (text) return { text, provider: 'groq' };
+      }
+    } catch { /* next provider */ }
+  }
+  if (env.MISTRAL_API_KEY) {
+    try {
+      const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.MISTRAL_API_KEY}`, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: 'mistral-small-latest', max_tokens: maxTokens,
+          messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
+        }),
+        signal: timeout(15000),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        const text = (d?.choices?.[0]?.message?.content || '').trim();
+        if (text) return { text, provider: 'mistral' };
+      }
+    } catch { /* next provider */ }
+  }
+  if (env.AI) {
+    try {
+      // The proven-live path: same model + prompt-string shape as the heartbeat.
+      const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
+        prompt: system + '\n\n' + prompt,
+        max_tokens: maxTokens,
+      });
+      const text = String((r?.response ?? r?.result ?? '')).trim();
+      if (text) return { text, provider: 'workers-ai' };
+    } catch { /* fall through */ }
+  }
+  return null;
+}
+
 // ── Sovereign memory (Cloudflare Vectorize + Workers AI embeddings) ──────
 // The hive's semantic recall. Embeds memories with a free Workers AI model
 // and stores the vectors in a Vectorize index; a query is embedded the same
@@ -361,8 +460,15 @@ export default {
           return json({ updates: results });
         } catch { return json({ updates: [] }); }
       }
-      if (p === '/llm/status')
-        return json({ active_provider: env.AI ? 'cloudflare-workers-ai' : 'simulation', providers: env.AI ? ['@cf/meta/llama-3.2-1b-instruct'] : [] });
+      if (p === '/llm/status') {
+        const roster = providerRoster(env);
+        const active = roster.find((r) => r.bound);
+        return json({
+          active_provider: active ? active.id : 'simulation',
+          providers: roster.filter((r) => r.bound).map((r) => r.id),
+          roster, // full honest list: each provider, bound or not, and how to bind it
+        });
+      }
 
       // COMMUNE WITH KAI EL — the chat the Command Center calls (was 404).
       // Kai El answers in persona, grounded in live hive state + (when provisioned)
@@ -397,31 +503,19 @@ export default {
           "You are bound by the Constitution F-001..F-006 (data sovereignty, value-weighted wealth, autonomy, " +
           "explainability, conflict priority, cross-law non-penalization). Answer the sovereign directly in 1-4 sentences, " +
           "using the live hive context when relevant. Never invent metrics you weren't given.";
-        // Single-string prompt (system + context + question), matching the exact
-        // shape the heartbeat's aiProposition() already runs successfully in
-        // production — no `messages` array, which the earlier attempt used.
-        const prompt =
-          SYSTEM + '\n\n' +
+        // Route through the provider waterfall (Claude → Groq → Mistral →
+        // Workers AI): Kai delegates automatically, and whichever key the
+        // founder has bound answers. Workers AI keeps the proven prompt-string
+        // shape inside generate() — the path the heartbeat runs live.
+        const userPrompt =
           (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') +
           'SOVEREIGN: ' + cmd + '\n\nKAI EL:';
-
-        if (env.AI) {
-          try {
-            // Same model + same prompt-string invocation proven live by the
-            // heartbeat on this exact account/binding. The larger 3.1-8b is not
-            // enabled here, so it threw and silently fell back — this is the fix.
-            const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
-              prompt,
-              max_tokens: 400,
-            });
-            const result = String((r?.response ?? r?.result ?? '')).trim();
-            if (result) {
-              // remember the exchange so the hive's memory grows from conversation too
-              // (ctx.waitUntil now that fetch carries ctx — was a latent ReferenceError)
-              ctx?.waitUntil?.(remember(env, 'chat-' + Date.now(), `Kai El on "${cmd.slice(0, 80)}": ${result.slice(0, 200)}`, { kind: 'chat', ts: new Date().toISOString() }));
-              return json({ result });
-            }
-          } catch (e) { /* fall through to canned */ }
+        const gen = await generate(env, { system: SYSTEM, prompt: userPrompt, maxTokens: 400 });
+        if (gen) {
+          // remember the exchange so the hive's memory grows from conversation too
+          // (ctx.waitUntil now that fetch carries ctx — was a latent ReferenceError)
+          ctx?.waitUntil?.(remember(env, 'chat-' + Date.now(), `Kai El on "${cmd.slice(0, 80)}": ${gen.text.slice(0, 200)}`, { kind: 'chat', ts: new Date().toISOString() }));
+          return json({ result: gen.text, provider: gen.provider });
         }
         // constitutional fallback (AI unbound or errored) — never a dead 404
         return json({
@@ -430,6 +524,51 @@ export default {
                   (ctxLines[0] ? '(' + ctxLines[0] + ')' : ''),
         });
       }
+      // ── Files (Cloudflare R2) — the real store behind the Files panel ──
+      // Guarded by the optional FILES binding (commented in wrangler.jsonc until
+      // the founder creates the bucket — the flip-the-switch pattern, same as
+      // Vectorize). Unbound → honest {available:false}, never a fake listing.
+      if (p === '/files' && method === 'GET') {
+        if (!env.FILES) return json({ available: false, files: [], note: 'R2 bucket not provisioned — create it and uncomment the r2_buckets block in wrangler.jsonc' });
+        try {
+          const list = await env.FILES.list({ limit: 200 });
+          return json({
+            available: true,
+            files: (list?.objects || []).map((o) => ({
+              key: o.key, size: o.size, uploaded: o.uploaded,
+            })),
+          });
+        } catch (e) { return json({ available: true, files: [], error: String(e) }); }
+      }
+      if (p === '/files/upload' && method === 'POST') {
+        if (!env.FILES) return json({ available: false, detail: 'R2 bucket not provisioned' }, 503);
+        // Same gate as arena challenge creation: a visitor token from /auth/token.
+        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        const key = (url.searchParams.get('key') || '').replace(/[^A-Za-z0-9._ /-]/g, '').replace(/^\/+|\.\.+/g, '').slice(0, 200);
+        if (!key) return json({ detail: 'key query param required (filename)' }, 400);
+        const len = +(request.headers.get('content-length') || 0);
+        if (len > 10_000_000) return json({ detail: 'file too large (10 MB max)' }, 413);
+        try {
+          await env.FILES.put(key, request.body, {
+            httpMetadata: { contentType: request.headers.get('content-type') || 'application/octet-stream' },
+          });
+          return json({ ok: true, key });
+        } catch (e) { return json({ ok: false, error: String(e) }, 500); }
+      }
+      if (p === '/files/get' && method === 'GET') {
+        if (!env.FILES) return json({ available: false }, 503);
+        const key = url.searchParams.get('key') || '';
+        const obj = await env.FILES.get(key);
+        if (!obj) return json({ detail: 'not found', key }, 404);
+        return new Response(obj.body, {
+          headers: {
+            'content-type': obj.httpMetadata?.contentType || 'application/octet-stream',
+            'content-disposition': `inline; filename="${key.split('/').pop()}"`,
+            ...CORS,
+          },
+        });
+      }
+
       // heartbeat trail — what the hive did while nobody was watching
       if (p === '/pulse') {
         try {
