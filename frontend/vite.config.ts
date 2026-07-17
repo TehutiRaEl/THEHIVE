@@ -55,7 +55,14 @@ export default defineConfig({
     css: true,
   },
   define: {
-    'import.meta.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || 'http://localhost:8000'),
+    // Default to '' (same-origin), NOT localhost. This define overrides the fallback in
+    // src/utils/constants.ts, so a localhost default here hardwired the DEPLOYED bundle to
+    // http://localhost:8000 — on a visitor's phone that fetched their own non-existent
+    // localhost, making the whole app read OFFLINE / 0 agents (PR_LESSONS: a build-time
+    // constant silently breaking the shipped result). Empty = talk to whatever origin
+    // serves the app (the Worker, where /v11 is live). Dev still gets localhost via the
+    // import.meta.env.DEV branch in constants.ts.
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || ''),
     'import.meta.env.VITE_ARENA_WS_URL': JSON.stringify(process.env.VITE_ARENA_WS_URL || 'ws://localhost:3001'),
     'import.meta.env.VITE_SENTRY_DSN': JSON.stringify(process.env.VITE_SENTRY_DSN || ''),
   },
