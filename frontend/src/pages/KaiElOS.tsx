@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useHiveData } from '../hooks/useHiveData';
+import { useIsWideViewport, useForceDesktop } from '../hooks/useViewport';
 import TopStatusBar from '../components/kai-os/TopStatusBar';
 import LeftNav from '../components/kai-os/LeftNav';
 import CenterGraph from '../components/kai-os/CenterGraph';
@@ -40,9 +41,18 @@ type PanelId = 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-sta
 
 export default function KaiElOS() {
   const hive = useHiveData();
+  const wide = useIsWideViewport();
+  const [forceDesktop, setForceDesktop] = useForceDesktop();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const [observatory, setObservatory] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);        // mobile slide-over nav
+  const [communeOpen, setCommuneOpen] = useState(false); // mobile bottom commune sheet
+
+  // Desktop three-column shell when the viewport is wide OR the founder forced
+  // "desktop view". Forcing on a phone pans the full desktop layout via
+  // horizontal scroll — a real "request desktop site", not media-query dependent.
+  const desktop = wide || forceDesktop;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -58,7 +68,8 @@ export default function KaiElOS() {
   }, []);
 
   const handleSelect = useCallback((id: string) => {
-    if (id === 'commune') { setActiveSection(null); return; }
+    setNavOpen(false); // any selection closes the mobile drawer
+    if (id === 'commune') { setActiveSection(null); setCommuneOpen(true); return; }
     setActiveSection(id);
   }, []);
 
@@ -120,41 +131,143 @@ export default function KaiElOS() {
 
   const panel = activeSection ? panels[activeSection as PanelId] : undefined;
 
+  const centerContent = panel ? (
+    <div className="flex-1 overflow-y-auto p-5 sm:p-8">
+      <button
+        onClick={() => setActiveSection(null)}
+        className="mb-6 px-3 py-1.5 rounded-lg bg-void-800 border border-white/10 text-slate-400 text-xs hover:text-cyan-glow"
+      >
+        ← Kai EL OS
+      </button>
+      <h2 className="font-display text-lg text-gold mb-4 tracking-wide">{panel.title}</h2>
+      {panel.body}
+    </div>
+  ) : (
+    <div className="flex-1 min-h-0">
+      <CenterGraph hive={hive} speaking={speaking} onSelect={handleSelect} />
+    </div>
+  );
+
+  const rightRail = (
+    <div className="w-80 shrink-0 h-full flex flex-col gap-3 p-3 bg-void-900 border-l border-white/5 overflow-y-auto">
+      <div className="h-72 shrink-0"><KaiCommune onSpeakingChange={setSpeaking} /></div>
+      <div className="h-40 shrink-0"><HiveTerminal hive={hive} /></div>
+      <WorkflowsDrawer />
+      <div className="border-t border-white/10 pt-3">
+        <ConnectedModels hive={hive} />
+      </div>
+    </div>
+  );
+
+  // ---- Desktop shell (wide viewport or forced) ----
+  if (desktop) {
+    // When forced on a narrow screen, allow horizontal panning of the full
+    // desktop layout (a genuine "request desktop site" experience).
+    const forcedNarrow = forceDesktop && !wide;
+    return (
+      <div className={`h-screen w-screen flex flex-col bg-void-black text-slate-200 font-body ${forcedNarrow ? 'overflow-x-auto' : 'overflow-hidden'}`}>
+        <div className={`flex flex-col h-full ${forcedNarrow ? 'min-w-[1280px]' : 'w-full'}`}>
+          <TopStatusBar hive={hive} />
+          {forcedNarrow && (
+            <button
+              onClick={() => setForceDesktop(false)}
+              className="self-start m-2 px-3 py-1 rounded-lg bg-void-800 border border-cyan-glow/30 text-cyan-glow text-xs hover:bg-void-700"
+            >
+              ↩ Back to mobile view
+            </button>
+          )}
+          <div className="flex flex-1 min-h-0">
+            <LeftNav activeSection={activeSection} onSelect={handleSelect} onCommune={() => { setActiveSection(null); setCommuneOpen(true); }} />
+            <div className="flex-1 min-w-0 relative flex flex-col">
+              {centerContent}
+              <BottomActivityFeed hive={hive} />
+            </div>
+            {rightRail}
+          </div>
+          <Observatory active={observatory} onClose={() => setObservatory(false)} hive={hive} speaking={speaking} onSelect={handleSelect} />
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Mobile shell (narrow viewport, not forced) ----
   return (
     <div className="h-screen w-screen flex flex-col bg-void-black text-slate-200 font-body overflow-hidden">
       <TopStatusBar hive={hive} />
-      <div className="flex flex-1 min-h-0">
-        <LeftNav activeSection={activeSection} onSelect={handleSelect} onCommune={() => setActiveSection(null)} />
 
-        <div className="flex-1 min-w-0 relative flex flex-col">
-          {panel ? (
-            <div className="flex-1 overflow-y-auto p-8">
-              <button
-                onClick={() => setActiveSection(null)}
-                className="mb-6 px-3 py-1.5 rounded-lg bg-void-800 border border-white/10 text-slate-400 text-xs hover:text-cyan-glow"
-              >
-                ← Kai EL OS
-              </button>
-              <h2 className="font-display text-lg text-gold mb-4 tracking-wide">{panel.title}</h2>
-              {panel.body}
-            </div>
-          ) : (
-            <div className="flex-1 min-h-0">
-              <CenterGraph hive={hive} speaking={speaking} onSelect={handleSelect} />
-            </div>
-          )}
-          <BottomActivityFeed hive={hive} />
+      {/* Mobile toolbar: menu + brand + request-desktop */}
+      <div className="flex items-center gap-2 px-3 h-12 shrink-0 border-b border-white/5 bg-void-900/80">
+        <button
+          onClick={() => setNavOpen(true)}
+          aria-label="Open menu"
+          className="h-9 w-9 grid place-items-center rounded-lg bg-void-800 border border-white/10 text-slate-200 text-lg"
+        >
+          ☰
+        </button>
+        <span className="font-display text-gold tracking-[0.18em] text-sm">KAI EL OS</span>
+        <button
+          onClick={() => setForceDesktop(true)}
+          className="ml-auto px-2.5 py-1.5 rounded-lg bg-void-800 border border-cyan-glow/30 text-cyan-glow text-[11px] whitespace-nowrap"
+        >
+          Desktop view
+        </button>
+      </div>
+
+      {/* Center content scales to viewport width */}
+      <div className="flex-1 min-h-0 relative flex flex-col">
+        {centerContent}
+      </div>
+
+      <BottomActivityFeed hive={hive} />
+
+      {/* Pinned commune launcher */}
+      <button
+        onClick={() => setCommuneOpen(true)}
+        className="shrink-0 h-12 flex items-center justify-center gap-2 bg-yale/40 border-t border-cyan-glow/30 text-cyan-glow font-body text-sm"
+      >
+        💬 Commune with Kai El
+      </button>
+
+      {/* Slide-over nav */}
+      {navOpen && (
+        <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setNavOpen(false)} />
+          <div className="relative h-full animate-slideIn">
+            <LeftNav activeSection={activeSection} onSelect={handleSelect} onCommune={() => { setNavOpen(false); setActiveSection(null); setCommuneOpen(true); }} />
+          </div>
+          <button
+            onClick={() => setNavOpen(false)}
+            aria-label="Close menu"
+            className="absolute top-3 right-3 h-9 w-9 grid place-items-center rounded-lg bg-void-800 border border-white/10 text-slate-300"
+          >
+            ✕
+          </button>
         </div>
+      )}
 
-        <div className="w-80 shrink-0 h-full flex flex-col gap-3 p-3 bg-void-900 border-l border-white/5 overflow-y-auto">
-          <div className="h-72 shrink-0"><KaiCommune onSpeakingChange={setSpeaking} /></div>
-          <div className="h-40 shrink-0"><HiveTerminal hive={hive} /></div>
-          <WorkflowsDrawer />
-          <div className="border-t border-white/10 pt-3">
-            <ConnectedModels hive={hive} />
+      {/* Commune bottom sheet */}
+      {communeOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setCommuneOpen(false)} />
+          <div className="relative max-h-[85vh] rounded-t-2xl bg-void-900 border-t border-white/10 flex flex-col overflow-y-auto p-3 gap-3">
+            <div className="flex items-center justify-between">
+              <span className="font-display text-gold tracking-wide text-sm">Commune</span>
+              <button
+                onClick={() => setCommuneOpen(false)}
+                aria-label="Close commune"
+                className="h-8 w-8 grid place-items-center rounded-lg bg-void-800 border border-white/10 text-slate-300"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="h-80 shrink-0"><KaiCommune onSpeakingChange={setSpeaking} /></div>
+            <div className="h-40 shrink-0"><HiveTerminal hive={hive} /></div>
+            <div className="border-t border-white/10 pt-3">
+              <ConnectedModels hive={hive} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <Observatory active={observatory} onClose={() => setObservatory(false)} hive={hive} speaking={speaking} onSelect={handleSelect} />
     </div>

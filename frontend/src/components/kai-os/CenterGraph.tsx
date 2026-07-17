@@ -74,7 +74,7 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
             key={n.id}
             onClick={() => onSelect(n.id)}
             className={`absolute z-10 flex flex-col items-center gap-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full
-              w-20 h-20 border transition-all hover:scale-105
+              w-14 h-14 sm:w-20 sm:h-20 border transition-all hover:scale-105
               ${n.wired ? 'border-cyan-glow/40 bg-void-800/80 hover:border-cyan-glow' : 'border-white/10 bg-void-800/50 opacity-50'}`}
             style={{ left: `${xPct}%`, top: `${yPct}%` }}
             title={!n.wired ? `${n.label} — not yet connected` : n.label}
