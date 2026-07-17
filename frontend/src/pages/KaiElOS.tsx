@@ -4,6 +4,7 @@ import { useIsWideViewport, useForceDesktop } from '../hooks/useViewport';
 import TopStatusBar from '../components/kai-os/TopStatusBar';
 import LeftNav from '../components/kai-os/LeftNav';
 import CenterGraph from '../components/kai-os/CenterGraph';
+import KaiSigil from '../components/kai-os/KaiSigil';
 import KaiCommune from '../components/kai-os/KaiCommune';
 import HiveTerminal from '../components/kai-os/HiveTerminal';
 import BottomActivityFeed from '../components/kai-os/BottomActivityFeed';
@@ -12,6 +13,7 @@ import ConnectedModels from '../components/kai-os/ConnectedModels';
 import DreamLogs from '../components/kai-os/DreamLogs';
 import HiveUpdates from '../components/kai-os/HiveUpdates';
 import LegalLearning from '../components/kai-os/LegalLearning';
+import FilesPanel from '../components/kai-os/FilesPanel';
 import Observatory from '../components/kai-os/Observatory';
 
 // The 13 existing, live-data-wired tabs — each already renders its own
@@ -100,16 +102,7 @@ export default function KaiElOS() {
         <div className="max-w-md"><WorkflowsDrawer /></div>
       ),
     },
-    sources: {
-      title: 'Files · Sources', body: (
-        <p className="text-slate-400 text-sm leading-relaxed max-w-lg">
-          Founder-provided material (PDFs, books, web clippings, research notes) lives in
-          <code className="mx-1 text-cyan-glow">Project_file/Founders Visonary Folder/SOURCES/</code>
-          in the repo. Anything dropped there is routed through the <code className="text-cyan-glow">research-to-dna</code> skill
-          before it becomes hive knowledge — nothing is treated as canon automatically.
-        </p>
-      ),
-    },
+    sources: { title: 'Files', body: <FilesPanel /> },
     skills: {
       title: 'Active Skills', body: (
         <p className="text-slate-400 text-sm leading-relaxed max-w-lg">
@@ -147,8 +140,21 @@ export default function KaiElOS() {
       {panel.body}
     </div>
   ) : (
-    <div className="flex-1 min-h-0">
+    <div className="flex-1 min-h-0 relative">
       <CenterGraph hive={hive} speaking={speaking} onSelect={handleSelect} />
+      {/* The sacred-geometry sigil — its own element UNDER the web (per the
+          founder's sketch), not fused into the center. Click = Observatory. */}
+      <button
+        onClick={() => setObservatory(true)}
+        className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-20 flex flex-col items-center gap-1 group"
+        aria-label="Open the Observatory"
+        title="The Observatory (Space)"
+      >
+        <div className="opacity-80 group-hover:opacity-100 transition-opacity">
+          <KaiSigil size={80} speaking={speaking} online={hive.online} />
+        </div>
+        <span className="text-[8px] uppercase tracking-[0.25em] text-slate-500 group-hover:text-cyan-glow">Observatory</span>
+      </button>
     </div>
   );
 

@@ -43,8 +43,10 @@ export default function LeftNav({ activeSection, onSelect, onCommune }: LeftNavP
     <button
       key={item.id}
       onClick={() => (item.id === 'commune' ? onCommune() : onSelect(item.id))}
-      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm text-left transition-colors
-        ${activeSection === item.id ? 'bg-yale/40 text-cyan-glow' : 'text-slate-300 hover:bg-white/5'}
+      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm text-left transition-all
+        ${activeSection === item.id
+          ? 'bg-yale/40 text-cyan-neon shadow-neon-cyan border border-cyan-glow/40'
+          : 'text-slate-300 hover:bg-white/5 hover:text-cyan-glow border border-transparent'}
         ${!item.wired ? 'opacity-50' : ''}`}
       title={!item.wired ? `${item.label} — not yet connected` : item.label}
     >

@@ -19,11 +19,22 @@ export default {
         },
         cyan: {
           glow: '#22d3ee',
+          neon: '#00e5ff',
           dim: 'rgba(34, 211, 238, 0.35)',
         },
         gold: {
           DEFAULT: '#e8c15a',
+          neon: '#ffd166',
           dim: 'rgba(232, 193, 90, 0.35)',
+        },
+        violet: {
+          neon: '#8b5cf6',
+          bright: '#a78bfa',
+          dim: 'rgba(139, 92, 246, 0.35)',
+        },
+        electric: {
+          blue: '#3b82f6',
+          green: '#34d399',
         },
       },
       fontFamily: {
@@ -33,6 +44,10 @@ export default {
       boxShadow: {
         glow: '0 0 24px rgba(34, 211, 238, 0.25)',
         'glow-gold': '0 0 24px rgba(232, 193, 90, 0.3)',
+        'neon-cyan': '0 0 8px rgba(0, 229, 255, 0.6), 0 0 28px rgba(0, 229, 255, 0.25)',
+        'neon-violet': '0 0 8px rgba(139, 92, 246, 0.6), 0 0 28px rgba(139, 92, 246, 0.25)',
+        'neon-gold': '0 0 8px rgba(255, 209, 102, 0.55), 0 0 28px rgba(255, 209, 102, 0.22)',
+        'panel-neon': 'inset 0 0 0 1px rgba(34, 211, 238, 0.12), 0 0 20px rgba(59, 130, 246, 0.08)',
       },
       backdropBlur: {
         xs: '2px',
