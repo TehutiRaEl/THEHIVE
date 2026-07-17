@@ -36,8 +36,17 @@ jobs:
       - name: Probe the live app in a real browser
         env:
           COMMITTED_HASH: ${{ steps.committed.outputs.hash }}
+          # Browsers are already baked into the mcr playwright image; only the JS
+          # package needs to be resolvable. Skip the browser re-download.
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
         run: |
-          cat > /tmp/probe.mjs <<'EOF'
+          # ESM can't resolve the image's global 'playwright' from an arbitrary
+          # script path, so install the matching JS package into the workspace
+          # (no browser download) and run the script from here.
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.48.0 --no-save --no-audit --no-fund --loglevel=error
+          mkdir -p artifacts
+          cat > probe.mjs <<'EOF'
           import { chromium } from 'playwright';
           const BASE = 'https://thehive.sovereignhive.workers.dev/app/';
           const committed = process.env.COMMITTED_HASH || '';
@@ -85,7 +94,7 @@ jobs:
               if (!hasDesktopBtn) failures.push('[mobile] "Desktop view" button not found');
             }
 
-            await page.screenshot({ path: `/tmp/artifacts/${name}.png`, fullPage: false });
+            await page.screenshot({ path: `artifacts/${name}.png`, fullPage: false });
             console.log(`── ${name} (${viewport.width}x${viewport.height}): served=${served} live=${live} agents=${agents} consoleErrors=${consoleErrors.length}`);
             await ctx.close();
           }
@@ -101,13 +110,12 @@ jobs:
           }
           console.log('✅ Rendered app is live at both mobile and desktop: LIVE status, real agents, no overflow, no console errors.');
           EOF
-          mkdir -p /tmp/artifacts
-          node /tmp/probe.mjs
+          node probe.mjs
 
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ui-live-probe-screenshots
-          path: /tmp/artifacts/*.png
+          path: artifacts/*.png
           if-no-files-found: warn
