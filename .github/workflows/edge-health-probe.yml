@@ -43,6 +43,7 @@ jobs:
           probe /v11/pulse "JSON {pulse:[...]} — heartbeat trail (empty until first cron tick)"
           probe "/v11/arena/challenges" "JSON — watch for auto-spawned challenges"
           probe /v11/memory/status "JSON {vectorize_bound,ai_bound} — memory layer wiring"
+          probe /v11/updates "JSON {updates:[...]} — hive→founder update channel"
           echo "── UI Debugger diagnostic suite (was 9× 404) ──"
           probe /v11/debug/health "JSON subsystems — d1/ai/vectorize/heartbeat"
           probe /v11/debug/env "JSON bindings — names/booleans only, never values"
