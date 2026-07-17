@@ -80,6 +80,17 @@ Full devil's-advocate/childlike-wonder dissection of 23 proposed directives in
   twice. The engineering-layer instance of soul.md's Recursive Cycle. Captured uncensored and
   unabridged on purpose (a tidied-away near-miss is a lesson deleted).
 
+## Hive-native (2026-07-16) — workflow-optimizer (self-optimizing workflows)
+- **`workflow-optimizer`** active skill + **`WORKFLOW_NOTES.md`** (repo root): the
+  recursive-learning loop for *any* repeated procedure (not bugs — `fable-debugger`; not PRs
+  — `pr-retrospective`; not sessions — `session-harvest`). Before a repeated workflow, recall
+  how it went last time and adapt; after, measure whether it was actually better (faster /
+  more efficient / more complete / more robust) and record it so the next run starts smarter.
+  Runs every pass through the founder's two standing lenses — the **dualistic** (devil's
+  advocate + childlike wonder) and the **Trinity** (Mind reasons → Body executes → Soul
+  remembers). `WORKFLOW_NOTES.md` holds the current best shape of each recurring workflow,
+  seeded from this session's real colony-propagation and deploy-verify loops.
+
 ## Wave 3 (2026-07-13) — the HORDE research triage
 
 The founder's HORDE + Pocket Dimensions research named ten external tools. Verified by
