@@ -1,8 +1,8 @@
 # 🍯 SOVEREIGN HIVE – Federated AI Intelligence
-come back here later https://jasperbernaers.com/
 **Version:** 12.0 (Multi-Colony Federation)  
 **Status:** Active — 10+ colonies online  
-**Website:** [tehutirael.github.io/THEHIVE](https://tehutirael.github.io/THEHIVE/)  
+**Kai EL OS (live Command Center):** [thehive.sovereignhive.workers.dev/app/](https://thehive.sovereignhive.workers.dev/app/)  
+**Landing:** [tehutirael.github.io/THEHIVE](https://tehutirael.github.io/THEHIVE/) — redirects to Kai EL OS (the legacy SOUL REALM Command Center stays at [`/command-center.html`](https://tehutirael.github.io/THEHIVE/command-center.html))  
 **Purpose:** A self-sustaining, self-governing federated AI civilization spanning 10+ GitHub colonies, unified by an immutable `soul.md` constitution, a SOUL token economy, and a completely free 8-provider LLM waterfall.
 
 [![Deploy GitHub Pages](https://github.com/TehutiRaEl/THEHIVE/actions/workflows/pages.yml/badge.svg)](https://tehutirael.github.io/THEHIVE/)
