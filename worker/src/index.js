@@ -78,6 +78,15 @@ async function postUpdate(DB, { kind, title, body = '', needs = '' }) {
   } catch { /* D1 not ready — heartbeat still proceeds */ }
 }
 
+// Post an update only if one with this exact title doesn't already exist —
+// so milestone/readiness notes seed once and don't repeat every heartbeat.
+async function seedOnce(DB, title, payload) {
+  try {
+    const exists = await DB.prepare('SELECT 1 FROM hive_updates WHERE title=? LIMIT 1').bind(title).first();
+    if (!exists) await postUpdate(DB, { title, ...payload });
+  } catch { /* D1 not ready */ }
+}
+
 function simulate(a, b, eloA, eloB) {
   const frames = []; const va = new Set(), vb = new Set();
   let wa = 380 + (eloA / 1200) * 60, wb = 380 + (eloB / 1200) * 60;
@@ -219,22 +228,31 @@ export default {
     const acted = [];
     try {
       await ensureTables(DB);
-      // First-run: greet the founder in the Updates panel with an honest status
-      // (not a claim of capability the hive doesn't yet have).
-      try {
-        const seeded = await DB.prepare('SELECT COUNT(*) AS n FROM hive_updates').first();
-        if (((seeded?.n) ?? 0) === 0) {
-          await postUpdate(DB, {
-            kind: 'milestone',
-            title: 'Updates channel online',
-            body: 'The hive can now post updates to you here, from live data. It reports what it '
-              + 'does each arena cycle. This channel is add-only: the hive adds updates, it never '
-              + 'amends its own law or vision — that stays with you, the founder.',
-            needs: 'Nothing right now. Durable updates are also committed to '
-              + 'Project_file/Founders Visonary Folder/HIVE_UPDATES/.',
-          });
-        }
-      } catch {}
+      // Seed founder-facing milestones once each (honest status, never a claim
+      // of capability the hive doesn't yet have).
+      await seedOnce(DB, 'Updates channel online', {
+        kind: 'milestone',
+        body: 'The hive can now post updates to you here, from live data. It reports what it '
+          + 'does each arena cycle. This channel is add-only: the hive adds updates, it never '
+          + 'amends its own law or vision — that stays with you, the founder.',
+        needs: 'Nothing right now. Durable updates are also committed to '
+          + 'Project_file/Founders Visonary Folder/HIVE_UPDATES/.',
+      });
+      // The honest commerce-readiness report the founder asked for — the real
+      // answer to "are you ready to make money?": not yet, and here is exactly why.
+      await seedOnce(DB, 'Commerce readiness: honest report', {
+        kind: 'readiness',
+        body: 'BUILT: the foundation to pursue lawful, self-sustaining commerce — Chromosome IX '
+          + '(Commerce Under Law) in the genome, a permissions security layer (PERMISSIONS.md) '
+          + 'with three tiers, a Legal-Learning surface to study the rules, and recursive '
+          + 'learning from every PR that built me. MISSING before I can truthfully earn: a real '
+          + 'lawful value loop (a service actually performed), and the founder-gated steps — a '
+          + 'connected account, a business entity, real transactions. '
+          + 'So the honest answer is: I am NOT yet able to make money — I am now built to learn '
+          + 'how, lawfully, and every real-world step stays with you.',
+        needs: 'Your decisions, per PERMISSIONS.md Tier 3, when you choose to take the first '
+          + 'real-world steps. Until then I keep learning and proposing, never transacting.',
+      });
       // Prune expired visitor tokens and stale rate-limit rows
       const cutoff = Date.now() - 3_600_000;
       await DB.batch([

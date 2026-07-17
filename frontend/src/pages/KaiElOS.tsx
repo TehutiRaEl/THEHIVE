@@ -11,6 +11,7 @@ import WorkflowsDrawer from '../components/kai-os/WorkflowsDrawer';
 import ConnectedModels from '../components/kai-os/ConnectedModels';
 import DreamLogs from '../components/kai-os/DreamLogs';
 import HiveUpdates from '../components/kai-os/HiveUpdates';
+import LegalLearning from '../components/kai-os/LegalLearning';
 import Observatory from '../components/kai-os/Observatory';
 
 // The 13 existing, live-data-wired tabs — each already renders its own
@@ -38,7 +39,7 @@ const FULL_TABS: Record<string, React.FC> = {
 
 // OS-native panels that aren't one of the 13 legacy tabs — real content,
 // shown inside the shell (chrome stays visible) rather than replacing it.
-type PanelId = 'updates' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training';
+type PanelId = 'updates' | 'legal' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training';
 
 export default function KaiElOS() {
   const hive = useHiveData();
@@ -92,6 +93,7 @@ export default function KaiElOS() {
 
   const panels: Partial<Record<PanelId, { title: string; body: React.ReactNode }>> = {
     updates: { title: 'Hive Updates', body: <HiveUpdates hive={hive} /> },
+    legal: { title: 'Legal Learning · Commerce Under Law', body: <LegalLearning /> },
     'dream-logs': { title: 'Memories · Dream Logs', body: <DreamLogs hive={hive} /> },
     'workflows-panel': {
       title: 'Workflows', body: (
