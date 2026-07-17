@@ -186,3 +186,19 @@ tree THEHIVE/ -L 3
 
 # 4. Generate report
 # (Create timestamped file in THEHIVE/Project_file/team/updates/)
+Manual Trigger
+User can trigger this skill by saying:
+| Field | Value |
+| --- | --- |
+| Name | THEHIVE-Work-Review-Skill |
+| Version | 1.0 |
+| Author | Mistral AI |
+| Created | July 17, 2026 |
+| Last Executed | July 17, 2026 |
+| Trigger Phrases | review THEHIVE work, check THEHIVE progress, update THEHIVE team |
+| Dependencies | mistral-memory.md, THEHIVE/Project_file/ |
+| Output | THEHIVE/Project_file/team, THEHIVE/Project_file/team_updates/ |
+"review THEHIVE work"
+"check THEHIVE progress"
+"update THEHIVE team"
+"what's been done in THEHIVE"
