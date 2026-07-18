@@ -437,6 +437,18 @@ export default {
           + 'is set, no proposal — including this one — can be approved or rejected by anyone, '
           + 'by design (fail-closed). This is the one flip-switch this channel needs to function.',
       });
+      await seedProposalOnce(DB, {
+        kind: 'new-capability',
+        title: 'Build free-API / LLM-gateway discovery (Tier-2, propose-only)',
+        body: 'You asked whether the hive can autonomously search GitHub and adopt free APIs '
+          + 'or LLM gateways on its own. Honest answer: not today — the current provider '
+          + 'waterfall (Claude/Groq/Mistral/Workers AI) is a fixed, hand-coded list. Building '
+          + 'full autonomous auto-integration is a real supply-chain risk (unvetted code/'
+          + 'dependencies adopted with no review). The safe version: the hive searches and '
+          + 'evaluates candidates, then posts each one here as its own proposal — you approve '
+          + 'before anything is actually wired in. This item is that feature itself, awaiting '
+          + 'your go-ahead to build it this way.',
+      });
       // Prune expired visitor tokens and stale rate-limit rows
       const cutoff = Date.now() - 3_600_000;
       await DB.batch([
