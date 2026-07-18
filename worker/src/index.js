@@ -46,6 +46,20 @@ async function tokenOk(DB, request, env) {
   } catch { return true; }
 }
 
+// Founder-only gate for deciding hive proposals — deliberately the OPPOSITE
+// default of tokenOk above. tokenOk fails OPEN when no admin key is set
+// (fine for anti-spam on a chat message). Approving a hive-evolution
+// proposal is a much higher-stakes action — "the founder said yes" must be
+// verifiably true, so this fails CLOSED: with no FOUNDER_KEY secret bound,
+// nothing can be approved or rejected at all, by anyone, rather than
+// silently letting any visitor decide. See FLIP_THE_SWITCHES.md.
+function founderAuthOk(request, env) {
+  if (!env.FOUNDER_KEY) return false;
+  const auth = request.headers.get('Authorization') || '';
+  const key = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  return !!key && key === env.FOUNDER_KEY;
+}
+
 // D1 table initialisation — called once per heartbeat to ensure all tables exist.
 async function ensureTables(DB) {
   await DB.batch([
@@ -63,7 +77,29 @@ async function ensureTables(DB) {
     DB.prepare(`CREATE TABLE IF NOT EXISTS hive_updates
       (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
        kind TEXT NOT NULL, title TEXT NOT NULL, body TEXT, needs TEXT)`),
+    // Hive → founder PROPOSALS — the hive's own suggestions for how it should
+    // evolve (new features, goals, implementations, changes). Distinct from
+    // hive_updates (status reports): a proposal always starts 'pending' and
+    // ONLY changes state via the founder-key-gated /decide endpoint. The hive
+    // may add proposals freely; it can never approve its own. Never auto-applied.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS hive_proposals
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
+       kind TEXT NOT NULL, title TEXT NOT NULL, body TEXT,
+       status TEXT NOT NULL DEFAULT 'pending',
+       decided_at TEXT, founder_note TEXT)`),
   ]);
+}
+
+// Seed a proposal once (by title) — same idempotent pattern as seedOnce for
+// hive_updates, so re-running the heartbeat never duplicates a suggestion.
+async function seedProposalOnce(DB, { kind, title, body }) {
+  try {
+    const exists = await DB.prepare('SELECT 1 FROM hive_proposals WHERE title=? LIMIT 1').bind(title).first();
+    if (!exists) {
+      await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status) VALUES (?,?,?,?,\'pending\')')
+        .bind(new Date().toISOString(), kind, title, body).run();
+    }
+  } catch { /* D1 not ready */ }
 }
 
 // Append a founder-facing update (add-only; never edits law/vision). Keeps the
@@ -370,6 +406,37 @@ export default {
         needs: 'Your decisions, per PERMISSIONS.md Tier 3, when you choose to take the first '
           + 'real-world steps. Until then I keep learning and proposing, never transacting.',
       });
+      // Real, currently-open proposals — genuinely pending founder decisions
+      // from this session, not placeholder examples. This is the Proposals
+      // channel's first real content: new implementations awaiting your yes/no.
+      await seedProposalOnce(DB, {
+        kind: 'new-colony',
+        title: 'Create the "venture" colony repository',
+        body: 'You asked for a new colony dedicated to entrepreneurial ventures (copywriting, '
+          + 'dropshipping, app-building, invention/product ideas), separate from aether. I can\'t '
+          + 'create GitHub repositories myself (no permission) — creating github.com/venture (empty) '
+          + 'and telling me is the one step that unblocks scaffolding the whole colony.',
+      });
+      await seedProposalOnce(DB, {
+        kind: 'flip-switch',
+        title: 'Provision Vectorize (sovereign memory)',
+        body: 'wrangler vectorize create hive-memory --dimensions=768 --metric=cosine, then '
+          + 'uncomment the vectorize block in wrangler.jsonc. Unlocks real semantic recall over '
+          + 'the hive\'s own history instead of vectorize_bound:false.',
+      });
+      await seedProposalOnce(DB, {
+        kind: 'flip-switch',
+        title: 'Provision R2 (Files store)',
+        body: 'wrangler r2 bucket create hive-files, then uncomment the r2_buckets block in '
+          + 'wrangler.jsonc. Unlocks real upload/list/download in the Files panel.',
+      });
+      await seedProposalOnce(DB, {
+        kind: 'flip-switch',
+        title: 'Bind a founder key so proposals can actually be decided',
+        body: 'wrangler secret put FOUNDER_KEY (any strong random value you choose). Until this '
+          + 'is set, no proposal — including this one — can be approved or rejected by anyone, '
+          + 'by design (fail-closed). This is the one flip-switch this channel needs to function.',
+      });
       // Prune expired visitor tokens and stale rate-limit rows
       const cutoff = Date.now() - 3_600_000;
       await DB.batch([
@@ -477,6 +544,54 @@ export default {
             'SELECT id, ts, kind, title, body, needs FROM hive_updates ORDER BY id DESC LIMIT 30').all();
           return json({ updates: results });
         } catch { return json({ updates: [] }); }
+      }
+      // Hive proposals — suggestions for how the hive should evolve. Pending
+      // ones always need the founder's explicit decision; nothing here is
+      // ever auto-applied. founder_auth_bound tells the UI whether the
+      // decide endpoint can do anything yet (see founderAuthOk above).
+      if (p === '/proposals' && method === 'GET') {
+        try {
+          const { results } = await DB.prepare(
+            `SELECT id, ts, kind, title, body, status, decided_at, founder_note FROM hive_proposals
+             ORDER BY (status='pending') DESC, id DESC LIMIT 50`).all();
+          return json({ proposals: results, founder_auth_bound: !!env.FOUNDER_KEY });
+        } catch { return json({ proposals: [], founder_auth_bound: !!env.FOUNDER_KEY }); }
+      }
+      if (p === '/proposals' && method === 'POST') {
+        // Anti-spam only (same permissive-if-unbound tokenOk as other public
+        // writes) — creating a suggestion is Tier 1, reversible, and never
+        // itself changes anything. Deciding it is the gated action.
+        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        const body = await request.json().catch(() => ({}));
+        const kind = (body.kind || 'suggestion').toString().slice(0, 40);
+        const title = (body.title || '').toString().trim().slice(0, 200);
+        const detail = (body.body || '').toString().slice(0, 4000);
+        if (!title) return json({ detail: 'title required' }, 400);
+        await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status) VALUES (?,?,?,?,\'pending\')')
+          .bind(new Date().toISOString(), kind, title, detail).run();
+        return json({ ok: true });
+      }
+      const decideMatch = p.match(/^\/proposals\/(\d+)\/decide$/);
+      if (decideMatch && method === 'POST') {
+        if (!founderAuthOk(request, env)) {
+          return json({
+            detail: env.FOUNDER_KEY
+              ? 'invalid or missing founder key'
+              : 'no FOUNDER_KEY bound yet — nothing can be decided until the founder sets one (see FLIP_THE_SWITCHES.md)',
+          }, 401);
+        }
+        const id = Number(decideMatch[1]);
+        const body = await request.json().catch(() => ({}));
+        const decision = body.decision === 'approved' ? 'approved' : body.decision === 'rejected' ? 'rejected' : null;
+        if (!decision) return json({ detail: "decision must be 'approved' or 'rejected'" }, 400);
+        const note = (body.note || '').toString().slice(0, 2000);
+        const result = await DB.prepare(
+          "UPDATE hive_proposals SET status=?, decided_at=?, founder_note=? WHERE id=? AND status='pending'"
+        ).bind(decision, new Date().toISOString(), note, id).run();
+        if (!result.meta?.changes) {
+          return json({ detail: `proposal ${id} not found or already decided` }, 404);
+        }
+        return json({ ok: true, id, decision });
       }
       if (p === '/llm/status') {
         const roster = providerRoster(env);

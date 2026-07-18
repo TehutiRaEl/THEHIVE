@@ -42,6 +42,21 @@ whichever is highest in the waterfall).
 Keys live only as Cloudflare secrets — never in the repo, never echoed back (F-001: the
 debug surface reports names/presence only).
 
+## 4 · Founder key → the Proposals panel can actually approve/reject
+
+The hive can now draft standing suggestions ("Proposals" in the left nav) — new
+implementations, goals, changes it thinks are worth doing. Nothing is ever applied on its own;
+every item waits for your explicit approve/reject. That decision endpoint is deliberately
+**fail-closed**: with no key bound, nobody — not even you, from the UI — can decide anything,
+rather than defaulting to "anyone can."
+
+```bash
+npx wrangler secret put FOUNDER_KEY   # pick any strong random value yourself
+```
+Then paste that same value into the Proposals panel's key field (stored only in your
+browser's localStorage, never sent anywhere except the `Authorization` header on decide calls).
+**Proof:** `GET /v11/proposals` → `founder_auth_bound: true`; Approve/Reject buttons work.
+
 ## Already flipped / no switch needed
 - D1 database, Workers AI, assets, the 30-min heartbeat — live now.
 - The UI (graph web, neon theme, Updates, Legal Learning, Files panel shell) — ships with
