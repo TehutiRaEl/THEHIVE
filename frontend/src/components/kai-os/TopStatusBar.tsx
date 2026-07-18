@@ -7,9 +7,10 @@ const KAI_FREQUENCY_HZ = 432;
 
 interface TopStatusBarProps {
   hive: HiveData;
+  onOpenBiosystem?: () => void;
 }
 
-export default function TopStatusBar({ hive }: TopStatusBarProps) {
+export default function TopStatusBar({ hive, onOpenBiosystem }: TopStatusBarProps) {
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
 
   useEffect(() => {
@@ -54,7 +55,17 @@ export default function TopStatusBar({ hive }: TopStatusBarProps) {
       <span className="text-slate-400">
         Models <span className="text-slate-100">{hive.aiBound ? (hive.llm?.active_provider ?? 'bound') : 'simulation'}</span>
       </span>
-      <span className="ml-auto text-slate-500">
+      {onOpenBiosystem && (
+        <button
+          onClick={onOpenBiosystem}
+          className="ml-auto px-2 py-0.5 rounded border border-violet-bright/30 text-violet-bright hover:bg-violet-bright/10 hover:border-violet-bright/60 shrink-0"
+          style={{ textShadow: '0 0 8px rgba(139,92,246,0.5)' }}
+          title="Open the Biosystem Architecture dashboard"
+        >
+          🧬 Biosystem
+        </button>
+      )}
+      <span className={onOpenBiosystem ? 'text-slate-500' : 'ml-auto text-slate-500'}>
         Latency <span className="text-emerald-300">{latencyMs != null ? `${latencyMs}ms` : '—'}</span>
       </span>
     </div>
