@@ -15,6 +15,41 @@ const json = (data, status = 200) =>
 
 const COLORS = [[0.1, 0.8, 0.1], [0.1, 0.4, 0.9], [0.0, 0.9, 0.9], [1.0, 0.8, 0.0]];
 
+// The evolutionary roadmap — GOVERNANCE.md F-008D / F-009E, verbatim:
+// "Germination → Mycelium → Fruiting → Transformation → Senescence → Seed."
+// F-008D: "the cycle is infinite" — Seed loops back to Germination, not a dead end.
+// Driven by `soul` (the agents table's live EVW-derived wealth score, soul.md's
+// wealth formula) since it's the only real, accumulating, per-agent number the
+// hive already tracks — nothing here is invented per-agent progress.
+// Thresholds below are provisional and UNCALIBRATED (same honesty disclosure as
+// F-012's phase thresholds) — there isn't yet a real distribution of soul values
+// across a mature hive to calibrate against.
+const ROADMAP_STAGES = [
+  { name: 'Germination', min: 0 },
+  { name: 'Mycelium', min: 25 },
+  { name: 'Fruiting', min: 75 },
+  { name: 'Transformation', min: 150 },
+  { name: 'Senescence', min: 300 },
+  { name: 'Seed', min: 500 },
+];
+function computeRoadmap(soulRaw) {
+  const soul = Number(soulRaw) || 0;
+  let idx = 0;
+  for (let i = 0; i < ROADMAP_STAGES.length; i++) if (soul >= ROADMAP_STAGES[i].min) idx = i;
+  const stage = ROADMAP_STAGES[idx];
+  const next = ROADMAP_STAGES[idx + 1] || null;
+  const progressPct = next
+    ? Math.max(0, Math.min(100, Math.round(((soul - stage.min) / (next.min - stage.min)) * 100)))
+    : 100;
+  return {
+    stage: stage.name,
+    nextStage: next ? next.name : 'Germination (F-008D: the cycle is infinite)',
+    soul,
+    soulToNext: next ? Math.max(0, +(next.min - soul).toFixed(1)) : 0,
+    progressPct,
+  };
+}
+
 async function sha256(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -540,6 +575,24 @@ export default {
         const { results } = await DB.prepare('SELECT name AS agent, soul FROM agents ORDER BY soul DESC').all();
         return json({ leaderboard: results });
       }
+      // Evolutionary roadmap (F-008D/F-009E): every agent's real progress
+      // toward its next stage, plus a Hoard-level aggregate. See
+      // computeRoadmap() above for the honesty disclosure on thresholds.
+      if (p === '/roadmap') {
+        const { results } = await DB.prepare(
+          "SELECT name, soul, elo FROM agents WHERE status='active' ORDER BY soul DESC").all();
+        const agents = results.map(a => ({ agent: a.name, elo: a.elo, ...computeRoadmap(a.soul) }));
+        const totalSoul = results.reduce((sum, a) => sum + (Number(a.soul) || 0), 0);
+        const avgSoul = results.length ? totalSoul / results.length : 0;
+        const hoard = { agentCount: results.length, totalSoul: +totalSoul.toFixed(1), ...computeRoadmap(avgSoul) };
+        return json({
+          agents,
+          hoard,
+          note: 'hoard.* is an aggregate rollup (mean agent soul) for display purposes only — the Hoard is not itself a separate constitutional entity with its own tracked soul value.',
+          stages: ROADMAP_STAGES.map(s => s.name),
+          source: 'GOVERNANCE.md F-008D/F-009E',
+        });
+      }
       if (p === '/tasks') {
         const { results } = await DB.prepare('SELECT * FROM tasks ORDER BY id DESC LIMIT 20').all();
         return json({ tasks: results });
@@ -826,7 +879,7 @@ export default {
           base: '/v11',
           routes: [
             'GET /health', 'GET /agents', 'GET /grading/leaderboard', 'GET /wallet/leaderboard/soul',
-            'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
+            'GET /roadmap', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
             'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
             'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',

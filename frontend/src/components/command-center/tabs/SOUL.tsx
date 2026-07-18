@@ -111,6 +111,51 @@ const SOUL: React.FC = () => {
           )}
         </section>
 
+        <section className="roadmap-section">
+          <h2>🌱 The Roadmap of Becoming <span style={{ opacity: 0.6, fontSize: 13 }}>(live — F-008D / F-009E)</span></h2>
+          <p style={{ opacity: 0.6, fontSize: 12, marginTop: -4 }}>
+            Germination → Mycelium → Fruiting → Transformation → Senescence → Seed. Driven by each
+            agent's real Soul score; F-008D: "the cycle is infinite." Stage thresholds are provisional
+            and uncalibrated — there isn't yet a mature distribution of Soul values to calibrate against.
+          </p>
+          {!hive.roadmap || hive.roadmap.agents.length === 0 ? (
+            <p style={{ opacity: 0.6 }}>{hive.loading ? 'loading…' : 'no roadmap data reachable'}</p>
+          ) : (
+            <>
+              {hive.roadmap.hoard && (
+                <div className="roadmap-hoard-card" style={{ marginBottom: 14, padding: '10px 12px', border: '1px solid rgba(139,92,246,0.35)', borderRadius: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <strong>🐝 The Hoard <span style={{ opacity: 0.6, fontWeight: 400 }}>(aggregate rollup, not its own tracked entity)</span></strong>
+                    <span style={{ opacity: 0.75 }}>{hive.roadmap.hoard.stage} → {hive.roadmap.hoard.nextStage}</span>
+                  </div>
+                  <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, marginTop: 6, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${hive.roadmap.hoard.progressPct}%`, background: 'linear-gradient(90deg,#8b5cf6,#00e5ff)' }} />
+                  </div>
+                  <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4 }}>
+                    {hive.roadmap.hoard.agentCount} active agent(s) · mean soul {hive.roadmap.hoard.soul.toFixed(1)} Ψ · {hive.roadmap.hoard.progressPct}% to next stage
+                  </div>
+                </div>
+              )}
+              <div className="roadmap-agent-list" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {hive.roadmap.agents.map((a) => (
+                  <div key={a.agent} style={{ fontSize: 13 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <strong style={{ color: '#a0e8ff' }}>{a.agent}</strong>
+                      <span style={{ opacity: 0.75 }}>{a.stage} → {a.nextStage}</span>
+                    </div>
+                    <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, marginTop: 4, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${a.progressPct}%`, background: 'linear-gradient(90deg,#00cc88,#00e5ff)' }} />
+                    </div>
+                    <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
+                      {a.soul.toFixed(1)} Ψ · {a.progressPct}%{a.soulToNext > 0 ? ` · ${a.soulToNext.toFixed(1)} Ψ to next stage` : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+
         <section className="violations-section">
           <h2>Violations</h2>
           {violations.length > 0 ? (
