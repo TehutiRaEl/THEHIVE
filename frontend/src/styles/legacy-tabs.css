@@ -1,0 +1,224 @@
+/* Styling for the 13 legacy Command Center tabs (HIVE, ARENA, GOVERN, DREAM,
+ * ARCANE, WORLD, SOUL, MISSIONS, API, 4D, WOW, NO_MANS_SKY, SETTINGS).
+ *
+ * Root cause found via fable-debugger CONTRAST: these tabs use a consistent,
+ * semantic class-naming convention (*-tab, *-section, *-grid, *-card,
+ * control-btn, status-online, ...) and index.css even defines CSS variables
+ * clearly meant for them (--bg-card, --border-color, --text-primary) — but no
+ * rule anywhere ever applied those variables to these classes. The tabs
+ * rendered as entirely unstyled HTML: no padding, no cards, no grid, default
+ * browser buttons, on the OS's dark backdrop. This file is that missing
+ * layer, using the same design tokens/suffix convention already established
+ * (not a second, competing theme) so these tabs read as part of the same OS
+ * as Kai EL OS rather than a bare fallback.
+ */
+
+[class$="-tab"] {
+  padding: 20px 28px 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.tab-header h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.tab-header p {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+[class$="-section"] > h2,
+[class$="-live"] > h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  color: #ffd166; /* gold-neon — matches Kai EL OS section headers */
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Grids: every *-grid across all 13 tabs, one consistent auto-fit layout */
+[class$="-grid"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+/* Cards: every *-card across all 13 tabs */
+[class$="-card"] {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+[class$="-card"]:hover {
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.08);
+}
+
+[class$="-card"] h3 {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+[class$="-card"] p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.stat-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.6rem;
+  color: #22d3ee;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Buttons: real, wired buttons (control-btn / btn-primary / btn-secondary /
+ * btn-small / bare <button>) — consistent neon-bordered chrome. Disabled
+ * PlannedControl buttons override opacity/cursor inline, so they still read
+ * as visibly inactive on top of this. */
+[class$="-tab"] button {
+  background: rgba(15, 61, 110, 0.25);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  color: #22d3ee;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-family: 'Exo 2', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+[class$="-tab"] button:not(:disabled):hover {
+  background: rgba(15, 61, 110, 0.45);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+}
+
+[class$="-tab"] .btn-primary {
+  background: rgba(232, 193, 90, 0.15);
+  border-color: rgba(232, 193, 90, 0.4);
+  color: #ffd166;
+}
+
+.control-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-group h3 {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.view-buttons, .projection-buttons, .render-buttons,
+.movement-buttons, .mode-buttons, .plane-buttons, .rotation-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status-online {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.status-offline {
+  color: #f87171;
+  font-weight: 600;
+}
+
+/* Tables (status-table, spell-table, ...) */
+[class$="-table"] {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+[class$="-table"] th {
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 500;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+[class$="-table"] td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}
+
+.progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22d3ee, #8b5cf6);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 6, 15, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1rem;
+}

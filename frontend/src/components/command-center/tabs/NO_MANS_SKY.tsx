@@ -2,6 +2,7 @@ import React from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
 import PhaserScene from '../../PhaserScene';
+import PlannedControl from '../../PlannedControl';
 
 const NO_MANS_SKY: React.FC = () => {
   return (
@@ -26,30 +27,30 @@ const NO_MANS_SKY: React.FC = () => {
             <div className="control-group">
               <h3>Movement</h3>
               <div className="movement-buttons">
-                <button>Thrust Forward</button>
-                <button>Thrust Backward</button>
-                <button>Thrust Left</button>
-                <button>Thrust Right</button>
+                <PlannedControl label="Thrust Forward" />
+                <PlannedControl label="Thrust Backward" />
+                <PlannedControl label="Thrust Left" />
+                <PlannedControl label="Thrust Right" />
               </div>
             </div>
-            
+
             <div className="control-group">
               <h3>Rotation</h3>
               <div className="rotation-buttons">
-                <button>Pitch Up</button>
-                <button>Pitch Down</button>
-                <button>Yaw Left</button>
-                <button>Yaw Right</button>
+                <PlannedControl label="Pitch Up" />
+                <PlannedControl label="Pitch Down" />
+                <PlannedControl label="Yaw Left" />
+                <PlannedControl label="Yaw Right" />
               </div>
             </div>
 
             <div className="control-group">
               <h3>Actions</h3>
               <div className="action-buttons">
-                <button>Warp Jump</button>
-                <button>Scan</button>
-                <button>Mine</button>
-                <button>Dock</button>
+                <PlannedControl label="Warp Jump" />
+                <PlannedControl label="Scan" />
+                <PlannedControl label="Mine" />
+                <PlannedControl label="Dock" />
               </div>
             </div>
           </div>
@@ -79,7 +80,7 @@ const NO_MANS_SKY: React.FC = () => {
         </section>
 
         <section className="space-stats">
-          <h2>Spacecraft Status</h2>
+          <h2>Spacecraft Status <span style={{ opacity: 0.5, fontSize: 12 }}>(demo values — not live telemetry)</span></h2>
           <div className="stats-grid">
             <div className="stat-card">
               <h3>Fuel</h3>

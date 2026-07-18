@@ -1,6 +1,7 @@
 import React from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
+import PlannedControl from '../../PlannedControl';
 import { useHiveData } from '../../../hooks/useHiveData';
 
 const GOVERN: React.FC = () => {
@@ -19,7 +20,7 @@ const GOVERN: React.FC = () => {
           </p>
         </header>
 
-        <section className="governance-live">
+        <section id="governance-log" className="governance-live">
           <h2>⚖ Governance Log <span style={{ opacity: 0.6, fontSize: 13 }}>(live from the Queen)</span></h2>
           {hive.governance.length === 0 ? (
             <p style={{ opacity: 0.6 }}>{hive.loading ? 'loading…' : 'no governance events yet'}</p>
@@ -72,17 +73,19 @@ const GOVERN: React.FC = () => {
             <div className="governance-card">
               <h3>Constitutional Compliance</h3>
               <p>Monitor and enforce constitutional laws</p>
-              <button>Run Compliance Check</button>
+              <PlannedControl label="Run Compliance Check" />
             </div>
             <div className="governance-card">
               <h3>Audit Log</h3>
               <p>Track all administrative actions</p>
-              <button>View Audit Log</button>
+              <button onClick={() => document.getElementById('governance-log')?.scrollIntoView({ behavior: 'smooth' })}>
+                View Audit Log
+              </button>
             </div>
             <div className="governance-card">
               <h3>Vote Management</h3>
               <p>Conduct votes on constitutional matters</p>
-              <button>Create Vote</button>
+              <PlannedControl label="Create Vote" />
             </div>
           </div>
         </section>
@@ -92,21 +95,21 @@ const GOVERN: React.FC = () => {
           <div className="control-panel">
             <div className="control-group">
               <h3>System</h3>
-              <button className="control-btn">Restart</button>
-              <button className="control-btn">Shutdown</button>
-              <button className="control-btn">Backup</button>
+              <PlannedControl label="Restart" className="control-btn" />
+              <PlannedControl label="Shutdown" className="control-btn" />
+              <PlannedControl label="Backup" className="control-btn" />
             </div>
             <div className="control-group">
               <h3>Agents</h3>
-              <button className="control-btn">Start All</button>
-              <button className="control-btn">Stop All</button>
-              <button className="control-btn">Restart All</button>
+              <PlannedControl label="Start All" className="control-btn" />
+              <PlannedControl label="Stop All" className="control-btn" />
+              <PlannedControl label="Restart All" className="control-btn" />
             </div>
             <div className="control-group">
               <h3>Colonies</h3>
-              <button className="control-btn">Sync All</button>
-              <button className="control-btn">Health Check</button>
-              <button className="control-btn">Update All</button>
+              <PlannedControl label="Sync All" className="control-btn" />
+              <PlannedControl label="Health Check" className="control-btn" />
+              <PlannedControl label="Update All" className="control-btn" />
             </div>
           </div>
         </section>
@@ -126,20 +129,20 @@ const GOVERN: React.FC = () => {
               <tr>
                 <td>Frontend</td>
                 <td><span className="status-online">Online</span></td>
-                <td>2026-07-10 00:10</td>
-                <td><button>Restart</button></td>
+                <td>{new Date().toISOString().slice(0, 16).replace('T', ' ')}</td>
+                <td><PlannedControl label="Restart" /></td>
               </tr>
               <tr>
-                <td>Backend</td>
-                <td><span className="status-online">Online</span></td>
-                <td>2026-07-10 00:10</td>
-                <td><button>Restart</button></td>
+                <td>Edge Worker (/v11)</td>
+                <td><span className={hive.online ? 'status-online' : 'status-offline'}>{hive.online ? 'Online' : 'Unreachable'}</span></td>
+                <td>{hive.loading ? 'checking…' : 'just now'}</td>
+                <td><PlannedControl label="Restart" /></td>
               </tr>
               <tr>
-                <td>Database</td>
-                <td><span className="status-online">Online</span></td>
-                <td>2026-07-10 00:10</td>
-                <td><button>Backup</button></td>
+                <td>Vectorize memory</td>
+                <td><span className={hive.memoryBound ? 'status-online' : 'status-offline'}>{hive.memoryBound ? 'Bound' : 'Not provisioned'}</span></td>
+                <td>{hive.loading ? 'checking…' : 'just now'}</td>
+                <td><PlannedControl label="Backup" /></td>
               </tr>
             </tbody>
           </table>
