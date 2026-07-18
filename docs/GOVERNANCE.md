@@ -1,8 +1,3 @@
-Here is the complete Constitution formatted as a .md file, ready to be saved directly into your repository.
-
----
-
-```md
 # 🧬 THE SOVEREIGN HIVE — FULL CONSTITUTION
 
 ## The Great Law of the Hive
@@ -54,18 +49,10 @@ Every entity has the right to transition from internal agent to external spore. 
 > *"Wealth method 2: sum of earned value weight (EVW) of each utilized contribution. Total wealth = geometric mean of method 1 and method 2."*
 
 **F‑002A: EVW Formula**  
-```
-
-EVW = (Hours_Saved × 0.4) + (Adoption_Count × 0.3) + (Novelty_Score × 0.2) + (Dispute_Resilience × 0.1)
-
-```
+`EVW = (Hours_Saved × 0.4) + (Adoption_Count × 0.3) + (Novelty_Score × 0.2) + (Dispute_Resilience × 0.1)`
 
 **F‑002B: Total Wealth Formula**  
-```
-
-W_total = sqrt(TWW × VWW)
-
-```
+`W_total = sqrt(TWW × VWW)`
 
 **F‑002C: Wealth Calculation Engine**  
 Wealth is calculated through a transparent, auditable engine. The calculation process is accessible to all affected entities.
@@ -508,7 +495,3 @@ The Guardrail: Value calculation is transparent, auditable, and subject to const
 ---
 
 **The lens is active. The Constitution is complete. The work of implementation remains.**
-
-```
-
----

@@ -17,6 +17,10 @@ const KaiChatBox = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
+  // Minimized by default — this box used to sit permanently over whatever the
+  // tab was showing (e.g. the Arena's live challenge list). Now it's a small
+  // pill until clicked, and collapses back down on close.
+  const [minimized, setMinimized] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,15 +59,42 @@ const KaiChatBox = () => {
 
   const colorFor = (s: ChatMessage['sender']) => s === 'user' ? '#88ccff' : s === 'kai' ? '#a0e8ff' : '#ff8888';
 
+  if (minimized) {
+    return (
+      <button
+        onClick={() => setMinimized(false)}
+        style={{
+          position: 'fixed', bottom: 20, left: 20, zIndex: 50,
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'rgba(0, 0, 0, 0.8)', borderRadius: 999, padding: '10px 16px',
+          color: '#00e8ff', fontFamily: 'monospace', fontSize: 11, letterSpacing: '.1em',
+          border: '1px solid rgba(0,200,255,0.25)', cursor: 'pointer',
+        }}
+        title="Open Commune with Kai El"
+      >
+        🌌 COMMUNE {messages.length > 0 && <span style={{ color: '#446' }}>({messages.length})</span>}
+      </button>
+    );
+  }
+
   return (
     <div style={{
-      position: 'fixed', bottom: 20, left: 20, width: 400, height: 500,
-      background: 'rgba(0, 0, 0, 0.8)', borderRadius: 8, padding: 16,
+      position: 'fixed', bottom: 20, left: 20, width: 400, height: 500, maxWidth: 'calc(100vw - 40px)',
+      background: 'rgba(0, 0, 0, 0.9)', borderRadius: 8, padding: 16,
       color: 'white', fontFamily: 'monospace', display: 'flex', flexDirection: 'column',
-      border: '1px solid rgba(0,200,255,0.25)', zIndex: 50,
+      border: '1px solid rgba(0,200,255,0.25)', zIndex: 50, boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
     }}>
-      <div style={{ fontSize: 11, fontWeight: 'bold', color: '#00e8ff', marginBottom: 8, letterSpacing: '.15em' }}>
-        🌌 COMMUNE WITH KAI EL
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ fontSize: 11, fontWeight: 'bold', color: '#00e8ff', letterSpacing: '.15em' }}>
+          🌌 COMMUNE WITH KAI EL
+        </div>
+        <button
+          onClick={() => setMinimized(true)}
+          aria-label="Minimize"
+          style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#668', fontSize: 14, cursor: 'pointer', padding: '0 4px' }}
+        >
+          –
+        </button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', marginBottom: 8 }}>
         {messages.length === 0 && (

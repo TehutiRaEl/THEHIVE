@@ -14,6 +14,7 @@ import DreamLogs from '../components/kai-os/DreamLogs';
 import HiveUpdates from '../components/kai-os/HiveUpdates';
 import LegalLearning from '../components/kai-os/LegalLearning';
 import FilesPanel from '../components/kai-os/FilesPanel';
+import ConstitutionViewer from '../components/kai-os/ConstitutionViewer';
 import Observatory from '../components/kai-os/Observatory';
 import BiosystemOverlay from '../components/kai-os/BiosystemOverlay';
 
@@ -42,7 +43,7 @@ const FULL_TABS: Record<string, React.FC> = {
 
 // OS-native panels that aren't one of the 13 legacy tabs — real content,
 // shown inside the shell (chrome stays visible) rather than replacing it.
-type PanelId = 'updates' | 'legal' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training';
+type PanelId = 'updates' | 'legal' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training';
 
 export default function KaiElOS() {
   const hive = useHiveData();
@@ -98,6 +99,7 @@ export default function KaiElOS() {
   const panels: Partial<Record<PanelId, { title: string; body: React.ReactNode }>> = {
     updates: { title: 'Hive Updates', body: <HiveUpdates hive={hive} /> },
     legal: { title: 'Legal Learning · Commerce Under Law', body: <LegalLearning /> },
+    constitution: { title: 'The Constitution', body: <ConstitutionViewer /> },
     'dream-logs': { title: 'Memories · Dream Logs', body: <DreamLogs hive={hive} /> },
     'workflows-panel': {
       title: 'Workflows', body: (

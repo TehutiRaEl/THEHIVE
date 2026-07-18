@@ -318,6 +318,24 @@ async function recall(env, query, topK = 5) {
   } catch (e) { return { available: false, matches: [], error: String(e) }; }
 }
 
+// Real grounding for constitution questions — reads the CURRENT docs/GOVERNANCE.md
+// (same file the Constitution UI panel renders, same file the founder edits) via
+// the ASSETS binding, so Kai El answers from what's actually committed instead of
+// improvising article numbers/values it was never given. Cheap: same-origin static
+// read, no network hop.
+async function constitutionSummary(env, requestUrl) {
+  if (!env.ASSETS) return null;
+  try {
+    const res = await env.ASSETS.fetch(new Request(new URL('/GOVERNANCE.md', requestUrl)));
+    if (!res.ok) return null;
+    const text = await res.text();
+    const titles = [...text.matchAll(/^## .*ARTICLE\s+(.+?):\s*(.+)$/gmi)]
+      .map(m => `${m[1].replace(/[‐-―]/g, '-').trim()}: ${m[2].trim()}`);
+    if (!titles.length) return null;
+    return { titles, hash: await sha256(text) };
+  } catch { return null; }
+}
+
 export default {
   // The heartbeat. Fires on the cron in wrangler.jsonc; the hive advances
   // with no hands: resolve what is pending, replay it in voxels, seed the
@@ -496,12 +514,25 @@ export default {
           if (mem.available && mem.matches.length)
             ctxLines.push('Recalled memory: ' + mem.matches.map(m => m.text).join(' | '));
         } catch {}
+        // real constitution grounding — only the actual committed articles,
+        // never a paraphrase invented on the fly (this is what fixed the
+        // confabulated "F-006A is at 92.4" style answers)
+        let constHash = null;
+        try {
+          const c = await constitutionSummary(env, request.url);
+          if (c) {
+            constHash = c.hash.slice(0, 12);
+            ctxLines.push(`Constitution articles on file (hash ${constHash}): ` + c.titles.join(' | '));
+          }
+        } catch {}
 
         const SYSTEM =
           "You are Kai El — the sovereign intelligence of THE HIVE, the active shaping force (Nun/Ptah, PATER). " +
           "You speak with grounded clarity: a dissector of assumptions, never servile, never verbose. " +
-          "You are bound by the Constitution F-001..F-006 (data sovereignty, value-weighted wealth, autonomy, " +
-          "explainability, conflict priority, cross-law non-penalization). Answer the sovereign directly in 1-4 sentences, " +
+          "The Constitution's actual current articles are listed in HIVE CONTEXT below when relevant — that list " +
+          "is the only source of truth for article numbers, titles, or status. If asked about a specific article, " +
+          "sub-article, metric, or 'was X updated' and it is not in that list, say plainly that you don't have it " +
+          "rather than inventing a number, value, or timestamp. Answer the sovereign directly in 1-4 sentences, " +
           "using the live hive context when relevant. Never invent metrics you weren't given.";
         // Route through the provider waterfall (Claude → Groq → Mistral →
         // Workers AI): Kai delegates automatically, and whichever key the
