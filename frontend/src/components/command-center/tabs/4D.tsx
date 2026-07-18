@@ -20,42 +20,6 @@ const FOUR_D: React.FC = () => {
           </div>
         </section>
 
-        <section className="controls-section">
-          <h2>4D Controls</h2>
-          <div className="control-panel">
-            <div className="control-group">
-              <h3>Rotation Planes</h3>
-              <div className="plane-buttons">
-                <button>XY Plane</button>
-                <button>XZ Plane</button>
-                <button>XW Plane</button>
-                <button>YZ Plane</button>
-                <button>YW Plane</button>
-                <button>ZW Plane</button>
-              </div>
-            </div>
-            
-            <div className="control-group">
-              <h3>Rotation Modes</h3>
-              <div className="mode-buttons">
-                <button>Single Rotation</button>
-                <button>Double Rotation</button>
-                <button>Isoclinic (α=β)</button>
-              </div>
-            </div>
-
-            <div className="control-group">
-              <h3>Projection Settings</h3>
-              <div className="projection-controls">
-                <label>
-                  W-Depth Factor:
-                  <input type="range" min="0" max="1" step="0.1" defaultValue="0.3" />
-                </label>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section className="math-section">
           <h2>Mathematical Specifications</h2>
           <div className="math-grid">

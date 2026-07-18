@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
 import LiveArenaViewer from '../../LiveArenaViewer';
+import PlannedControl from '../../PlannedControl';
 import { useHiveData } from '../../../hooks/useHiveData';
 
 const ARENA: React.FC = () => {
   const hive = useHiveData();
   const active = hive.challenges.filter((c) => c.status !== 'completed');
+  // Root cause: LiveArenaViewer requires a challengeId to load any frames at
+  // all — it was rendered with none, so the viewer sat permanently empty no
+  // matter how much real arena data existed. Default to the most recent
+  // challenge; clicking a row below re-targets the viewer at that one.
+  const [viewedId, setViewedId] = useState<number | undefined>(hive.challenges[0]?.id);
+  const effectiveId = viewedId ?? hive.challenges[0]?.id;
   return (
     <div className="tab-container arena-tab">
       <SpaceNavigation />
@@ -19,7 +26,7 @@ const ARENA: React.FC = () => {
 
         <section className="arena-visualization">
           <div className="arena-container">
-            <LiveArenaViewer />
+            <LiveArenaViewer challengeId={effectiveId} autoPlay />
           </div>
         </section>
 
@@ -29,28 +36,28 @@ const ARENA: React.FC = () => {
             <div className="control-group">
               <h3>View Mode</h3>
               <div className="view-buttons">
-                <button>First Person</button>
-                <button>Third Person</button>
-                <button>Top Down</button>
-                <button>Isometric</button>
+                <PlannedControl label="First Person" />
+                <PlannedControl label="Third Person" />
+                <PlannedControl label="Top Down" />
+                <PlannedControl label="Isometric" />
               </div>
             </div>
-            
+
             <div className="control-group">
               <h3>Projection</h3>
               <div className="projection-buttons">
-                <button>2D</button>
-                <button>3D</button>
-                <button>Voxel</button>
+                <PlannedControl label="2D" />
+                <PlannedControl label="3D" />
+                <PlannedControl label="Voxel" />
               </div>
             </div>
 
             <div className="control-group">
               <h3>Rendering</h3>
               <div className="render-buttons">
-                <button>Wireframe</button>
-                <button>Solid</button>
-                <button>Textured</button>
+                <PlannedControl label="Wireframe" />
+                <PlannedControl label="Solid" />
+                <PlannedControl label="Textured" />
               </div>
             </div>
           </div>
@@ -109,11 +116,17 @@ const ARENA: React.FC = () => {
           ) : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {hive.challenges.slice(0, 8).map((c) => (
-                <li key={c.id} style={{
-                  padding: '10px 12px', margin: '8px 0', borderRadius: 8,
-                  background: 'rgba(255,255,255,0.03)',
-                  borderLeft: `3px solid ${c.status === 'completed' ? '#00e888' : '#ffbb33'}`,
-                }}>
+                <li
+                  key={c.id}
+                  onClick={() => setViewedId(c.id)}
+                  title="View this challenge's projection above"
+                  style={{
+                    padding: '10px 12px', margin: '8px 0', borderRadius: 8, cursor: 'pointer',
+                    background: c.id === effectiveId ? 'rgba(0,232,136,0.08)' : 'rgba(255,255,255,0.03)',
+                    borderLeft: `3px solid ${c.status === 'completed' ? '#00e888' : '#ffbb33'}`,
+                    outline: c.id === effectiveId ? '1px solid rgba(0,232,136,0.4)' : 'none',
+                  }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
                     <strong>#{c.id} · {c.challenger} vs {c.challenged}</strong>
                     <span style={{ color: c.status === 'completed' ? '#00e888' : '#ffbb33' }}>
