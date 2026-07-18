@@ -25,6 +25,24 @@
   gap: 28px;
 }
 
+.tab-header {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+/* The one signature line this whole OS shares — same gradient as
+ * TopStatusBar's underline — so a legacy tab reads as the same system,
+ * not a fallback bolted on beside it. */
+.tab-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,229,255,0.55) 0%, rgba(139,92,246,0.45) 55%, transparent 90%);
+}
+
 .tab-header h1 {
   font-family: 'Orbitron', sans-serif;
   font-size: 1.5rem;
