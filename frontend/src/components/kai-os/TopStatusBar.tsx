@@ -8,9 +8,10 @@ const KAI_FREQUENCY_HZ = 432;
 interface TopStatusBarProps {
   hive: HiveData;
   onOpenBiosystem?: () => void;
+  onOpenGatewayConsole?: () => void;
 }
 
-export default function TopStatusBar({ hive, onOpenBiosystem }: TopStatusBarProps) {
+export default function TopStatusBar({ hive, onOpenBiosystem, onOpenGatewayConsole }: TopStatusBarProps) {
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
 
   useEffect(() => {
@@ -65,7 +66,17 @@ export default function TopStatusBar({ hive, onOpenBiosystem }: TopStatusBarProp
           🧬 Biosystem
         </button>
       )}
-      <span className={onOpenBiosystem ? 'text-slate-500' : 'ml-auto text-slate-500'}>
+      {onOpenGatewayConsole && (
+        <button
+          onClick={onOpenGatewayConsole}
+          className={`${onOpenBiosystem ? '' : 'ml-auto '}px-2 py-0.5 rounded border border-cyan-neon/30 text-cyan-neon hover:bg-cyan-neon/10 hover:border-cyan-neon/60 shrink-0`}
+          style={{ textShadow: '0 0 8px rgba(0,229,255,0.5)' }}
+          title="Open the Gateway Console (BYO LLM keys + live research tools)"
+        >
+          ⬡ Gateway
+        </button>
+      )}
+      <span className={onOpenBiosystem || onOpenGatewayConsole ? 'text-slate-500' : 'ml-auto text-slate-500'}>
         Latency <span className="text-emerald-300">{latencyMs != null ? `${latencyMs}ms` : '—'}</span>
       </span>
     </div>

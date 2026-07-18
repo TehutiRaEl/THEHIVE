@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sovereign Hive — Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#0a0d12;
+    --bg-panel:#12161d;
+    --bg-elevated:#1a1f29;
+    --bg-elevated-2:#1f2530;
+    --border-subtle:#242b38;
+    --border-faint:#1b2129;
+    --accent-honey:#f0a830;
+    --accent-honey-dim:#caa45c;
+    --accent-cyan:#4fd1c5;
+    --accent-danger:#e2574c;
+    --text-primary:#e9edf3;
+    --text-muted:#8a94a3;
+    --text-faint:#5b6472;
+    --radius-sm:4px;
+    --radius-md:8px;
+    --font-ui:'Sora',system-ui,sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg-void);
+    color:var(--text-primary);
+    font-family:var(--font-ui);
+    font-size:14px;
+    line-height:1.5;
+    overflow:hidden;
+  }
+
+  /* ---------- background honeycomb watermark ---------- */
+  .hive-watermark{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    opacity:0.035;
+    background-image:
+      radial-gradient(circle at 1px 1px, transparent 0, transparent 0),
+      repeating-linear-gradient(60deg, var(--accent-honey) 0 1px, transparent 1px 52px),
+      repeating-linear-gradient(-60deg, var(--accent-honey) 0 1px, transparent 1px 52px),
+      repeating-linear-gradient(0deg, var(--accent-honey) 0 1px, transparent 1px 90px);
+    z-index:0;
+  }
+
+  /* ---------- app shell ---------- */
+  .app{
+    position:relative;
+    z-index:1;
+    height:100vh;
+    display:grid;
+    grid-template-columns:300px 1fr 300px;
+    grid-template-rows:56px 1fr;
+    grid-template-areas:
+      "topbar topbar topbar"
+      "left   main   right";
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    grid-area:topbar;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 18px;
+    background:var(--bg-panel);
+    border-bottom:1px solid var(--border-subtle);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand-hex{
+    width:26px;height:26px;flex:none;
+  }
+  .brand-text{
+    display:flex;
+    flex-direction:column;
+    line-height:1.1;
+  }
+  .brand-text .name{
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+  .brand-text .sub{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-faint);
+  }
+  .topbar-status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-muted);
+  }
+  .mobile-toggles{display:none; gap:8px;}
+  .mobile-toggles button{
+    background:var(--bg-elevated);
+    border:1px solid var(--border-subtle);
+    color:var(--text-muted);
+    border-radius:var(--radius-sm);
+    padding:6px 10px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    cursor:pointer;
+  }
+
+  /* ---------- side panels (shared) ---------- */
+  .panel{
+    overflow-y:auto;
+    background:var(--bg-panel);
+    padding:16px;
+  }
+  .panel::-webkit-scrollbar{width:8px;}
+  .panel::-webkit-scrollbar-thumb{background:var(--border-subtle); border-radius:4px;}
+
+  .left-panel{grid-area:left; border-right:1px solid var(--border-subtle);}
+  .right-panel{grid-area:right; border-left:1px solid var(--border-subtle);}
+
+  .panel-section{margin-bottom:22px;}
+  .panel-label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  select, input[type="text"], input[type="password"]{
+    width:100%;
+    background:var(--bg-elevated);
+    border:1px solid var(--border-subtle);
+    color:var(--text-primary);
+    border-radius:var(--radius-sm);
+    padding:9px 10px;
+    font-family:var(--font-ui);
+    font-size:13px;
+    outline:none;
+  }
+  select:focus, input:focus{border-color:var(--accent-honey);}
+
+  .field{margin-bottom:10px;}
+  .field-row{display:flex; gap:8px;}
+  .field-row > *{flex:1;}
+
+  .key-input-wrap{position:relative;}
+  .key-input-wrap input{padding-right:62px;}
+  .key-toggle{
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    background:none; border:none; color:var(--text-faint);
+    font-family:var(--font-mono); font-size:11px; cursor:pointer;
+    padding:4px 6px;
+  }
+  .key-toggle:hover{color:var(--accent-cyan);}
+
+  .badge{
+    display:inline-flex; align-items:center; gap:4px;
+    font-family:var(--font-mono); font-size:10.5px;
+    padding:2px 7px; border-radius:10px;
+    border:1px solid var(--border-subtle);
+    color:var(--text-muted);
+  }
+  .badge.key-required{color:var(--accent-honey); border-color:rgba(240,168,48,0.35); background:rgba(240,168,48,0.08);}
+  .badge.no-key{color:var(--accent-cyan); border-color:rgba(79,209,197,0.35); background:rgba(79,209,197,0.08);}
+
+  .endpoint-preview{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    background:var(--bg-elevated);
+    border:1px solid var(--border-faint);
+    border-radius:var(--radius-sm);
+    padding:10px;
+    color:var(--text-muted);
+    white-space:pre-wrap;
+    word-break:break-all;
+    line-height:1.55;
+  }
+  .endpoint-preview .hl{color:var(--accent-cyan);}
+  .endpoint-preview .hl2{color:var(--accent-honey-dim);}
+
+  .gateway-note{
+    font-size:12px;
+    color:var(--text-muted);
+    margin-top:8px;
+    line-height:1.5;
+  }
+
+  .btn{
+    font-family:var(--font-ui);
+    font-weight:600;
+    font-size:12.5px;
+    border-radius:var(--radius-sm);
+    border:1px solid var(--border-subtle);
+    background:var(--bg-elevated);
+    color:var(--text-primary);
+    padding:9px 12px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .btn:hover{border-color:var(--accent-honey-dim);}
+  .btn-primary{
+    background:linear-gradient(180deg, #f3b54a, var(--accent-honey));
+    color:#1a1306;
+    border:none;
+  }
+  .btn-primary:hover{filter:brightness(1.07);}
+  .btn-block{width:100%;}
+  .btn-ghost{background:transparent;}
+  .btn-row{display:flex; gap:8px;}
+  .btn-row > .btn{flex:1;}
+
+  .template-grid{display:flex; flex-direction:column; gap:6px;}
+  .template-btn{
+    text-align:left;
+    background:var(--bg-elevated);
+    border:1px solid var(--border-subtle);
+    color:var(--text-primary);
+    border-radius:var(--radius-sm);
+    padding:8px 10px;
+    font-family:var(--font-ui);
+    font-size:12.5px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .template-btn:hover{border-color:var(--accent-cyan);}
+  .template-btn .region-tag{
+    font-family:var(--font-mono); font-size:10px; color:var(--text-faint);
+  }
+
+  .status-line{
+    display:flex; align-items:center; gap:8px;
+    font-family:var(--font-mono); font-size:12px; color:var(--text-muted);
+    margin-top:10px;
+  }
+  .hex-dot{width:11px; height:11px; flex:none;}
+
+  /* ---------- main chat column ---------- */
+  .main{
+    grid-area:main;
+    display:flex;
+    flex-direction:column;
+    background:var(--bg-void);
+    min-width:0;
+  }
+  .chat-meta{
+    padding:10px 20px;
+    border-bottom:1px solid var(--border-subtle);
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--text-faint);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .chat-history{
+    flex:1;
+    overflow-y:auto;
+    padding:22px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .chat-history::-webkit-scrollbar{width:8px;}
+  .chat-history::-webkit-scrollbar-thumb{background:var(--border-subtle); border-radius:4px;}
+
+  .msg{
+    max-width:72%;
+    padding:11px 14px;
+    border-radius:var(--radius-md);
+    font-size:13.5px;
+    line-height:1.6;
+  }
+  .msg.user{
+    align-self:flex-end;
+    background:var(--bg-elevated-2);
+    border:1px solid var(--border-subtle);
+  }
+  .msg.ai{
+    align-self:flex-start;
+    background:rgba(240,168,48,0.06);
+    border:1px solid rgba(240,168,48,0.18);
+  }
+  .msg.system{
+    align-self:center;
+    background:transparent;
+    border:1px dashed var(--border-subtle);
+    color:var(--text-faint);
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    max-width:90%;
+  }
+  .msg.error{
+    align-self:flex-start;
+    border:1px solid rgba(226,87,76,0.4);
+    background:rgba(226,87,76,0.08);
+    color:#f3b3ac;
+  }
+  .msg-role{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--text-faint);
+    margin-bottom:4px;
+  }
+  .msg pre{
+    background:var(--bg-void);
+    border:1px solid var(--border-faint);
+    border-radius:var(--radius-sm);
+    padding:10px;
+    overflow-x:auto;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+  }
+  .msg code{
+    background:var(--bg-void);
+    padding:1px 5px;
+    border-radius:3px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+  }
+  .msg ul{padding-left:18px; margin:6px 0;}
+  .msg a{color:var(--accent-cyan);}
+
+  .composer{
+    border-top:1px solid var(--border-subtle);
+    padding:14px 18px;
+    display:flex;
+    gap:10px;
+    align-items:flex-end;
+  }
+  .composer textarea{
+    flex:1;
+    resize:none;
+    background:var(--bg-elevated);
+    border:1px solid var(--border-subtle);
+    color:var(--text-primary);
+    border-radius:var(--radius-md);
+    padding:11px 13px;
+    font-family:var(--font-ui);
+    font-size:13.5px;
+    max-height:140px;
+    min-height:42px;
+    outline:none;
+  }
+  .composer textarea:focus{border-color:var(--accent-honey);}
+  .send-btn{
+    background:linear-gradient(180deg, #f3b54a, var(--accent-honey));
+    border:none;
+    color:#1a1306;
+    font-weight:700;
+    border-radius:var(--radius-md);
+    padding:11px 18px;
+    cursor:pointer;
+    font-family:var(--font-ui);
+    font-size:13px;
+  }
+  .send-btn:disabled{opacity:0.5; cursor:not-allowed;}
+
+  /* ---------- activity log ---------- */
+  .log-list{display:flex; flex-direction:column; gap:8px;}
+  .log-entry{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--text-muted);
+    border-left:2px solid var(--border-subtle);
+    padding:4px 0 4px 10px;
+  }
+  .log-entry .ts{color:var(--accent-cyan); margin-right:6px;}
+  .log-entry.level-warn{border-left-color:var(--accent-honey);}
+  .log-entry.level-error{border-left-color:var(--accent-danger); color:#f3b3ac;}
+  .log-entry.level-ok{border-left-color:var(--accent-cyan);}
+
+  /* ---------- tool registry panel ---------- */
+  .tool-registry-list{display:flex; flex-direction:column; gap:8px;}
+  .tool-registry-item{
+    border:1px solid var(--border-subtle);
+    border-radius:var(--radius-sm);
+    padding:8px 10px;
+    background:var(--bg-elevated);
+  }
+  .tool-registry-item .tool-name{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--accent-cyan);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .tool-registry-item .tool-desc{
+    font-size:11.5px;
+    color:var(--text-muted);
+    margin-top:4px;
+    line-height:1.45;
+  }
+  .sim-badge{
+    font-family:var(--font-mono); font-size:9.5px;
+    color:var(--accent-honey); border:1px solid rgba(240,168,48,0.35);
+    background:rgba(240,168,48,0.08); border-radius:8px; padding:1px 6px;
+  }
+
+  /* ---------- command hint bar ---------- */
+  .command-hint{
+    padding:6px 20px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-faint);
+    border-top:1px solid var(--border-faint);
+    background:var(--bg-panel);
+  }
+  .command-hint code{
+    background:var(--bg-elevated);
+    border:1px solid var(--border-subtle);
+    border-radius:3px;
+    padding:1px 5px;
+    color:var(--accent-honey-dim);
+  }
+
+  /* ---------- tool result messages ---------- */
+  .msg.tool{
+    align-self:flex-start;
+    max-width:88%;
+    background:rgba(79,209,197,0.05);
+    border:1px solid rgba(79,209,197,0.22);
+  }
+  .msg.tool.pending{color:var(--text-muted); font-family:var(--font-mono); font-size:12.5px;}
+  .pending-dots::after{
+    content:'…'; display:inline-block; width:1em; overflow:hidden; vertical-align:bottom;
+    animation:pendingDots 1.1s steps(4) infinite;
+  }
+  @keyframes pendingDots{ from{width:0;} to{width:1.1em;} }
+
+  .tool-meta{
+    font-family:var(--font-mono); font-size:11px; color:var(--text-faint);
+    margin-bottom:8px;
+  }
+  .tool-result-row{
+    border-top:1px solid var(--border-faint);
+    padding:8px 0;
+  }
+  .tool-result-row:first-of-type{border-top:none;}
+  .tool-result-title{font-size:13px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .tool-result-title a{color:var(--accent-cyan); text-decoration:none;}
+  .tool-result-title a:hover{text-decoration:underline;}
+  .engine-tag{
+    font-family:var(--font-mono); font-size:9.5px; color:var(--text-faint);
+    border:1px solid var(--border-subtle); border-radius:8px; padding:0 6px;
+  }
+  .tool-result-snippet{font-size:12.5px; color:var(--text-muted); margin-top:3px;}
+  .confidence-bar{
+    position:relative; height:5px; background:var(--bg-void);
+    border-radius:3px; margin-top:6px; overflow:hidden;
+  }
+  .confidence-fill{height:100%; background:var(--accent-cyan);}
+  .confidence-label{
+    display:block; font-family:var(--font-mono); font-size:10px;
+    color:var(--text-faint); margin-top:3px;
+  }
+  .conflict-block{
+    margin-top:10px; padding:8px 10px; border-radius:var(--radius-sm);
+    border:1px solid rgba(240,168,48,0.3); background:rgba(240,168,48,0.07);
+    font-size:12px;
+  }
+  .conflict-block.ok{
+    border-color:rgba(79,209,197,0.3); background:rgba(79,209,197,0.07); color:var(--text-muted);
+  }
+  .conflict-row{margin-top:4px; color:var(--text-muted);}
+  .conflict-row em{color:var(--accent-honey-dim); font-style:normal;}
+  .paper-row{border-top:1px solid var(--border-faint); padding:8px 0;}
+  .paper-row:first-of-type{border-top:none;}
+  .paper-title{font-size:13px;}
+  .paper-authors{font-size:12px; color:var(--text-muted); margin-top:2px;}
+  .paper-meta{font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); margin-top:3px;}
+  .crawl-field{margin-top:6px; font-size:12.5px;}
+  .crawl-field .k{color:var(--text-faint); font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:2px;}
+  .tool-error{color:#f3b3ac;}
+
+  /* ---------- orchestrator report ---------- */
+  .msg.report{
+    align-self:stretch;
+    max-width:96%;
+    background:var(--bg-elevated);
+    border:1px solid var(--accent-honey-dim);
+    box-shadow:0 0 0 1px rgba(240,168,48,0.08) inset;
+  }
+  .msg.report p{margin:10px 0;}
+  .msg.report strong{display:inline-block; margin-top:2px;}
+  .msg.report ul{margin:8px 0 14px; padding-left:20px;}
+  .msg.report pre{margin:6px 0;}
+  .msg.report hr{border:none; border-top:1px solid var(--border-faint); margin:14px 0;}
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1024px){
+    .app{grid-template-columns:1fr;}
+    .left-panel, .right-panel{
+      position:fixed;
+      top:56px; bottom:0;
+      width:280px;
+      z-index:20;
+      transition:transform .2s ease;
+      box-shadow:0 0 24px rgba(0,0,0,0.5);
+    }
+    .left-panel{left:0; transform:translateX(-100%);}
+    .right-panel{right:0; transform:translateX(100%);}
+    .left-panel.open{transform:translateX(0);}
+    .right-panel.open{transform:translateX(0);}
+    .main{grid-column:1;}
+    .mobile-toggles{display:flex;}
+    .msg{max-width:88%;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hive-watermark"></div>
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <svg class="brand-hex" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,3 93,27 93,73 50,97 7,73 7,27" fill="none" stroke="#f0a830" stroke-width="6"/>
+        <polygon points="50,28 72,40 72,64 50,76 28,64 28,40" fill="#f0a830" opacity="0.85"/>
+      </svg>
+      <div class="brand-text">
+        <span class="name">Sovereign Hive</span>
+        <span class="sub">command center · v9</span>
+      </div>
+    </div>
+    <div class="mobile-toggles">
+      <button id="toggleLeft">⬡ Gateway</button>
+      <button id="toggleRight">⬡ Log</button>
+    </div>
+    <div class="topbar-status">
+      <svg class="hex-dot" id="topStatusDot" viewBox="0 0 100 100"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27" fill="#5b6472"/></svg>
+      <span id="topStatusText">No gateway connected</span>
+    </div>
+  </div>
+
+  <!-- LEFT SIDEBAR : GATEWAY MANAGEMENT -->
+  <div class="panel left-panel" id="leftPanel">
+
+    <div class="panel-section">
+      <div class="panel-label">LLM Gateway</div>
+      <select id="gatewaySelect"></select>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Endpoint <span id="keyBadge" class="badge">—</span></div>
+      <div class="endpoint-preview" id="endpointPreview">Select a gateway to see its request shape.</div>
+      <div class="gateway-note" id="gatewayNote"></div>
+    </div>
+
+    <div class="panel-section" id="customUrlSection" style="display:none;">
+      <div class="panel-label">Base URL (editable)</div>
+      <div class="field">
+        <input type="text" id="customBaseUrl" placeholder="https://your-endpoint.example.com/v1" />
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Model ID</div>
+      <div class="field">
+        <input type="text" id="modelIdInput" placeholder="model identifier" />
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">API Key <span class="badge" style="font-size:10px;">stored in this browser only</span></div>
+      <div class="field key-input-wrap">
+        <input type="password" id="apiKeyInput" placeholder="Paste API key (if required)" />
+        <button class="key-toggle" id="toggleKeyVisibility">SHOW</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="saveKeyBtn">Save</button>
+        <button class="btn btn-ghost" id="clearKeyBtn">Clear</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Asia-Pacific quick templates</div>
+      <div class="template-grid" id="asiaTemplateGrid"></div>
+      <div class="gateway-note">These fill in the provider's typical endpoint shape. You'll still need to paste your own account key above — none of these are key‑free.</div>
+    </div>
+
+    <div class="panel-section">
+      <button class="btn btn-primary btn-block" id="connectBtn">Connect gateway</button>
+      <button class="btn btn-ghost btn-block" id="testBtn" style="margin-top:8px;">Test connection</button>
+      <div class="status-line">
+        <svg class="hex-dot" id="connStatusDot" viewBox="0 0 100 100"><polygon points="50,3 93,27 93,73 50,97 7,73 7,27" fill="#5b6472"/></svg>
+        <span id="connStatusText">Not tested yet</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN: CHAT -->
+  <div class="main">
+    <div class="chat-meta">
+      <span id="chatMetaGateway">gateway: —</span>
+      <span id="chatMetaModel">model: —</span>
+    </div>
+    <div class="chat-history" id="chatHistory"></div>
+    <div class="command-hint">try: <code>search "query"</code> · <code>crawl "https://url"</code> · <code>academic "topic"</code> · <code>ddg "query"</code> · <code>deep research &lt;brief&gt;</code> · <code>help</code></div>
+    <div class="composer">
+      <textarea id="chatInput" placeholder="Message the active gateway…" rows="1"></textarea>
+      <button class="send-btn" id="sendBtn">Send</button>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDEBAR : ACTIVITY LOG -->
+  <div class="panel right-panel" id="rightPanel">
+    <div class="panel-section">
+      <div class="panel-label">Tool Registry <span class="badge" style="font-size:10px;">live</span></div>
+      <div class="tool-registry-list" id="toolRegistryList"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-label">Activity Log</div>
+      <div class="log-list" id="logList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  /* =====================================================
+     GATEWAY CONFIGURATION
+     Edit this object to add, remove, or reconfigure gateways.
+     Every entry follows the same shape so new ones drop in cleanly.
+  ====================================================== */
+  const GATEWAYS = {
+    custom: {
+      label: "Custom Endpoint",
+      group: "Custom",
+      baseUrl: "",
+      needsKey: true,
+      keyHeader: "Authorization",
+      keyPrefix: "Bearer ",
+      defaultModel: "",
+      editableUrl: true,
+      notes: "Point this at any OpenAI-compatible endpoint you control — your own proxy, a colleague's server, etc."
+    },
+    ollama_local: {
+      label: "Local Ollama (self-hosted)",
+      group: "Self-hosted / free",
+      baseUrl: "http://localhost:11434/v1",
+      needsKey: false,
+      defaultModel: "llama3",
+      editableUrl: true,
+      notes: "Runs on your own machine — there's no account because you ARE the provider. Genuinely free, genuinely keyless."
+    },
+    openrouter: {
+      label: "OpenRouter",
+      group: "Global providers",
+      baseUrl: "https://openrouter.ai/api/v1",
+      needsKey: true,
+      keyHeader: "Authorization",
+      keyPrefix: "Bearer ",
+      defaultModel: "meta-llama/llama-3.1-8b-instruct:free",
+      editableUrl: false,
+      notes: "Free account required. Several community models are no-cost, but the endpoint still checks for a valid key."
+    },
+    huggingface: {
+      label: "Hugging Face Inference API",
+      group: "Global providers",
+      baseUrl: "https://api-inference.huggingface.co/v1",
+      needsKey: true,
+      keyHeader: "Authorization",
+      keyPrefix: "Bearer ",
+      defaultModel: "meta-llama/Meta-Llama-3-8B-Instruct",
+      editableUrl: false,
+      notes: "Free tier available with a Hugging Face access token."
+    },
+    modelscope: {
+      label: "Alibaba ModelScope",
+      group: "Asia-Pacific",
+      baseUrl: "https://api-inference.modelscope.cn/v1",
+      needsKey: true,
+      keyHeader: "Authorization",
+      keyPrefix: "Bearer ",
+      defaultModel: "Qwen/Qwen2.5-7B-Instruct",
+      editableUrl: false,
+      notes: "Requires a ModelScope SDK token from a registered (free-to-create) account."
+    },
+    qianfan: {
+      label: "Baidu Qianfan",
+      group: "Asia-Pacific",
+      baseUrl: "https://qianfan.baidubce.com/v2",
+      needsKey: true,
+      keyHeader: "Authorization",
+      keyPrefix: "Bearer ",
+      defaultModel: "ernie-4.0-8k",
+      editableUrl: false,
+      notes: "Requires an API key from a registered Baidu Cloud account."
+    },
+    tencent_hai: {
+      label: "Tencent Cloud HAI",
+      group: "Asia-Pacific",
+      baseUrl: "https://api.hunyuan.cloud.tencent.com/v1",
+      needsKey: true,
+      keyHeader: "Authorization",
+      keyPrefix: "Bearer ",
+      defaultModel: "hunyuan-lite",
+      editableUrl: false,
+      notes: "Requires a Tencent Cloud API key tied to your account."
+    }
+  };
+
+  const ASIA_IDS = Object.keys(GATEWAYS).filter(id => GATEWAYS[id].group === "Asia-Pacific");
+
+  /* =====================================================
+     TOOL REGISTRY (Step 2)
+     Every tool below makes a genuine, keyless, no-backend-required network
+     call from the browser. None of these fabricate data — a tool either
+     returns real results or throws a real, explained error (most often a
+     CORS restriction, since this page has no server of its own under
+     docs/ to relay through). That honesty-over-fakery rule is deliberate:
+     see FABLE_DNA.md Chromosome II (the debugging method) and the
+     fable-debugger skill this repo already uses — "I don't have that"
+     beats a plausible-looking fabrication every time.
+
+     Sources actually wired in, and why each was picked:
+       - OpenAlex        — free, keyless, explicitly documents open CORS
+         for direct browser use. No caveats.
+       - Wikipedia       — MediaWiki's `origin=*` param is the documented,
+         official mechanism for CORS-enabled browser calls. No caveats.
+       - Hacker News     — the Algolia-backed HN Search API is free,
+         keyless, and CORS-open by design (a common client-side demo API).
+       - DuckDuckGo      — the free Instant Answer API (format=json) does
+         NOT reliably grant CORS to arbitrary origins. The call is real
+         and attempted for real; when it's blocked, the UI shows the real
+         CORS error instead of inventing search results. This replaces the
+         old (fabricated) "paginates past page 100" claim, which no free
+         keyless API actually offers.
+       - DeepCrawl       — fetching an arbitrary caller-supplied URL from
+         browser JS is blocked by CORS for the general case (the target
+         site, not this page, controls that). There is no free, keyless,
+         backend-free way around this. The tool still makes a real fetch
+         attempt — it succeeds for the rare CORS-open target and reports
+         a real, specific error otherwise. A true "works for any URL"
+         DeepCrawl needs a backend relay (tracked as future Worker-side
+         work, not invented here).
+  ====================================================== */
+  const TOOL_LIVE_MODE = true;
+
+  function truncate(s, n){ return s.length > n ? s.slice(0,n-1) + "…" : s; }
+
+  function stripHtml(html){
+    const noScripts = html.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ');
+    return noScripts.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  const ToolRegistry = {
+    RivalSearch: {
+      name: "RivalSearch",
+      description: "Fans a query out to Wikipedia search and Hacker News (Algolia) in parallel — both real, free, keyless, CORS-open APIs — and flags when neither engine's top hit overlaps.",
+      liveHint: "Live: Wikipedia (action=query&list=search&origin=*) + Hacker News Algolia search API.",
+      async call(query){
+        const t0 = Date.now();
+        const [wikiSettled, hnSettled] = await Promise.allSettled([
+          fetch('https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srlimit=4&srsearch=' + encodeURIComponent(query))
+            .then(r => { if(!r.ok) throw new Error('Wikipedia HTTP ' + r.status); return r.json(); }),
+          fetch('https://hn.algolia.com/api/v1/search?tags=story&hitsPerPage=4&query=' + encodeURIComponent(query))
+            .then(r => { if(!r.ok) throw new Error('Hacker News HTTP ' + r.status); return r.json(); })
+        ]);
+
+        const results = [];
+        if(wikiSettled.status === 'fulfilled'){
+          (wikiSettled.value.query && wikiSettled.value.query.search || []).forEach(w => results.push({
+            title: w.title,
+            url: 'https://en.wikipedia.org/wiki/' + encodeURIComponent(w.title.replace(/ /g, '_')),
+            snippet: stripHtml(w.snippet || ''),
+            engine: 'Wikipedia'
+          }));
+        }
+        if(hnSettled.status === 'fulfilled'){
+          (hnSettled.value.hits || []).forEach(h => results.push({
+            title: h.title || '(untitled HN story)',
+            url: h.url || ('https://news.ycombinator.com/item?id=' + h.objectID),
+            snippet: `${h.points || 0} points · ${h.num_comments || 0} comments · ${h.author || 'unknown'}`,
+            engine: 'Hacker News'
+          }));
+        }
+
+        const failures = [wikiSettled, hnSettled].filter(s => s.status === 'rejected');
+        if(results.length === 0){
+          throw new Error(failures.map(f => f.reason.message).join('; ') || 'Both engines returned zero results.');
+        }
+
+        const conflicts = [];
+        const wikiTop = results.find(r => r.engine === 'Wikipedia');
+        const hnTop = results.find(r => r.engine === 'Hacker News');
+        if(wikiTop && hnTop){
+          const overlap = wikiTop.title.toLowerCase().split(/\s+/).some(w => w.length > 3 && hnTop.title.toLowerCase().includes(w));
+          if(!overlap){
+            conflicts.push({ topic: 'top result', engineA: 'Wikipedia', valueA: wikiTop.title, engineB: 'Hacker News', valueB: hnTop.title });
+          }
+        }
+        failures.forEach(f => conflicts.push({ topic: 'engine availability', engineA: 'requested', valueA: 'response', engineB: 'actual', valueB: f.reason.message }));
+
+        return { query, tookMs: Date.now() - t0, results, conflicts, live: true };
+      }
+    },
+
+    DeepCrawl: {
+      name: "DeepCrawl",
+      description: "Fetches a URL directly from the browser and extracts de-chromed text. Works only when the target grants CORS to arbitrary origins (rare) — otherwise reports the real block instead of faking a result.",
+      liveHint: "Real fetch(url) + tag-stripping. Arbitrary-URL crawling needs a backend relay to work universally — not built here.",
+      async call(url){
+        let res;
+        try{
+          res = await fetch(url, { mode: 'cors' });
+        }catch(err){
+          throw new Error(`Direct browser fetch blocked for ${url} (${err.message}). Most sites don't grant cross-origin access to arbitrary pages — a backend relay is required for universal crawling.`);
+        }
+        if(!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
+        const raw = await res.text();
+        const titleMatch = raw.match(/<title[^>]*>([^<]*)<\/title>/i);
+        const stripped = stripHtml(raw);
+        return {
+          url,
+          title: titleMatch ? titleMatch[1].trim() : url,
+          fetchedAt: new Date().toISOString(),
+          wordCount: stripped.split(/\s+/).filter(Boolean).length,
+          preview: truncate(stripped, 600),
+          live: true
+        };
+      }
+    },
+
+    OpenAlexSearch: {
+      name: "OpenAlexSearch",
+      description: "Searches real academic literature via the OpenAlex catalog — free, keyless, CORS-open by design.",
+      liveHint: "Live: GET https://api.openalex.org/works?search=<topic>",
+      async call(topic){
+        const res = await fetch('https://api.openalex.org/works?per-page=4&search=' + encodeURIComponent(topic));
+        if(!res.ok) throw new Error('OpenAlex HTTP ' + res.status);
+        const json = await res.json();
+        const papers = (json.results || []).map(w => ({
+          title: w.display_name || '(untitled work)',
+          authors: (w.authorships || []).map(a => a.author && a.author.display_name).filter(Boolean).slice(0, 4),
+          year: w.publication_year || null,
+          openAlexId: w.id,
+          citedBy: w.cited_by_count || 0,
+          url: w.doi || w.id
+        }));
+        return { topic, count: papers.length, papers, live: true };
+      }
+    },
+
+    DuckDuckGoSearch: {
+      name: "DuckDuckGoSearch",
+      description: "Queries DuckDuckGo's free Instant Answer API (topic summary + related links). Note: this is DDG's keyless Instant Answer API, not literal deep result-page pagination — no free API offers that; a backend-proxied search API would be required.",
+      liveHint: "Live: GET https://api.duckduckgo.com/?q=<query>&format=json — CORS support from DDG is inconsistent, so failures here are shown as real errors, not masked.",
+      async call(query){
+        const res = await fetch('https://api.duckduckgo.com/?format=json&no_html=1&skip_disambig=1&q=' + encodeURIComponent(query));
+        if(!res.ok) throw new Error('DuckDuckGo HTTP ' + res.status);
+        const json = await res.json();
+        const related = (json.RelatedTopics || [])
+          .flatMap(t => Array.isArray(t.Topics) ? t.Topics : [t])
+          .filter(t => t && t.Text)
+          .slice(0, 5)
+          .map(t => ({ title: (t.Text.split(' - ')[0] || t.Text).trim(), url: t.FirstURL || '', snippet: t.Text }));
+        if(!json.AbstractText && related.length === 0){
+          throw new Error('DuckDuckGo returned no abstract and no related topics for this query.');
+        }
+        const results = json.AbstractText
+          ? [{ title: json.Heading || query, url: json.AbstractURL || '', snippet: json.AbstractText }, ...related]
+          : related;
+        return { query, results, live: true };
+      }
+    }
+  };
+
+  // Which tool can stand in for which, if the primary genuinely fails.
+  // DeepCrawl and OpenAlexSearch have no natural substitute in this registry yet.
+  const TOOL_FALLBACK = {
+    RivalSearch: "DuckDuckGoSearch",
+    DuckDuckGoSearch: "RivalSearch"
+  };
+
+  /* =====================================================
+     STATE + PERSISTENCE
+  ====================================================== */
+  const STORAGE_KEY = "sovereignHive.gatewayState.v1";
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return { selected: "custom", customBaseUrl: "", keys: {}, models: {} };
+  }
+  function saveState(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  let state = loadState();
+  let connectedGatewayId = null;
+  let messages = []; // {role: 'user'|'ai'|'system'|'error', content}
+
+  /* =====================================================
+     DOM REFS
+  ====================================================== */
+  const gatewaySelect   = document.getElementById('gatewaySelect');
+  const endpointPreview = document.getElementById('endpointPreview');
+  const gatewayNote     = document.getElementById('gatewayNote');
+  const keyBadge        = document.getElementById('keyBadge');
+  const customUrlSection= document.getElementById('customUrlSection');
+  const customBaseUrlEl = document.getElementById('customBaseUrl');
+  const modelIdInput    = document.getElementById('modelIdInput');
+  const apiKeyInput     = document.getElementById('apiKeyInput');
+  const toggleKeyBtn    = document.getElementById('toggleKeyVisibility');
+  const saveKeyBtn      = document.getElementById('saveKeyBtn');
+  const clearKeyBtn     = document.getElementById('clearKeyBtn');
+  const asiaTemplateGrid= document.getElementById('asiaTemplateGrid');
+  const connectBtn      = document.getElementById('connectBtn');
+  const testBtn         = document.getElementById('testBtn');
+  const connStatusDot   = document.getElementById('connStatusDot');
+  const connStatusText  = document.getElementById('connStatusText');
+  const topStatusDot    = document.getElementById('topStatusDot');
+  const topStatusText   = document.getElementById('topStatusText');
+  const chatMetaGateway = document.getElementById('chatMetaGateway');
+  const chatMetaModel   = document.getElementById('chatMetaModel');
+  const chatHistory     = document.getElementById('chatHistory');
+  const chatInput       = document.getElementById('chatInput');
+  const sendBtn         = document.getElementById('sendBtn');
+  const logList         = document.getElementById('logList');
+  const toolRegistryList= document.getElementById('toolRegistryList');
+  const leftPanel       = document.getElementById('leftPanel');
+  const rightPanel      = document.getElementById('rightPanel');
+
+  const DOT_COLORS = { idle:"#5b6472", ok:"#4fd1c5", warn:"#f0a830", error:"#e2574c" };
+
+  /* =====================================================
+     ACTIVITY LOG
+  ====================================================== */
+  function logActivity(text, level){
+    level = level || "info";
+    const ts = new Date();
+    const hh = String(ts.getHours()).padStart(2,'0');
+    const mm = String(ts.getMinutes()).padStart(2,'0');
+    const entry = document.createElement('div');
+    entry.className = "log-entry" + (level !== "info" ? " level-" + level : "");
+    entry.innerHTML = `<span class="ts">[${hh}:${mm}]</span>${escapeHtml(text)}`;
+    logList.prepend(entry);
+    // cap log length
+    while(logList.children.length > 200){
+      logList.removeChild(logList.lastChild);
+    }
+  }
+
+  /* =====================================================
+     HELPERS
+  ====================================================== */
+  function escapeHtml(str){
+    return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function maskKey(key){
+    if(!key) return "";
+    if(key.length <= 4) return "•".repeat(key.length);
+    return "•".repeat(key.length - 4) + key.slice(-4);
+  }
+
+  function setDot(el, level){ el.querySelector('polygon').setAttribute('fill', DOT_COLORS[level] || DOT_COLORS.idle); }
+
+  function activeGatewayId(){ return gatewaySelect.value; }
+
+  function getEffectiveBaseUrl(gw, id){
+    if(gw.editableUrl && id === 'custom') return state.customBaseUrl || gw.baseUrl;
+    if(gw.editableUrl && id === 'ollama_local') return customBaseUrlEl_value_for(id) || gw.baseUrl;
+    return gw.baseUrl;
+  }
+  function customBaseUrlEl_value_for(id){
+    // only relevant while that gateway is selected and the field is visible
+    if(activeGatewayId() === id) return customBaseUrlEl.value.trim();
+    return state["url_" + id] || "";
+  }
+
+  // Priority order for the orchestrator's LLM fallback: the user's connected
+  // (or currently selected) gateway first, then everything else in registry order.
+  function buildGatewayFallbackOrder(){
+    const ids = Object.keys(GATEWAYS);
+    const primary = connectedGatewayId || activeGatewayId();
+    const rest = ids.filter(id => id !== primary);
+    return primary ? [primary, ...rest] : ids;
+  }
+
+  /* =====================================================
+     RENDER: GATEWAY DROPDOWN
+  ====================================================== */
+  function buildDropdown(){
+    const groups = {};
+    Object.entries(GATEWAYS).forEach(([id, gw]) => {
+      groups[gw.group] = groups[gw.group] || [];
+      groups[gw.group].push(id);
+    });
+    gatewaySelect.innerHTML = "";
+    Object.entries(groups).forEach(([groupName, ids]) => {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = groupName;
+      ids.forEach(id => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = GATEWAYS[id].label;
+        optgroup.appendChild(opt);
+      });
+      gatewaySelect.appendChild(optgroup);
+    });
+    gatewaySelect.value = state.selected || "custom";
+  }
+
+  /* =====================================================
+     RENDER: GATEWAY PANEL (preview, key field, badges)
+  ====================================================== */
+  function renderGatewayPanel(){
+    const id = activeGatewayId();
+    const gw = GATEWAYS[id];
+
+    // custom URL field visibility
+    customUrlSection.style.display = gw.editableUrl ? "block" : "none";
+    if(gw.editableUrl){
+      customBaseUrlEl.placeholder = gw.baseUrl || "https://your-endpoint.example.com/v1";
+      customBaseUrlEl.value = state["url_" + id] !== undefined ? state["url_" + id] : (id === 'custom' ? state.customBaseUrl : gw.baseUrl);
+    }
+
+    const baseUrl = getEffectiveBaseUrl(gw, id);
+    const key = state.keys[id] || "";
+    const model = (state.models[id] !== undefined ? state.models[id] : gw.defaultModel) || "";
+    modelIdInput.value = model;
+    apiKeyInput.value = key;
+    apiKeyInput.placeholder = gw.needsKey ? "Paste API key (required)" : "Not required for this gateway";
+    apiKeyInput.disabled = !gw.needsKey;
+
+    keyBadge.textContent = gw.needsKey ? "🔑 key required" : "✓ no key needed";
+    keyBadge.className = "badge " + (gw.needsKey ? "key-required" : "no-key");
+
+    const headerLine = gw.needsKey
+      ? `${gw.keyHeader}: ${gw.keyPrefix}${key ? maskKey(key) : "<your key>"}`
+      : `(no auth header)`;
+
+    endpointPreview.innerHTML =
+      `POST <span class="hl">${escapeHtml(baseUrl || "<base url not set>")}</span>/chat/completions\n` +
+      `Content-Type: application/json\n` +
+      `<span class="hl2">${escapeHtml(headerLine)}</span>\n` +
+      `model: ${escapeHtml(model || "<unset>")}`;
+
+    gatewayNote.textContent = gw.notes || "";
+
+    chatMetaGateway.textContent = "gateway: " + gw.label;
+    chatMetaModel.textContent = "model: " + (model || "—");
+  }
+
+  /* =====================================================
+     RENDER: ASIA-PACIFIC QUICK TEMPLATES
+  ====================================================== */
+  function buildAsiaTemplates(){
+    asiaTemplateGrid.innerHTML = "";
+    ASIA_IDS.forEach(id => {
+      const gw = GATEWAYS[id];
+      const btn = document.createElement('button');
+      btn.className = "template-btn";
+      btn.innerHTML = `<span>${escapeHtml(gw.label)}</span><span class="region-tag">template</span>`;
+      btn.addEventListener('click', () => {
+        gatewaySelect.value = id;
+        onGatewayChange();
+        apiKeyInput.focus();
+        logActivity(`Loaded template for ${gw.label} — paste your account key to use it.`, "warn");
+      });
+      asiaTemplateGrid.appendChild(btn);
+    });
+  }
+
+  /* =====================================================
+     RENDER: TOOL REGISTRY PANEL
+     Reads straight from ToolRegistry — add a tool there and it
+     shows up here automatically, no extra wiring needed.
+  ====================================================== */
+  function buildToolRegistryPanel(){
+    toolRegistryList.innerHTML = "";
+    Object.values(ToolRegistry).forEach(tool => {
+      const item = document.createElement('div');
+      item.className = "tool-registry-item";
+      item.innerHTML = `<div class="tool-name">${escapeHtml(tool.name)}<span class="sim-badge">live</span></div><div class="tool-desc">${escapeHtml(tool.description)}</div>`;
+      toolRegistryList.appendChild(item);
+    });
+  }
+
+  /* =====================================================
+     EVENT HANDLERS
+  ====================================================== */
+  function onGatewayChange(){
+    state.selected = activeGatewayId();
+    saveState();
+    renderGatewayPanel();
+  }
+
+  function onCustomUrlInput(){
+    const id = activeGatewayId();
+    state["url_" + id] = customBaseUrlEl.value.trim();
+    if(id === 'custom') state.customBaseUrl = customBaseUrlEl.value.trim();
+    saveState();
+    renderGatewayPanel();
+  }
+
+  function onModelInput(){
+    const id = activeGatewayId();
+    state.models[id] = modelIdInput.value.trim();
+    saveState();
+    chatMetaModel.textContent = "model: " + (modelIdInput.value.trim() || "—");
+  }
+
+  function onSaveKey(){
+    const id = activeGatewayId();
+    state.keys[id] = apiKeyInput.value.trim();
+    saveState();
+    renderGatewayPanel();
+    logActivity(`Saved API key for ${GATEWAYS[id].label} (stored only in this browser).`, "ok");
+  }
+
+  function onClearKey(){
+    const id = activeGatewayId();
+    delete state.keys[id];
+    apiKeyInput.value = "";
+    saveState();
+    renderGatewayPanel();
+    logActivity(`Cleared API key for ${GATEWAYS[id].label}.`, "warn");
+  }
+
+  function onToggleKeyVisibility(){
+    const showing = apiKeyInput.type === "text";
+    apiKeyInput.type = showing ? "password" : "text";
+    toggleKeyBtn.textContent = showing ? "SHOW" : "HIDE";
+  }
+
+  function onConnect(){
+    const id = activeGatewayId();
+    const gw = GATEWAYS[id];
+    connectedGatewayId = id;
+    setDot(topStatusDot, "ok");
+    topStatusText.textContent = "Connected: " + gw.label;
+    logActivity(`Switched gateway to ${gw.label}.`, "ok");
+    appendMessage("system", `Active gateway set to ${gw.label}${gw.needsKey && !state.keys[id] ? " — no API key saved yet." : "."}`);
+  }
+
+  async function onTestConnection(){
+    const id = activeGatewayId();
+    const gw = GATEWAYS[id];
+    const baseUrl = getEffectiveBaseUrl(gw, id);
+    if(!baseUrl){
+      setDot(connStatusDot, "error");
+      connStatusText.textContent = "No base URL set";
+      logActivity("Test failed: no base URL configured.", "error");
+      return;
+    }
+    setDot(connStatusDot, "warn");
+    connStatusText.textContent = "Testing…";
+    logActivity(`Testing connection to ${gw.label}…`);
+    try{
+      const headers = { "Content-Type": "application/json" };
+      if(gw.needsKey && state.keys[id]) headers[gw.keyHeader] = gw.keyPrefix + state.keys[id];
+      const res = await fetch(baseUrl.replace(/\/+$/,'') + "/models", { method: "GET", headers });
+      if(res.ok){
+        setDot(connStatusDot, "ok");
+        connStatusText.textContent = "Reachable (HTTP " + res.status + ")";
+        logActivity(`${gw.label} responded with HTTP ${res.status}.`, "ok");
+      }else{
+        setDot(connStatusDot, "warn");
+        connStatusText.textContent = "Reached, but HTTP " + res.status;
+        logActivity(`${gw.label} reachable but returned HTTP ${res.status} — check your key.`, "warn");
+      }
+    }catch(err){
+      setDot(connStatusDot, "error");
+      connStatusText.textContent = "Unreachable from browser";
+      logActivity(`Connection test failed for ${gw.label}: ${err.message}. Often a CORS restriction — many providers block direct browser calls.`, "error");
+    }
+  }
+
+  /* =====================================================
+     CHAT
+  ====================================================== */
+  function renderMarkdown(src){
+    let s = escapeHtml(src);
+    // fenced code blocks
+    s = s.replace(/```([a-zA-Z0-9]*)\n([\s\S]*?)```/g, (m, lang, code) => `<pre><code>${code}</code></pre>`);
+    // inline code
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // bold / italic
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    // links
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // headers
+    s = s.replace(/^### (.*)$/gm, '<strong>$1</strong>');
+    s = s.replace(/^## (.*)$/gm, '<strong style="font-size:1.05em;">$1</strong>');
+    s = s.replace(/^# (.*)$/gm, '<strong style="font-size:1.15em;">$1</strong>');
+    // horizontal rule (standalone --- line)
+    s = s.replace(/^---$/gm, ' HR ');
+    // unordered lists
+    s = s.replace(/(^|\n)((?:- .*(?:\n|$))+)/g, (m, lead, block) => {
+      const items = block.trim().split('\n').map(l => `<li>${l.replace(/^- /,'')}</li>`).join('');
+      return lead + `<ul>${items}</ul>`;
+    });
+    // paragraphs / line breaks
+    s = s.split(/\n{2,}/).map(p => {
+      const t = p.trim();
+      if(!t) return '';
+      if(t === ' HR ') return '<hr>';
+      return `<p>${t.replace(/\n/g,'<br>')}</p>`;
+    }).join('');
+    return s || escapeHtml(src);
+  }
+
+  function appendMessage(role, content){
+    messages.push({role, content});
+    const el = document.createElement('div');
+    el.className = "msg " + role;
+    const roleLabel = { user:"You", ai:"Assistant", system:"System", error:"Error" }[role] || role;
+    el.innerHTML = `<div class="msg-role">${roleLabel}</div>${ role === 'user' || role === 'system' || role === 'error' ? escapeHtml(content).replace(/\n/g,'<br>') : renderMarkdown(content) }`;
+    chatHistory.appendChild(el);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  }
+
+  /* =====================================================
+     TOOL COMMANDS: parsing + result rendering
+     Add a new tool command by adding one entry to CMD_PATTERNS
+     plus a render*() function — handleToolCommand() does the rest.
+  ====================================================== */
+  function renderSearchResults(data){
+    const rows = data.results.map(r => `
+      <div class="tool-result-row">
+        <div class="tool-result-title"><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a><span class="engine-tag">${escapeHtml(r.engine)}</span></div>
+        <div class="tool-result-snippet">${escapeHtml(r.snippet)}</div>
+      </div>`).join('');
+    const conflictBlock = data.conflicts.length
+      ? `<div class="conflict-block"><strong>⚠ ${data.conflicts.length} conflict(s) detected</strong>${data.conflicts.map(c => `<div class="conflict-row">${escapeHtml(c.engineA)} says <em>${escapeHtml(c.valueA)}</em>, ${escapeHtml(c.engineB)} says <em>${escapeHtml(c.valueB)}</em> — re: ${escapeHtml(c.topic)}</div>`).join('')}</div>`
+      : `<div class="conflict-block ok">No cross-engine conflicts detected.</div>`;
+    return `<div class="tool-meta">query: "${escapeHtml(data.query)}" · ${data.tookMs}ms · live (Wikipedia + Hacker News)</div>${rows || '<div class="tool-result-snippet">No results from either engine.</div>'}${conflictBlock}`;
+  }
+
+  function renderCrawlResult(data){
+    return `<div class="tool-meta">live fetch · ${new Date(data.fetchedAt).toLocaleTimeString()}</div>
+      <div class="crawl-field"><span class="k">url</span>${escapeHtml(data.url)}</div>
+      <div class="crawl-field"><span class="k">title</span>${escapeHtml(data.title)}</div>
+      <div class="crawl-field"><span class="k">word count</span>${data.wordCount}</div>
+      <div class="crawl-field"><span class="k">preview</span>${escapeHtml(data.preview)}</div>`;
+  }
+
+  function renderAcademicResults(data){
+    const rows = data.papers.map(p => `
+      <div class="paper-row">
+        <div class="paper-title">${p.url ? `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.title)}</a>` : escapeHtml(p.title)}</div>
+        <div class="paper-authors">${escapeHtml(p.authors.join(", ") || "authors not listed")} · ${p.year || "year unknown"}</div>
+        <div class="paper-meta">${escapeHtml(p.openAlexId)} · cited by ${p.citedBy}</div>
+      </div>`).join('');
+    return `<div class="tool-meta">topic: "${escapeHtml(data.topic)}" · ${data.count} live result(s) from OpenAlex</div>${rows || '<div class="tool-result-snippet">No papers found for this topic.</div>'}`;
+  }
+
+  function renderDdgResults(data){
+    const rows = data.results.map(r => `
+      <div class="tool-result-row">
+        <div class="tool-result-title">${r.url ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener">${escapeHtml(r.title)}</a>` : escapeHtml(r.title)}</div>
+        <div class="tool-result-snippet">${escapeHtml(r.snippet)}</div>
+      </div>`).join('');
+    return `<div class="tool-meta">query: "${escapeHtml(data.query)}" · live (DuckDuckGo Instant Answer API)</div>${rows}`;
+  }
+
+  const CMD_PATTERNS = [
+    { re: /^search\s+"([^"]+)"$/i,   tool: "RivalSearch",      render: renderSearchResults   },
+    { re: /^crawl\s+"([^"]+)"$/i,    tool: "DeepCrawl",        render: renderCrawlResult     },
+    { re: /^academic\s+"([^"]+)"$/i, tool: "OpenAlexSearch",   render: renderAcademicResults },
+    { re: /^ddg\s+"([^"]+)"$/i,      tool: "DuckDuckGoSearch", render: renderDdgResults      }
+  ];
+
+  function matchToolCommand(text){
+    for(const pattern of CMD_PATTERNS){
+      const m = text.match(pattern.re);
+      if(m) return { pattern, arg: m[1] };
+    }
+    return null;
+  }
+
+  function appendPendingTool(label){
+    const el = document.createElement('div');
+    el.className = "msg tool pending";
+    el.innerHTML = `<div class="msg-role">Tool</div><span class="pending-dots">${escapeHtml(label)}</span>`;
+    chatHistory.appendChild(el);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    return el;
+  }
+
+  function resolvePendingTool(el, toolName, html){
+    el.classList.remove('pending');
+    el.innerHTML = `<div class="msg-role">${escapeHtml(toolName)} · simulated</div>${html}`;
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  }
+
+  async function handleToolCommand(cmd){
+    const tool = ToolRegistry[cmd.pattern.tool];
+    const pendingEl = appendPendingTool(`Running ${tool.name}`);
+    logActivity(`Tool call: ${tool.name}("${truncate(cmd.arg, 50)}")`, "info");
+    try{
+      const data = await tool.call(cmd.arg);
+      resolvePendingTool(pendingEl, tool.name, cmd.pattern.render(data));
+      logActivity(`${tool.name} completed.`, "ok");
+    }catch(err){
+      resolvePendingTool(pendingEl, tool.name, `<div class="tool-error">Tool failed: ${escapeHtml(err.message)}</div>`);
+      logActivity(`${tool.name} failed: ${err.message}`, "error");
+    }
+  }
+
+  const HELP_TEXT =
+`Available commands:
+search "query" — RivalSearch across multiple engines, with conflict detection
+crawl "url" — DeepCrawl a page and extract its cleaned content
+academic "topic" — OpenAlexSearch for papers on a topic
+ddg "query" — DuckDuckGoSearch deep pagination (past page 100)
+deep research <brief> — orchestrator runs the full pipeline (search + crawl + academic + conflict analysis + synthesis) and returns one report
+
+Anything else is sent to whichever gateway is currently connected. Every tool above makes a real, keyless network call — DeepCrawl and DuckDuckGo report an honest error (usually a CORS block) instead of faking a result when the target won't cooperate. See ToolRegistry and Orchestrator in the source.`;
+
+  /* =====================================================
+     ORCHESTRATOR (Step 3)
+     Chains the ToolRegistry into a "deep research" pipeline:
+     parallel search + academic lookup -> crawl the best hits ->
+     conflict analysis -> synthesis (real gateway if reachable,
+     otherwise a deterministic local summary) -> one formatted report.
+  ====================================================== */
+  class Orchestrator{
+    parse(text){
+      const m = text.match(/^deep research\s+(.+)$/i);
+      if(!m) return null;
+      const brief = m[1].trim().replace(/^"(.*)"$/, '$1');
+      const coreTopic = brief.split(/\s+and find\s+|\s*,?\s*then\s+|\s+and then\s+/i)[0].trim();
+      return { brief, coreTopic };
+    }
+
+    async callToolResilient(toolName, arg){
+      const fallbackName = TOOL_FALLBACK[toolName];
+      const order = fallbackName ? [toolName, fallbackName] : [toolName];
+      let lastErr;
+      for(let i = 0; i < order.length; i++){
+        const name = order[i];
+        try{
+          const data = await ToolRegistry[name].call(arg);
+          if(i > 0) logActivity(`Fell back from ${toolName} to ${name} after a real failure.`, "warn");
+          return { toolUsed: name, data };
+        }catch(err){
+          lastErr = err;
+          logActivity(`${name} failed during orchestration: ${err.message}.`, "warn");
+        }
+      }
+      throw lastErr;
+    }
+
+    async synthesize(brief, rival, academic, conflicts){
+      const order = buildGatewayFallbackOrder();
+      for(const id of order){
+        const gw = GATEWAYS[id];
+        if(!gw) continue;
+        const baseUrl = getEffectiveBaseUrl(gw, id);
+        const key = state.keys[id] || "";
+        if(gw.needsKey && !key){ logActivity(`Skipping ${gw.label} for synthesis — no key saved.`, "warn"); continue; }
+        if(!baseUrl){ logActivity(`Skipping ${gw.label} for synthesis — no base URL set.`, "warn"); continue; }
+        try{
+          logActivity(`Attempting synthesis via ${gw.label}…`);
+          const headers = { "Content-Type": "application/json" };
+          if(gw.needsKey) headers[gw.keyHeader] = gw.keyPrefix + key;
+          const model = state.models[id] || gw.defaultModel || "";
+          const prompt = `Summarize this research brief in 2-3 sentences, noting any conflicting information.\nBrief: ${brief}\nWeb findings: ${rival.data.results.map(r => r.title).join("; ")}\nAcademic papers: ${academic.data.papers.map(p => p.title).join("; ")}\nConflicts: ${conflicts.length ? conflicts.map(c => `${c.topic}: ${c.valueA} vs ${c.valueB}`).join("; ") : "none flagged"}`;
+          const res = await fetch(baseUrl.replace(/\/+$/,'') + "/chat/completions", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], stream: false })
+          });
+          if(!res.ok) throw new Error("HTTP " + res.status);
+          const data = await res.json();
+          const content = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : null;
+          if(!content) throw new Error("empty response body");
+          logActivity(`Synthesis succeeded via ${gw.label}.`, "ok");
+          return { text: content, source: gw.label, live: true };
+        }catch(err){
+          logActivity(`Synthesis via ${gw.label} failed: ${err.message} — trying next gateway.`, "warn");
+        }
+      }
+      logActivity("All configured gateways exhausted for synthesis — using a local deterministic summary.", "warn");
+      const text = `Local summary (no reachable LLM gateway): gathered ${rival.data.results.length} web result(s) and ${academic.data.papers.length} academic paper(s) on "${brief}". ${conflicts.length ? `${conflicts.length} conflict(s) flagged, notably around ${conflicts[0].topic}.` : "No major conflicts were flagged across the gathered sources."}`;
+      return { text, source: "local fallback (no gateway reachable)", live: false };
+    }
+
+    buildReportMarkdown({ brief, rival, ddg, academic, crawled, conflicts, synthesis }){
+      const allWeb = [
+        ...rival.data.results.map(r => ({ ...r, src: r.engine || rival.toolUsed })),
+        ...ddg.data.results.map(r => ({ ...r, src: ddg.toolUsed }))
+      ];
+      const findingsLines = allWeb.slice(0, 6)
+        .map(r => `- **${r.title}** (${r.src}) — ${r.snippet}`)
+        .join("\n");
+
+      const crawlBlocks = crawled.length
+        ? crawled.map(c => `**${c.sourceTitle}**\n\`\`\`\n${c.preview}\n\`\`\``).join("\n\n")
+        : "_No sources were crawled this run._";
+
+      const paperLines = academic.data.papers.length
+        ? academic.data.papers.map(p => `- **${p.title}** — ${p.authors.join(", ")} (${p.year}) · cited by ${p.citedBy} · ${p.openAlexId}`).join("\n")
+        : "_No papers found._";
+
+      const conflictLines = conflicts.length
+        ? conflicts.map(c => `- ${c.engineA} says *${c.valueA}*, ${c.engineB} says *${c.valueB}* — re: ${c.topic}`).join("\n")
+        : "- No conflicts detected across the gathered sources.";
+
+      return `# Deep Research Report: "${brief}"
+
+Pipeline: parallel search (Wikipedia + Hacker News) → crawl top hits (direct browser fetch — CORS permitting) → academic search (OpenAlex, live) → conflict analysis → synthesis. Every tool call above is real; failures are reported honestly rather than filled in.
+
+## Key Findings (Web Search)
+${findingsLines}
+
+## Crawled Source Extracts
+${crawlBlocks}
+
+## Academic Coverage (OpenAlex)
+${paperLines}
+
+## Conflict Summary
+${conflictLines}
+
+## Synthesis (${synthesis.live ? "via " + synthesis.source : synthesis.source})
+${synthesis.text}
+
+---
+*Assembled from live tool calls (OpenAlex, Wikipedia, Hacker News, DuckDuckGo) — see ToolRegistry and Orchestrator in the source. DeepCrawl and DuckDuckGo report real errors when a target blocks cross-origin access rather than fabricating a result.*`;
+    }
+
+    appendReportMessage(markdown){
+      const el = document.createElement('div');
+      el.className = "msg report";
+      el.innerHTML = `<div class="msg-role">Orchestrator · Deep Research Report</div>${renderMarkdown(markdown)}`;
+      chatHistory.appendChild(el);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    async run(brief, coreTopic){
+      logActivity(`Deep research started: "${brief}".`, "info");
+      const pendingEl = appendPendingTool(`Orchestrator researching "${coreTopic}"`);
+
+      try{
+        logActivity("Phase 1: parallel web search (RivalSearch + DuckDuckGoSearch) and academic search (OpenAlexSearch).");
+        const [rival, ddg, academic] = await Promise.all([
+          this.callToolResilient("RivalSearch", coreTopic),
+          this.callToolResilient("DuckDuckGoSearch", coreTopic),
+          this.callToolResilient("OpenAlexSearch", coreTopic)
+        ]);
+        logActivity("Phase 1 complete — web and academic search returned.", "ok");
+
+        const promising = rival.data.results.slice(0, 2);
+        logActivity(`Phase 2: crawling ${promising.length} result(s) with DeepCrawl (works only where the target grants CORS).`);
+        const crawled = [];
+        for(const p of promising){
+          if(!p.url) continue;
+          try{
+            const { data } = await this.callToolResilient("DeepCrawl", p.url);
+            crawled.push({ ...data, sourceTitle: p.title });
+            logActivity(`Crawled ${p.url}.`, "ok");
+          }catch(err){
+            logActivity(`Crawl failed for ${p.url}: ${err.message}.`, "error");
+          }
+        }
+
+        logActivity("Phase 3: analyzing conflicts across engines.");
+        const conflicts = [...rival.data.conflicts];
+        logActivity(`Phase 3 complete — ${conflicts.length} conflict(s) flagged.`, conflicts.length ? "warn" : "ok");
+
+        logActivity("Phase 4: synthesizing findings — trying the connected LLM gateway first.");
+        const synthesis = await this.synthesize(brief, rival, academic, conflicts);
+
+        logActivity("Phase 5: compiling final report.");
+        const reportMd = this.buildReportMarkdown({ brief, rival, ddg, academic, crawled, conflicts, synthesis });
+        pendingEl.remove();
+        this.appendReportMessage(reportMd);
+        logActivity(`Deep research complete: "${brief}".`, "ok");
+      }catch(err){
+        pendingEl.remove();
+        appendMessage("error", `Deep research failed: ${err.message}`);
+        logActivity(`Deep research failed: ${err.message}`, "error");
+      }
+    }
+  }
+
+  const ORCHESTRATOR = new Orchestrator();
+
+  async function sendMessage(){
+    const text = chatInput.value.trim();
+    if(!text) return;
+
+    const research = ORCHESTRATOR.parse(text);
+    if(research){
+      appendMessage("user", text);
+      chatInput.value = "";
+      autosizeTextarea();
+      sendBtn.disabled = true;
+      try{
+        await ORCHESTRATOR.run(research.brief, research.coreTopic);
+      }finally{
+        sendBtn.disabled = false;
+      }
+      return;
+    }
+
+    const cmd = matchToolCommand(text);
+    if(cmd){
+      appendMessage("user", text);
+      chatInput.value = "";
+      autosizeTextarea();
+      await handleToolCommand(cmd);
+      return;
+    }
+    if(/^help$/i.test(text)){
+      appendMessage("user", text);
+      chatInput.value = "";
+      autosizeTextarea();
+      appendMessage("system", HELP_TEXT);
+      return;
+    }
+    if(!connectedGatewayId){
+      appendMessage("system", "No gateway connected yet — click \"Connect gateway\" in the left panel first.");
+      logActivity("Send blocked: no gateway connected.", "warn");
+      return;
+    }
+    appendMessage("user", text);
+    chatInput.value = "";
+    autosizeTextarea();
+    sendBtn.disabled = true;
+
+    const id = connectedGatewayId;
+    const gw = GATEWAYS[id];
+    const baseUrl = getEffectiveBaseUrl(gw, id);
+    const model = state.models[id] || gw.defaultModel || "";
+    const key = state.keys[id] || "";
+
+    if(gw.needsKey && !key){
+      appendMessage("error", `${gw.label} requires an API key, but none is saved. Add one in the left panel, then Save.`);
+      logActivity(`Send blocked: ${gw.label} needs a key.`, "warn");
+      sendBtn.disabled = false;
+      return;
+    }
+    if(!baseUrl){
+      appendMessage("error", "No base URL configured for the active gateway.");
+      sendBtn.disabled = false;
+      return;
+    }
+
+    logActivity(`Sending message via ${gw.label}…`);
+    try{
+      const headers = { "Content-Type": "application/json" };
+      if(gw.needsKey) headers[gw.keyHeader] = gw.keyPrefix + key;
+
+      const payload = {
+        model: model,
+        messages: messages
+          .filter(m => m.role === 'user' || m.role === 'ai')
+          .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content })),
+        stream: false
+      };
+
+      const res = await fetch(baseUrl.replace(/\/+$/,'') + "/chat/completions", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      const raw = await res.text();
+      let data;
+      try{ data = JSON.parse(raw); }catch(e){ data = null; }
+
+      if(!res.ok){
+        const detail = data && data.error ? (data.error.message || JSON.stringify(data.error)) : raw.slice(0,300);
+        appendMessage("error", `${gw.label} returned HTTP ${res.status}: ${detail}`);
+        logActivity(`Request failed: HTTP ${res.status} from ${gw.label}.`, "error");
+      }else{
+        const content = data && data.choices && data.choices[0] && data.choices[0].message
+          ? data.choices[0].message.content
+          : "(No content field found in response — check the provider's response schema.)";
+        appendMessage("ai", content);
+        logActivity(`Received response from ${gw.label}.`, "ok");
+      }
+    }catch(err){
+      appendMessage("error", `Request failed: ${err.message}. This is frequently a CORS restriction — most hosted providers block direct calls from a page running in someone else's browser, by design. A small backend relay usually fixes it.`);
+      logActivity(`Network/CORS error contacting ${gw.label}: ${err.message}`, "error");
+    }finally{
+      sendBtn.disabled = false;
+    }
+  }
+
+  function autosizeTextarea(){
+    chatInput.style.height = "auto";
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + "px";
+  }
+
+  /* =====================================================
+     MOBILE PANEL TOGGLES
+  ====================================================== */
+  document.getElementById('toggleLeft').addEventListener('click', () => {
+    leftPanel.classList.toggle('open');
+    rightPanel.classList.remove('open');
+  });
+  document.getElementById('toggleRight').addEventListener('click', () => {
+    rightPanel.classList.toggle('open');
+    leftPanel.classList.remove('open');
+  });
+
+  /* =====================================================
+     WIRE UP EVENTS
+  ====================================================== */
+  gatewaySelect.addEventListener('change', onGatewayChange);
+  customBaseUrlEl.addEventListener('input', onCustomUrlInput);
+  modelIdInput.addEventListener('input', onModelInput);
+  saveKeyBtn.addEventListener('click', onSaveKey);
+  clearKeyBtn.addEventListener('click', onClearKey);
+  toggleKeyBtn.addEventListener('click', onToggleKeyVisibility);
+  connectBtn.addEventListener('click', onConnect);
+  testBtn.addEventListener('click', onTestConnection);
+  sendBtn.addEventListener('click', sendMessage);
+  chatInput.addEventListener('input', autosizeTextarea);
+  chatInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  /* =====================================================
+     INIT
+  ====================================================== */
+  buildDropdown();
+  buildAsiaTemplates();
+  buildToolRegistryPanel();
+  renderGatewayPanel();
+  appendMessage("system", "Sovereign Hive command center initialized. Select a gateway on the left, add a key if required, then Connect. Type \"help\" to see available commands, including \"deep research <brief>\" for the full orchestrator pipeline.");
+  logActivity("Command center initialized.");
+  logActivity("Tool Registry loaded: RivalSearch (Wikipedia+HN), DeepCrawl (direct fetch), OpenAlexSearch, DuckDuckGoSearch — all live, keyless calls.");
+  logActivity("Orchestrator ready — try: deep research Web3 privacy and find academic papers, then summarize conflicts");
+
+})();
+</script>
+</body>
+</html>

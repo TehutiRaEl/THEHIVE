@@ -18,6 +18,7 @@ import FilesPanel from '../components/kai-os/FilesPanel';
 import ConstitutionViewer from '../components/kai-os/ConstitutionViewer';
 import Observatory from '../components/kai-os/Observatory';
 import BiosystemOverlay from '../components/kai-os/BiosystemOverlay';
+import GatewayConsoleOverlay from '../components/kai-os/GatewayConsoleOverlay';
 
 // The 13 existing, live-data-wired tabs — each already renders its own
 // SpaceNavigation + KaiChatBox, so when one is shown it fully replaces the OS
@@ -54,6 +55,7 @@ export default function KaiElOS() {
   const [speaking, setSpeaking] = useState(false);
   const [observatory, setObservatory] = useState(false);
   const [biosystem, setBiosystem] = useState(false);
+  const [gatewayConsole, setGatewayConsole] = useState(false);
   const [navOpen, setNavOpen] = useState(false);        // mobile slide-over nav
   const [communeOpen, setCommuneOpen] = useState(false); // mobile bottom commune sheet
 
@@ -183,7 +185,7 @@ export default function KaiElOS() {
     return (
       <div className={`h-screen w-screen flex flex-col bg-void-black text-slate-200 font-body ${forcedNarrow ? 'overflow-x-auto' : 'overflow-hidden'}`}>
         <div className={`flex flex-col h-full ${forcedNarrow ? 'min-w-[1280px]' : 'w-full'}`}>
-          <TopStatusBar hive={hive} onOpenBiosystem={() => setBiosystem(true)} />
+          <TopStatusBar hive={hive} onOpenBiosystem={() => setBiosystem(true)} onOpenGatewayConsole={() => setGatewayConsole(true)} />
           {forcedNarrow && (
             <button
               onClick={() => setForceDesktop(false)}
@@ -202,6 +204,7 @@ export default function KaiElOS() {
           </div>
           <Observatory active={observatory} onClose={() => setObservatory(false)} hive={hive} speaking={speaking} onSelect={handleSelect} />
           <BiosystemOverlay active={biosystem} onClose={() => setBiosystem(false)} />
+          <GatewayConsoleOverlay active={gatewayConsole} onClose={() => setGatewayConsole(false)} />
         </div>
       </div>
     );
@@ -210,7 +213,7 @@ export default function KaiElOS() {
   // ---- Mobile shell (narrow viewport, not forced) ----
   return (
     <div className="h-screen w-screen flex flex-col bg-void-black text-slate-200 font-body overflow-hidden">
-      <TopStatusBar hive={hive} onOpenBiosystem={() => setBiosystem(true)} />
+      <TopStatusBar hive={hive} onOpenBiosystem={() => setBiosystem(true)} onOpenGatewayConsole={() => setGatewayConsole(true)} />
 
       {/* Mobile toolbar: menu + brand + request-desktop */}
       <div className="flex items-center gap-2 px-3 h-12 shrink-0 border-b border-white/5 bg-void-900/80">
@@ -288,6 +291,7 @@ export default function KaiElOS() {
 
       <Observatory active={observatory} onClose={() => setObservatory(false)} hive={hive} speaking={speaking} onSelect={handleSelect} />
       <BiosystemOverlay active={biosystem} onClose={() => setBiosystem(false)} />
+      <GatewayConsoleOverlay active={gatewayConsole} onClose={() => setGatewayConsole(false)} />
     </div>
   );
 }
