@@ -5,7 +5,7 @@
  * and as an internal currency that can have real-world value.
  */
 
-import { XPTransaction, XPBalance, XPMultiplier, AgentAvatar } from '../avatars/types';
+import { XPTransaction, XPBalance, XPMultiplier } from '../avatars/types';
 
 // XP sources and their base values
 export const XP_SOURCES: Record<string, { base: number; description: string; cooldown?: number }> = {
@@ -136,9 +136,14 @@ class XPSystem {
     
     // Check cooldown
     if (sourceConfig.cooldown) {
-      const lastTransaction = this.transactions.findLast(t => 
-        t.agentId === agentId && t.type === source as any
-      );
+      let lastTransaction: XPTransaction | undefined;
+      for (let i = this.transactions.length - 1; i >= 0; i--) {
+        const t = this.transactions[i];
+        if (t.agentId === agentId && t.type === (source as any)) {
+          lastTransaction = t;
+          break;
+        }
+      }
       
       if (lastTransaction) {
         const lastTime = new Date(lastTransaction.timestamp).getTime();
@@ -310,7 +315,8 @@ class XPSystem {
       return { totalUSD: 0, totalTokens: 0 };
     }
     
-    return this.convertXPToValue(balance.totalXP);
+    const { usd, tokens } = this.convertXPToValue(balance.totalXP);
+    return { totalUSD: usd, totalTokens: tokens };
   }
 }
 

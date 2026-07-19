@@ -42,3 +42,7 @@ node_modules/
 
 # Archived legacy files
 .archive/
+
+# agent-harness per-run state (goal/task-specific, not durable) — the
+# committed domain manifest lives in .claude/skills/agent-harness/assets/harnesses/
+.agent-harness/

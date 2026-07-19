@@ -24,6 +24,7 @@ const PRIMARY: NavItem[] = [
 const SECONDARY: NavItem[] = [
   { id: 'ml-status', label: 'Cloudflare Workers AI', icon: '☁', wired: true },
   { id: 'legal', label: 'Legal Learning', icon: '⚖', wired: true },
+  { id: 'venture', label: 'Venture Planner', icon: '🚀', wired: true },
   { id: 'connectors', label: 'Connectors', icon: '🔌', wired: false },
   { id: 'sources', label: 'Upload Files', icon: '📁', wired: true },
   { id: 'skills', label: 'Active Skills', icon: '⚡', wired: true },

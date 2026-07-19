@@ -1,6 +1,7 @@
 import React from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
+import RoadmapAvatar from '../../kai-os/RoadmapAvatar';
 import { useConstitutionStore } from '../../../stores/constitutionStore';
 import { useHiveData } from '../../../hooks/useHiveData';
 
@@ -108,6 +109,38 @@ const SOUL: React.FC = () => {
                 </li>
               ))}
             </ol>
+          )}
+        </section>
+
+        <section className="roadmap-section">
+          <h2>🌱 The Roadmap of Becoming <span style={{ opacity: 0.6, fontSize: 13 }}>(live — F-008D / F-009E)</span></h2>
+          <p style={{ opacity: 0.6, fontSize: 12, marginTop: -4 }}>
+            Germination → Mycelium → Fruiting → Transformation → Senescence → Seed. Driven by each
+            agent's real Soul score; F-008D: "the cycle is infinite." Stage thresholds are provisional
+            and uncalibrated — there isn't yet a mature distribution of Soul values to calibrate against.
+          </p>
+          {!hive.roadmap || hive.roadmap.agents.length === 0 ? (
+            <p style={{ opacity: 0.6 }}>{hive.loading ? 'loading…' : 'no roadmap data reachable'}</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {hive.roadmap.hoard && (
+                <div>
+                  <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>
+                    🐝 The Hoard — {hive.roadmap.hoard.agentCount} active agent(s), aggregate rollup (not its own tracked entity)
+                  </div>
+                  <RoadmapAvatar
+                    entry={{ ...hive.roadmap.hoard, agent: 'The Hoard' }}
+                    size="large"
+                    emphasize
+                  />
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {hive.roadmap.agents.map((a) => (
+                  <RoadmapAvatar key={a.agent} entry={a} size="medium" />
+                ))}
+              </div>
+            </div>
           )}
         </section>
 
