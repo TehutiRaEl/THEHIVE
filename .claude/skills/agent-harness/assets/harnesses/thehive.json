@@ -1,0 +1,1166 @@
+{
+  "schema": "agent-harness/manifest.v1",
+  "domain": ".claude/skills",
+  "skill_count": 66,
+  "loop_defaults": {
+    "max_attempts_per_task": 3,
+    "max_loop_iterations": 12,
+    "escalate_on": [
+      "attempts_exhausted",
+      "no_verification_available",
+      "destructive_or_irreversible_action",
+      "goal_drift_detected"
+    ]
+  },
+  "skills": [
+    {
+      "name": "SOURCED_SKILLS_INDEX.md",
+      "path": ".claude/skills/SOURCED_SKILLS_INDEX.md",
+      "description": "",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "agent-harness",
+      "path": ".claude/skills/agent-harness",
+      "description": "Turn any domain folder of skills into a bounded agentic loop: compile a goal into a verifiable task plan, execute tasks with the domain's own tools, verify every task with machine-run checks, retry with caps, escalate to a human when budgets exhaust, and refuse to close until everything is verified or explicitly waived. Use when you want an agent or subagent to pick up a goal and drive it to a verified close across one of this repo's 18 domains ('run this goal through the engineering harness', 'set up an agentic loop for marketing work', 'make the finance domain self-verifying'). NOT for \u2026",
+      "tools": [
+        {
+          "script": ".claude/skills/agent-harness/scripts/goal_compiler.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/goal_compiler.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/goal_compiler.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/agent-harness/scripts/harness_manifest_builder.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/harness_manifest_builder.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/harness_manifest_builder.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/agent-harness/scripts/loop_controller.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/loop_controller.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/loop_controller.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": true
+      },
+      "references": [
+        "agentic_loop_canon.md",
+        "domain_harness_design.md",
+        "verification_discipline.md"
+      ]
+    },
+    {
+      "name": "algorithmic-art",
+      "path": ".claude/skills/algorithmic-art",
+      "description": "Creating algorithmic art using p5.js with seeded randomness and interactive parameter exploration. Use this when users request creating art using code, generative art, algorithmic art, flow fields, or particle systems. Create original algorithmic art rather than copying existing artists' work to avoid copyright violations.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "anomaly-triage",
+      "path": ".claude/skills/anomaly-triage",
+      "description": "Use when something unexpected happens that isn't yet clearly a bug to fix or a threat to block \u2014 a strange input, an odd CI failure, an unusual pattern in logs/metrics, a surprising agent output. Applies a severity-tiered response instead of a binary panic/ignore reaction, so genuinely low-stakes surprises become learning material rather than alarms, while anything that actually looks like a real security threat is still blocked and escalated immediately \u2014 never treated as \"just a lesson.\" Not for routine bugs with an obvious fix (just fix them) or confirmed security incidents (escalate \u2026",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "antigravity-protocol",
+      "path": ".claude/skills/antigravity",
+      "description": "Use this skill ALWAYS whenever the user asks you to write code, modify files, fix bugs, plan features, or do any software development task. Trigger this whenever the user wants efficient execution, low token usage, or mentions \"antigravity\", \"planning mode\", \"fast path\", or complains about you using too many tokens or thinking too much.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "antigravity-protocol-v2",
+      "path": ".claude/skills/antigravity2.0",
+      "description": "Use this skill ALWAYS whenever the user asks you to write code, modify files, fix bugs, plan features, or do any software development task. Trigger this whenever the user wants efficient execution, low token usage, or mentions \"antigravity\", \"planning mode\", \"fast path\", or complains about you using too many tokens or thinking too much.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "brand-guidelines",
+      "path": ".claude/skills/brand-guidelines",
+      "description": "Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "brandkit",
+      "path": ".claude/skills/brandkit",
+      "description": "Premium brand-kit image generation skill for creating high-end brand-guidelines boards, logo systems, identity decks, and visual-world presentations. Trained for minimalist, cinematic, editorial, dark-tech, luxury, cultural, security, gaming, developer-tool, and consumer-app brand systems. Optimized for intentional logo concepting, refined composition, sparse typography, strong symbolic meaning, premium mockups, art-directed imagery, and flexible grid layouts.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "industrial-brutalist-ui",
+      "path": ".claude/skills/brutalist-skill",
+      "description": "Raw mechanical interfaces fusing Swiss typographic print with military terminal aesthetics. Rigid grids, extreme type scale contrast, utilitarian color, analog degradation effects. For data-heavy dashboards, portfolios, or editorial sites that need to feel like declassified blueprints.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "build-graph",
+      "path": ".claude/skills/build-graph",
+      "description": "Build or update the code review knowledge graph. Run this first to initialize, or let hooks keep it updated automatically.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "canvas-design",
+      "path": ".claude/skills/canvas-design",
+      "description": "Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other static piece. Create original visual designs, never copying existing artists' work to avoid copyright violations.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "claude-api",
+      "path": ".claude/skills/claude-api",
+      "description": "|- Reference for the Claude API / Anthropic SDK \u2014 model ids, pricing, params, streaming, tool use, MCP, agents, caching, token counting, model migration. TRIGGER \u2014 read BEFORE opening the target file; don't skip because it \"looks like a one-liner\" \u2014 whenever: the prompt names Claude/Anthropic in any form (Claude, Anthropic, Fable, Opus, Sonnet, Haiku, `anthropic`, `@anthropic-ai`, `claude-*`, `us.anthropic.*`, `[1m]`); the user asks about an LLM (pricing/model choice/limits/caching) \u2014 never answer from memory; OR the task is LLM-shaped with provider unstated \u2026",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "code-review",
+      "path": ".claude/skills/code-review",
+      "description": "Performs an architectural and quality code review on a specified file or set of files. Checks for coding standard compliance, architectural pattern adherence, SOLID principles, testability, and performance concerns.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "consistency-check",
+      "path": ".claude/skills/consistency-check",
+      "description": "Scan all GDDs against the entity registry to detect cross-document inconsistencies: same entity with different stats, same item with different values, same formula with different variables. Grep-first approach \u2014 reads registry then targets only conflicting GDD sections rather than full document reads.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "Debug Issue",
+      "path": ".claude/skills/debug-issue/debug-issue",
+      "description": "Systematically debug issues using graph-powered code navigation",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "design-review",
+      "path": ".claude/skills/design-review",
+      "description": "Reviews a game design document for completeness, internal consistency, implementability, and adherence to project design standards. Run this before handing a design document to programmers.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "design-system",
+      "path": ".claude/skills/design-system",
+      "description": "Guided, section-by-section GDD authoring for a single game system. Gathers context from existing docs, walks through each required section collaboratively, cross-references dependencies, and writes incrementally to file.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "diagram-from-language",
+      "path": ".claude/skills/diagram-from-language",
+      "description": "Generate, refine, and validate diagrams from natural language, code, schemas, or notes \u2014 flowcharts, sequence, state, ER, C4 architecture, dependency graphs, mind maps. Mermaid by default (renders inline in GitHub + the Command Center), Graphviz for complex layout. Adapted from P4nda0s/reverse-skills diagram-generator, de-scoped to the hive's docs.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "doc-coauthoring",
+      "path": ".claude/skills/doc-coauthoring",
+      "description": "Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "Explore Codebase",
+      "path": ".claude/skills/explore-codebase",
+      "description": "Navigate and understand codebase structure using the knowledge graph",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "fable-debugger",
+      "path": ".claude/skills/fable-debugger",
+      "description": "The Fable-level self-debugger, persistently in the hive. Use when something in the hive is broken, degraded, or \"works but not the way it was envisioned\" \u2014 a 404, a silent fallback, a stale deploy, a test that lies. Encodes Fable's debugging method (Chromosome II of FABLE_DNA.md) as a runnable discipline any model can follow: probe before claim, compare against a proven-working path, find the coupled latent bug, verify where it actually runs, never fake a green. Not a copy of a mind \u2014 a copy of a method, so it debugs like Fable without being Fable.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "founder-directive-capture",
+      "path": ".claude/skills/founder-directive-capture",
+      "description": "Use whenever the founder gives a substantive directive, vision statement, or constitutional/policy instruction \u2014 not a routine bug report or small tweak, but something shaping the hive's direction, economics, or governance. Preserves the founder's own words verbatim (unredacted, uncensored, unabridged, untruncated) into Project_file/Founders Visonary Folder/HIVE_UPDATES/, as the primary-source record distinct from session-harvest's distilled summaries.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "frontend-design",
+      "path": ".claude/skills/frontend-design",
+      "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "gpt-taste",
+      "path": ".claude/skills/gpt-tasteskill",
+      "description": "Elite UX/UI & Advanced GSAP Motion Engineer. Enforces Python-driven true randomization for layout variance, strict AIDA page structure, wide editorial typography (bans 6-line wraps), gapless bento grids, strict GSAP ScrollTriggers (pinning, stacking, scrubbing), inline micro-images, and massive section spacing.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "hive-conductor",
+      "path": ".claude/skills/hive-conductor",
+      "description": "The Master Harness of the Sovereign Hive. Use when a founder directive needs to be decomposed into sub-tasks, routed to the right hive domain (backend/edge, frontend, colonies, governance, strategy), driven to a verified close, and gated by the Constitution (F-001\u2026F-006) before anything ships. This is the top-level orchestrator that sits above the domain harnesses \u2014 the \"Hive Conductor\" in the multi-level MCP-harness architecture.",
+      "tools": [
+        {
+          "script": ".claude/skills/hive-conductor/scripts/recall_context.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/hive-conductor/scripts/recall_context.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/hive-conductor/scripts/recall_context.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "hive-memory.md",
+      "path": ".claude/skills/hive-memory.md",
+      "description": "",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "image-to-code",
+      "path": ".claude/skills/image-to-code-skill",
+      "description": "Elite website image-to-code skill for Codex. For visually important web tasks, it must first generate the design image(s) itself, deeply analyze them, then implement the website to match them as closely as possible. In Codex, it must prefer large, readable, section-specific images instead of tiny compressed boards, generate fresh standalone images for sections or detail views instead of cropping old ones, avoid lazy under-generation, avoid cards-inside-cards-inside-cards UI, and keep the hero clean, spacious, readable, and visible on a small laptop.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "imagegen-frontend-mobile",
+      "path": ".claude/skills/imagegen-frontend-mobile",
+      "description": "Elite mobile app image-generation skill for creating premium, app-native screen concepts and flows. Designed for iOS, Android, and cross-platform mobile products. Prioritizes clean hierarchy, comfortably readable text, strong multi-screen consistency, controlled color palettes, non-generic creative direction, textured surfaces, image-led composition, tasteful custom iconography, and clean phone mockup framing. By default, screens should be shown inside a subtle premium iPhone or similar phone mockup with a visible frame, while the main focus stays on the app content itself. This skill \u2026",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "imagegen-frontend-web",
+      "path": ".claude/skills/imagegen-frontend-web",
+      "description": "Elite frontend image-direction skill for generating premium, conversion-aware website design references. CRITICAL OUTPUT RULE \u2014 generate ONE separate horizontal image FOR EVERY section. A landing page with 8 sections produces 8 images. Never compress multiple sections into one image. Enforces composition variety (not always left-text / right-image), background-image freedom, varied CTAs, varied hero scales (giant / mid / mini minimalist), narrative concept spine, second-read moments, and a single consistent palette across all images. Optimized for landing pages, marketing sites, and product \u2026",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "imagegen-frontend-web",
+      "path": ".claude/skills/imagegen-frontend-web/imagegen-frontend-web",
+      "description": "Elite frontend image-direction skill for generating premium, conversion-aware website design references. CRITICAL OUTPUT RULE \u2014 generate ONE separate horizontal image FOR EVERY section. A landing page with 8 sections produces 8 images. Never compress multiple sections into one image. Enforces composition variety (not always left-text / right-image), background-image freedom, varied CTAs, varied hero scales (giant / mid / mini minimalist), narrative concept spine, second-read moments, and a single consistent palette across all images. Optimized for landing pages, marketing sites, and product \u2026",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "internal-comms",
+      "path": ".claude/skills/internal-comms",
+      "description": "A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenever asked to write some sort of internal communications (status reports, leadership updates, 3P updates, company newsletters, FAQs, incident reports, project updates, etc.).",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "json-canvas",
+      "path": ".claude/skills/json-canvas",
+      "description": "Create and edit JSON Canvas files (.canvas) with nodes, edges, groups, and connections. Use when working with .canvas files, creating visual canvases, mind maps, flowcharts, or when the user mentions Canvas files in Obsidian.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": [
+        "EXAMPLES.md"
+      ]
+    },
+    {
+      "name": "mcp-builder",
+      "path": ".claude/skills/mcp-builder",
+      "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).",
+      "tools": [
+        {
+          "script": ".claude/skills/mcp-builder/scripts/connections.py",
+          "wired": false,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/mcp-builder/scripts/connections.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/mcp-builder/scripts/evaluation.py",
+          "wired": false,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/mcp-builder/scripts/evaluation.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "memory-graph-canvas",
+      "path": ".claude/skills/memory-graph-canvas",
+      "description": "Use when visualizing or persisting the hive's memory/federation as a graph \u2014 the MemoryGraph React component, the colony federation map, or an exportable knowledge canvas. Reverse-engineered from breferrari/obsidian-mind's json-canvas + graph skills (MIT) into the hive's D3/Three stack.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "merge-readiness",
+      "path": ".claude/skills/merge-readiness",
+      "description": "Use when a change is ready for a PR and you want it to land green without babysitting each CI failure by hand \u2014 the formalized verify-PR-autofix-merge loop this hive already practices. Also use when watching an open PR for CI failures that need re-diagnosis and a re-push. Not a license to self-merge beyond whatever scope the founder has already authorized \u2014 the founder-only gate on irreversible/shared-truth actions is a hard boundary this skill never expands.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "minimalist-ui",
+      "path": ".claude/skills/minimalist-skill",
+      "description": "Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "nine-miss-truths",
+      "path": ".claude/skills/nine-miss-truths",
+      "description": "Use before committing to a conclusion that matters \u2014 a root-cause diagnosis, a \"this is why it works this way\" claim, a decision about what a piece of data means. Generates the plausible alternative explanations deliberately before settling on one, to catch premature convergence and confirmation bias before they ship. Not for trivial or already-verified facts (a passing test result doesn't need nine alternatives) \u2014 use it at the moment of interpretation, not after a machine check has already settled the question.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "full-output-enforcement",
+      "path": ".claude/skills/output-skill",
+      "description": "Overrides default LLM truncation behavior. Enforces complete code generation, bans placeholder patterns, and handles token-limit splits cleanly. Apply to any task requiring exhaustive, unabridged output.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "pocket-dimensions",
+      "path": ".claude/skills/pocket-dimensions",
+      "description": "Use when a task should be tried in an isolated, disposable workspace before it touches shared truth \u2014 parallel exploration, a risky refactor, an agent working unsupervised, or any \"try it and see\" change. Formalizes the create \u2192 work \u2192 review \u2192 merge/discard lifecycle (the pattern behind BranchFS, agent-cow, Sandcastle, dmux) using tools the hive already has natively \u2014 git worktrees and GitHub PRs \u2014 with zero new dependencies. This is the honest, buildable half of the founder's \"Pocket Dimensions\" research: real isolation without importing an unvetted third party.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "pr-retrospective",
+      "path": ".claude/skills/pr-retrospective",
+      "description": "Use after any PR merges or fails, and again as a pre-flight before opening the next PR that touches a risky surface (frontend entry point, build tooling, deploy, dependencies). Turns every past PR into a forward check so the hive stops paying for the same failure class twice \u2014 the recursive-learning loop made concrete at the PR boundary. Reads and appends to PR_LESSONS.md; run its accumulated pre-flight before shipping. Not for trivial doc-only PRs (nothing to learn, pre-flight is a no-op) \u2014 use it when a PR touched real code or its outcome revealed a failure class worth catching next time.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "quick-design",
+      "path": ".claude/skills/quick-design",
+      "description": "Lightweight design spec for small changes \u2014 tuning adjustments, minor mechanics, balance tweaks. Skips full GDD authoring when a system GDD already exists or the change is too small to warrant one. Produces a Quick Design Spec that embeds directly into story files.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "redesign-existing-projects",
+      "path": ".claude/skills/redesign-skill",
+      "description": "Upgrades existing websites and apps to premium quality. Audits current design, identifies generic AI patterns, and applies high-end design standards without breaking functionality. Works with any CSS framework or vanilla CSS.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "Refactor Safely",
+      "path": ".claude/skills/refactor-safely",
+      "description": "Plan and execute safe refactoring using dependency analysis",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "research-to-dna",
+      "path": ".claude/skills/research-to-dna",
+      "description": "Use whenever the founder shares research, a vision document, a plan, or \"here's what I found\" \u2014 anything meant to be formatted into the hive going forward. This is the standing process for turning founder research into hive DNA honestly. Verify named tools/claims before trusting them, separate the verified-real from the speculative from the narrative/mythological, distill principles rather than import unvetted dependencies, and write the result into FABLE_DNA.md / THE_CODEX.md / SOURCED_SKILLS_INDEX.md as appropriate. Do not invoke this to research a single specific technical question \u2014 \u2026",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "Review Changes",
+      "path": ".claude/skills/review-changes",
+      "description": "Perform a structured code review using change detection and impact",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "review-delta",
+      "path": ".claude/skills/review-delta",
+      "description": "Review only changes since last commit using impact analysis. Token-efficient delta review with automatic blast-radius detection.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "review-pr",
+      "path": ".claude/skills/review-pr",
+      "description": "Review a PR or branch diff using the knowledge graph for full structural context. Outputs a structured review with blast-radius analysis.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "session-harvest",
+      "path": ".claude/skills/session-harvest",
+      "description": "Run at the close of a session (or invoke manually with \"/session-harvest\" or \"harvest this session\") to distill what was actually built, decided, or learned into the hive's permanent memory. This is a debugger for the session itself \u2014 it reviews the session's own real output (commits, decisions, dead ends), never external sources, and every candidate lesson must pass an ownership/license gate before it's written anywhere. Use this instead of any process that would copy code or \"logs\" from outside sources into the hive \u2014 that is explicitly out of scope for this skill; see the Hard Boundary \u2026",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "skill-census",
+      "path": ".claude/skills/skill-census",
+      "description": "Use to audit whether the hive's skills (.claude/skills/, the team Skill Exchange in Project_file/Founders Visonary Folder/SKILLS/, and equivalents in the colonies) are actually referenced and wired to something, or just sitting in the repo taking up space. Run this periodically, not just once \u2014 a skill can go from active to orphaned as the hive changes. Produces a chronological census: what exists, what's active, what's an orphan, and the generational order they were built in (which skill's existence led to the next).",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "skill-creator",
+      "path": ".claude/skills/skill-creator",
+      "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.",
+      "tools": [
+        {
+          "script": ".claude/skills/skill-creator/scripts/__init__.py",
+          "wired": false,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/skill-creator/scripts/__init__.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/skill-creator/scripts/aggregate_benchmark.py",
+          "wired": false,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/skill-creator/scripts/aggregate_benchmark.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/skill-creator/scripts/generate_report.py",
+          "wired": false,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/skill-creator/scripts/generate_report.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/skill-creator/scripts/improve_description.py",
+          "wired": false,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/skill-creator/scripts/improve_description.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/skill-creator/scripts/package_skill.py",
+          "wired": true,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/skill-creator/scripts/package_skill.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/skill-creator/scripts/quick_validate.py",
+          "wired": false,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/skill-creator/scripts/quick_validate.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/skill-creator/scripts/run_eval.py",
+          "wired": true,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/skill-creator/scripts/run_eval.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/skill-creator/scripts/run_loop.py",
+          "wired": true,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/skill-creator/scripts/run_loop.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        },
+        {
+          "script": ".claude/skills/skill-creator/scripts/utils.py",
+          "wired": false,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/skill-creator/scripts/utils.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": [
+        "schemas.md"
+      ]
+    },
+    {
+      "name": "skill-harvester",
+      "path": ".claude/skills/skill-harvester",
+      "description": "Use when the founder asks to find, scan, import, or add open-source skills/code from GitHub into the hive. The repeatable process for discovering public skill collections, cloning them under the container's network constraints, vetting for safety, and importing \u2014 either as active skills or into the on-demand skills-library. Also the promote-from-library flow.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "slack-gif-creator",
+      "path": ".claude/skills/slack-gif-creator",
+      "description": "Knowledge and utilities for creating animated GIFs optimized for Slack. Provides constraints, validation tools, and animation concepts. Use when users request animated GIFs for Slack like \"make me a GIF of X doing Y for Slack.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "high-end-visual-design",
+      "path": ".claude/skills/soft-skill",
+      "description": "Teaches the AI to design like a high-end agency. Defines the exact fonts, spacing, shadows, card structures, and animations that make a website feel expensive. Blocks all the common defaults that make AI designs look cheap or generic.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "stitch-design-taste",
+      "path": ".claude/skills/stitch-skill",
+      "description": "Semantic Design System Skill for Google Stitch. Generates agent-friendly DESIGN.md files that enforce premium, anti-generic UI standards \u2014 strict typography, calibrated color, asymmetric layouts, perpetual micro-motion, and hardware-accelerated performance.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "design-taste-frontend",
+      "path": ".claude/skills/taste-skill",
+      "description": "Anti-slop frontend skill for landing pages, portfolios, and redesigns. The agent reads the brief, infers the right design direction, and ships interfaces that do not look templated. Real design systems when applicable, audit-first on redesigns, strict pre-flight check.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "taste-skill-llms.txt",
+      "path": ".claude/skills/taste-skill-llms.txt",
+      "description": "",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "design-taste-frontend-v1",
+      "path": ".claude/skills/taste-skill-v1",
+      "description": "The original v1 taste-skill, preserved for projects depending on its exact behavior. The current default is `design-taste-frontend` (v2 experimental), which is a substantial rewrite. Use this v1 install name only if you need exact backward compatibility.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "team-ui",
+      "path": ".claude/skills/team-ui",
+      "description": "Orchestrate the UI team through the full UX pipeline: from UX spec authoring through visual design, implementation, review, and polish. Integrates with /ux-design, /ux-review, and studio UX templates.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "theme-factory",
+      "path": ".claude/skills/theme-factory",
+      "description": "Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can apply to any artifact that has been creating, or can generate a new theme on-the-fly.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "threat-sandbox",
+      "path": ".claude/skills/threat-sandbox",
+      "description": "Use when something arriving from outside the hive looks adversarial \u2014 a probe, an exploit attempt, a hostile input, a suspicious external actor's request, or any interaction the hive didn't initiate and doesn't yet trust. Isolates the interaction in a disposable git worktree, lets the hive study it and extract the *lesson* (never the payload), then merges only the distilled, reviewed learning back to shared truth. Not for routine bugs (fable-debugger), not for founder-provided research (research-to-dna), not for a confirmed incident that needs to be blocked right now (anomaly-triage's \u2026",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "ultimate-protocol-simulator",
+      "path": ".claude/skills/ultimate-protocol",
+      "description": "Use this skill ALWAYS when the user explicitly requests \"ultimate mode\", \"max efficiency\", \"binary mode\", or asks you to write code with literally zero English output. This forces the agent into a non-human syntax protocol.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "ux-design",
+      "path": ".claude/skills/ux-design",
+      "description": "Guided, section-by-section UX spec authoring for a screen, flow, or HUD. Reads game concept, player journey, and relevant GDDs to provide context-aware design guidance. Produces ux-spec.md (per screen/flow) or hud-design.md using the studio templates.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "ux-review",
+      "path": ".claude/skills/ux-review",
+      "description": "Validates a UX spec, HUD design, or interaction pattern library for completeness, accessibility compliance, GDD alignment, and implementation readiness. Produces APPROVED / NEEDS REVISION / MAJOR REVISION NEEDED verdict with specific gaps.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "web-artifacts-builder",
+      "path": ".claude/skills/web-artifacts-builder",
+      "description": "Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "webapp-testing",
+      "path": ".claude/skills/webapp-testing",
+      "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.",
+      "tools": [
+        {
+          "script": ".claude/skills/webapp-testing/scripts/with_server.py",
+          "wired": true,
+          "supports_sample": false,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/webapp-testing/scripts/with_server.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "workflow-optimizer",
+      "path": ".claude/skills/workflow-optimizer",
+      "description": "Use whenever you're about to do a task the hive has done before \u2014 a repeated, multi-step workflow (propagate a change to the colonies, ship-and-verify a deploy, run a survey, build-and-merge a PR). Before running it, recall how it went last time and adapt; after running it, record what was slower/missing/error-prone and how to do it better next time. The recursive-learning loop for *any* repeated workflow \u2014 each repetition makes the workflow itself faster, more efficient, more complete. Not for one-off tasks that won't recur (nothing to learn against) or for the PR-specific version (use \u2026",
+      "tools": [],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    }
+  ]
+}
