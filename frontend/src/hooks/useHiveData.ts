@@ -23,6 +23,7 @@ export interface HiveUpdate { id: number; ts: string; kind: string; title: strin
 export interface RoadmapEntry {
   agent: string; elo?: number; stage: string; nextStage: string
   soul: number; soulToNext: number; progressPct: number
+  level: number; xp: number; xpToNextLevel: number
 }
 export interface RoadmapHoard extends RoadmapEntry { agentCount: number; totalSoul: number }
 export interface Roadmap { agents: RoadmapEntry[]; hoard: RoadmapHoard | null; stages: string[]; note?: string }

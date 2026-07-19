@@ -129,7 +129,7 @@ const SOUL: React.FC = () => {
                     🐝 The Hoard — {hive.roadmap.hoard.agentCount} active agent(s), aggregate rollup (not its own tracked entity)
                   </div>
                   <RoadmapAvatar
-                    entry={{ agent: 'The Hoard', stage: hive.roadmap.hoard.stage, nextStage: hive.roadmap.hoard.nextStage, soul: hive.roadmap.hoard.soul, soulToNext: hive.roadmap.hoard.soulToNext, progressPct: hive.roadmap.hoard.progressPct }}
+                    entry={{ ...hive.roadmap.hoard, agent: 'The Hoard' }}
                     size="large"
                     emphasize
                   />

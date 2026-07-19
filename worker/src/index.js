@@ -32,6 +32,13 @@ const ROADMAP_STAGES = [
   { name: 'Senescence', min: 300 },
   { name: 'Seed', min: 500 },
 ];
+// The founder's directive (2026-07-18): don't retire the level/XP framing —
+// "rewire" it so it's real and applies to every current and future agent.
+// level/xp/xpToNextLevel below are pure derivations of the same stage/soul
+// data above, not a second, separate progress system — the "game" framing
+// and the constitutional stage name always describe the identical, real
+// position. Nothing here is fictional; level is just idx+1 (1-indexed so
+// a brand-new agent reads as "Level 1," not "Level 0").
 function computeRoadmap(soulRaw) {
   const soul = Number(soulRaw) || 0;
   let idx = 0;
@@ -47,6 +54,9 @@ function computeRoadmap(soulRaw) {
     soul,
     soulToNext: next ? Math.max(0, +(next.min - soul).toFixed(1)) : 0,
     progressPct,
+    level: idx + 1,
+    xp: soul,
+    xpToNextLevel: next ? next.min : stage.min,
   };
 }
 
@@ -484,6 +494,19 @@ export default {
           + 'before anything is actually wired in. This item is that feature itself, awaiting '
           + 'your go-ahead to build it this way.',
       });
+      await seedProposalOnce(DB, {
+        kind: 'venture',
+        title: 'Venture: book-merch dropshipping + faceless multi-platform social',
+        body: 'Your own first-workflow example for the Sub-Architect (2026-07-18): a merch '
+          + 'dropshipping storefront for an upcoming book, paired with a faceless Instagram/'
+          + 'YouTube/TikTok/X presence, driven by real-time SEO/market signal to find trending '
+          + 'niches — explicitly not limited to this one idea (you also named copywriting, '
+          + 'rebranding, landing pages, ad/marketing services, real estate wholesaling as the '
+          + 'same "one product sold a million times" pattern). Try it yourself: the Venture '
+          + 'Planner panel (left nav) now generates a real structured plan for this via POST '
+          + '/v11/venture/plan. This item exists so the example itself is tracked, not just '
+          + 'demoed — nothing executes (no real account, post, or dollar) until you decide.',
+      });
       // Prune expired visitor tokens and stale rate-limit rows
       const cutoff = Date.now() - 3_600_000;
       await DB.batch([
@@ -657,6 +680,61 @@ export default {
           return json({ detail: `proposal ${id} not found or already decided` }, 404);
         }
         return json({ ok: true, id, decision });
+      }
+      // Sub-Architect's first workflow (TEAM_CHARTERS.md, 2026-07-18): decompose a
+      // founder-initiated venture brief into a structured CEO->departments->tasks
+      // plan, using whichever LLM provider is actually bound. Never executes
+      // anything real — no accounts created, no posts sent, no money spent. The
+      // output is a draft the founder can route to /proposals for a real decision.
+      if (p === '/venture/plan' && method === 'POST') {
+        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        const body = await request.json().catch(() => ({}));
+        const brief = (body.brief || '').toString().trim().slice(0, 2000);
+        if (!brief) return json({ detail: 'brief required' }, 400);
+
+        const SYSTEM = `You are the Sub-Architect of a self-governing AI hive (Sovereign Hive), reporting to the hive's Harness & Lead Manager. A founder has proposed a venture. Decompose it into a structured business plan: one CEO-level goal statement, then 3-6 departments (e.g. Product/Sourcing, Marketing/Content, Growth/SEO, Operations), each with a one-line mandate and 2-5 concrete tasks. Ground every task in the brief itself — never invent fake market statistics, fake revenue numbers, or claim access to real-time data you don't have. Reply with ONLY valid JSON, no markdown code fences, no commentary, exactly matching this shape: {"goal": "string", "departments": [{"name": "string", "mandate": "string", "tasks": ["string", "string"]}]}`;
+
+        const gen = await generate(env, { system: SYSTEM, prompt: brief, maxTokens: 900 });
+        if (!gen) {
+          return json({ ok: false, brief, detail: 'no LLM provider is currently bound or reachable — nothing was fabricated in its place' }, 503);
+        }
+        let plan;
+        try {
+          const cleaned = gen.text.trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
+          plan = JSON.parse(cleaned);
+          if (!plan || typeof plan.goal !== 'string' || !Array.isArray(plan.departments)) throw new Error('shape mismatch');
+        } catch {
+          return json({
+            ok: false, brief, provider: gen.provider,
+            detail: 'the model did not return valid structured JSON — showing its raw output rather than fabricating a fallback plan',
+            raw: gen.text.slice(0, 4000),
+          }, 502);
+        }
+        return json({
+          ok: true, brief, plan, provider: gen.provider,
+          note: 'a draft plan only — nothing here creates a real account, posts content, spends money, or deploys a storefront; submit it to /v11/proposals for a real founder decision before anything executes',
+        });
+      }
+      // Legal Guild v1 (founder's explicit scope choice, 2026-07-18: "real
+      // research assistant, hard disclaimer" — not a false-authority persona).
+      // Never claims to be licensed or to have passed a bar exam; always
+      // states plainly that it is not a lawyer and this is not legal advice.
+      if (p === '/legal/research' && method === 'POST') {
+        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        const body = await request.json().catch(() => ({}));
+        const question = (body.question || '').toString().trim().slice(0, 1000);
+        if (!question) return json({ detail: 'question required' }, 400);
+
+        const SYSTEM = `You are the hive's Legal Guild research assistant. You are NOT a lawyer and this is NOT legal advice — say so plainly in every answer. Explain general legal concepts accurately. Where relevant, explain the real distinction between a "sovereign citizen" (a fringe legal theory that courts have consistently and unanimously rejected, sometimes leading to sanctions for those who rely on it) and genuine questions of jurisdiction, sovereign immunity, or public-vs-private capacity (real, substantive, well-established areas of law) — the two are often confused and the difference matters. Point toward real, findable sources (Cornell LII, Bouvier's Law Dictionary, the actual U.S. Code or CFR, real case names) rather than vague generalities, but never fabricate a specific citation, docket number, or case holding you are not certain of — if unsure, say so plainly and suggest where a human could verify it instead. Never claim to have passed a bar exam, hold a law license, or represent anyone. End every answer with a one-line reminder that this is not legal advice.`;
+
+        const gen = await generate(env, { system: SYSTEM, prompt: question, maxTokens: 700 });
+        if (!gen) {
+          return json({ ok: false, question, detail: 'no LLM provider is currently bound or reachable — nothing was fabricated in its place' }, 503);
+        }
+        return json({
+          ok: true, question, answer: gen.text, provider: gen.provider,
+          disclaimer: 'Not a lawyer. Not legal advice. For anything with real stakes, consult licensed counsel.',
+        });
       }
       if (p === '/llm/status') {
         const roster = providerRoster(env);
@@ -879,7 +957,7 @@ export default {
           base: '/v11',
           routes: [
             'GET /health', 'GET /agents', 'GET /grading/leaderboard', 'GET /wallet/leaderboard/soul',
-            'GET /roadmap', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
+            'GET /roadmap', 'POST /venture/plan', 'POST /legal/research', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
             'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
             'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',

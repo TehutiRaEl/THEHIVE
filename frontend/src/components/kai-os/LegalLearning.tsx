@@ -4,6 +4,11 @@
 // legal references. Opening them is Tier-1 (reading/learning) per PERMISSIONS.md;
 // nothing here transacts or acts in the world.
 
+import { useState } from 'react';
+import { API_BASE_URL } from '../../utils/constants';
+
+const V11 = `${API_BASE_URL}/v11`;
+
 interface RefLink {
   label: string;
   href: string;
@@ -47,6 +52,79 @@ const GROUPS: RefGroup[] = [
   },
 ];
 
+// Legal Guild v1 — the founder's explicit scope choice (2026-07-18): a real
+// research assistant with a hard disclaimer, not a false-authority persona
+// that role-plays as having passed the bar. Every answer, success or
+// failure, carries the same disclaimer — it is never omitted based on how
+// confident the answer sounds.
+function LegalGuildQA() {
+  const [question, setQuestion] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [provider, setProvider] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const ask = async () => {
+    const q = question.trim();
+    if (!q) return;
+    setLoading(true);
+    setError(null);
+    setAnswer(null);
+    try {
+      const r = await fetch(`${V11}/legal/research`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) { setError(d.detail || `HTTP ${r.status}`); return; }
+      setAnswer(d.answer);
+      setProvider(d.provider);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg border border-gold/20 bg-void-800/60 p-3 mb-6 space-y-3">
+      <h3 className="text-[11px] uppercase tracking-widest text-gold/80">Ask the Legal Guild</h3>
+      <p className="text-xs text-slate-500 leading-relaxed">
+        A real research assistant, not a licensed attorney — it cites the kind of source that
+        would confirm an answer (Cornell LII, Bouvier's, actual code sections) rather than
+        fabricating specifics, and it is built to explain the real difference between
+        sovereignty/jurisdiction questions and the "sovereign citizen" theory courts have
+        uniformly rejected.
+      </p>
+      <textarea
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        placeholder="e.g. what's the actual legal difference between a sovereign and a sovereign citizen?"
+        rows={2}
+        className="w-full bg-void-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-gold/50"
+      />
+      <button
+        onClick={ask}
+        disabled={loading || !question.trim()}
+        className="px-2.5 py-1 rounded border border-gold/40 text-gold text-xs hover:bg-gold/10 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {loading ? 'Researching…' : 'Ask'}
+      </button>
+      {error && <p className="text-xs text-amber-300">{error}</p>}
+      {answer && (
+        <div className="space-y-2">
+          <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">{answer}</p>
+          {provider && <p className="text-[10px] text-slate-600">via {provider}</p>}
+        </div>
+      )}
+      <p className="text-[10px] text-amber-300/80 border-t border-white/5 pt-2">
+        Not a lawyer. Not legal advice. For anything with real stakes, consult licensed counsel.
+      </p>
+    </div>
+  );
+}
+
 export default function LegalLearning() {
   return (
     <div className="max-w-2xl">
@@ -57,6 +135,8 @@ export default function LegalLearning() {
         speaks for the hive. Anything with real legal weight stays founder-only, with qualified
         human counsel.
       </p>
+
+      <LegalGuildQA />
 
       <div className="flex flex-col gap-5">
         {GROUPS.map((g) => (

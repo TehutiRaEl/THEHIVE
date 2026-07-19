@@ -36,15 +36,22 @@ export default function RoadmapAvatar({ entry, size = 'medium', emphasize = fals
       className={`flex items-center gap-3 ${emphasize ? 'p-2.5 rounded-lg border border-violet-bright/30' : ''}`}
     >
       <div
-        className="rounded-full grid place-items-center shrink-0 text-white font-display font-semibold"
+        className="rounded-full grid place-items-center shrink-0 text-white font-display font-semibold relative"
         style={{ width: px, height: px, fontSize: px * 0.4, background: gradient, boxShadow: '0 0 14px rgba(139,92,246,0.35)' }}
       >
         {entry.agent.charAt(0).toUpperCase()}
+        <span
+          className="absolute -bottom-1 -right-1 rounded-full bg-void-900 border border-white/20 text-white grid place-items-center font-display"
+          style={{ width: px * 0.42, height: px * 0.42, fontSize: px * 0.19 }}
+          title={`Level ${entry.level} — same real data as the stage name, just the game-framing view`}
+        >
+          {entry.level}
+        </span>
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <strong className="text-cyan-glow truncate text-sm">{entry.agent}</strong>
-          <span className="text-[11px] text-slate-400 whitespace-nowrap">{entry.stage} → {entry.nextStage}</span>
+          <span className="text-[11px] text-slate-400 whitespace-nowrap">Lvl {entry.level} · {entry.stage} → {entry.nextStage}</span>
         </div>
         <div className="h-1.5 rounded-full bg-white/10 mt-1.5 overflow-hidden">
           <motion.div
@@ -56,8 +63,8 @@ export default function RoadmapAvatar({ entry, size = 'medium', emphasize = fals
           />
         </div>
         <div className="text-[11px] text-slate-500 mt-1">
-          {entry.soul.toFixed(1)} Ψ · {entry.progressPct}%
-          {entry.soulToNext > 0 ? ` · ${entry.soulToNext.toFixed(1)} Ψ to next stage` : ''}
+          {entry.xp.toFixed(1)} / {entry.xpToNextLevel.toFixed(1)} XP ({entry.soul.toFixed(1)} Ψ) · {entry.progressPct}%
+          {entry.soulToNext > 0 ? ` · ${entry.soulToNext.toFixed(1)} to next level` : ''}
         </div>
       </div>
     </motion.div>
