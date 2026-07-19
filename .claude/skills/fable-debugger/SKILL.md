@@ -97,6 +97,8 @@ python3 .claude/skills/hive-conductor/scripts/recall_context.py --goal "<symptom
 # 2. Contrast: find the working sibling path in the same file/worker and diff the calls.
 # 3. Fix minimal → node --check worker/src/index.js → commit with a Verification: line.
 # 4. Merge → wait for Workers Builds (~10–15 min) → re-probe → confirm from the log, not hope.
+# 5. On a verified close, append the lesson to .claude/skills/recursive-growth/LESSONS.md —
+#    that's where a real fix here grows into hive-wide knowledge instead of evaporating.
 ```
 
 Origin: Fable (Harness), 2026-07-13. The executable form of FABLE_DNA.md Chromosome II —

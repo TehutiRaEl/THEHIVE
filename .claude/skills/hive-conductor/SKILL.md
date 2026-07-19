@@ -43,6 +43,11 @@ duplicating effort.
 python3 .claude/skills/hive-conductor/scripts/recall_context.py --goal "<directive>" --brief
 ```
 - Prints a markdown "Prior hive memory" brief; **prepend it to the goal** before `goal_compiler`.
+- This queries the network-backed D1/Vectorize memory for "has the hive done something like
+  this before, anywhere." For "where are we in the one plan we already agreed to, right
+  now" — a local, always-available question with no network dependency — run
+  `recursive-growth` first instead/as well (`.claude/skills/recursive-growth/SKILL.md`); the
+  two answer different questions and neither substitutes for the other.
 - Degrades gracefully (exit 0 always): if the Vectorize index isn't provisioned yet, or the
   runner has no egress to the edge, it says so and you plan on first principles — never blocked.
 - The loop-close is itself a memory (the heartbeat already writes; manual notes via
