@@ -64,14 +64,34 @@ jobs:
             // Give useHiveData's first poll time to populate the status bar.
             await page.waitForTimeout(4000);
 
-            const bodyText = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
-            const html = await page.content();
+            let bodyText = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+            let html = await page.content();
 
-            // 1) served bundle == committed bundle (L-04)
-            const servedMatch = html.match(/assets\/index-[A-Za-z0-9_-]+\.js/);
-            const served = servedMatch ? servedMatch[0] : '(none)';
+            // 1) served bundle == committed bundle (L-04) — Cloudflare Workers Builds has a
+            // real ~10-15 min deploy lag (see this file's header comment), so a probe firing
+            // shortly after a docs/app-touching merge will legitimately see the previous
+            // bundle for a few minutes. That's not a stale/stuck deploy, it's normal
+            // propagation — retry with backoff before treating a mismatch as a real failure.
+            // Root-caused 2026-07-19 (fable-debugger): two independent failing runs both
+            // showed live=true, real agents>0, zero console errors — only this freshness
+            // check tripped, both times against a very recently merged commit.
+            let servedMatch = html.match(/assets\/index-[A-Za-z0-9_-]+\.js/);
+            let served = servedMatch ? servedMatch[0] : '(none)';
+            if (committed && served !== committed) {
+              const delaysMs = [60000, 90000, 120000]; // ~4.5 min total, well under the ~15 min worst case
+              for (const delay of delaysMs) {
+                if (served === committed) break;
+                await page.waitForTimeout(delay);
+                await page.reload({ waitUntil: 'networkidle', timeout: 45000 });
+                await page.waitForTimeout(4000);
+                html = await page.content();
+                bodyText = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+                servedMatch = html.match(/assets\/index-[A-Za-z0-9_-]+\.js/);
+                served = servedMatch ? servedMatch[0] : '(none)';
+              }
+            }
             if (committed && served !== committed)
-              failures.push(`[${name}] served bundle ${served} != committed ${committed} (deploy may still be in flight)`);
+              failures.push(`[${name}] served bundle ${served} != committed ${committed} after retrying with backoff (deploy still not caught up after ~4.5min — a real stale/stuck deploy, not just propagation lag)`);
 
             // 2) status bar reads LIVE, not OFFLINE
             const live = /\bLIVE\b/.test(bodyText);
