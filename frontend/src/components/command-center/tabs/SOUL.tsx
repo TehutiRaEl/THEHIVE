@@ -1,6 +1,7 @@
 import React from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
+import RoadmapAvatar from '../../kai-os/RoadmapAvatar';
 import { useConstitutionStore } from '../../../stores/constitutionStore';
 import { useHiveData } from '../../../hooks/useHiveData';
 
@@ -121,38 +122,25 @@ const SOUL: React.FC = () => {
           {!hive.roadmap || hive.roadmap.agents.length === 0 ? (
             <p style={{ opacity: 0.6 }}>{hive.loading ? 'loading…' : 'no roadmap data reachable'}</p>
           ) : (
-            <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {hive.roadmap.hoard && (
-                <div className="roadmap-hoard-card" style={{ marginBottom: 14, padding: '10px 12px', border: '1px solid rgba(139,92,246,0.35)', borderRadius: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <strong>🐝 The Hoard <span style={{ opacity: 0.6, fontWeight: 400 }}>(aggregate rollup, not its own tracked entity)</span></strong>
-                    <span style={{ opacity: 0.75 }}>{hive.roadmap.hoard.stage} → {hive.roadmap.hoard.nextStage}</span>
+                <div>
+                  <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>
+                    🐝 The Hoard — {hive.roadmap.hoard.agentCount} active agent(s), aggregate rollup (not its own tracked entity)
                   </div>
-                  <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, marginTop: 6, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${hive.roadmap.hoard.progressPct}%`, background: 'linear-gradient(90deg,#8b5cf6,#00e5ff)' }} />
-                  </div>
-                  <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4 }}>
-                    {hive.roadmap.hoard.agentCount} active agent(s) · mean soul {hive.roadmap.hoard.soul.toFixed(1)} Ψ · {hive.roadmap.hoard.progressPct}% to next stage
-                  </div>
+                  <RoadmapAvatar
+                    entry={{ agent: 'The Hoard', stage: hive.roadmap.hoard.stage, nextStage: hive.roadmap.hoard.nextStage, soul: hive.roadmap.hoard.soul, soulToNext: hive.roadmap.hoard.soulToNext, progressPct: hive.roadmap.hoard.progressPct }}
+                    size="large"
+                    emphasize
+                  />
                 </div>
               )}
-              <div className="roadmap-agent-list" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {hive.roadmap.agents.map((a) => (
-                  <div key={a.agent} style={{ fontSize: 13 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <strong style={{ color: '#a0e8ff' }}>{a.agent}</strong>
-                      <span style={{ opacity: 0.75 }}>{a.stage} → {a.nextStage}</span>
-                    </div>
-                    <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, marginTop: 4, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${a.progressPct}%`, background: 'linear-gradient(90deg,#00cc88,#00e5ff)' }} />
-                    </div>
-                    <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
-                      {a.soul.toFixed(1)} Ψ · {a.progressPct}%{a.soulToNext > 0 ? ` · ${a.soulToNext.toFixed(1)} Ψ to next stage` : ''}
-                    </div>
-                  </div>
+                  <RoadmapAvatar key={a.agent} entry={a} size="medium" />
                 ))}
               </div>
-            </>
+            </div>
           )}
         </section>
 
