@@ -42,11 +42,19 @@ THEHIVE and proven end-to-end. PR #126 (covering the last several of these) is m
 
 ## The real backlog, in dependency order
 
-### Phase 0 — Fix the currently-broken CI check (Tier 1, first, no dependencies)
+### Phase 0 — Fix the currently-broken CI check ✅ CLOSED 2026-07-19
 
-`.github/workflows/ui-live-probe.yml` is actively failing (4 of its last 5 runs red; only
-2026-07-18T19:45 passed). This is the hive's own "is the UI actually live" check lying to
-everyone — nothing downstream should lean on CI as verification while this is broken.
+`.github/workflows/ui-live-probe.yml` was actively failing (4 of its last 5 runs red).
+Root-caused via `fable-debugger` (two independent failing runs, both showing the app fully
+healthy — live=true, real agents, zero console errors — with only the served-vs-committed
+bundle-hash freshness check tripping, both times against a very recently merged commit):
+Cloudflare's real ~10-15 min Workers Builds deploy lag had zero tolerance in the check, so
+any probe firing within that window after a `docs/app`-touching merge spuriously failed.
+Fixed with a bounded retry (60s/90s/120s backoff, ~4.5min total) before treating a mismatch
+as real. Verified live via `workflow_dispatch` (run 29675735880): passed cleanly against the
+real site. Shipped in PR #127. The retry-with-backoff branch itself wasn't exercised in that
+verification run (no mismatch was pending) — worth a real check next time this workflow
+happens to fire during an active deploy window, to see the retry path itself succeed live.
 - **Goal:** `fix-ui-live-probe`. **Done when:** the workflow is green on `main` twice in a
   row (not a one-off flake). Apply `fable-debugger` discipline directly: probe before
   claiming a fix, compare against the one known-good run, find the coupled latent bug, never
