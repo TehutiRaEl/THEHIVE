@@ -256,6 +256,40 @@ Architecture, DevTools/Productivity, AI/ML, Technical Interviews, How It Works,
 Database/Storage, Computer Fundamentals) before designing new backend/architecture work from
 scratch, the same way `research-to-dna` already checks founder-provided research first.
 
+### Phase 9 — `automaton/`: the self-improving, self-replicating agent ✅ CLOSED 2026-07-21
+
+Founder directive: clone `Conway-Research/automaton` (MIT), devil's-advocate it, reverse-engineer
+and improve it (not just copy it), rebuild file-for-file into its own `automaton/` directory in
+THEHIVE. Full writeup: `Project_file/Founders Visonary Folder/VISION/2026-07-21-vision-automaton-devils-advocate-005.md`.
+
+A source-level review (not just the README) found five concrete gaps between what upstream's
+safety mechanisms claim and what the code enforces: a "requires confirmation" policy action that
+behaves identically to a hard deny; self-replication funding (`fund_child`) uncapped while the
+equivalent `transfer_credits` tool had real limits; the agent able to edit its own
+financial/authority policy-rule files (only the thin wrapper files were protected, not the rule
+implementations); a real, unencrypted wallet private key written to disk by default; and the only
+"supervised human-approval" concept in the whole codebase being non-functional stub code. The
+founder, put to the actual choice, initially picked "fully autonomous, real wallet" and "fully
+autonomous replication, as upstream" — this was pushed back on with the concrete findings above
+(not a hypothetical objection) and the founder confirmed proceeding on the amended basis: build
+the full mechanism, close all five gaps for real, ship both master switches
+(`AUTOMATON_FINANCIAL_AUTONOMY`, `AUTOMATON_REPLICATION_AUTONOMY`) defaulting off — same
+flip-the-switch pattern as Vectorize/R2/KV/Queues — with replication approval unconditional
+regardless of either switch.
+
+**Done when:** `cd automaton && npm test` — 15/15 green, each of the five gaps proven closed with
+a real, running test (`test/gap-closure.test.js`), zero `npm install` step (Node 22's built-in
+`node:sqlite`/`node:test` only). Verified this session.
+
+- **Decoupled from Conway Cloud**: `src/ledger/ledger.js` (simulated, survival-pressure-bearing
+  ledger) replaces `conway/{client,credits,topup,x402}`; `src/inference/thehive-provider.js` calls
+  a new `POST /v11/automaton/infer` Worker route that reuses the exact same `generate()` waterfall
+  already backing `/v11/venture/plan` and `/v11/legal/research` — no new inference infrastructure,
+  no new provider keys.
+- **Files**: `automaton/` (new directory — `src/`, `test/`, `NOTICE.md`, `README.md`,
+  `ARCHITECTURE.md`, `FLIP_THE_SWITCHES.md`, `constitution.md`), `worker/src/index.js` (one new
+  route), `CLAUDE.md` (documented), this plan file.
+
 ## Deferred vision — real, not contradicted, just not this plan
 
 - The macro-universe vision (colonies-as-worlds connected like the knowledge graph, recursive

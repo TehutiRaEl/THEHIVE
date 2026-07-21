@@ -917,6 +917,26 @@ export default {
           disclaimer: 'Not a lawyer. Not legal advice. For anything with real stakes, consult licensed counsel.',
         });
       }
+      // Generic inference passthrough for the automaton/ subsystem (Phase 8
+      // follow-up, 2026-07-21): reuses this exact same generate() waterfall
+      // rather than giving automaton/ its own inference client or a Conway
+      // Cloud-style proprietary gateway — one waterfall, every caller (Kai El
+      // chat, venture-planner, Legal Guild, and now automaton/) shares it.
+      // Same token gate + rate limit as every other write-adjacent endpoint.
+      if (p === '/automaton/infer' && method === 'POST') {
+        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        const body = await request.json().catch(() => ({}));
+        const system = (body.system || '').toString().slice(0, 4000);
+        const prompt = (body.prompt || '').toString().slice(0, 4000);
+        const maxTokens = Math.min(1200, Math.max(1, parseInt(body.maxTokens, 10) || 400));
+        if (!prompt) return json({ detail: 'prompt required' }, 400);
+
+        const gen = await generate(env, { system, prompt, maxTokens });
+        if (!gen) {
+          return json({ ok: false, detail: 'no LLM provider is currently bound or reachable — nothing was fabricated in its place' }, 503);
+        }
+        return json({ ok: true, text: gen.text, provider: gen.provider });
+      }
       if (p === '/llm/status') {
         // Short TTL (not the 60s used elsewhere): this is the diagnostic
         // endpoint used to verify a just-bound secret actually took effect
@@ -1162,7 +1182,7 @@ export default {
           base: '/v11',
           routes: [
             'GET /health', 'GET /agents', 'GET /grading/leaderboard', 'GET /wallet/leaderboard/soul',
-            'GET /roadmap', 'POST /venture/plan', 'POST /legal/research', 'GET /jobs (Queues polling, opt-in async)', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
+            'GET /roadmap', 'POST /venture/plan', 'POST /legal/research', 'POST /automaton/infer', 'GET /jobs (Queues polling, opt-in async)', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
             'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
             'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',
