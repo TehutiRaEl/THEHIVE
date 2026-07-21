@@ -201,6 +201,55 @@ the Harness & Lead Manager role by mapping, not by original design. Propose (Tie
 Proposals) whether the founder wants a distinct seat carved out. No default action — proceeds
 only on a yes.
 
+### Phase 8 — System-design professionalization (added 2026-07-21)
+
+Per the founder's directive: a 31-page study-handbook PDF (misreported as 219 pages by the
+upload pipeline — corrected via `pdfinfo` before any work proceeded) plus the newly-cloned
+`TehutiRaEl/system-design-101` (real ByteByteGo repo, `cc-by-nc-sd-4.0` — principles
+extracted, nothing copied, per `research-to-dna`/`session-harvest`'s standing discipline)
+were used as a lens on the hive's own real code. Full findings:
+`Project_file/Founders Visonary Folder/VISION/2026-07-21-vision-system-design-professionalization-audit-003.md`.
+
+Confirmed real, right-sized gaps (each grep-verified against `worker/src/index.js`, not
+assumed):
+- **Goal:** `harden-cors-scope` — `Access-Control-Allow-Origin: '*'` (line 9) is wildcard on
+  every response. **Done when:** write-endpoint responses scope CORS appropriately (or the
+  wildcard is kept with an explicit, documented rationale) and the anti-spam token gate still
+  passes its existing checks. Tier 1.
+- **Goal:** `add-list-endpoint-pagination` — every list route (`/tasks`, `/updates`,
+  `/proposals`, `/pulse`, `/arena/challenges`, `/arena/fallen`, etc.) hardcodes `LIMIT N`
+  with no offset/cursor param. **Done when:** these routes accept an offset or cursor query
+  param and a request for "the next page" returns different rows than the first page. Tier 1.
+- **Goal:** `evaluate-edge-caching` — zero use of Cloudflare KV, the Cache API, or Queues
+  anywhere in the Worker; every request hits D1 directly even for rarely-changing data
+  (`/v11/agents`, `/v11/roadmap`, `/v11/llm/status`). **Done when:** either a real KV/Cache-API
+  layer is added for the handful of rarely-changing GET routes with a measured latency/D1-read
+  reduction, or a documented decision that it's not worth the complexity yet at current
+  traffic. Tier 1 (KV/Cache-API addition, reversible); Tier 2 if it touches a founder-facing
+  behavior change.
+
+Catalogued, not scheduled (real, but no trigger condition yet — same honest treatment as the
+Commercial Hive blueprint's deferred items):
+- JWT/claims-based auth to replace the opaque visitor-token model, once a Tier-2/3 surface
+  needs stronger caller identity than "has a token, isn't spamming."
+- Cloudflare Queues to decouple the synchronous LLM calls in `/v11/venture/plan` and
+  `/v11/legal/research` from the request/response cycle, once that latency actually matters.
+
+Confirmed non-gaps (verified, not just assumed, before being ruled out) — do not "fix" these:
+load balancing (Cloudflare's own anycast network already is one), classic OOP design patterns
+on the Worker (it's a lightweight edge function — forcing Repository/Strategy/Adapter here
+would be over-engineering; System A, once deployed per Phase 3, is the actual right home for
+that review), the `${t}` string-interpolated query in the debug-export route (draws from a
+hardcoded 6-item whitelist, not user input — genuinely safe), and API versioning (the `/v11`
+prefix already is real versioning).
+
+`system-design-101` becomes a standing reference library going forward — check its relevant
+category (14 total: API/Web Dev, Real-World Case Studies, Security, Caching/Performance,
+Payment/Fintech, Cloud/Distributed Systems, DevOps/CI-CD, Software Development, Software
+Architecture, DevTools/Productivity, AI/ML, Technical Interviews, How It Works,
+Database/Storage, Computer Fundamentals) before designing new backend/architecture work from
+scratch, the same way `research-to-dna` already checks founder-provided research first.
+
 ## Deferred vision — real, not contradicted, just not this plan
 
 - The macro-universe vision (colonies-as-worlds connected like the knowledge graph, recursive
