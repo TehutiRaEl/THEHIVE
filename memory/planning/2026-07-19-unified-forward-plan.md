@@ -211,29 +211,35 @@ were used as a lens on the hive's own real code. Full findings:
 `Project_file/Founders Visonary Folder/VISION/2026-07-21-vision-system-design-professionalization-audit-003.md`.
 
 Confirmed real, right-sized gaps (each grep-verified against `worker/src/index.js`, not
-assumed):
-- **Goal:** `harden-cors-scope` — `Access-Control-Allow-Origin: '*'` (line 9) is wildcard on
-  every response. **Done when:** write-endpoint responses scope CORS appropriately (or the
-  wildcard is kept with an explicit, documented rationale) and the anti-spam token gate still
-  passes its existing checks. Tier 1.
-- **Goal:** `add-list-endpoint-pagination` — every list route (`/tasks`, `/updates`,
-  `/proposals`, `/pulse`, `/arena/challenges`, `/arena/fallen`, etc.) hardcodes `LIMIT N`
-  with no offset/cursor param. **Done when:** these routes accept an offset or cursor query
-  param and a request for "the next page" returns different rows than the first page. Tier 1.
-- **Goal:** `evaluate-edge-caching` — zero use of Cloudflare KV, the Cache API, or Queues
-  anywhere in the Worker; every request hits D1 directly even for rarely-changing data
-  (`/v11/agents`, `/v11/roadmap`, `/v11/llm/status`). **Done when:** either a real KV/Cache-API
-  layer is added for the handful of rarely-changing GET routes with a measured latency/D1-read
-  reduction, or a documented decision that it's not worth the complexity yet at current
-  traffic. Tier 1 (KV/Cache-API addition, reversible); Tier 2 if it touches a founder-facing
-  behavior change.
+assumed) — **all four items below are CLOSED as of 2026-07-21, code-complete and
+`node --check`-verified; KV/Queues additionally need one founder-run `wrangler` command
+each before they take live effect (see `FLIP_THE_SWITCHES.md` §5-6), same
+commented-binding pattern already used for Vectorize/R2:**
+- **Goal:** `harden-cors-scope` — ✅ done. The old wildcard `Access-Control-Allow-Origin: '*'`
+  was replaced with `corsHeadersFor(request)`, echoing the caller's `Origin` only when it's in
+  `ALLOWED_ORIGINS` (the live Worker origin, the GitHub Pages mirror, local dev ports).
+  Computed fresh per-request inside `fetch()`'s closure — never a shared module-level value —
+  to avoid the Workers-isolate cross-request state leak that pattern would risk.
+- **Goal:** `add-list-endpoint-pagination` — ✅ done. `pageParams(url, defaultLimit, maxLimit)`
+  now backs `/tasks`, `/governance/log`, `/updates`, `/proposals`, `/pulse`,
+  `/arena/challenges`, `/arena/fallen` — every one accepts `?limit=&offset=`, capped, and
+  echoes both back in the response.
+- **Goal:** `evaluate-edge-caching` — ✅ done (Cache API + KV, both real, not just evaluated).
+  `cachedJson()` wraps `/agents`, `/roadmap`, `/llm/status` in `caches.default`, deliberately
+  caching only the JSON body (never the full Response, so a cached entry can never leak one
+  origin's CORS header to another origin's request for the same URL) with a 20-60s TTL.
+  `rateLimitOk()` now prefers a `RATE_LIMIT_KV` binding (counter+TTL, KV's textbook use case)
+  over the original D1 sliding-window table, falling back to D1 when KV is unbound.
+- **Goal (upgraded from catalogued to done):** Cloudflare Queues to decouple the synchronous
+  LLM calls in `/v11/venture/plan` and `/v11/legal/research` — ✅ done, additive/opt-in only.
+  Both endpoints stay fully synchronous by default (zero frontend changes needed); passing
+  `{"async": true}` in the body, once `LLM_QUEUE` is bound, enqueues the job and returns
+  `202 {job_id, poll}` instead — a new `queue(batch, env, ctx)` consumer processes it and a new
+  `GET /v11/jobs?id=` endpoint reports `queued → done/error`.
 
-Catalogued, not scheduled (real, but no trigger condition yet — same honest treatment as the
-Commercial Hive blueprint's deferred items):
-- JWT/claims-based auth to replace the opaque visitor-token model, once a Tier-2/3 surface
-  needs stronger caller identity than "has a token, isn't spamming."
-- Cloudflare Queues to decouple the synchronous LLM calls in `/v11/venture/plan` and
-  `/v11/legal/research` from the request/response cycle, once that latency actually matters.
+JWT/claims-based auth to replace the opaque visitor-token model remains catalogued, not
+scheduled — still no trigger condition (a Tier-2/3 surface needing stronger caller identity
+than "has a token, isn't spamming") has arisen.
 
 Confirmed non-gaps (verified, not just assumed, before being ruled out) — do not "fix" these:
 load balancing (Cloudflare's own anycast network already is one), classic OOP design patterns

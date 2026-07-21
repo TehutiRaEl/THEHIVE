@@ -1,0 +1,47 @@
+# THEHIVE Worker (System B, worker/src/index.js) — local dev secrets template.
+#
+# This is the file that actually matters for the LIVE, production system
+# (thehive.sovereignhive.workers.dev). Copy it to `.dev.vars` (gitignored) for
+# local `npx wrangler dev` — Cloudflare's own convention, not a generic .env.
+#
+# PRODUCTION secrets are NEVER set from a file at all — Cloudflare Workers in
+# production only read secrets bound via `npx wrangler secret put <NAME>`,
+# logged into the hive's Cloudflare account. That is the ONLY way any of the
+# variables below actually take effect on the live Worker. See
+# FLIP_THE_SWITCHES.md section 3 for the exact commands.
+#
+# CONFIRMED LIVE STATUS (2026-07-21, via GET /v11/llm/status through the
+# edge-health-probe GitHub Actions workflow — this repo can't curl
+# *.workers.dev directly, egress-blocked):
+#   {"active_provider":"workers-ai","providers":["workers-ai"],
+#    "roster":[{"id":"claude","bound":false},{"id":"groq","bound":false},
+#              {"id":"mistral","bound":false}]}
+# GET /v11/debug/env also confirms "secrets_present":[] — zero Worker
+# secrets are currently bound, of any kind. The Worker is running entirely on
+# the free Workers AI fallback (@cf/meta/llama-3.2-1b-instruct). If you
+# recently added a key somewhere, it has not reached the live Worker — most
+# likely it went into a local .env file (which Workers never read) instead of
+# `wrangler secret put`. Re-run the three commands below to actually bind them.
+
+# Claude — reasoning tier (top of the waterfall)
+# ACTIVATE: npx wrangler secret put ANTHROPIC_API_KEY
+ANTHROPIC_API_KEY=
+
+# Groq — speed tier
+# ACTIVATE: npx wrangler secret put GROQ_API_KEY
+GROQ_API_KEY=
+
+# Mistral — local-intelligence tier
+# ACTIVATE: npx wrangler secret put MISTRAL_API_KEY
+MISTRAL_API_KEY=
+
+# Write-endpoint anti-spam gate. Unset = fail-open (dev-permissive, current
+# live state). Set = every write endpoint requires a valid visitor token.
+# ACTIVATE: npx wrangler secret put WORKER_ADMIN_KEY
+WORKER_ADMIN_KEY=
+
+# Proposals-channel decide-gate. Unset = fail-closed (nobody, including the
+# founder, can approve/reject — by design). Set = the Proposals panel's
+# Approve/Reject buttons work once you paste the same value into the panel.
+# ACTIVATE: npx wrangler secret put FOUNDER_KEY
+FOUNDER_KEY=

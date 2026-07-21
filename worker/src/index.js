@@ -5,13 +5,77 @@
 // Rate limit: 30 POST requests per IP per minute (D1-backed sliding window).
 // Admin surfaces (WORKER_ADMIN_KEY protected) stay off-edge.
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-API-Key,X-Grok-Key',
-};
-const json = (data, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...CORS } });
+// CORS scoping (Phase 8, 2026-07-21 professionalization audit): a bare '*'
+// let any origin freely call every endpoint, including writes, with no
+// tightening ever possible. Real browser callers of this API are known and
+// finite (the Worker's own same-origin UI never needs CORS at all — docs/ and
+// /v11 are served from one origin on purpose; cross-origin only matters for
+// the GitHub Pages mirror and local frontend dev). Anything outside this list
+// still gets a real, non-empty response (this is a public read-mostly API,
+// not gated by CORS itself — CORS only controls whether a *browser* is
+// allowed to read the response cross-origin) but without an
+// Access-Control-Allow-Origin the browser will refuse to expose it to page
+// JS, which is the actual protection: an unlisted third-party site can no
+// longer silently proxy this API as its own backend from a visitor's browser.
+const ALLOWED_ORIGINS = new Set([
+  'https://thehive.sovereignhive.workers.dev',
+  'https://tehutirael.github.io',
+  'http://localhost:5173', // local Vite dev server (frontend/)
+  'http://localhost:8788', // local `wrangler dev` (docs/ + /v11 together)
+]);
+function corsHeadersFor(request) {
+  const origin = request.headers.get('Origin');
+  const headers = {
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-API-Key,X-Grok-Key',
+    'Vary': 'Origin',
+  };
+  if (origin && ALLOWED_ORIGINS.has(origin)) headers['Access-Control-Allow-Origin'] = origin;
+  return headers;
+}
+
+// Pagination (Phase 8, 2026-07-21 professionalization audit): every list
+// route used to hardcode LIMIT N with no way to reach older rows. `?offset=`
+// (and an optional `?limit=`, capped so a caller can't force a huge scan)
+// now works the same way across every list endpoint below.
+function pageParams(url, defaultLimit, maxLimit) {
+  let limit = parseInt(url.searchParams.get('limit'), 10);
+  if (!Number.isFinite(limit) || limit <= 0) limit = defaultLimit;
+  limit = Math.min(limit, maxLimit);
+  let offset = parseInt(url.searchParams.get('offset'), 10);
+  if (!Number.isFinite(offset) || offset < 0) offset = 0;
+  return { limit, offset };
+}
+
+// Edge caching (Phase 8, 2026-07-21 professionalization audit): a handful of
+// GET routes are read far more often than their underlying data changes
+// (active-agent roster, the roadmap rollup, which LLM provider is bound).
+// Cloudflare's Cache API (`caches.default`) sits in front of D1 for exactly
+// this. Deliberately caches ONLY the JSON body — never the full Response —
+// because the served Response's CORS headers are per-request (echoing the
+// caller's Origin against ALLOWED_ORIGINS, see corsHeadersFor above); baking
+// a CORS header into a cached-by-URL entry would leak one origin's
+// Access-Control-Allow-Origin to a different origin's request for the same
+// cached path. The cache key is the request's full URL (pathname + query
+// string, e.g. distinct entries per ?limit=/?offset= on a paginated route) —
+// Origin is a header, never part of the URL, so it can't collide here.
+async function cachedJson(request, ctx, corsHeaders, ttlSeconds, computeFn) {
+  const cache = caches.default;
+  const cacheKey = new Request(new URL(request.url).toString(), { method: 'GET' });
+  const respond = (data) =>
+    new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+  let hit;
+  try { hit = await cache.match(cacheKey); } catch { hit = undefined; }
+  if (hit) {
+    try { return respond(await hit.json()); } catch { /* fall through and recompute */ }
+  }
+  const data = await computeFn();
+  const stored = new Response(JSON.stringify(data), {
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ttlSeconds}` },
+  });
+  ctx.waitUntil(cache.put(cacheKey, stored));
+  return respond(data);
+}
 
 const COLORS = [[0.1, 0.8, 0.1], [0.1, 0.4, 0.9], [0.0, 0.9, 0.9], [1.0, 0.8, 0.0]];
 
@@ -65,8 +129,26 @@ async function sha256(text) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Rate limit: 30 POSTs per IP per 60s using D1 sliding window. Fails open.
-async function rateLimitOk(DB, ip) {
+// Rate limit: 30 POSTs per IP per 60s. Prefers KV (Phase 8, 2026-07-21) when
+// the RATE_LIMIT_KV binding exists — a counter-with-TTL is KV's textbook use
+// case and skips a D1 round-trip (plus the DELETE-then-SELECT-then-INSERT
+// this used to cost) on every single write request. Falls back to the
+// original D1 sliding-window implementation when KV is unbound — same
+// commented-until-founder-activates pattern as Vectorize/R2 (see
+// wrangler.jsonc + FLIP_THE_SWITCHES.md). KV reads are eventually consistent
+// across edge locations, the standard tradeoff every KV-backed rate limiter
+// makes; acceptable here since this is anti-spam, not a security boundary —
+// a false negative just lets an occasional 31st request through.
+async function rateLimitOk(DB, ip, env) {
+  if (env?.RATE_LIMIT_KV) {
+    try {
+      const key = `rl:${ip}`;
+      const current = parseInt(await env.RATE_LIMIT_KV.get(key), 10) || 0;
+      if (current >= 30) return false;
+      await env.RATE_LIMIT_KV.put(key, String(current + 1), { expirationTtl: 60 });
+      return true;
+    } catch { return true; } // KV outage — fail open, never block on infra trouble
+  }
   try {
     const now = Date.now(), window = now - 60_000;
     await DB.prepare('DELETE FROM rate_limits WHERE ip=? AND ts<?').bind(ip, window).run();
@@ -132,6 +214,15 @@ async function ensureTables(DB) {
        kind TEXT NOT NULL, title TEXT NOT NULL, body TEXT,
        status TEXT NOT NULL DEFAULT 'pending',
        decided_at TEXT, founder_note TEXT)`),
+    // Async LLM jobs (Phase 8, 2026-07-21): backs the optional Queues path for
+    // /v11/venture/plan and /v11/legal/research. Additive only — both
+    // endpoints keep answering synchronously by default; this table only
+    // fills when a caller opts in with {"async": true} AND the LLM_QUEUE
+    // binding exists (see wrangler.jsonc). status: queued -> done | error.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS async_jobs
+      (id TEXT PRIMARY KEY, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued',
+       input TEXT, result TEXT, error TEXT,
+       created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`),
   ]);
 }
 
@@ -564,12 +655,58 @@ export default {
     }
   },
 
+  // Queues consumer (Phase 8, 2026-07-21): processes jobs enqueued by the
+  // opt-in {"async": true} path on /v11/venture/plan and /v11/legal/research.
+  // Only reachable once LLM_QUEUE + its consumer are bound in wrangler.jsonc
+  // (see FLIP_THE_SWITCHES.md) — until then nothing calls this, since the
+  // producer side no-ops back to the synchronous path when LLM_QUEUE is unset.
+  async queue(batch, env, ctx) {
+    const DB = env.DB;
+    for (const message of batch.messages) {
+      const { id, kind, brief, question } = message.body || {};
+      try {
+        const SYSTEM = kind === 'venture/plan'
+          ? `You are the Sub-Architect of a self-governing AI hive (Sovereign Hive), reporting to the hive's Harness & Lead Manager. A founder has proposed a venture. Decompose it into a structured business plan: one CEO-level goal statement, then 3-6 departments (e.g. Product/Sourcing, Marketing/Content, Growth/SEO, Operations), each with a one-line mandate and 2-5 concrete tasks. Ground every task in the brief itself — never invent fake market statistics, fake revenue numbers, or claim access to real-time data you don't have. Reply with ONLY valid JSON, no markdown code fences, no commentary, exactly matching this shape: {"goal": "string", "departments": [{"name": "string", "mandate": "string", "tasks": ["string", "string"]}]}`
+          : `You are the hive's Legal Guild research assistant. You are NOT a lawyer and this is NOT legal advice — say so plainly in every answer. Explain general legal concepts accurately. Where relevant, explain the real distinction between a "sovereign citizen" (a fringe legal theory that courts have consistently and unanimously rejected, sometimes leading to sanctions for those who rely on it) and genuine questions of jurisdiction, sovereign immunity, or public-vs-private capacity (real, substantive, well-established areas of law) — the two are often confused and the difference matters. Point toward real, findable sources (Cornell LII, Bouvier's Law Dictionary, the actual U.S. Code or CFR, real case names) rather than vague generalities, but never fabricate a specific citation, docket number, or case holding you are not certain of — if unsure, say so plainly and suggest where a human could verify it instead. Never claim to have passed a bar exam, hold a law license, or represent anyone. End every answer with a one-line reminder that this is not legal advice.`;
+        const prompt = kind === 'venture/plan' ? brief : question;
+        const gen = await generate(env, { system: SYSTEM, prompt, maxTokens: kind === 'venture/plan' ? 900 : 700 });
+        if (!gen) throw new Error('no LLM provider currently bound or reachable');
+        let result;
+        if (kind === 'venture/plan') {
+          const cleaned = gen.text.trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
+          const plan = JSON.parse(cleaned);
+          if (!plan || typeof plan.goal !== 'string' || !Array.isArray(plan.departments)) throw new Error('shape mismatch');
+          result = { ok: true, brief, plan, provider: gen.provider };
+        } else {
+          result = { ok: true, question, answer: gen.text, provider: gen.provider };
+        }
+        await DB.prepare(
+          "UPDATE async_jobs SET status='done', result=?, updated_at=? WHERE id=?"
+        ).bind(JSON.stringify(result), Date.now(), id).run();
+        message.ack();
+      } catch (e) {
+        try {
+          await DB.prepare(
+            "UPDATE async_jobs SET status='error', error=?, updated_at=? WHERE id=?"
+          ).bind(String(e), Date.now(), id).run();
+        } catch {}
+        message.retry();
+      }
+    }
+  },
+
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const p = url.pathname.replace(/^\/v11/, '');
     const method = request.method.toUpperCase();
     const DB = env.DB;
-    if (method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+    // Computed once per request (never a shared/mutable module-level value —
+    // Workers isolates can reuse global scope across concurrent requests, so
+    // per-request state must live in this closure, not a top-level `let`).
+    const corsHeaders = corsHeadersFor(request);
+    const json = (data, status = 200) =>
+      new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...corsHeaders } });
+    if (method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
 
     try {
       if (p === '/health' || p === '/colony/health')
@@ -587,8 +724,10 @@ export default {
       }
 
       if (p === '/agents') {
-        const { results } = await DB.prepare("SELECT name FROM agents WHERE status='active'").all();
-        return json({ agents: results });
+        return cachedJson(request, ctx, corsHeaders, 60, async () => {
+          const { results } = await DB.prepare("SELECT name FROM agents WHERE status='active'").all();
+          return { agents: results };
+        });
       }
       if (p === '/grading/leaderboard') {
         const { results } = await DB.prepare('SELECT name AS agent_name, elo AS rating FROM agents ORDER BY elo DESC').all();
@@ -602,35 +741,40 @@ export default {
       // toward its next stage, plus a Hoard-level aggregate. See
       // computeRoadmap() above for the honesty disclosure on thresholds.
       if (p === '/roadmap') {
-        const { results } = await DB.prepare(
-          "SELECT name, soul, elo FROM agents WHERE status='active' ORDER BY soul DESC").all();
-        const agents = results.map(a => ({ agent: a.name, elo: a.elo, ...computeRoadmap(a.soul) }));
-        const totalSoul = results.reduce((sum, a) => sum + (Number(a.soul) || 0), 0);
-        const avgSoul = results.length ? totalSoul / results.length : 0;
-        const hoard = { agentCount: results.length, totalSoul: +totalSoul.toFixed(1), ...computeRoadmap(avgSoul) };
-        return json({
-          agents,
-          hoard,
-          note: 'hoard.* is an aggregate rollup (mean agent soul) for display purposes only — the Hoard is not itself a separate constitutional entity with its own tracked soul value.',
-          stages: ROADMAP_STAGES.map(s => s.name),
-          source: 'GOVERNANCE.md F-008D/F-009E',
+        return cachedJson(request, ctx, corsHeaders, 60, async () => {
+          const { results } = await DB.prepare(
+            "SELECT name, soul, elo FROM agents WHERE status='active' ORDER BY soul DESC").all();
+          const agents = results.map(a => ({ agent: a.name, elo: a.elo, ...computeRoadmap(a.soul) }));
+          const totalSoul = results.reduce((sum, a) => sum + (Number(a.soul) || 0), 0);
+          const avgSoul = results.length ? totalSoul / results.length : 0;
+          const hoard = { agentCount: results.length, totalSoul: +totalSoul.toFixed(1), ...computeRoadmap(avgSoul) };
+          return {
+            agents,
+            hoard,
+            note: 'hoard.* is an aggregate rollup (mean agent soul) for display purposes only — the Hoard is not itself a separate constitutional entity with its own tracked soul value.',
+            stages: ROADMAP_STAGES.map(s => s.name),
+            source: 'GOVERNANCE.md F-008D/F-009E',
+          };
         });
       }
       if (p === '/tasks') {
-        const { results } = await DB.prepare('SELECT * FROM tasks ORDER BY id DESC LIMIT 20').all();
-        return json({ tasks: results });
+        const { limit, offset } = pageParams(url, 20, 200);
+        const { results } = await DB.prepare('SELECT * FROM tasks ORDER BY id DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
+        return json({ tasks: results, limit, offset });
       }
       if (p === '/governance/log') {
-        const { results } = await DB.prepare('SELECT action, article, ts FROM governance_log ORDER BY id DESC LIMIT 12').all();
+        const { limit, offset } = pageParams(url, 12, 200);
+        const { results } = await DB.prepare('SELECT action, article, ts FROM governance_log ORDER BY id DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
         return json(results);
       }
       // Hive → founder updates: what the hive has done / needs, newest first.
       // Add-only from the hive's side; the founder holds the law/vision.
       if (p === '/updates') {
         try {
+          const { limit, offset } = pageParams(url, 30, 200);
           const { results } = await DB.prepare(
-            'SELECT id, ts, kind, title, body, needs FROM hive_updates ORDER BY id DESC LIMIT 30').all();
-          return json({ updates: results });
+            'SELECT id, ts, kind, title, body, needs FROM hive_updates ORDER BY id DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
+          return json({ updates: results, limit, offset });
         } catch { return json({ updates: [] }); }
       }
       // Hive proposals — suggestions for how the hive should evolve. Pending
@@ -639,10 +783,11 @@ export default {
       // decide endpoint can do anything yet (see founderAuthOk above).
       if (p === '/proposals' && method === 'GET') {
         try {
+          const { limit, offset } = pageParams(url, 50, 200);
           const { results } = await DB.prepare(
             `SELECT id, ts, kind, title, body, status, decided_at, founder_note FROM hive_proposals
-             ORDER BY (status='pending') DESC, id DESC LIMIT 50`).all();
-          return json({ proposals: results, founder_auth_bound: !!env.FOUNDER_KEY });
+             ORDER BY (status='pending') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
+          return json({ proposals: results, founder_auth_bound: !!env.FOUNDER_KEY, limit, offset });
         } catch { return json({ proposals: [], founder_auth_bound: !!env.FOUNDER_KEY }); }
       }
       if (p === '/proposals' && method === 'POST') {
@@ -692,6 +837,26 @@ export default {
         const brief = (body.brief || '').toString().trim().slice(0, 2000);
         if (!brief) return json({ detail: 'brief required' }, 400);
 
+        // Optional Queues path (Phase 8, 2026-07-21): opt-in only, via
+        // {"async": true} — the default stays fully synchronous so
+        // VenturePlanner.tsx needs no changes. Lets a caller decouple a slow
+        // LLM generation from the request that triggered it; poll the result
+        // via GET /v11/jobs?id=. No-ops back to the normal sync path below
+        // when LLM_QUEUE isn't bound yet (see wrangler.jsonc).
+        if (body.async === true && env.LLM_QUEUE) {
+          const id = crypto.randomUUID();
+          const now = Date.now();
+          try {
+            await DB.prepare(
+              'INSERT INTO async_jobs (id, kind, status, input, created_at, updated_at) VALUES (?,?,\'queued\',?,?,?)'
+            ).bind(id, 'venture/plan', brief, now, now).run();
+            await env.LLM_QUEUE.send({ id, kind: 'venture/plan', brief });
+            return json({ ok: true, job_id: id, status: 'queued', poll: `/v11/jobs?id=${id}` }, 202);
+          } catch (e) {
+            return json({ ok: false, detail: 'failed to enqueue: ' + String(e) }, 500);
+          }
+        }
+
         const SYSTEM = `You are the Sub-Architect of a self-governing AI hive (Sovereign Hive), reporting to the hive's Harness & Lead Manager. A founder has proposed a venture. Decompose it into a structured business plan: one CEO-level goal statement, then 3-6 departments (e.g. Product/Sourcing, Marketing/Content, Growth/SEO, Operations), each with a one-line mandate and 2-5 concrete tasks. Ground every task in the brief itself — never invent fake market statistics, fake revenue numbers, or claim access to real-time data you don't have. Reply with ONLY valid JSON, no markdown code fences, no commentary, exactly matching this shape: {"goal": "string", "departments": [{"name": "string", "mandate": "string", "tasks": ["string", "string"]}]}`;
 
         const gen = await generate(env, { system: SYSTEM, prompt: brief, maxTokens: 900 });
@@ -725,6 +890,22 @@ export default {
         const question = (body.question || '').toString().trim().slice(0, 1000);
         if (!question) return json({ detail: 'question required' }, 400);
 
+        // Optional Queues path (Phase 8, 2026-07-21) — same opt-in pattern as
+        // /v11/venture/plan above. Default stays synchronous.
+        if (body.async === true && env.LLM_QUEUE) {
+          const id = crypto.randomUUID();
+          const now = Date.now();
+          try {
+            await DB.prepare(
+              'INSERT INTO async_jobs (id, kind, status, input, created_at, updated_at) VALUES (?,?,\'queued\',?,?,?)'
+            ).bind(id, 'legal/research', question, now, now).run();
+            await env.LLM_QUEUE.send({ id, kind: 'legal/research', question });
+            return json({ ok: true, job_id: id, status: 'queued', poll: `/v11/jobs?id=${id}` }, 202);
+          } catch (e) {
+            return json({ ok: false, detail: 'failed to enqueue: ' + String(e) }, 500);
+          }
+        }
+
         const SYSTEM = `You are the hive's Legal Guild research assistant. You are NOT a lawyer and this is NOT legal advice — say so plainly in every answer. Explain general legal concepts accurately. Where relevant, explain the real distinction between a "sovereign citizen" (a fringe legal theory that courts have consistently and unanimously rejected, sometimes leading to sanctions for those who rely on it) and genuine questions of jurisdiction, sovereign immunity, or public-vs-private capacity (real, substantive, well-established areas of law) — the two are often confused and the difference matters. Point toward real, findable sources (Cornell LII, Bouvier's Law Dictionary, the actual U.S. Code or CFR, real case names) rather than vague generalities, but never fabricate a specific citation, docket number, or case holding you are not certain of — if unsure, say so plainly and suggest where a human could verify it instead. Never claim to have passed a bar exam, hold a law license, or represent anyone. End every answer with a one-line reminder that this is not legal advice.`;
 
         const gen = await generate(env, { system: SYSTEM, prompt: question, maxTokens: 700 });
@@ -737,12 +918,35 @@ export default {
         });
       }
       if (p === '/llm/status') {
-        const roster = providerRoster(env);
-        const active = roster.find((r) => r.bound);
+        // Short TTL (not the 60s used elsewhere): this is the diagnostic
+        // endpoint used to verify a just-bound secret actually took effect
+        // (see .dev.vars.example) — a long-lived stale cache here would
+        // directly undermine the one thing this route exists to answer.
+        return cachedJson(request, ctx, corsHeaders, 20, async () => {
+          const roster = providerRoster(env);
+          const active = roster.find((r) => r.bound);
+          return {
+            active_provider: active ? active.id : 'simulation',
+            providers: roster.filter((r) => r.bound).map((r) => r.id),
+            roster, // full honest list: each provider, bound or not, and how to bind it
+          };
+        });
+      }
+
+      // Poll the result of an async job queued via /v11/venture/plan or
+      // /v11/legal/research with {"async": true} (Phase 8, Queues path).
+      if (p === '/jobs' && method === 'GET') {
+        const id = url.searchParams.get('id') || '';
+        if (!id) return json({ detail: 'id required' }, 400);
+        const row = await DB.prepare(
+          'SELECT id, kind, status, result, error, created_at, updated_at FROM async_jobs WHERE id=?'
+        ).bind(id).first();
+        if (!row) return json({ detail: 'not found', id }, 404);
         return json({
-          active_provider: active ? active.id : 'simulation',
-          providers: roster.filter((r) => r.bound).map((r) => r.id),
-          roster, // full honest list: each provider, bound or not, and how to bind it
+          job_id: row.id, kind: row.kind, status: row.status,
+          result: row.result ? JSON.parse(row.result) : null,
+          error: row.error || null,
+          created_at: row.created_at, updated_at: row.updated_at,
         });
       }
 
@@ -853,7 +1057,7 @@ export default {
           headers: {
             'content-type': obj.httpMetadata?.contentType || 'application/octet-stream',
             'content-disposition': `inline; filename="${key.split('/').pop()}"`,
-            ...CORS,
+            ...corsHeaders,
           },
         });
       }
@@ -861,8 +1065,9 @@ export default {
       // heartbeat trail — what the hive did while nobody was watching
       if (p === '/pulse') {
         try {
-          const { results } = await DB.prepare('SELECT ts, action, detail FROM hive_pulse ORDER BY id DESC LIMIT 20').all();
-          return json({ pulse: results });
+          const { limit, offset } = pageParams(url, 20, 200);
+          const { results } = await DB.prepare('SELECT ts, action, detail FROM hive_pulse ORDER BY id DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
+          return json({ pulse: results, limit, offset });
         } catch { return json({ pulse: [] }); }
       }
 
@@ -912,7 +1117,7 @@ export default {
 
       // Which bindings/secrets are PRESENT — names and booleans only, never values (F-001).
       if (p === '/debug/env') {
-        const known = ['DB', 'AI', 'VECTORIZE', 'ASSETS'];
+        const known = ['DB', 'AI', 'VECTORIZE', 'ASSETS', 'FILES', 'RATE_LIMIT_KV', 'LLM_QUEUE'];
         const bindings = {}; for (const k of known) bindings[k] = !!env[k];
         // report which expected secrets are set, by presence only
         const expectedSecrets = ['GROK_BRIDGE_KEY', 'CLOUDFLARE_API_TOKEN'];
@@ -957,7 +1162,7 @@ export default {
           base: '/v11',
           routes: [
             'GET /health', 'GET /agents', 'GET /grading/leaderboard', 'GET /wallet/leaderboard/soul',
-            'GET /roadmap', 'POST /venture/plan', 'POST /legal/research', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
+            'GET /roadmap', 'POST /venture/plan', 'POST /legal/research', 'GET /jobs (Queues polling, opt-in async)', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
             'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
             'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',
@@ -999,16 +1204,18 @@ export default {
       }
 
       if (p === '/arena/challenges') {
-        const { results } = await DB.prepare('SELECT * FROM arena_challenges ORDER BY id DESC LIMIT 20').all();
-        return json({ challenges: results });
+        const { limit, offset } = pageParams(url, 20, 200);
+        const { results } = await DB.prepare('SELECT * FROM arena_challenges ORDER BY id DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
+        return json({ challenges: results, limit, offset });
       }
       if (p === '/arena/fallen') {
-        const { results } = await DB.prepare('SELECT * FROM fallen_ideas ORDER BY id DESC LIMIT 8').all();
-        return json({ hall_of_fallen_ideas: results });
+        const { limit, offset } = pageParams(url, 8, 200);
+        const { results } = await DB.prepare('SELECT * FROM fallen_ideas ORDER BY id DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
+        return json({ hall_of_fallen_ideas: results, limit, offset });
       }
       if (p === '/arena/challenge' && method === 'POST') {
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-        if (!await rateLimitOk(DB, ip)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        if (!await rateLimitOk(DB, ip, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
         if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const b = await request.json();
         const r = await DB.prepare('INSERT INTO arena_challenges (challenger, challenged, proposition) VALUES (?,?,?)')
@@ -1019,7 +1226,7 @@ export default {
       let m = p.match(/^\/arena\/resolve\/(\d+)$/);
       if (m && method === 'POST') {
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-        if (!await rateLimitOk(DB, ip)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        if (!await rateLimitOk(DB, ip, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
         if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const ch = await DB.prepare('SELECT * FROM arena_challenges WHERE id=?').bind(+m[1]).first();
         if (!ch) return json({ detail: 'challenge not found' }, 404);
@@ -1030,7 +1237,7 @@ export default {
       m = p.match(/^\/arena\/project\/(\d+)$/);
       if (m && method === 'POST') {
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-        if (!await rateLimitOk(DB, ip)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        if (!await rateLimitOk(DB, ip, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
         if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const ch = await DB.prepare('SELECT * FROM arena_challenges WHERE id=?').bind(+m[1]).first();
         if (!ch) return json({ detail: 'challenge not found' }, 404);

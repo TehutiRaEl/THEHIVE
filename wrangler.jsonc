@@ -37,6 +37,37 @@
   // "r2_buckets": [
   //   { "binding": "FILES", "bucket_name": "hive-files" }
   // ],
+  // Rate-limit counters (Phase 8, 2026-07-21). Same flip-the-switch pattern:
+  // a kv_namespaces binding pointing at a namespace that doesn't exist fails
+  // the deploy, so it ships commented and rateLimitOk() falls back to the
+  // original D1 sliding-window implementation until this is activated.
+  // TO ACTIVATE (founder, one time):
+  //   1) npx wrangler kv namespace create RATE_LIMIT_KV
+  //      (prints an "id" — paste it in below)
+  //   2) uncomment the "kv_namespaces" block below, commit → Workers Builds redeploys
+  //   3) write endpoints now rate-limit via KV instead of D1 (no behavior
+  //      change visible to callers — same 30/min/IP limit, just faster)
+  // "kv_namespaces": [
+  //   { "binding": "RATE_LIMIT_KV", "id": "<paste the id from step 1 here>" }
+  // ],
+  // Async LLM jobs (Phase 8, 2026-07-21). Same flip-the-switch pattern: a
+  // queues binding pointing at a queue that doesn't exist fails the deploy,
+  // so it ships commented. Until activated, POST /v11/venture/plan and
+  // POST /v11/legal/research simply ignore {"async": true} and answer
+  // synchronously as they always have — nothing breaks either way.
+  // TO ACTIVATE (founder, one time):
+  //   1) npx wrangler queues create hive-llm-jobs
+  //   2) uncomment the "queues" block below, commit → Workers Builds redeploys
+  //   3) POST /v11/venture/plan or /v11/legal/research with {"async": true}
+  //      now returns 202 {job_id, poll}; GET /v11/jobs?id=<job_id> to check status
+  // "queues": {
+  //   "producers": [
+  //     { "binding": "LLM_QUEUE", "queue": "hive-llm-jobs" }
+  //   ],
+  //   "consumers": [
+  //     { "queue": "hive-llm-jobs", "max_batch_size": 5, "max_retries": 3 }
+  //   ]
+  // },
   "d1_databases": [
     {
       "binding": "DB",
