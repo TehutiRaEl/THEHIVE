@@ -81,6 +81,33 @@ repo's `derive_counters.py --check` discipline.
 - The bare name "loop" is overloaded in this repo (the `/loop` scheduler skill,
   `loop-library`, workflow loop templates) — this skill never claims it.
 
+## Non-folder domains (hand-authored manifests)
+
+Not every name in a routing table (e.g. `hive-conductor/SKILL.md`'s domain list) corresponds
+to a real folder full of skills. `colonies` (the six colony repos, checked out as sibling
+directories, not a subtree of this repo) hit this in Phase G of the 2026-07-22 colony
+deep-integration pass; `governance` and `strategy` name the same gap (`governance/` and
+`strategy/` don't exist under this repo's tree either) and will hit it the moment someone
+tries to regenerate their manifest the normal way.
+
+When this happens:
+1. **Don't force the generic scanner.** `harness_manifest_builder.py` walks a folder for
+   `SKILL.md` files; a domain that isn't shaped that way has nothing for it to find.
+2. **Hand-author the manifest instead**, still schema-valid against
+   `harness_manifest.schema.json` — one `skills[]` entry per real unit of the domain (a
+   colony repo, a governance surface, whatever the domain actually is), each pointing at a
+   **purpose-built verify script** that knows how to check that specific kind of thing
+   (`scripts/colony_verify.py` checks sibling-repo file state; a `governance` domain would
+   need its own script checking `soul.md`/constitution-sync state, etc.).
+3. **Document the exception where an agent will actually read it before running the
+   builder** — this skill's own `SKILL.md`, right after the regenerate-a-manifest command —
+   so nobody "fixes" a hand-authored manifest by overwriting it with an empty auto-scan.
+4. **Prove it through the same consumer machinery**, not just schema validation: feed the
+   manifest to `goal_compiler.py`, drive `loop_controller.py` init → execute → verify, and
+   confirm the controller independently re-runs the checks via subprocess and reaches
+   `"status": "verified"`. A hand-authored manifest that only passes a schema check is inert
+   JSON; one that's been driven through a real compile→execute→verify cycle is proven wired.
+
 ## Extending a domain's harness
 
 1. Author or improve skills so they carry the agentic signals (intake, refusal gates,

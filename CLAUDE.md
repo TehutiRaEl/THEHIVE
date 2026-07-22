@@ -48,7 +48,9 @@ only one exists.** Reconciling them into one coherent story is real, open work, 
 - **`.claude/skills/`** (this session's additions): `fable-debugger`, `research-to-dna`,
   `session-harvest`, `pocket-dimensions`, `anomaly-triage`, `merge-readiness`,
   `nine-miss-truths`, `skill-census`.
-- **`Project_file/Fable_memory.md`** — this session's continuity log.
+- **`.claude/Fable_memory.md`** — this session's continuity log (moved here from
+  `Project_file/Fable_memory.md` by a parallel session on 2026-07-16; this file's stale path
+  corrected 2026-07-22).
 - **`Project_file/Founders Visonary Folder/SOURCES/`** — where the founder drops PDFs,
   books, web clippings, research notes for the hive to build from; routed through
   `research-to-dna` before anything becomes hive knowledge (see that folder's README for
