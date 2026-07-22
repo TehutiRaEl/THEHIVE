@@ -29,6 +29,11 @@ pandas>=2.2.3
 scipy>=1.15.0
 numpy-quaternion>=2024.0.13
 
+# tesseract_math — the real tesseract/hypercomplex/dream-engine math that
+# used to live duplicated in backend/tier2/. 4DBRAIN is the canonical owner
+# now (2026-07-22); backend/tier2/*.py are thin re-export shims over this.
+4dbrain-tesseract @ git+https://github.com/TehutiRaEl/4DBRAIN.git#subdirectory=tesseract_math
+
 # Monitoring
 prometheus-client>=0.21.0
 opentelemetry-api>=1.28.2

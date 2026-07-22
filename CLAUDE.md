@@ -9,8 +9,11 @@ only one exists.** Reconciling them into one coherent story is real, open work, 
 ## System A — the FastAPI / second-brain harness
 
 - **`backend/`** — FastAPI app, 80+ `/v11/*` endpoints, tier2/tier3 math (`backend/core/`
-  hdc.py/protocol.py/hive_mesh.py, `backend/tier2/` dream engine + tesseract 4D,
-  `backend/tier3/` quantum bridge + sheaf guild + arena renderer + IPFS pubsub).
+  hdc.py/protocol.py/hive_mesh.py, `backend/tier2/` — thin re-export shims since 2026-07-22;
+  the real dream engine + tesseract 4D math now lives in 4DBRAIN's `tesseract_math` package,
+  4DBRAIN being the colony whose name actually promised it (see colony deep-integration
+  Phase B in memory/planning/) — `backend/tier3/` quantum bridge + sheaf guild + arena
+  renderer + IPFS pubsub.
 - **`memory/`** — an Obsidian-style vault: 101-node knowledge graph (`_graph.json`),
   wiki-linked Markdown, `memory/planning/` for session plans.
 - **`.claude/memory/memory.md`** + **`.claude/skills/hive-memory.md`** — the "second brain":
