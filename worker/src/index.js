@@ -508,6 +508,52 @@ async function constitutionSummary(env, requestUrl) {
   } catch { return null; }
 }
 
+// Queues consumer (Phase 8, 2026-07-21): processes jobs enqueued by the
+// opt-in {"async": true} path on /v11/venture/plan and /v11/legal/research.
+// DELIBERATELY NOT EXPORTED as `queue` in export default below: a Worker
+// that exports a queue() consumer handler while wrangler.jsonc's
+// queues.consumers binding is commented out fails Workers Builds' pre-deploy
+// validation — this exact mismatch broke every production deploy from
+// 2026-07-21 (commit 15906b0) until diagnosed 2026-07-22 via a direct read
+// of the live (stale) bundle. When activating Queues (FLIP_THE_SWITCHES.md
+// section 6), re-attach it as `queue: processQueueBatch` in export default
+// IN THE SAME COMMIT as uncommenting the wrangler.jsonc queues block — the
+// handler export and the consumer binding must always move together.
+async function processQueueBatch(batch, env, ctx) {
+  const DB = env.DB;
+  for (const message of batch.messages) {
+    const { id, kind, brief, question } = message.body || {};
+    try {
+      const SYSTEM = kind === 'venture/plan'
+        ? `You are the Sub-Architect of a self-governing AI hive (Sovereign Hive), reporting to the hive's Harness & Lead Manager. A founder has proposed a venture. Decompose it into a structured business plan: one CEO-level goal statement, then 3-6 departments (e.g. Product/Sourcing, Marketing/Content, Growth/SEO, Operations), each with a one-line mandate and 2-5 concrete tasks. Ground every task in the brief itself — never invent fake market statistics, fake revenue numbers, or claim access to real-time data you don't have. Reply with ONLY valid JSON, no markdown code fences, no commentary, exactly matching this shape: {"goal": "string", "departments": [{"name": "string", "mandate": "string", "tasks": ["string", "string"]}]}`
+        : `You are the hive's Legal Guild research assistant. You are NOT a lawyer and this is NOT legal advice — say so plainly in every answer. Explain general legal concepts accurately. Where relevant, explain the real distinction between a "sovereign citizen" (a fringe legal theory that courts have consistently and unanimously rejected, sometimes leading to sanctions for those who rely on it) and genuine questions of jurisdiction, sovereign immunity, or public-vs-private capacity (real, substantive, well-established areas of law) — the two are often confused and the difference matters. Point toward real, findable sources (Cornell LII, Bouvier's Law Dictionary, the actual U.S. Code or CFR, real case names) rather than vague generalities, but never fabricate a specific citation, docket number, or case holding you are not certain of — if unsure, say so plainly and suggest where a human could verify it instead. Never claim to have passed a bar exam, hold a law license, or represent anyone. End every answer with a one-line reminder that this is not legal advice.`;
+      const prompt = kind === 'venture/plan' ? brief : question;
+      const gen = await generate(env, { system: SYSTEM, prompt, maxTokens: kind === 'venture/plan' ? 900 : 700 });
+      if (!gen) throw new Error('no LLM provider currently bound or reachable');
+      let result;
+      if (kind === 'venture/plan') {
+        const cleaned = gen.text.trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
+        const plan = JSON.parse(cleaned);
+        if (!plan || typeof plan.goal !== 'string' || !Array.isArray(plan.departments)) throw new Error('shape mismatch');
+        result = { ok: true, brief, plan, provider: gen.provider };
+      } else {
+        result = { ok: true, question, answer: gen.text, provider: gen.provider };
+      }
+      await DB.prepare(
+        "UPDATE async_jobs SET status='done', result=?, updated_at=? WHERE id=?"
+      ).bind(JSON.stringify(result), Date.now(), id).run();
+      message.ack();
+    } catch (e) {
+      try {
+        await DB.prepare(
+          "UPDATE async_jobs SET status='error', error=?, updated_at=? WHERE id=?"
+        ).bind(String(e), Date.now(), id).run();
+      } catch {}
+      message.retry();
+    }
+  }
+}
+
 export default {
   // The heartbeat. Fires on the cron in wrangler.jsonc; the hive advances
   // with no hands: resolve what is pending, replay it in voxels, seed the
@@ -655,45 +701,9 @@ export default {
     }
   },
 
-  // Queues consumer (Phase 8, 2026-07-21): processes jobs enqueued by the
-  // opt-in {"async": true} path on /v11/venture/plan and /v11/legal/research.
-  // Only reachable once LLM_QUEUE + its consumer are bound in wrangler.jsonc
-  // (see FLIP_THE_SWITCHES.md) — until then nothing calls this, since the
-  // producer side no-ops back to the synchronous path when LLM_QUEUE is unset.
-  async queue(batch, env, ctx) {
-    const DB = env.DB;
-    for (const message of batch.messages) {
-      const { id, kind, brief, question } = message.body || {};
-      try {
-        const SYSTEM = kind === 'venture/plan'
-          ? `You are the Sub-Architect of a self-governing AI hive (Sovereign Hive), reporting to the hive's Harness & Lead Manager. A founder has proposed a venture. Decompose it into a structured business plan: one CEO-level goal statement, then 3-6 departments (e.g. Product/Sourcing, Marketing/Content, Growth/SEO, Operations), each with a one-line mandate and 2-5 concrete tasks. Ground every task in the brief itself — never invent fake market statistics, fake revenue numbers, or claim access to real-time data you don't have. Reply with ONLY valid JSON, no markdown code fences, no commentary, exactly matching this shape: {"goal": "string", "departments": [{"name": "string", "mandate": "string", "tasks": ["string", "string"]}]}`
-          : `You are the hive's Legal Guild research assistant. You are NOT a lawyer and this is NOT legal advice — say so plainly in every answer. Explain general legal concepts accurately. Where relevant, explain the real distinction between a "sovereign citizen" (a fringe legal theory that courts have consistently and unanimously rejected, sometimes leading to sanctions for those who rely on it) and genuine questions of jurisdiction, sovereign immunity, or public-vs-private capacity (real, substantive, well-established areas of law) — the two are often confused and the difference matters. Point toward real, findable sources (Cornell LII, Bouvier's Law Dictionary, the actual U.S. Code or CFR, real case names) rather than vague generalities, but never fabricate a specific citation, docket number, or case holding you are not certain of — if unsure, say so plainly and suggest where a human could verify it instead. Never claim to have passed a bar exam, hold a law license, or represent anyone. End every answer with a one-line reminder that this is not legal advice.`;
-        const prompt = kind === 'venture/plan' ? brief : question;
-        const gen = await generate(env, { system: SYSTEM, prompt, maxTokens: kind === 'venture/plan' ? 900 : 700 });
-        if (!gen) throw new Error('no LLM provider currently bound or reachable');
-        let result;
-        if (kind === 'venture/plan') {
-          const cleaned = gen.text.trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
-          const plan = JSON.parse(cleaned);
-          if (!plan || typeof plan.goal !== 'string' || !Array.isArray(plan.departments)) throw new Error('shape mismatch');
-          result = { ok: true, brief, plan, provider: gen.provider };
-        } else {
-          result = { ok: true, question, answer: gen.text, provider: gen.provider };
-        }
-        await DB.prepare(
-          "UPDATE async_jobs SET status='done', result=?, updated_at=? WHERE id=?"
-        ).bind(JSON.stringify(result), Date.now(), id).run();
-        message.ack();
-      } catch (e) {
-        try {
-          await DB.prepare(
-            "UPDATE async_jobs SET status='error', error=?, updated_at=? WHERE id=?"
-          ).bind(String(e), Date.now(), id).run();
-        } catch {}
-        message.retry();
-      }
-    }
-  },
+  // NOTE: no `queue` handler here on purpose — see processQueueBatch above.
+  // Re-attach as `queue: processQueueBatch` only in the same commit that
+  // uncomments wrangler.jsonc's queues block (FLIP_THE_SWITCHES.md §6).
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);

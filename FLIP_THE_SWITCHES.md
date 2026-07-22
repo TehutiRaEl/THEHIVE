@@ -72,7 +72,13 @@ binding exists.
 ```bash
 npx wrangler queues create hive-llm-jobs
 ```
-Then uncomment the `"queues"` block in `wrangler.jsonc`, commit, push. Nothing changes for
+Then, **in the same commit**: uncomment the `"queues"` block in `wrangler.jsonc` **and**
+re-attach the consumer handler in `worker/src/index.js` — add `queue: processQueueBatch,`
+inside the `export default { ... }` object (the function already exists just above it).
+These two must always move together: a Worker that exports a `queue()` consumer handler
+while the `queues.consumers` binding is commented out fails Workers Builds' pre-deploy
+validation — this exact mismatch silently broke every production deploy from 2026-07-21
+until diagnosed 2026-07-22 (see PR_LESSONS.md). Commit, push. Nothing changes for
 existing callers — both endpoints stay fully synchronous by default. **Proof:**
 `POST /v11/venture/plan` (or `/v11/legal/research`) with `{"async": true}` in the body now
 returns `202 {job_id, poll: "/v11/jobs?id=..."}` instead of `503`; `GET /v11/jobs?id=<job_id>`
