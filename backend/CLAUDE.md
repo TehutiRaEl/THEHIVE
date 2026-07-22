@@ -21,8 +21,8 @@ The FastAPI application. Entry point: `backend/main.py`. All HTTP endpoints are 
 | `governance/` | Governance patterns + recommend logic |
 | `guilds/` | 12 guild module stubs |
 | `memory/` | Episodic memory + vector store |
-| `mcp/` | MCP server + tools for external tool calling |
-| `tier2/` | 4D tesseract math, dream engine, hypercomplex layers, ARG-NN |
+| `mcp/` | An in-process tool registry — NOT a real MCP (Model Context Protocol) server; no JSON-RPC/transport, one tool (`web_search_tool`) is literally simulated, unwired from `routes.py`. A real MCP server for the federation (colonies as MCP clients) is planned separately — see memory/planning/'s colony deep-integration Phase E — do not confuse the two. |
+| `tier2/` | Thin re-export shims since 2026-07-22 — the real 4D tesseract math, dream engine, hypercomplex layers, ARG-NN now live in 4DBRAIN's `tesseract_math` package (4DBRAIN being the colony whose name promised it) |
 | `tier3/` | Arena renderer, quantum bridge, sheaf guild, IPFS pubsub, tesseract model |
 | `utils/` | Crypto helpers, rate limiter, misc utils |
 

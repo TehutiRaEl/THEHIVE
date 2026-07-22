@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sovereign-hive-colony-sdk"
+version = "1.0.0"
+description = "Colony Standard Layer factory for the Sovereign Hive federation — canonically owned by THEHIVE (the Queen), consumed by every colony as a pinned dependency."
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "fastapi>=0.100.0",
+    "pydantic>=2.0.0",
+]
+
+[tool.setuptools]
+packages = ["colony_sdk"]
+package-dir = { "colony_sdk" = "." }

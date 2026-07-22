@@ -4,6 +4,8 @@ Exposes /colony/* endpoints so the Queen meta-repo and other colonies
 can discover, health-check, and send events to this node.
 """
 
+import hashlib
+import hmac
 import time
 import asyncio
 from datetime import datetime, timezone
@@ -18,6 +20,29 @@ from backend.core.db import get_db
 from backend.api.models import HealthResponse, ColonyInfoResponse
 
 router = APIRouter(prefix="/colony", tags=["colony"])
+
+
+def _verify_hive_signature(request: Request, body: bytes) -> None:
+    """
+    Reject cross-colony POSTs whose X-Hive-Signature doesn't match
+    HMAC-SHA256(body, settings.jwt_secret_key) — the same key hive_mesh.py's
+    _hmac_sign() uses to sign outbound dispatches, and the same pattern
+    every colony's own /colony/events already enforces (colony_sdk.py,
+    automatisch's colony.js, LocalAGI's colony.go, aether's route.ts).
+    Found missing here 2026-07-22 while wiring the rest of the federation —
+    the Queen's own inbound event endpoint had zero verification, the one
+    real inconsistency in an otherwise-uniform pattern. Permissive when
+    unset (dev mode), fail-closed once JWT_SECRET_KEY is a real secret.
+    """
+    secret = settings.jwt_secret_key
+    if not secret or secret == "super-secret-change-me":
+        return  # permissive — no real secret configured yet
+    sig_header = request.headers.get("X-Hive-Signature", "")
+    if not sig_header.startswith("sha256="):
+        raise HTTPException(status_code=401, detail="Missing X-Hive-Signature header")
+    expected = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig_header, expected):
+        raise HTTPException(status_code=401, detail="Invalid hive signature")
 
 # ── Colony identity (override via env vars) ────────────────────
 COLONY_NAME = settings.colony_name
@@ -111,11 +136,20 @@ async def colony_agents():
 
 
 @router.post("/events")
-async def receive_event(event: ColonyEvent):
+async def receive_event(request: Request):
     """
     Receive a cross-colony event from automatisch or the Queen.
     Handles: constitution_update, agent_migrated, soul_transfer, task_dispatch.
+    Requires a valid X-Hive-Signature once JWT_SECRET_KEY is set (see
+    _verify_hive_signature above) — permissive in dev mode, same as every
+    other colony's /colony/events.
     """
+    body = await request.body()
+    _verify_hive_signature(request, body)
+    try:
+        event = ColonyEvent.model_validate_json(body)
+    except Exception:
+        raise HTTPException(status_code=422, detail="Invalid event body")
     event.timestamp = event.timestamp or datetime.now(timezone.utc).isoformat()
 
     if event.event_type == "constitution_update":

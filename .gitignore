@@ -7,6 +7,9 @@ env/
 venv/
 .env
 .venv
+*.egg-info/
+build/
+dist/
 
 # Database
 *.db
