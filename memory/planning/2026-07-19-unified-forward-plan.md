@@ -290,6 +290,96 @@ a real, running test (`test/gap-closure.test.js`), zero `npm install` step (Node
   `ARCHITECTURE.md`, `FLIP_THE_SWITCHES.md`, `constitution.md`), `worker/src/index.js` (one new
   route), `CLAUDE.md` (documented), this plan file.
 
+### Phase 10 — Colony deep-integration: fully utilize what's already in each colony ✅ CLOSED 2026-07-22
+
+Founder directive: "is there a way to fully utilize the software in each repo that was just
+built on top of" — look at each colony's license first, then bridge or extend the existing
+agentic mesh/harness protocol (whichever is more efficient) rather than inventing a new one,
+so every colony's real code strengthens the hive instead of sitting mostly-parallel to it.
+Full plan: `/root/.claude/plans/the-handoff-is-already-cheeky-ember.md`. Three research passes
+(this repo's own mesh infra; automatisch/LocalAGI's licenses+architecture;
+NAR2/4DBRAIN/aether's real function+licensing) plus a synthesis pass produced the phased plan
+below. Founder decided four judgment calls up front: colony licensing (proprietary/
+hive-internal), tesseract-math ownership (move into 4DBRAIN, matching its name), Kimi-K2's
+dual bridge (retire Node, keep Python), deployment scope (build to the deploy step, park it —
+same founder-only blocker as System A's own deploy).
+
+Protocol decision: **bridge, don't invent.** Two layers, both extending something already
+real — the existing HMAC-HTTP colony-standard-layer for lifecycle/health/constitution-sync,
+and MCP (Model Context Protocol) for agentic tool-calling/task-dispatch (LocalAGI already
+speaks it natively; Python/Node/Go/TS SDKs cover every language already in the federation).
+
+- **Phase A** (mechanical fixes, all 6 colonies): proprietary hive-internal LICENSE added to
+  NAR2/4DBRAIN/aether (none existed); aether's `/colony/events` route given real HMAC
+  verification (it accepted any unauthenticated JSON body — the one real security gap among
+  the six colonies); `aether/LAUpackage.json` renamed to `package.json`, CI `cp` workaround
+  removed; Kimi-K2's duplicate Node colony bridge (`colony-server.js`, `Dockerfile.colony`)
+  retired in favor of its real Python bridge; NAR2's README architecture drift fixed.
+- **Phase B**: the tesseract/hypercomplex/dream-engine math (previously living duplicated in
+  this repo's `backend/tier2/`) moved into a real, pip-installable `4DBRAIN/tesseract_math/`
+  package — 4DBRAIN being the colony whose name always implied it owned this math. This
+  repo's `tier2/*.py` and NAR2's `rotation_matrix.py` are now thin re-export shims over it.
+  Found and fixed a real crashing bug in the process: 4DBRAIN's `backend/main.py` had a dead
+  `from colony import router` import (nonexistent module, `ImportError` on any real run).
+- **Phase C**: `colony_sdk.py` (previously hand-copied byte-identical into NAR2, 4DBRAIN,
+  Kimi-K2) promoted into a real package (`colony_sdk/`, `sovereign-hive-colony-sdk` on git),
+  consumed as a pinned dependency by all three instead of a diverging local file. Found and
+  fixed a real bug: NAR2's `main.py` used a relative `from .colony_sdk import ...`, which
+  would have broken once `colony_sdk.py` stopped being a sibling file. Also found and fixed
+  this repo's own `backend/api/colony.py` — it had **zero** HMAC verification on
+  `POST /colony/events`, the one place this repo's own colony-standard-layer implementation
+  was less secure than every colony consuming it.
+- **Phase D**: automatisch (AGPL-3.0) gets a native `packages/backend/src/apps/thehive/` app —
+  a real "Hive Dispatch Received" trigger and "Send to Hive Mesh" action, not a bolt-on route.
+  `/colony/manifest` now reports a real `source: {repo, commit, license}` field (live
+  `git rev-parse HEAD`) to satisfy AGPL Section 13's corresponding-source obligation; this
+  repo's own code still only ever talks to automatisch over HTTP, never in-process, so AGPL
+  never crosses into the rest of the federation. The orphaned `packages/colony-server/`
+  sidecar was retired (confirmed zero references first).
+- **Phase E**: a real MCP server built at `backend/mcp_server/` (the existing `backend/mcp/`
+  was confirmed dead — no JSON-RPC, no transport, one simulated tool, never wired to
+  `routes.py`) exposing `hive_dispatch`, `hive_memory_recall`, `hive_law_query` as native
+  tools any MCP client can call. First consumer: LocalAGI, which already speaks MCP natively
+  (`core/agent/mcp.go`) — no LocalAGI-side code change needed, just operator config pointing
+  at `http://<host>:8100/mcp`. Verified with a real JSON-RPC `initialize` handshake over
+  streamable-http.
+- **Phase F**: `hive_mesh.dispatch()` previously fired any `event_type` to every colony blind.
+  Added a Tier-1-safe allow-list per `PERMISSIONS.md`'s own tier definitions
+  (`health_check`, `manifest_query`, `capabilities_query`, `info_query`,
+  `constitution_update`, `constitution_sync`, `ping`); anything else (e.g. automatisch's
+  `task_dispatch`) is now held for founder review through the existing HITL queue
+  (`backend/core/hitl.py`) instead of dispatching — reusing existing infra rather than
+  inventing a new approval mechanism. Also fixed a real bug found while re-verifying: Tier 3
+  `backend/tier3/tesseract_model.py`'s `TesseractModelTorch` had no `wealth_forecast`, so
+  `POST /v11/tesseract/forecast` crashed with `AttributeError` whenever torch was installed
+  (the default path) — given real `rollout`/`wealth_forecast` methods using its own
+  `forward()` pass rather than silently routing to the numpy model (which would have made the
+  `"backend": "PyTorch"` response label false).
+- **Phase G**: `.claude/skills/agent-harness/assets/harnesses/colonies.json` built — the real
+  manifest behind hive-conductor's previously-aspirational "colonies" domain lane. Since the
+  six colonies are sibling repos, not a `.claude/skills`-shaped folder
+  `harness_manifest_builder.py` can scan, this manifest is hand-authored (documented as the
+  one deliberate exception) and its verify step is a new `scripts/colony_verify.py` —
+  deterministic, stdlib-only, real structural checks against each sibling checkout. Fed
+  through the real harness machinery end to end: `goal_compiler.py` compiled a real goal
+  against it, `loop_controller.py` drove init → execute → verify for a task and independently
+  re-ran the checks via subprocess, reaching `"status": "verified"`.
+- **Phase H — parked, not built this pass**: real deployment of NAR2/4DBRAIN/aether requires
+  an account-level deploy (Tier 3, founder-only) plus this repo's own System A deployed first.
+  Documented as the natural next step, not scheduled work.
+
+**Done when:** each phase's own done-when line (in the plan file) is independently verified —
+all satisfied this session with real commands, not assertions (fresh-venv installs, real
+FastAPI/Node HMAC round-trips, a live MCP JSON-RPC handshake, a synthetic Tier-3-shaped
+dispatch proven rejected, all 18 `colony_verify.py` checks across 6 colonies passing).
+
+- **Files**: `NAR2/`, `4DBRAIN/`, `aether/`, `automatisch/`, `Kimi-K2/` (each its own PR:
+  NAR2 #18, 4DBRAIN #14, aether #13, automatisch #13, Kimi-K2 #14) + this repo's
+  `backend/core/hive_mesh.py`, `backend/api/colony.py`, `backend/colony_sdk/`,
+  `backend/mcp_server/`, `backend/tier2/*.py` (shims), `backend/tier3/tesseract_model.py`,
+  `.claude/skills/agent-harness/` (`SKILL.md`, `assets/harnesses/colonies.json`,
+  `scripts/colony_verify.py`), this plan file.
+
 ## Deferred vision — real, not contradicted, just not this plan
 
 - The macro-universe vision (colonies-as-worlds connected like the knowledge graph, recursive
