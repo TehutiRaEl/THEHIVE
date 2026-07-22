@@ -12,7 +12,7 @@ with care — a bug here affects all 80+ endpoints.
 | `config.py` | Pydantic Settings (env vars) | `settings` singleton |
 | `db.py` | SQLite WAL connection + 10 indexes | `get_db()` |
 | `protocol.py` | asyncio event bus (50ms batch, NO Redis) | `protocol.publish()` |
-| `hive_mesh.py` | HMAC fan-out to colonies, circuit breaker | `hive_mesh.dispatch()` |
+| `hive_mesh.py` | HMAC fan-out to colonies, circuit breaker, PERMISSIONS.md tier gate (2026-07-22 — non-Tier-1-safe event types are held for founder review via `hitl`, not fired) | `hive_mesh.dispatch()` |
 | `constitution.py` | F-001..F-006 enforcement, soul.md loader | `ConstitutionChecker` |
 | `validator.py` | Ma'at validation, `is_critical_violation()` | `validator.validate()` |
 | `hdc.py` | 1024-dim HDC/VSA — bind/bundle/closest | `hdc` singleton |

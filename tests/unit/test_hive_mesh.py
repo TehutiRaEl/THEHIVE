@@ -131,7 +131,8 @@ class TestDispatchResults:
             mock_proto.publish_sync = MagicMock()
             from backend.core.hive_mesh import HiveMesh
             mesh = HiveMesh()
-            result = await mesh.dispatch("test.event", {"data": 1}, targets=["nar2"])
+            # Tier-1-safe event type: must bypass the HITL gate and actually dispatch.
+            result = await mesh.dispatch("health_check", {"data": 1}, targets=["nar2"])
 
         assert isinstance(result, dict)
         assert "nar2" in result
@@ -153,7 +154,9 @@ class TestDispatchResults:
             mock_ctx.return_value.__aenter__ = AsyncMock(return_value=AsyncMock())
             mock_ctx.return_value.__aexit__ = AsyncMock(return_value=False)
             mock_proto.publish_sync = MagicMock()
-            result = await mesh.dispatch("test", {}, targets=["nar2"])
+            # Tier-1-safe event type: must bypass the HITL gate and reach the
+            # circuit-breaker check (which is what this test is exercising).
+            result = await mesh.dispatch("health_check", {}, targets=["nar2"])
 
         assert result.get("nar2") in {"skipped", "failed", None} or "nar2" in result
 
@@ -174,3 +177,96 @@ class TestColonyRegistry:
             from backend.core.hive_mesh import _COLONY_URLS
         for url in _COLONY_URLS.values():
             assert url.startswith("http://") or url.startswith("https://")
+
+
+# ── tier gate (PERMISSIONS.md enforcement) ────────────────────────────────
+# hive_mesh.dispatch() must classify event_type before firing: Tier-1-safe
+# types (health/manifest/constitution relay — reversible, internal, no
+# external party) dispatch immediately; anything else is Tier-2/3-shaped per
+# PERMISSIONS.md and must be held for founder review instead of fired blind.
+
+class TestTierGate:
+    @pytest.mark.asyncio
+    async def test_non_tier1_event_is_held_for_review_not_dispatched(self):
+        mock_hitl = MagicMock()
+        mock_hitl.request_approval = AsyncMock(return_value="hitl_abc123")
+
+        with patch("backend.core.hive_mesh.settings", _settings_mock()), \
+             patch("backend.core.hive_mesh.hive_protocol") as mock_proto, \
+             patch("backend.core.hive_mesh.hitl", mock_hitl), \
+             patch("httpx.AsyncClient") as mock_ctx:
+            mock_proto.publish_sync = MagicMock()
+            from backend.core.hive_mesh import HiveMesh
+            mesh = HiveMesh()
+            # "task_dispatch" is a real event type used by the automatisch
+            # bridge (Phase D) and is Tier-2/3-shaped: it can trigger an
+            # arbitrary outward-facing flow action colony-side.
+            result = await mesh.dispatch("task_dispatch", {"do": "something"}, targets=["nar2"])
+
+        assert result == {"nar2": "held_for_review"}
+        mock_hitl.request_approval.assert_awaited_once()
+        assert mock_hitl.request_approval.call_args.kwargs["action_type"] == "hive_mesh.dispatch:task_dispatch"
+        mock_ctx.assert_not_called()  # never touches the network — held, not dispatched
+        mock_proto.publish_sync.assert_called_once()
+        assert mock_proto.publish_sync.call_args[0][0] == "hive.dispatch.held"
+
+    @pytest.mark.asyncio
+    async def test_synthetic_tier3_shaped_dispatch_is_rejected_before_reaching_colony(self):
+        """Phase F's own done-when: a synthetic Tier-3-shaped dispatch is
+        provably rejected before reaching any colony."""
+        mock_hitl = MagicMock()
+        mock_hitl.request_approval = AsyncMock(return_value="hitl_tier3")
+
+        with patch("backend.core.hive_mesh.settings", _settings_mock()), \
+             patch("backend.core.hive_mesh.hive_protocol") as mock_proto, \
+             patch("backend.core.hive_mesh.hitl", mock_hitl), \
+             patch("httpx.AsyncClient") as mock_ctx:
+            mock_proto.publish_sync = MagicMock()
+            from backend.core.hive_mesh import HiveMesh
+            mesh = HiveMesh()
+            result = await mesh.dispatch(
+                "move_funds",
+                {"amount": 500, "to_account": "external"},
+                targets=["nar2", "aether"],
+            )
+
+        assert result == {"nar2": "held_for_review", "aether": "held_for_review"}
+        mock_ctx.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_tier1_safe_event_bypasses_hitl_and_dispatches(self):
+        mock_hitl = MagicMock()
+        mock_hitl.request_approval = AsyncMock()
+
+        mock_health_response = MagicMock()
+        mock_health_response.status_code = 200
+        mock_post_response = MagicMock()
+        mock_post_response.status_code = 200
+        mock_post_response.json.return_value = {"event_id": "ev-2"}
+
+        mock_client = AsyncMock()
+        mock_client.get.return_value = mock_health_response
+        mock_client.post.return_value = mock_post_response
+
+        with patch("backend.core.hive_mesh.settings", _settings_mock()), \
+             patch("backend.core.hive_mesh.hive_protocol") as mock_proto, \
+             patch("backend.core.hive_mesh.hitl", mock_hitl), \
+             patch("httpx.AsyncClient") as mock_ctx:
+            mock_ctx.return_value.__aenter__ = AsyncMock(return_value=mock_client)
+            mock_ctx.return_value.__aexit__ = AsyncMock(return_value=False)
+            mock_proto.publish_sync = MagicMock()
+            from backend.core.hive_mesh import HiveMesh
+            mesh = HiveMesh()
+            result = await mesh.dispatch("health_check", {}, targets=["nar2"])
+
+        assert result == {"nar2": "ev-2"}
+        mock_hitl.request_approval.assert_not_awaited()
+
+    def test_safe_allowlist_excludes_outward_facing_event_types(self):
+        with patch("backend.core.hive_mesh.settings", _settings_mock()), \
+             patch("backend.core.hive_mesh.hive_protocol"):
+            from backend.core.hive_mesh import TIER1_SAFE_EVENT_TYPES
+        for unsafe in ("task_dispatch", "publish_post", "open_account", "move_funds", "sign_contract"):
+            assert unsafe not in TIER1_SAFE_EVENT_TYPES
+        for safe in ("health_check", "manifest_query", "constitution_update", "ping"):
+            assert safe in TIER1_SAFE_EVENT_TYPES
