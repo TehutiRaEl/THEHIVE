@@ -1,0 +1,240 @@
+{
+  "schema": "agent-harness/manifest.v1",
+  "domain": "colonies",
+  "_generation": "Hand-authored 2026-07-22 (Phase G of the colony deep-integration plan), NOT produced by harness_manifest_builder.py. That builder scans a domain FOLDER for SKILL.md files; the six colony repos below are separate GitHub repos checked out as sibling directories next to THEHIVE in this environment, not a subtree under THEHIVE's own tree. Each entry's verification runs scripts/colony_verify.py, which performs real, deterministic structural checks (file exists/absent, pattern present) against the sibling checkout — see that script's own docstring for the upgrade path once colonies are actually deployed (Phase H, parked).",
+  "skill_count": 6,
+  "loop_defaults": {
+    "max_attempts_per_task": 3,
+    "max_loop_iterations": 12,
+    "escalate_on": [
+      "attempts_exhausted",
+      "no_verification_available",
+      "destructive_or_irreversible_action",
+      "goal_drift_detected"
+    ]
+  },
+  "skills": [
+    {
+      "name": "nar2",
+      "path": "../NAR2",
+      "description": "Solomon Security Colony — multi-agent security orchestrator (BrainSwarm) with free LLM gateways, deep search, distributed compute, and persistent memory. Original hive-built software, not a fork; proprietary hive-internal LICENSE since Phase A. Consumes the shared sovereign-hive-colony-sdk (Phase C) and 4dbrain-tesseract (Phase B) packages as pinned git dependencies.",
+      "tools": [
+        {
+          "script": ".claude/skills/agent-harness/scripts/colony_verify.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --colony nar2 --repo-root ..",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "4dbrain",
+      "path": "../4DBRAIN",
+      "description": "Hybrid cloud/local-LLM ReAct+memory colony. Canonical owner of the tesseract/hypercomplex/dream-engine math since Phase B (tesseract_math/, a real installable package) — the colony whose name actually promised that math, unlike before this session. Original hive-built software; proprietary hive-internal LICENSE since Phase A.",
+      "tools": [
+        {
+          "script": ".claude/skills/agent-harness/scripts/colony_verify.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --colony 4dbrain --repo-root ..",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "aether",
+      "path": "../aether",
+      "description": "Real commercial-design colony — RevenueSplitter.sol, server-side revenue-split enforcement, a documented exploit teardown (MATHEMATICAL_TEARDOWN.md). Original hive-built software; proprietary hive-internal LICENSE since Phase A. Was the one real security inconsistency among the six colonies (its /colony/events route accepted any unauthenticated JSON body) until Phase A added HMAC verification.",
+      "tools": [
+        {
+          "script": ".claude/skills/agent-harness/scripts/colony_verify.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --colony aether --repo-root ..",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "automatisch",
+      "path": "../automatisch",
+      "description": "Fork of automatisch (AGPL-3.0) — real open-source workflow-automation platform. Native apps/thehive/ integration (Phase D) makes hive_mesh events a first-class flow trigger ('Hive Dispatch Received') and lets a flow push events back to the Queen ('Send to Hive Mesh'), closing the loop bidirectionally. /colony/manifest reports a real source/commit/license field so the AGPL Section 13 corresponding-source obligation is actually met for whatever commit is running. THEHIVE's own code only talks to it over HTTP, never in-process, so AGPL never crosses into the rest of the federation.",
+      "tools": [
+        {
+          "script": ".claude/skills/agent-harness/scripts/colony_verify.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --colony automatisch --repo-root ..",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": true,
+        "close_out": true
+      },
+      "references": []
+    },
+    {
+      "name": "kimi-k2",
+      "path": "../Kimi-K2",
+      "description": "Kimi-K2-based colony. Used to run two colony bridges at once (Python + a separate Node colony-server.js); the Node bridge was retired in Phase A so Python — the app's real language — is the single bridge, sharing the same sovereign-hive-colony-sdk package as NAR2/4DBRAIN (Phase C) instead of a hand-copied file.",
+      "tools": [
+        {
+          "script": ".claude/skills/agent-harness/scripts/colony_verify.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --colony kimi-k2 --repo-root ..",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    },
+    {
+      "name": "localagi",
+      "path": "../LocalAGI",
+      "description": "Fork of LocalAGI (MIT) — Go-based local-agent runtime. Already speaks MCP natively (core/agent/mcp.go, imports modelcontextprotocol/go-sdk) and supports attaching remote HTTP MCP servers per-agent — the real, previously-unused attach point Phase E pointed THEHIVE's own backend/mcp_server/ at. Its Go colony bridge (pkg/colony/colony.go) was deliberately left as-is per the plan: a shared Go SDK for a single consumer would be premature.",
+      "tools": [
+        {
+          "script": ".claude/skills/agent-harness/scripts/colony_verify.py",
+          "wired": true,
+          "supports_sample": true,
+          "verification": [
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --help",
+              "expect_exit": 0,
+              "kind": "smoke"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --sample",
+              "expect_exit": 0,
+              "kind": "sample"
+            },
+            {
+              "cmd": "python3 .claude/skills/agent-harness/scripts/colony_verify.py --colony localagi --repo-root ..",
+              "expect_exit": 0,
+              "kind": "smoke"
+            }
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": true,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    }
+  ]
+}
