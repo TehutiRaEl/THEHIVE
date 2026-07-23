@@ -23,6 +23,8 @@ TESSERACT MODEL — TesserAct 4D World Model
 - `generate()`
 - `forward()` — x: (B, T, X, Y, C) → pred: (B, X, Y, C)
 - `curvature_loss()`
+- `rollout()` — Autoregressive rollout through this model's own forward() (untrained
+- `wealth_forecast()` — Predict wealth trajectory for a named colony via this model's own forward pass.
 
 ## Links
 

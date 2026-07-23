@@ -421,6 +421,16 @@
       "group": "module"
     },
     {
+      "id": "backend/mcp_server/__init__",
+      "label": "__init__",
+      "group": "module"
+    },
+    {
+      "id": "backend/mcp_server/server",
+      "label": "server",
+      "group": "module"
+    },
+    {
       "id": "backend/memory/__init__",
       "label": "__init__",
       "group": "module"
@@ -597,6 +607,10 @@
       "target": "backend/core/config"
     },
     {
+      "source": "backend/core/hive_mesh",
+      "target": "backend/core/hitl"
+    },
+    {
       "source": "backend/core/llm_router",
       "target": "backend/core/config"
     },
@@ -701,6 +715,10 @@
       "target": "backend/core/protocol"
     },
     {
+      "source": "backend/mcp_server/server",
+      "target": "backend/core/hive_mesh"
+    },
+    {
       "source": "backend/memory/episodic_memory",
       "target": "backend/core/config"
     },
@@ -722,22 +740,6 @@
     },
     {
       "source": "backend/simulator/twin",
-      "target": "backend/core/config"
-    },
-    {
-      "source": "backend/tier2/argnn",
-      "target": "backend/core/db"
-    },
-    {
-      "source": "backend/tier2/argnn",
-      "target": "backend/core/frequency_guild"
-    },
-    {
-      "source": "backend/tier2/dream_engine",
-      "target": "backend/core/db"
-    },
-    {
-      "source": "backend/tier2/dream_engine",
       "target": "backend/core/config"
     },
     {

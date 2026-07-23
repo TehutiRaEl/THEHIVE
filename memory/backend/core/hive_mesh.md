@@ -8,4 +8,4 @@ HiveMesh — Sovereign Hive
 
 ## Links
 
-[[core.config]] · [[core.protocol]]
+[[core.config]] · [[core.hitl]] · [[core.protocol]]
