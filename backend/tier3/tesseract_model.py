@@ -227,6 +227,39 @@ if TORCH:
             smooth = lap_x.pow(2).mean() + lap_y.pow(2).mean()
             return mse + lambda_curv * smooth
 
+        def rollout(self, initial_frame: np.ndarray, n_steps: int = 4) -> np.ndarray:
+            """Autoregressive rollout through this model's own forward() (untrained
+            weights unless train_tesseract_model() has been run first)."""
+            history = [initial_frame]
+            with torch.no_grad():
+                for _ in range(n_steps):
+                    hist = np.stack(history[-T_STEPS:], axis=0)
+                    if hist.shape[0] < T_STEPS:
+                        pad = np.zeros((T_STEPS - hist.shape[0], X_SIZE, Y_SIZE, self.n_chan), dtype=np.float32)
+                        hist = np.concatenate([pad, hist], axis=0)
+                    x = torch.tensor(hist, dtype=torch.float32).unsqueeze(0)  # (1, T, X, Y, C)
+                    pred = self.forward(x)[0].numpy()  # (X, Y, C)
+                    history.append(pred)
+            return np.stack(history[1:], axis=0)
+
+        def wealth_forecast(self, colony_name: str, n_steps: int = 4) -> Dict:
+            """Predict wealth trajectory for a named colony via this model's own forward pass."""
+            seed = abs(hash(colony_name)) % (2**31)
+            ct   = ColonyTensor4D(colony_name, seed=seed)
+            pred = self.rollout(ct.tensor[-1], n_steps)
+            hist_wealth = ct.wealth_trajectory()
+            pred_wealth = [round(float(pred[t,:,:,0].sum()),2) for t in range(n_steps)]
+            trend = (pred_wealth[-1] - pred_wealth[0]) / max(1,n_steps)
+            return {
+                "colony":       colony_name,
+                "history":      hist_wealth,
+                "forecast":     pred_wealth,
+                "trend_per_tick": round(trend, 3),
+                "archetype":    "growing" if trend>1 else "declining" if trend<-1 else "stable",
+                "n_forecast":   n_steps,
+                "backend":      "PyTorch",
+            }
+
     def train_tesseract_model(n_samples: int = 64, epochs: int = 5) -> Dict:
         """Train on synthetic colony data."""
         model = TesseractModelTorch()

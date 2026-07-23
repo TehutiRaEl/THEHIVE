@@ -211,29 +211,35 @@ were used as a lens on the hive's own real code. Full findings:
 `Project_file/Founders Visonary Folder/VISION/2026-07-21-vision-system-design-professionalization-audit-003.md`.
 
 Confirmed real, right-sized gaps (each grep-verified against `worker/src/index.js`, not
-assumed):
-- **Goal:** `harden-cors-scope` — `Access-Control-Allow-Origin: '*'` (line 9) is wildcard on
-  every response. **Done when:** write-endpoint responses scope CORS appropriately (or the
-  wildcard is kept with an explicit, documented rationale) and the anti-spam token gate still
-  passes its existing checks. Tier 1.
-- **Goal:** `add-list-endpoint-pagination` — every list route (`/tasks`, `/updates`,
-  `/proposals`, `/pulse`, `/arena/challenges`, `/arena/fallen`, etc.) hardcodes `LIMIT N`
-  with no offset/cursor param. **Done when:** these routes accept an offset or cursor query
-  param and a request for "the next page" returns different rows than the first page. Tier 1.
-- **Goal:** `evaluate-edge-caching` — zero use of Cloudflare KV, the Cache API, or Queues
-  anywhere in the Worker; every request hits D1 directly even for rarely-changing data
-  (`/v11/agents`, `/v11/roadmap`, `/v11/llm/status`). **Done when:** either a real KV/Cache-API
-  layer is added for the handful of rarely-changing GET routes with a measured latency/D1-read
-  reduction, or a documented decision that it's not worth the complexity yet at current
-  traffic. Tier 1 (KV/Cache-API addition, reversible); Tier 2 if it touches a founder-facing
-  behavior change.
+assumed) — **all four items below are CLOSED as of 2026-07-21, code-complete and
+`node --check`-verified; KV/Queues additionally need one founder-run `wrangler` command
+each before they take live effect (see `FLIP_THE_SWITCHES.md` §5-6), same
+commented-binding pattern already used for Vectorize/R2:**
+- **Goal:** `harden-cors-scope` — ✅ done. The old wildcard `Access-Control-Allow-Origin: '*'`
+  was replaced with `corsHeadersFor(request)`, echoing the caller's `Origin` only when it's in
+  `ALLOWED_ORIGINS` (the live Worker origin, the GitHub Pages mirror, local dev ports).
+  Computed fresh per-request inside `fetch()`'s closure — never a shared module-level value —
+  to avoid the Workers-isolate cross-request state leak that pattern would risk.
+- **Goal:** `add-list-endpoint-pagination` — ✅ done. `pageParams(url, defaultLimit, maxLimit)`
+  now backs `/tasks`, `/governance/log`, `/updates`, `/proposals`, `/pulse`,
+  `/arena/challenges`, `/arena/fallen` — every one accepts `?limit=&offset=`, capped, and
+  echoes both back in the response.
+- **Goal:** `evaluate-edge-caching` — ✅ done (Cache API + KV, both real, not just evaluated).
+  `cachedJson()` wraps `/agents`, `/roadmap`, `/llm/status` in `caches.default`, deliberately
+  caching only the JSON body (never the full Response, so a cached entry can never leak one
+  origin's CORS header to another origin's request for the same URL) with a 20-60s TTL.
+  `rateLimitOk()` now prefers a `RATE_LIMIT_KV` binding (counter+TTL, KV's textbook use case)
+  over the original D1 sliding-window table, falling back to D1 when KV is unbound.
+- **Goal (upgraded from catalogued to done):** Cloudflare Queues to decouple the synchronous
+  LLM calls in `/v11/venture/plan` and `/v11/legal/research` — ✅ done, additive/opt-in only.
+  Both endpoints stay fully synchronous by default (zero frontend changes needed); passing
+  `{"async": true}` in the body, once `LLM_QUEUE` is bound, enqueues the job and returns
+  `202 {job_id, poll}` instead — a new `queue(batch, env, ctx)` consumer processes it and a new
+  `GET /v11/jobs?id=` endpoint reports `queued → done/error`.
 
-Catalogued, not scheduled (real, but no trigger condition yet — same honest treatment as the
-Commercial Hive blueprint's deferred items):
-- JWT/claims-based auth to replace the opaque visitor-token model, once a Tier-2/3 surface
-  needs stronger caller identity than "has a token, isn't spamming."
-- Cloudflare Queues to decouple the synchronous LLM calls in `/v11/venture/plan` and
-  `/v11/legal/research` from the request/response cycle, once that latency actually matters.
+JWT/claims-based auth to replace the opaque visitor-token model remains catalogued, not
+scheduled — still no trigger condition (a Tier-2/3 surface needing stronger caller identity
+than "has a token, isn't spamming") has arisen.
 
 Confirmed non-gaps (verified, not just assumed, before being ruled out) — do not "fix" these:
 load balancing (Cloudflare's own anycast network already is one), classic OOP design patterns
@@ -249,6 +255,130 @@ Payment/Fintech, Cloud/Distributed Systems, DevOps/CI-CD, Software Development, 
 Architecture, DevTools/Productivity, AI/ML, Technical Interviews, How It Works,
 Database/Storage, Computer Fundamentals) before designing new backend/architecture work from
 scratch, the same way `research-to-dna` already checks founder-provided research first.
+
+### Phase 9 — `automaton/`: the self-improving, self-replicating agent ✅ CLOSED 2026-07-21
+
+Founder directive: clone `Conway-Research/automaton` (MIT), devil's-advocate it, reverse-engineer
+and improve it (not just copy it), rebuild file-for-file into its own `automaton/` directory in
+THEHIVE. Full writeup: `Project_file/Founders Visonary Folder/VISION/2026-07-21-vision-automaton-devils-advocate-005.md`.
+
+A source-level review (not just the README) found five concrete gaps between what upstream's
+safety mechanisms claim and what the code enforces: a "requires confirmation" policy action that
+behaves identically to a hard deny; self-replication funding (`fund_child`) uncapped while the
+equivalent `transfer_credits` tool had real limits; the agent able to edit its own
+financial/authority policy-rule files (only the thin wrapper files were protected, not the rule
+implementations); a real, unencrypted wallet private key written to disk by default; and the only
+"supervised human-approval" concept in the whole codebase being non-functional stub code. The
+founder, put to the actual choice, initially picked "fully autonomous, real wallet" and "fully
+autonomous replication, as upstream" — this was pushed back on with the concrete findings above
+(not a hypothetical objection) and the founder confirmed proceeding on the amended basis: build
+the full mechanism, close all five gaps for real, ship both master switches
+(`AUTOMATON_FINANCIAL_AUTONOMY`, `AUTOMATON_REPLICATION_AUTONOMY`) defaulting off — same
+flip-the-switch pattern as Vectorize/R2/KV/Queues — with replication approval unconditional
+regardless of either switch.
+
+**Done when:** `cd automaton && npm test` — 15/15 green, each of the five gaps proven closed with
+a real, running test (`test/gap-closure.test.js`), zero `npm install` step (Node 22's built-in
+`node:sqlite`/`node:test` only). Verified this session.
+
+- **Decoupled from Conway Cloud**: `src/ledger/ledger.js` (simulated, survival-pressure-bearing
+  ledger) replaces `conway/{client,credits,topup,x402}`; `src/inference/thehive-provider.js` calls
+  a new `POST /v11/automaton/infer` Worker route that reuses the exact same `generate()` waterfall
+  already backing `/v11/venture/plan` and `/v11/legal/research` — no new inference infrastructure,
+  no new provider keys.
+- **Files**: `automaton/` (new directory — `src/`, `test/`, `NOTICE.md`, `README.md`,
+  `ARCHITECTURE.md`, `FLIP_THE_SWITCHES.md`, `constitution.md`), `worker/src/index.js` (one new
+  route), `CLAUDE.md` (documented), this plan file.
+
+### Phase 10 — Colony deep-integration: fully utilize what's already in each colony ✅ CLOSED 2026-07-22
+
+Founder directive: "is there a way to fully utilize the software in each repo that was just
+built on top of" — look at each colony's license first, then bridge or extend the existing
+agentic mesh/harness protocol (whichever is more efficient) rather than inventing a new one,
+so every colony's real code strengthens the hive instead of sitting mostly-parallel to it.
+Full plan: `/root/.claude/plans/the-handoff-is-already-cheeky-ember.md`. Three research passes
+(this repo's own mesh infra; automatisch/LocalAGI's licenses+architecture;
+NAR2/4DBRAIN/aether's real function+licensing) plus a synthesis pass produced the phased plan
+below. Founder decided four judgment calls up front: colony licensing (proprietary/
+hive-internal), tesseract-math ownership (move into 4DBRAIN, matching its name), Kimi-K2's
+dual bridge (retire Node, keep Python), deployment scope (build to the deploy step, park it —
+same founder-only blocker as System A's own deploy).
+
+Protocol decision: **bridge, don't invent.** Two layers, both extending something already
+real — the existing HMAC-HTTP colony-standard-layer for lifecycle/health/constitution-sync,
+and MCP (Model Context Protocol) for agentic tool-calling/task-dispatch (LocalAGI already
+speaks it natively; Python/Node/Go/TS SDKs cover every language already in the federation).
+
+- **Phase A** (mechanical fixes, all 6 colonies): proprietary hive-internal LICENSE added to
+  NAR2/4DBRAIN/aether (none existed); aether's `/colony/events` route given real HMAC
+  verification (it accepted any unauthenticated JSON body — the one real security gap among
+  the six colonies); `aether/LAUpackage.json` renamed to `package.json`, CI `cp` workaround
+  removed; Kimi-K2's duplicate Node colony bridge (`colony-server.js`, `Dockerfile.colony`)
+  retired in favor of its real Python bridge; NAR2's README architecture drift fixed.
+- **Phase B**: the tesseract/hypercomplex/dream-engine math (previously living duplicated in
+  this repo's `backend/tier2/`) moved into a real, pip-installable `4DBRAIN/tesseract_math/`
+  package — 4DBRAIN being the colony whose name always implied it owned this math. This
+  repo's `tier2/*.py` and NAR2's `rotation_matrix.py` are now thin re-export shims over it.
+  Found and fixed a real crashing bug in the process: 4DBRAIN's `backend/main.py` had a dead
+  `from colony import router` import (nonexistent module, `ImportError` on any real run).
+- **Phase C**: `colony_sdk.py` (previously hand-copied byte-identical into NAR2, 4DBRAIN,
+  Kimi-K2) promoted into a real package (`colony_sdk/`, `sovereign-hive-colony-sdk` on git),
+  consumed as a pinned dependency by all three instead of a diverging local file. Found and
+  fixed a real bug: NAR2's `main.py` used a relative `from .colony_sdk import ...`, which
+  would have broken once `colony_sdk.py` stopped being a sibling file. Also found and fixed
+  this repo's own `backend/api/colony.py` — it had **zero** HMAC verification on
+  `POST /colony/events`, the one place this repo's own colony-standard-layer implementation
+  was less secure than every colony consuming it.
+- **Phase D**: automatisch (AGPL-3.0) gets a native `packages/backend/src/apps/thehive/` app —
+  a real "Hive Dispatch Received" trigger and "Send to Hive Mesh" action, not a bolt-on route.
+  `/colony/manifest` now reports a real `source: {repo, commit, license}` field (live
+  `git rev-parse HEAD`) to satisfy AGPL Section 13's corresponding-source obligation; this
+  repo's own code still only ever talks to automatisch over HTTP, never in-process, so AGPL
+  never crosses into the rest of the federation. The orphaned `packages/colony-server/`
+  sidecar was retired (confirmed zero references first).
+- **Phase E**: a real MCP server built at `backend/mcp_server/` (the existing `backend/mcp/`
+  was confirmed dead — no JSON-RPC, no transport, one simulated tool, never wired to
+  `routes.py`) exposing `hive_dispatch`, `hive_memory_recall`, `hive_law_query` as native
+  tools any MCP client can call. First consumer: LocalAGI, which already speaks MCP natively
+  (`core/agent/mcp.go`) — no LocalAGI-side code change needed, just operator config pointing
+  at `http://<host>:8100/mcp`. Verified with a real JSON-RPC `initialize` handshake over
+  streamable-http.
+- **Phase F**: `hive_mesh.dispatch()` previously fired any `event_type` to every colony blind.
+  Added a Tier-1-safe allow-list per `PERMISSIONS.md`'s own tier definitions
+  (`health_check`, `manifest_query`, `capabilities_query`, `info_query`,
+  `constitution_update`, `constitution_sync`, `ping`); anything else (e.g. automatisch's
+  `task_dispatch`) is now held for founder review through the existing HITL queue
+  (`backend/core/hitl.py`) instead of dispatching — reusing existing infra rather than
+  inventing a new approval mechanism. Also fixed a real bug found while re-verifying: Tier 3
+  `backend/tier3/tesseract_model.py`'s `TesseractModelTorch` had no `wealth_forecast`, so
+  `POST /v11/tesseract/forecast` crashed with `AttributeError` whenever torch was installed
+  (the default path) — given real `rollout`/`wealth_forecast` methods using its own
+  `forward()` pass rather than silently routing to the numpy model (which would have made the
+  `"backend": "PyTorch"` response label false).
+- **Phase G**: `.claude/skills/agent-harness/assets/harnesses/colonies.json` built — the real
+  manifest behind hive-conductor's previously-aspirational "colonies" domain lane. Since the
+  six colonies are sibling repos, not a `.claude/skills`-shaped folder
+  `harness_manifest_builder.py` can scan, this manifest is hand-authored (documented as the
+  one deliberate exception) and its verify step is a new `scripts/colony_verify.py` —
+  deterministic, stdlib-only, real structural checks against each sibling checkout. Fed
+  through the real harness machinery end to end: `goal_compiler.py` compiled a real goal
+  against it, `loop_controller.py` drove init → execute → verify for a task and independently
+  re-ran the checks via subprocess, reaching `"status": "verified"`.
+- **Phase H — parked, not built this pass**: real deployment of NAR2/4DBRAIN/aether requires
+  an account-level deploy (Tier 3, founder-only) plus this repo's own System A deployed first.
+  Documented as the natural next step, not scheduled work.
+
+**Done when:** each phase's own done-when line (in the plan file) is independently verified —
+all satisfied this session with real commands, not assertions (fresh-venv installs, real
+FastAPI/Node HMAC round-trips, a live MCP JSON-RPC handshake, a synthetic Tier-3-shaped
+dispatch proven rejected, all 18 `colony_verify.py` checks across 6 colonies passing).
+
+- **Files**: `NAR2/`, `4DBRAIN/`, `aether/`, `automatisch/`, `Kimi-K2/` (each its own PR:
+  NAR2 #18, 4DBRAIN #14, aether #13, automatisch #13, Kimi-K2 #14) + this repo's
+  `backend/core/hive_mesh.py`, `backend/api/colony.py`, `backend/colony_sdk/`,
+  `backend/mcp_server/`, `backend/tier2/*.py` (shims), `backend/tier3/tesseract_model.py`,
+  `.claude/skills/agent-harness/` (`SKILL.md`, `assets/harnesses/colonies.json`,
+  `scripts/colony_verify.py`), this plan file.
 
 ## Deferred vision — real, not contradicted, just not this plan
 

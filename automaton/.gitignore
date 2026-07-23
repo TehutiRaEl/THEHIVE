@@ -1,0 +1,3 @@
+# Per-run state (SQLite db, SOUL.md, alerts, spawned-children homes) — never
+# committed, same as the repo-root .agent-harness/ pattern.
+.automaton-home/

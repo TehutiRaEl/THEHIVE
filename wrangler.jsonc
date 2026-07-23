@@ -37,6 +37,31 @@
   // "r2_buckets": [
   //   { "binding": "FILES", "bucket_name": "hive-files" }
   // ],
+  // Rate-limit counters (Phase 8, 2026-07-21). FLIPPED 2026-07-23 at the
+  // founder's go: namespace created via the Cloudflare MCP connector,
+  // rateLimitOk() now uses KV (same 30/min/IP limit as the D1 fallback it
+  // replaces — no caller-visible change, just faster).
+  "kv_namespaces": [
+    { "binding": "RATE_LIMIT_KV", "id": "7ca8178dc4bc40e7bac193362e3d6be4" }
+  ],
+  // Async LLM jobs (Phase 8, 2026-07-21). Same flip-the-switch pattern: a
+  // queues binding pointing at a queue that doesn't exist fails the deploy,
+  // so it ships commented. Until activated, POST /v11/venture/plan and
+  // POST /v11/legal/research simply ignore {"async": true} and answer
+  // synchronously as they always have — nothing breaks either way.
+  // TO ACTIVATE (founder, one time):
+  //   1) npx wrangler queues create hive-llm-jobs
+  //   2) uncomment the "queues" block below, commit → Workers Builds redeploys
+  //   3) POST /v11/venture/plan or /v11/legal/research with {"async": true}
+  //      now returns 202 {job_id, poll}; GET /v11/jobs?id=<job_id> to check status
+  // "queues": {
+  //   "producers": [
+  //     { "binding": "LLM_QUEUE", "queue": "hive-llm-jobs" }
+  //   ],
+  //   "consumers": [
+  //     { "queue": "hive-llm-jobs", "max_batch_size": 5, "max_retries": 3 }
+  //   ]
+  // },
   "d1_databases": [
     {
       "binding": "DB",

@@ -1,6 +1,6 @@
 ---
 name: agent-harness
-description: "Turn any domain folder of skills into a bounded agentic loop: compile a goal into a verifiable task plan, execute tasks with the domain's own tools, verify every task with machine-run checks, retry with caps, escalate to a human when budgets exhaust, and refuse to close until everything is verified or explicitly waived. Use when you want an agent or subagent to pick up a goal and drive it to a verified close across one of this repo's 18 domains ('run this goal through the engineering harness', 'set up an agentic loop for marketing work', 'make the finance domain self-verifying'). NOT for authoring Claude Code Workflow-tool .js scripts (workflow-builder), N-agent tournaments on one task (agenthub), single-file metric optimization (autoresearch-agent), or discovering published loop recipes (loop-library)."
+description: "Turn any domain folder of skills into a bounded agentic loop: compile a goal into a verifiable task plan, execute tasks with the domain's own tools, verify every task with machine-run checks, retry with caps, escalate to a human when budgets exhaust, and refuse to close until everything is verified or explicitly waived. Use when you want an agent or subagent to pick up a goal and drive it to a verified close across one of this repo's 20 domains ('run this goal through the engineering harness', 'set up an agentic loop for marketing work', 'make the finance domain self-verifying'). NOT for authoring Claude Code Workflow-tool .js scripts (workflow-builder), N-agent tournaments on one task (agenthub), single-file metric optimization (autoresearch-agent), or discovering published loop recipes (loop-library)."
 ---
 
 # Agent Harness
@@ -24,7 +24,7 @@ per-run **state file** (the single source of truth; a fresh session resumes from
 ## Quick start
 
 ```bash
-# 0. Pick the domain manifest (18 committed under assets/harnesses/, e.g. engineering-team.json)
+# 0. Pick the domain manifest (20 committed under assets/harnesses/, e.g. engineering-team.json)
 ls assets/harnesses/
 
 # 1. Compile the goal (refuses vague goals with exit 3 + forcing questions)
@@ -54,6 +54,15 @@ Regenerate a manifest after skills change (diff-stable, CI-checkable):
 python3 scripts/harness_manifest_builder.py --domain engineering-team \
   --repo-root <repo-root> --out-dir assets/harnesses --no-timestamp
 ```
+
+**Exception — `colonies.json`:** the `colonies` domain (hive-conductor's fifth lane) isn't a
+skills folder at all — it's the six colony repos (NAR2, 4DBRAIN, aether, automatisch, LocalAGI,
+Kimi-K2), checked out as sibling directories next to this one, not a subtree
+`harness_manifest_builder.py` can scan. `assets/harnesses/colonies.json` is hand-authored instead,
+and its verify step is `scripts/colony_verify.py` (stdlib-only, deterministic, real subprocess
+checks against each sibling repo's actual files) rather than the generic `--help`/`--sample`
+smoke pair. Regenerate by hand when a colony's integration state changes — there is no
+`--domain colonies` to re-run.
 
 ## Hard rules
 

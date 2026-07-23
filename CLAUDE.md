@@ -9,8 +9,11 @@ only one exists.** Reconciling them into one coherent story is real, open work, 
 ## System A — the FastAPI / second-brain harness
 
 - **`backend/`** — FastAPI app, 80+ `/v11/*` endpoints, tier2/tier3 math (`backend/core/`
-  hdc.py/protocol.py/hive_mesh.py, `backend/tier2/` dream engine + tesseract 4D,
-  `backend/tier3/` quantum bridge + sheaf guild + arena renderer + IPFS pubsub).
+  hdc.py/protocol.py/hive_mesh.py, `backend/tier2/` — thin re-export shims since 2026-07-22;
+  the real dream engine + tesseract 4D math now lives in 4DBRAIN's `tesseract_math` package,
+  4DBRAIN being the colony whose name actually promised it (see colony deep-integration
+  Phase B in memory/planning/) — `backend/tier3/` quantum bridge + sheaf guild + arena
+  renderer + IPFS pubsub.
 - **`memory/`** — an Obsidian-style vault: 101-node knowledge graph (`_graph.json`),
   wiki-linked Markdown, `memory/planning/` for session plans.
 - **`.claude/memory/memory.md`** + **`.claude/skills/hive-memory.md`** — the "second brain":
@@ -45,11 +48,34 @@ only one exists.** Reconciling them into one coherent story is real, open work, 
 - **`.claude/skills/`** (this session's additions): `fable-debugger`, `research-to-dna`,
   `session-harvest`, `pocket-dimensions`, `anomaly-triage`, `merge-readiness`,
   `nine-miss-truths`, `skill-census`.
-- **`Project_file/Fable_memory.md`** — this session's continuity log.
+- **`.claude/Fable_memory.md`** — this session's continuity log (moved here from
+  `Project_file/Fable_memory.md` by a parallel session on 2026-07-16; this file's stale path
+  corrected 2026-07-22).
 - **`Project_file/Founders Visonary Folder/SOURCES/`** — where the founder drops PDFs,
   books, web clippings, research notes for the hive to build from; routed through
   `research-to-dna` before anything becomes hive knowledge (see that folder's README for
   the licensing note).
+
+## `automaton/` — the self-improving, self-replicating agent (2026-07-21)
+
+Reverse-engineered from `Conway-Research/automaton` (MIT) at the founder's request — see
+`automaton/NOTICE.md`, `automaton/ARCHITECTURE.md`, and the full devil's-advocate review at
+`Project_file/Founders Visonary Folder/VISION/2026-07-21-vision-automaton-devils-advocate-005.md`.
+A source-level review found five concrete gaps between what upstream's safety mechanisms claim
+to do and what the code actually enforces (a "human confirmation required" action that behaves
+identically to a hard deny; self-replication funding uncapped while an equivalent transfer tool
+was capped; the agent able to edit its own financial/authority rule files; a real unencrypted
+wallet key on disk; the only "supervised approval" concept in the codebase being non-functional
+scaffolding) — this rebuild closes all five with real, running tests
+(`automaton/test/gap-closure.test.js`, 15/15 green), decouples from Conway's proprietary cloud
+in favor of THEHIVE's own Worker + provider waterfall (`POST /v11/automaton/infer`, a small new
+route added to `worker/src/index.js` that reuses the existing `generate()` function verbatim),
+and ships with two master switches (`AUTOMATON_FINANCIAL_AUTONOMY`,
+`AUTOMATON_REPLICATION_AUTONOMY`) both defaulting off — real money and real process-spawning
+replication are gated behind a founder-run flip (`automaton/FLIP_THE_SWITCHES.md`), while
+self-replication *approval itself* is never optional regardless of either switch. Zero runtime
+dependencies (Node 22's built-in `node:sqlite`/`node:test` only) — `cd automaton && npm test`
+runs immediately, no `npm install`.
 
 ## What is NOT yet reconciled (read this before assuming one system is "the" system)
 

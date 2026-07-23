@@ -57,10 +57,43 @@ Then paste that same value into the Proposals panel's key field (stored only in 
 browser's localStorage, never sent anywhere except the `Authorization` header on decide calls).
 **Proof:** `GET /v11/proposals` → `founder_auth_bound: true`; Approve/Reject buttons work.
 
+## 5 · Rate-limit counters (KV) → anti-spam moves off D1 — ✅ FLIPPED 2026-07-23
+
+Flipped at the founder's "go for phase 8": namespace `RATE_LIMIT_KV`
+(id `7ca8178dc4bc40e7bac193362e3d6be4`) created via the Cloudflare MCP connector, binding
+uncommented in `wrangler.jsonc`, deployed. **Proof:** no visible behavior change (still
+30 POSTs/min/IP) — the D1 `rate_limits` table simply stops growing, since `rateLimitOk()`
+prefers KV the moment the binding exists.
+
+## 6 · Async LLM jobs (Queues) → venture/plan and legal/research can run decoupled
+
+> Status 2026-07-23: still parked — the Cloudflare MCP connector available to sessions has
+> no queue-creation tool (KV/R2/D1 only), so this one still needs the founder's own
+> `npx wrangler queues create` below. Everything else about the flip is unchanged.
+
+```bash
+npx wrangler queues create hive-llm-jobs
+```
+Then, **in the same commit**: uncomment the `"queues"` block in `wrangler.jsonc` **and**
+re-attach the consumer handler in `worker/src/index.js` — add `queue: processQueueBatch,`
+inside the `export default { ... }` object (the function already exists just above it).
+These two must always move together: a Worker that exports a `queue()` consumer handler
+while the `queues.consumers` binding is commented out fails Workers Builds' pre-deploy
+validation — this exact mismatch silently broke every production deploy from 2026-07-21
+until diagnosed 2026-07-22 (see PR_LESSONS.md). Commit, push. Nothing changes for
+existing callers — both endpoints stay fully synchronous by default. **Proof:**
+`POST /v11/venture/plan` (or `/v11/legal/research`) with `{"async": true}` in the body now
+returns `202 {job_id, poll: "/v11/jobs?id=..."}` instead of `503`; `GET /v11/jobs?id=<job_id>`
+then shows `status` moving from `queued` to `done` (or `error`, with the reason) once the
+Queues consumer runs.
+
 ## Already flipped / no switch needed
 - D1 database, Workers AI, assets, the 30-min heartbeat — live now.
 - The UI (graph web, neon theme, Updates, Legal Learning, Files panel shell) — ships with
   the frontend build; no provisioning.
+- CORS scoping, list-endpoint pagination, and Cache API edge-caching (`/agents`, `/roadmap`,
+  `/llm/status`) — all code-only, no resource to provision, live on the next deploy.
 
-*2026-07-17 — written alongside the audit-driven Command Center update. When you flip one,
-tell the hive and it will re-probe and confirm from the live surface, not assume.*
+*2026-07-17 — written alongside the audit-driven Command Center update. Switches 5-6 added
+2026-07-21 (Phase 8 professionalization pass). When you flip one, tell the hive and it will
+re-probe and confirm from the live surface, not assume.*

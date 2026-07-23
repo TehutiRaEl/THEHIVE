@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import httpx
 
 from backend.core.config import settings
+from backend.core.hitl import hitl
 from backend.core.protocol import hive_protocol
 
 # ─── Colony registry (id → base URL) ────────────────────────────────────────
@@ -33,6 +34,25 @@ _COLONY_URLS: Dict[str, str] = {
 CACHE_TTL = 300          # health cache TTL (seconds)
 CIRCUIT_THRESHOLD = 3   # consecutive failures before opening circuit
 CIRCUIT_RESET_SECS = 60 # seconds before testing a tripped circuit
+
+# ─── Tier gate (PERMISSIONS.md) ──────────────────────────────────────────────
+# Tier 1 — AUTONOMOUS: "reversible, internal, no external party, no money, no
+# legal weight." These event types never cause a colony to take an outward-
+# facing or stateful action on their own — they are read-only or relay
+# already-approved law — so hive_mesh may fire them without a human in the
+# loop. Everything else is Tier-2/3-shaped (first contact, publishing,
+# commercial/task actions) and PERMISSIONS.md requires the founder's go
+# before it goes out — dispatch() holds those for review via the existing
+# HITL queue (backend/core/hitl.py) instead of firing blind.
+TIER1_SAFE_EVENT_TYPES = frozenset({
+    "health_check",
+    "manifest_query",
+    "capabilities_query",
+    "info_query",
+    "constitution_update",
+    "constitution_sync",
+    "ping",
+})
 
 
 def _hmac_sign(body: bytes) -> str:
@@ -66,9 +86,30 @@ class HiveMesh:
     ) -> Dict[str, str]:
         """
         Fan out an event to target colonies (all if targets is None).
-        Returns {colony_id: event_id | "failed" | "skipped"}.
+        `event_type` is classified against PERMISSIONS.md's Tier 1 allow-list
+        first: Tier-1-safe types dispatch immediately; anything else is held
+        for founder review through the HITL queue instead of firing blind.
+        Returns {colony_id: event_id | "failed" | "skipped" | "held_for_review"}.
         """
         target_ids = targets if targets else list(_COLONY_URLS.keys())
+
+        if event_type not in TIER1_SAFE_EVENT_TYPES:
+            request_id = await hitl.request_approval(
+                action_type=f"hive_mesh.dispatch:{event_type}",
+                params={"event_type": event_type, "payload": payload, "targets": target_ids},
+                requested_by="hive_mesh",
+            )
+            hive_protocol.publish_sync(
+                "hive.dispatch.held",
+                {
+                    "event_type": event_type,
+                    "targets": target_ids,
+                    "hitl_request_id": request_id,
+                    "reason": "event_type is not in TIER1_SAFE_EVENT_TYPES; held for founder review per PERMISSIONS.md",
+                },
+            )
+            return {cid: "held_for_review" for cid in target_ids}
+
         results: Dict[str, str] = {}
 
         _timeout = httpx.Timeout(connect=3.0, read=8.0, write=5.0, pool=5.0)

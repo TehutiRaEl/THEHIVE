@@ -109,6 +109,39 @@ rediscovers *after*.
 
 ---
 
+## L-08 · A handler export and its binding must ship as one unit
+
+- **What happened.** Phase 8 (commit `15906b0`, 2026-07-21) added an `async queue(batch, env,
+  ctx)` consumer handler to the Worker's `export default` while deliberately leaving
+  `wrangler.jsonc`'s `queues.consumers` binding commented out (the flip-the-switch pattern).
+  Every Cloudflare Workers Build from that commit on failed — **7+ consecutive red checks over
+  ~26 hours** — while the check itself exposed no error text, only a dashboard link this
+  environment can't open. Production silently froze on the pre-Phase-8 bundle the whole time.
+- **How it was caught.** Not from the check (no log access) — from reading the **live deployed
+  bundle** directly via the Cloudflare MCP connector (`workers_get_worker_code`) and grepping it
+  for Phase 8 markers (`ALLOWED_ORIGINS`, `pageParams`): all absent, while pre-Phase-8 markers
+  were all present. That bracketed the breakage to Phase 8's own diff, where the unguarded
+  `queue` export was the one structural mismatch. (An earlier hypothesis — a missing `wrangler`
+  devDependency — was falsified the same way: the gap predated the failures.)
+- **Root cause.** The flip-the-switch pattern guarded every binding at the point of *use*
+  (`if (env?.X)`) but not at the point of *export*. A `queue()` handler in `export default` is
+  a declaration that this Worker consumes a queue; deploying it with no consumer binding
+  configured is a config/code mismatch Workers Builds rejects pre-deploy.
+- **Forward check.** Every entry in the Worker's `export default` must have its wrangler.jsonc
+  counterpart active in the same commit (`scheduled` ↔ `triggers.crons`, `queue` ↔
+  `queues.consumers`). When shipping a handler ahead of its binding, keep the function defined
+  but NOT exported, and make re-attaching it an explicit step in FLIP_THE_SWITCHES.md. And when
+  a deploy check fails with no reachable log: **diff the live bundle against the repo** — the
+  deployed artifact is itself evidence of exactly which commit last shipped.
+- **Outcome (confirmed 2026-07-22 ~21:17 UTC).** The commit carrying the un-export fix
+  (`04e99f7`, deployed via `2dbb3a2`) produced the first green Workers Build since Phase 8,
+  and re-reading the live bundle (`workers_get_worker_code`) confirmed every Phase 8 marker
+  now present, `processQueueBatch` defined but not exported (the string `queue:
+  processQueueBatch` appears only inside the re-attach comment). Root cause proven end to
+  end, not just plausibly fixed — everything stuck since `15906b0` is now actually live.
+
+---
+
 ## The pre-flight (run these before opening the next PR that touches the relevant surface)
 
 Derived from the above — the checklist that grows every time something breaks:
@@ -123,6 +156,8 @@ Derived from the above — the checklist that grows every time something breaks:
 5. **Deploy typecheck** → scoped to the shipped subgraph; `vite build` alone is green (L-05).
 6. **Dependencies** → all declared deps resolve; all used imports are declared (L-06).
 7. **Anything "already deployed/live"** → probe it; report from evidence (L-07).
+8. **Worker handler exports** → every `export default` handler has its wrangler.jsonc binding
+   active in the same commit; a failing deploy with no log → diff the live bundle (L-08).
 
 *Origin: Fable (Harness), 2026-07-16, at the founder's direction that the hive learn from
 every previous PR — uncensored, unabridged, un-truncated — so no failure class is paid for

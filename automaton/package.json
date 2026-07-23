@@ -1,0 +1,17 @@
+{
+  "name": "@thehive/automaton",
+  "version": "0.1.0",
+  "private": true,
+  "description": "THEHIVE's self-improving, self-replicating agent runtime — reverse-engineered from Conway-Research/automaton (MIT), decoupled from Conway Cloud, rebuilt on THEHIVE's own stack with working financial/replication approval gates. See NOTICE.md and ARCHITECTURE.md.",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/index.js --run",
+    "selfcheck": "node src/index.js --selfcheck",
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT"
+}
