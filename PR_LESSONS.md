@@ -133,6 +133,12 @@ rediscovers *after*.
   but NOT exported, and make re-attaching it an explicit step in FLIP_THE_SWITCHES.md. And when
   a deploy check fails with no reachable log: **diff the live bundle against the repo** — the
   deployed artifact is itself evidence of exactly which commit last shipped.
+- **Outcome (confirmed 2026-07-22 ~21:17 UTC).** The commit carrying the un-export fix
+  (`04e99f7`, deployed via `2dbb3a2`) produced the first green Workers Build since Phase 8,
+  and re-reading the live bundle (`workers_get_worker_code`) confirmed every Phase 8 marker
+  now present, `processQueueBatch` defined but not exported (the string `queue:
+  processQueueBatch` appears only inside the re-attach comment). Root cause proven end to
+  end, not just plausibly fixed — everything stuck since `15906b0` is now actually live.
 
 ---
 
