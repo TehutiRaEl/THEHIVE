@@ -57,17 +57,19 @@ Then paste that same value into the Proposals panel's key field (stored only in 
 browser's localStorage, never sent anywhere except the `Authorization` header on decide calls).
 **Proof:** `GET /v11/proposals` → `founder_auth_bound: true`; Approve/Reject buttons work.
 
-## 5 · Rate-limit counters (KV) → anti-spam moves off D1
+## 5 · Rate-limit counters (KV) → anti-spam moves off D1 — ✅ FLIPPED 2026-07-23
 
-```bash
-npx wrangler kv namespace create RATE_LIMIT_KV
-```
-Copy the printed `id` into the `"kv_namespaces"` block in `wrangler.jsonc`, uncomment it,
-commit, push. **Proof:** no visible behavior change (still 30 POSTs/min/IP) — the D1
-`rate_limits` table simply stops growing, since `rateLimitOk()` prefers KV the moment the
-binding exists.
+Flipped at the founder's "go for phase 8": namespace `RATE_LIMIT_KV`
+(id `7ca8178dc4bc40e7bac193362e3d6be4`) created via the Cloudflare MCP connector, binding
+uncommented in `wrangler.jsonc`, deployed. **Proof:** no visible behavior change (still
+30 POSTs/min/IP) — the D1 `rate_limits` table simply stops growing, since `rateLimitOk()`
+prefers KV the moment the binding exists.
 
 ## 6 · Async LLM jobs (Queues) → venture/plan and legal/research can run decoupled
+
+> Status 2026-07-23: still parked — the Cloudflare MCP connector available to sessions has
+> no queue-creation tool (KV/R2/D1 only), so this one still needs the founder's own
+> `npx wrangler queues create` below. Everything else about the flip is unchanged.
 
 ```bash
 npx wrangler queues create hive-llm-jobs

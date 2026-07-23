@@ -37,19 +37,13 @@
   // "r2_buckets": [
   //   { "binding": "FILES", "bucket_name": "hive-files" }
   // ],
-  // Rate-limit counters (Phase 8, 2026-07-21). Same flip-the-switch pattern:
-  // a kv_namespaces binding pointing at a namespace that doesn't exist fails
-  // the deploy, so it ships commented and rateLimitOk() falls back to the
-  // original D1 sliding-window implementation until this is activated.
-  // TO ACTIVATE (founder, one time):
-  //   1) npx wrangler kv namespace create RATE_LIMIT_KV
-  //      (prints an "id" — paste it in below)
-  //   2) uncomment the "kv_namespaces" block below, commit → Workers Builds redeploys
-  //   3) write endpoints now rate-limit via KV instead of D1 (no behavior
-  //      change visible to callers — same 30/min/IP limit, just faster)
-  // "kv_namespaces": [
-  //   { "binding": "RATE_LIMIT_KV", "id": "<paste the id from step 1 here>" }
-  // ],
+  // Rate-limit counters (Phase 8, 2026-07-21). FLIPPED 2026-07-23 at the
+  // founder's go: namespace created via the Cloudflare MCP connector,
+  // rateLimitOk() now uses KV (same 30/min/IP limit as the D1 fallback it
+  // replaces — no caller-visible change, just faster).
+  "kv_namespaces": [
+    { "binding": "RATE_LIMIT_KV", "id": "7ca8178dc4bc40e7bac193362e3d6be4" }
+  ],
   // Async LLM jobs (Phase 8, 2026-07-21). Same flip-the-switch pattern: a
   // queues binding pointing at a queue that doesn't exist fails the deploy,
   // so it ships commented. Until activated, POST /v11/venture/plan and
