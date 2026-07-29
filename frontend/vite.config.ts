@@ -41,8 +41,11 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           three: ['three', '@react-three/fiber', '@react-three/drei'],
           d3: ['d3'],
+          // phaser: used via dynamic import() in PhaserScene.tsx — keep a dedicated chunk
+          // so the main OS bundle does not pay for it until a Phaser surface loads.
           phaser: ['phaser'],
-          socket: ['socket.io-client'],
+          // socket.io-client removed 2026-07-29 (PR #132): no imports in frontend/src;
+          // dead manualChunk previously listed a package not in package.json.
         },
       },
     },

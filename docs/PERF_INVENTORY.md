@@ -16,22 +16,15 @@
 
 Production path **excludes:** `src/worlds`, `voxel`, `xp`, `avatars`, `conversation`.
 
-## Manual chunks (vite.config.ts)
+## Manual chunks (vite.config.ts) — after Session 2
 
-Configured `manualChunks`:
-
-| Chunk name | Libraries |
-|------------|-----------|
-| `vendor` | react, react-dom, react-router-dom |
-| `three` | three, @react-three/fiber, @react-three/drei |
-| `d3` | d3 |
-| `phaser` | phaser |
-| `socket` | socket.io-client |
-
-### Detective finding
-
-`frontend/package.json` **dependencies** list react, three, r3f, d3, framer-motion, zustand, sentry — but **do not** list `phaser` or `socket.io-client`.  
-Chunk names for phaser/socket are therefore **reserved / possibly empty** unless those packages are pulled transitively or added later. Worth cleaning in a later commit (remove dead chunk keys or add deps if truly used).
+| Chunk name | Libraries | Notes |
+|------------|-----------|--------|
+| `vendor` | react, react-dom, react-router-dom | Core |
+| `three` | three, @react-three/fiber, @react-three/drei | 3D |
+| `d3` | d3 | Graphs |
+| `phaser` | phaser | Dynamic import in `PhaserScene.tsx`; **dep added** to package.json 2026-07-29 |
+| ~~socket~~ | ~~socket.io-client~~ | **Removed** — no imports in `frontend/src`; was not in package.json |
 
 `chunkSizeWarningLimit`: 1000 (kB).
 
@@ -39,18 +32,21 @@ Chunk names for phaser/socket are therefore **reserved / possibly empty** unless
 
 `VITE_API_BASE_URL` defaults to `''` at build time so the deployed app talks to the Worker origin — not a visitor’s localhost. Keep this invariant.
 
-## Safe optimizations (queued, not all done this commit)
+## Session 2 code changes
+
+| Change | Why |
+|--------|-----|
+| Remove `socket` manualChunk | Dead config |
+| Add `phaser` dependency | `PhaserScene` already `import('phaser')`; package was missing |
+| `React.lazy` + `Suspense` for 13 legacy tabs in `KaiElOS.tsx` | Initial OS shell no longer statically pulls all tab modules |
+
+## Remaining queue
 
 | Priority | Action | Status |
 |----------|--------|--------|
-| P0 | Document chunks + exclusions (this file) | Done |
-| P1 | Remove or fix dead `phaser` / `socket` manualChunks if unused | Next code slice |
-| P2 | Lazy-load legacy Command Center tabs only when user opens them | Next sessions |
-| P3 | Confirm three/d3 only load on routes that need them | Detective + optional code |
-| P4 | Optional CI bundle size note (founder-gated) | Later |
-
-## What we are not doing this session
-
-- No force-enable of future modules into the main bundle  
-- No full design-token unify yet (D1 is multi-session; starts after this baseline)  
-- No floating-menu implementation yet (hybrid design next docs)  
+| P0 | Document chunks + exclusions | Done |
+| P1 | Dead socket chunk + phaser dep | Done this commit |
+| P2 | Lazy-load legacy tabs | Done this commit |
+| P3 | Confirm three/d3 only load on routes that need them | Later |
+| P4 | Optional CI bundle size note | Later |
+| Next campaign | D1 token unify mapping doc | Session 3 area |
