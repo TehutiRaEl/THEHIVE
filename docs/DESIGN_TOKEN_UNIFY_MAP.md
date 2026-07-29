@@ -19,75 +19,56 @@ One rulebook for colors, fonts, spacing, and glow so new UI does not guess betwe
 
 | System | File | Role today |
 |--------|------|------------|
-| A | `frontend/src/index.css` | Global CSS vars + OS backdrop + focus/utilities |
+| A | `frontend/src/index.css` | Global CSS vars + OS backdrop + focus/utilities + **M1 `--hive-*` aliases** |
 | B | `frontend/src/assets/styles/variables.css` | Older colony themes, spacing scale, glass | 
 | C | `frontend/tailwind.config.js` | Tailwind colors/shadows/fonts used by OS components |
 
 ---
 
-## Canonical target names (proposed)
+## Canonical target names
 
-These become the **long-term names**. Implementation can map old names → new via CSS vars + Tailwind `theme.extend`.
+### Color roles (M1 aliases live in `:root`)
 
-### Color roles
+| Role | CSS token | Matches Tailwind |
+|------|-----------|------------------|
+| App void | `--hive-void` … `--hive-void-700` | `void.*` |
+| Panel surface | `--hive-surface` | `void.800` |
+| Yale structure | `--hive-yale` | `yale.DEFAULT` |
+| Cyan energy | `--hive-cyan` / `--hive-cyan-glow` | `cyan.neon` / `cyan.glow` |
+| Governance gold | `--hive-gold` / `--hive-gold-neon` | `gold.*` |
+| Violet accent | `--hive-violet` | `violet.neon` |
+| Danger / success | `--hive-danger` / `--hive-success` | danger + `electric.green` |
+| Text | `--hive-text*` | slate hierarchy |
 
-| Role | Proposed token | Tailwind path | Notes |
-|------|----------------|---------------|--------|
-| App void background | `--hive-void` | `void.black` / `void.900` | Keep void scale |
-| Panel surface | `--hive-surface` | `void.800` | Cards/rails |
-| Primary action / focus | `--hive-cyan` | `cyan.neon` / `cyan.glow` | OS energy |
-| Governance / Kai / Town Hall | `--hive-gold` | `gold.DEFAULT` / `gold.neon` | Gold reserved for governance |
-| Accent violet | `--hive-violet` | `violet.neon` | Secondary accent |
-| Yale structure | `--hive-yale` | `yale.DEFAULT` | Bars/structure |
-| Danger | `--hive-danger` | (add or use red-500) | Align with index danger |
-| Success | `--hive-success` | `electric.green` | |
-| Muted text | `--hive-text-muted` | slate utilities | |
-| Primary text | `--hive-text` | slate-200 | |
+### Colony theme
 
-### Colony theme (from variables.css — preserve, do not delete yet)
-
-Keep colony-specific vars (`--thehive-primary`, `--nar2-primary`, etc.) under a **`colony.*`** namespace in a later bridge so federation UI can still theme per colony without polluting OS chrome.
+Keep colony-specific vars in `variables.css` for now; later namespace as `colony.*` without deleting.
 
 ### Typography
 
-| Role | Target | Load in index.css |
-|------|--------|-------------------|
-| Display / titles | Orbitron | already |
-| Body | Exo 2 | already |
-| Constitutional / formal | Cinzel | already |
-| Deprecated for new UI | Rajdhani, Inter (listed only in variables.css) | do not add for new work |
-
-### Spacing / radius / z-index
-
-Prefer Tailwind scale for new UI. Optional later: expose `--space-*` from variables.css as aliases only if gamified CSS still needs them.
+Display Orbitron · Body Exo 2 · Formal Cinzel. Do not add Rajdhani/Inter for new UI.
 
 ---
 
-## Migration phases (do not skip)
+## Migration phases
 
-| Phase | Work | Risk |
-|-------|------|------|
-| **M0** | This map + interim rule (done) | None |
-| **M1** | Add `:root` aliases in `index.css` that mirror Tailwind hive names (no visual change) | Low |
-| **M2** | Point one small OS component at only canonical names; verify | Low |
-| **M3** | Document colony vars as `colony.*`; stop dual gold/purple in new PRs | Low |
-| **M4** | Freeze edits to `variables.css` except bugfixes; README pointer | Low |
-| **M5** | Optional: codemod/class audit for leftover old class patterns | Medium |
+| Phase | Work | Status |
+|-------|------|--------|
+| **M0** | Map + interim rule | **Done** |
+| **M1** | `:root` `--hive-*` aliases mirroring Tailwind | **Done** (2026-07-29) |
+| **M2** | Point one small OS component at canonical names only | Queued |
+| **M3** | Colony vars documented; stop dual gold/purple in new PRs | Queued |
+| **M4** | Freeze `variables.css` except bugfixes | Queued |
+| **M5** | Optional class audit | Later |
 
-**Not in scope yet:** deleting `variables.css`, restyling every legacy tab, or changing brand identity without founder review.
-
----
-
-## Conflicts to resolve deliberately
-
-| Conflict | Resolution rule |
-|----------|-----------------|
-| Two golds (amber secondary vs gold neon) | **Gold = governance only**; general highlights use cyan/violet |
-| Purple in index vs violet in Tailwind | Prefer **violet.neon** for OS; map `--color-primary` → violet over time |
-| Fonts named in variables but not loaded | Ignore for new UI; load only Cinzel/Exo/Orbitron |
+**Not in scope yet:** deleting `variables.css`, restyling every legacy tab.
 
 ---
 
-## Next implementable slice (Session 4+ when directed)
+## Conflicts (resolution rules)
 
-M1: additive CSS aliases only — no component rewrites required in the same commit.
+| Conflict | Rule |
+|----------|------|
+| Two golds | Gold = governance only; general energy = cyan/violet |
+| Purple vs violet | Prefer violet / `--hive-violet` for OS |
+| Fonts in variables not loaded | Ignore for new UI |

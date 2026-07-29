@@ -7,6 +7,7 @@
 @tailwind utilities;
 
 :root {
+  /* ===== Legacy vars (kept for existing CSS consumers) ===== */
   --color-primary: #9333ea;
   --color-secondary: #f59e0b;
   --color-accent: #10b981;
@@ -26,6 +27,33 @@
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
+
+  /* ===== M1 canonical hive aliases (D1 unify map, PR #132) =====
+     Mirror Tailwind Kai EL OS theme so CSS and Tailwind can converge.
+     Additive only — does not remove legacy vars above. */
+  --hive-void: #0a0a0d;
+  --hive-void-900: #0d0e12;
+  --hive-void-800: #14161c;
+  --hive-void-700: #1c1f28;
+  --hive-surface: #14161c;
+  --hive-yale: #0f3d6e;
+  --hive-yale-light: #1a5490;
+  --hive-cyan: #00e5ff;
+  --hive-cyan-glow: #22d3ee;
+  --hive-cyan-dim: rgba(34, 211, 238, 0.35);
+  --hive-gold: #e8c15a;
+  --hive-gold-neon: #ffd166;
+  --hive-gold-dim: rgba(232, 193, 90, 0.35);
+  --hive-violet: #8b5cf6;
+  --hive-violet-bright: #a78bfa;
+  --hive-violet-dim: rgba(139, 92, 246, 0.35);
+  --hive-danger: #ef4444;
+  --hive-success: #34d399;
+  --hive-text: #f1f5f9;
+  --hive-text-secondary: #94a3b8;
+  --hive-text-muted: #64748b;
+  --hive-border: rgba(107, 114, 128, 0.3);
+  --hive-focus: #8b5cf6;
 }
 
 * {
