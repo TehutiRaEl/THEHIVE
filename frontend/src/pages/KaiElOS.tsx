@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense, type ComponentType } from 'react';
 import { useHiveData } from '../hooks/useHiveData';
 import { useIsWideViewport, useForceDesktop } from '../hooks/useViewport';
 import TopStatusBar from '../components/kai-os/TopStatusBar';
@@ -21,32 +21,38 @@ import Observatory from '../components/kai-os/Observatory';
 import BiosystemOverlay from '../components/kai-os/BiosystemOverlay';
 import GatewayConsoleOverlay from '../components/kai-os/GatewayConsoleOverlay';
 
-// The 13 existing, live-data-wired tabs — each already renders its own
-// SpaceNavigation + KaiChatBox, so when one is shown it fully replaces the OS
-// shell (no duplicate nav/chat) rather than being embedded inside it.
-import HIVE from '../components/command-center/tabs/HIVE';
-import DREAM from '../components/command-center/tabs/DREAM';
-import ARCANE from '../components/command-center/tabs/ARCANE';
-import WORLD from '../components/command-center/tabs/WORLD';
-import SOUL from '../components/command-center/tabs/SOUL';
-import GOVERN from '../components/command-center/tabs/GOVERN';
-import MISSIONS from '../components/command-center/tabs/MISSIONS';
-import API from '../components/command-center/tabs/API';
-import FOUR_D from '../components/command-center/tabs/4D';
-import ARENA from '../components/command-center/tabs/ARENA';
-import WOW from '../components/command-center/tabs/WOW';
-import NO_MANS_SKY from '../components/command-center/tabs/NO_MANS_SKY';
-import SETTINGS from '../components/command-center/tabs/SETTINGS';
+// Legacy 13 tabs — lazy-loaded so the initial Kai EL OS shell does not pay for
+// all tab modules up front (Session 2 perf, PR #132). Each tab still full-takeover
+// replaces the shell when selected.
+const HIVE = lazy(() => import('../components/command-center/tabs/HIVE'));
+const DREAM = lazy(() => import('../components/command-center/tabs/DREAM'));
+const ARCANE = lazy(() => import('../components/command-center/tabs/ARCANE'));
+const WORLD = lazy(() => import('../components/command-center/tabs/WORLD'));
+const SOUL = lazy(() => import('../components/command-center/tabs/SOUL'));
+const GOVERN = lazy(() => import('../components/command-center/tabs/GOVERN'));
+const MISSIONS = lazy(() => import('../components/command-center/tabs/MISSIONS'));
+const API = lazy(() => import('../components/command-center/tabs/API'));
+const FOUR_D = lazy(() => import('../components/command-center/tabs/4D'));
+const ARENA = lazy(() => import('../components/command-center/tabs/ARENA'));
+const WOW = lazy(() => import('../components/command-center/tabs/WOW'));
+const NO_MANS_SKY = lazy(() => import('../components/command-center/tabs/NO_MANS_SKY'));
+const SETTINGS = lazy(() => import('../components/command-center/tabs/SETTINGS'));
 
-const FULL_TABS: Record<string, React.FC> = {
+const FULL_TABS: Record<string, ComponentType> = {
   hive: HIVE, dream: DREAM, arcane: ARCANE, world: WORLD, soul: SOUL,
   govern: GOVERN, missions: MISSIONS, api: API, '4d': FOUR_D, arena: ARENA,
   wow: WOW, 'no-mans-sky': NO_MANS_SKY, settings: SETTINGS,
 };
 
-// OS-native panels that aren't one of the 13 legacy tabs — real content,
-// shown inside the shell (chrome stays visible) rather than replacing it.
 type PanelId = 'updates' | 'proposals' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training';
+
+function TabLoadFallback() {
+  return (
+    <div className="min-h-screen grid place-items-center bg-void-black text-cyan-glow font-body text-sm">
+      Loading tab…
+    </div>
+  );
+}
 
 export default function KaiElOS() {
   const hive = useHiveData();
@@ -57,12 +63,9 @@ export default function KaiElOS() {
   const [observatory, setObservatory] = useState(false);
   const [biosystem, setBiosystem] = useState(false);
   const [gatewayConsole, setGatewayConsole] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);        // mobile slide-over nav
-  const [communeOpen, setCommuneOpen] = useState(false); // mobile bottom commune sheet
+  const [navOpen, setNavOpen] = useState(false);
+  const [communeOpen, setCommuneOpen] = useState(false);
 
-  // Desktop three-column shell when the viewport is wide OR the founder forced
-  // "desktop view". Forcing on a phone pans the full desktop layout via
-  // horizontal scroll — a real "request desktop site", not media-query dependent.
   const desktop = wide || forceDesktop;
 
   useEffect(() => {
@@ -79,12 +82,11 @@ export default function KaiElOS() {
   }, []);
 
   const handleSelect = useCallback((id: string) => {
-    setNavOpen(false); // any selection closes the mobile drawer
+    setNavOpen(false);
     if (id === 'commune') { setActiveSection(null); setCommuneOpen(true); return; }
     setActiveSection(id);
   }, []);
 
-  // Full legacy-tab takeover.
   if (activeSection && FULL_TABS[activeSection]) {
     const ActiveTab = FULL_TABS[activeSection];
     return (
@@ -95,7 +97,9 @@ export default function KaiElOS() {
         >
           ← Kai EL OS
         </button>
-        <ActiveTab />
+        <Suspense fallback={<TabLoadFallback />}>
+          <ActiveTab />
+        </Suspense>
       </div>
     );
   }
@@ -152,8 +156,6 @@ export default function KaiElOS() {
   ) : (
     <div className="flex-1 min-h-0 relative">
       <CenterGraph hive={hive} speaking={speaking} onSelect={handleSelect} />
-      {/* The sacred-geometry sigil — its own element UNDER the web (per the
-          founder's sketch), not fused into the center. Click = Observatory. */}
       <button
         onClick={() => setObservatory(true)}
         className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-20 flex flex-col items-center gap-1 group"
@@ -179,10 +181,7 @@ export default function KaiElOS() {
     </div>
   );
 
-  // ---- Desktop shell (wide viewport or forced) ----
   if (desktop) {
-    // When forced on a narrow screen, allow horizontal panning of the full
-    // desktop layout (a genuine "request desktop site" experience).
     const forcedNarrow = forceDesktop && !wide;
     return (
       <div className={`h-screen w-screen flex flex-col bg-void-black text-slate-200 font-body ${forcedNarrow ? 'overflow-x-auto' : 'overflow-hidden'}`}>
@@ -212,12 +211,10 @@ export default function KaiElOS() {
     );
   }
 
-  // ---- Mobile shell (narrow viewport, not forced) ----
   return (
     <div className="h-screen w-screen flex flex-col bg-void-black text-slate-200 font-body overflow-hidden">
       <TopStatusBar hive={hive} onOpenBiosystem={() => setBiosystem(true)} onOpenGatewayConsole={() => setGatewayConsole(true)} />
 
-      {/* Mobile toolbar: menu + brand + request-desktop */}
       <div className="flex items-center gap-2 px-3 h-12 shrink-0 border-b border-white/5 bg-void-900/80">
         <button
           onClick={() => setNavOpen(true)}
@@ -235,14 +232,12 @@ export default function KaiElOS() {
         </button>
       </div>
 
-      {/* Center content scales to viewport width */}
       <div className="flex-1 min-h-0 relative flex flex-col">
         {centerContent}
       </div>
 
       <BottomActivityFeed hive={hive} />
 
-      {/* Pinned commune launcher */}
       <button
         onClick={() => setCommuneOpen(true)}
         className="shrink-0 h-12 flex items-center justify-center gap-2 bg-yale/40 border-t border-cyan-glow/30 text-cyan-glow font-body text-sm"
@@ -250,7 +245,6 @@ export default function KaiElOS() {
         💬 Commune with Kai El
       </button>
 
-      {/* Slide-over nav */}
       {navOpen && (
         <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/60" onClick={() => setNavOpen(false)} />
@@ -267,7 +261,6 @@ export default function KaiElOS() {
         </div>
       )}
 
-      {/* Commune bottom sheet */}
       {communeOpen && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/60" onClick={() => setCommuneOpen(false)} />

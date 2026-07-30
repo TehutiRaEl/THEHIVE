@@ -1,10 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import svgr from 'vite-plugin-svgr'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react(), svgr()],
+  // vite-plugin-svgr removed: registered here but never declared in
+  // package.json, and zero .svg-as-React-component imports exist anywhere
+  // in src/ — a clean `npm install` could never resolve it, breaking every
+  // build (both `build` and `build:app`) from a fresh checkout regardless
+  // of any other change. Re-add both the dependency and this plugin
+  // together if SVG-as-component imports are ever actually needed.
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -41,8 +46,11 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           three: ['three', '@react-three/fiber', '@react-three/drei'],
           d3: ['d3'],
+          // phaser: used via dynamic import() in PhaserScene.tsx — keep a dedicated chunk
+          // so the main OS bundle does not pay for it until a Phaser surface loads.
           phaser: ['phaser'],
-          socket: ['socket.io-client'],
+          // socket.io-client removed 2026-07-29 (PR #132): no imports in frontend/src;
+          // dead manualChunk previously listed a package not in package.json.
         },
       },
     },

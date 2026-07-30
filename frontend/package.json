@@ -21,7 +21,8 @@
     "zustand": "^4.5.7",
     "d3": "^7.9.0",
     "@sentry/react": "^7.120.4",
-    "@sentry/tracing": "^7.120.4"
+    "@sentry/tracing": "^7.120.4",
+    "phaser": "^3.80.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

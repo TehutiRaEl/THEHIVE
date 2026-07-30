@@ -7,12 +7,13 @@
     <meta name="description" content="Sovereign Hive Command Center - Frontend Builder" />
     <meta name="theme-color" content="#0A0E2A" />
     <title>Sovereign Hive | Command Center</title>
-    
-    <!-- Preconnect to external resources -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&family=Inter:wght@400;500;700&family=Fira+Code&display=swap" rel="stylesheet">
-    
+
+    <!-- Preconnect only — actual families load once from src/index.css @import
+         (Cinzel + Exo 2 + Orbitron full weights). F1 2026-07-30 PR #132:
+         removed duplicate Orbitron + unused Rajdhani/Inter/Fira Code link. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
   </head>
