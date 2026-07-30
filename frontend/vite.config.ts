@@ -1,10 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import svgr from 'vite-plugin-svgr'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react(), svgr()],
+  // vite-plugin-svgr removed: registered here but never declared in
+  // package.json, and zero .svg-as-React-component imports exist anywhere
+  // in src/ — a clean `npm install` could never resolve it, breaking every
+  // build (both `build` and `build:app`) from a fresh checkout regardless
+  // of any other change. Re-add both the dependency and this plugin
+  // together if SVG-as-component imports are ever actually needed.
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
