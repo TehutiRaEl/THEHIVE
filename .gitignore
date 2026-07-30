@@ -53,3 +53,4 @@ node_modules/
 # Cloudflare Worker local-dev secrets (wrangler dev reads this) — never commit
 # the real file, only .dev.vars.example
 .dev.vars
+.coverage
