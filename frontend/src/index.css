@@ -180,3 +180,24 @@ html, body {
 .border-glow:hover {
   box-shadow: 0 0 20px var(--border-glow);
 }
+
+/* ===== A11y-3: reduced motion (PR #132) =====
+   Respect OS/browser "reduce motion" setting. Stops continuous pulse/float/
+   shimmer and shortens transitions so vestibular-sensitive users are not
+   forced into looping neon animations. Static styles (colors, layout) remain. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-pulse,
+  .animate-fadeIn,
+  .animate-slideIn {
+    animation: none !important;
+  }
+}
