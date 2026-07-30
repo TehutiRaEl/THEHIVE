@@ -93,9 +93,14 @@ runs immediately, no `npm install`.
   and System B's `fable-debugger`/`research-to-dna`/`skill-census`/…) with no cross-
   references between them yet. `skill-census`, run on this repo, will show this gap
   directly — it hasn't yet been re-run since these were discovered.
-- `FABLE_DNA.md` Chromosome I and `soul.md` describe the same six laws with different
-  wording (this file states `soul.md` wins; that hasn't been used to actually edit
-  Chromosome I's prose yet — a real follow-up, not done in this pass).
+- ~~`FABLE_DNA.md` Chromosome I and `soul.md` described the same six laws with different
+  wording~~ — reconciled 2026-07-30. Three real drifts found (F-001/F-002 had dropped
+  concrete mechanics — the 5-min/10-per-hour delete right, sell-transfers-a-copy, the EVW
+  formula, the geometric-mean wealth combination; F-003 had inverted whose autonomy the
+  law protects, describing the hive's agency instead of the person's right to decline).
+  `backend/core/validator.py`'s real F-003 enforcement already matched `soul.md`, confirming
+  the drift was in Chromosome I's prose, not the enforced law. Corrected per Chromosome I's
+  own rule (`soul.md` governs); full test suite (256 passed) reverified after the edit.
 
 ## The one-line version
 
