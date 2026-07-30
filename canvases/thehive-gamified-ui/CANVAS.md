@@ -17,7 +17,7 @@ import * as THREE from 'three';
 type Vector3 = { x: number; y: number; z: number };
 type Entity = {
   id: string;
-  type: 'player'   'npc' | 'portal' | 'colony' | 'voxel';
+  type: 'player' | 'npc' | 'portal' | 'colony' | 'voxel';
   position: Vector3;
   rotation?: Vector3;
   scale?: Vector3;
@@ -548,3 +548,194 @@ class AchievementTracker {
     console.log('[AchievementTracker] Initialized');
     this.createAchievement({ id: 'ach-first-steps', title: 'First Steps', description: 'Complete your first mission', type: 'exploration', rarity: 'common', points: 10, isUnlocked: false });
     this.createAchievement({ id: 'ach-builder', title: 'Master Builder', description: 'Build 10 structures', type: 'building', rarity: 'rare', points: 25, isUnlocked: false });
+    this.createAchievement({ id: 'ach-explorer', title: 'World Wanderer', description: 'Discover both hive and sandbox worlds', type: 'exploration', rarity: 'rare', points: 20, isUnlocked: false });
+  }
+
+  createAchievement(achievement: Achievement) { this.achievements.set(achievement.id, achievement); return achievement.id; }
+
+  unlockAchievement(achievementId: string): boolean {
+    const achievement = this.achievements.get(achievementId);
+    if (!achievement || achievement.isUnlocked) return false;
+    achievement.isUnlocked = true;
+    achievement.unlockDate = Date.now();
+    this.unlockedAchievements.add(achievementId);
+    this.totalPoints += achievement.points;
+    this.achievements.set(achievementId, achievement);
+    console.log(`[AchievementTracker] Unlocked: ${achievement.title} (+${achievement.points}pts)`);
+    return true;
+  }
+
+  getAchievements(): Achievement[] { return Array.from(this.achievements.values()); }
+  getUnlockedAchievements(): Achievement[] {
+    return Array.from(this.unlockedAchievements.values()).map(id => this.achievements.get(id)!).filter(Boolean);
+  }
+  getTotalPoints(): number { return this.totalPoints; }
+}
+
+// ============================================================================
+// 3D COMPONENTS
+// ============================================================================
+
+function PlayerAvatar({ position }: { position: Vector3 }) {
+  return (
+    <group position={[position.x, position.y + 0.9, position.z]}>
+      <mesh>
+        <capsuleGeometry args={[0.3, 0.7, 4, 8]} />
+        <meshStandardMaterial color="#4CAF50" metalness={0.3} roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 0.7, 0]}>
+        <sphereGeometry args={[0.25, 16, 16]} />
+        <meshStandardMaterial color="#4CAF50" metalness={0.2} roughness={0.8} />
+      </mesh>
+      <pointLight color="#4CAF50" intensity={0.5} distance={5} />
+    </group>
+  );
+}
+
+function NPCComponent({ npc }: { npc: any }) {
+  const getColor = (type: string) => {
+    const colors: Record<string, string> = { merchant: '#FFD700', quest: '#FF4500', guide: '#87CEEB', guard: '#800080', friend: '#00FF7F' };
+    return colors[type] || '#FFFFFF';
+  };
+  return (
+    <group position={[npc.position.x, npc.position.y + 0.9, npc.position.z]}>
+      <mesh>
+        <capsuleGeometry args={[0.4, 0.8, 4, 8]} />
+        <meshStandardMaterial color={getColor(npc.type)} metalness={0.3} roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 0.8, 0]}>
+        <sphereGeometry args={[0.3, 16, 16]} />
+        <meshStandardMaterial color={getColor(npc.type)} metalness={0.2} roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+function PortalComponent({ portal }: { portal: any }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  useFrame(() => { if (meshRef.current) meshRef.current.rotation.y += 0.01; });
+  return (
+    <group position={[portal.position.x, portal.position.y, portal.position.z]}>
+      <mesh ref={meshRef}>
+        <torusGeometry args={[1.5, 0.2, 16, 48]} />
+        <meshStandardMaterial color="#87CEEB" emissive="#87CEEB" emissiveIntensity={0.8} metalness={0.5} roughness={0.3} />
+      </mesh>
+      <pointLight color="#87CEEB" intensity={2} distance={10} />
+    </group>
+  );
+}
+
+function BuildingComponent({ building }: { building: any }) {
+  const getColor = (type: string) => {
+    const colors: Record<string, string> = { house: '#8B4513', workshop: '#A0522D', farm: '#228B22', mine: '#696969', tower: '#808080' };
+    return colors[type] || '#FFFFFF';
+  };
+  const getSize = (type: string): [number, number, number] => {
+    const sizes: Record<string, [number, number, number]> = { house: [2, 2, 2], workshop: [3, 1.5, 2], farm: [4, 1, 3], mine: [2, 1.5, 2], tower: [1.5, 4, 1.5] };
+    return sizes[type] || [1, 1, 1];
+  };
+  const [w, h, d] = getSize(building.type);
+  return (
+    <group position={[building.position.x, building.position.y + h / 2, building.position.z]}>
+      <mesh>
+        <boxGeometry args={[w, h, d]} />
+        <meshStandardMaterial color={getColor(building.type)} metalness={0.4} roughness={0.6} />
+      </mesh>
+    </group>
+  );
+}
+
+function VoxelComponent({ voxel }: { voxel: any }) {
+  return (
+    <group position={[voxel.position.x, voxel.position.y, voxel.position.z]}>
+      <mesh>
+        <boxGeometry args={[0.98, 0.98, 0.98]} />
+        <meshStandardMaterial color={voxel.color} roughness={0.8} metalness={0.1} />
+      </mesh>
+    </group>
+  );
+}
+
+function OtherPlayerComponent({ peer }: { peer: any }) {
+  return (
+    <group position={[peer.position.x, peer.position.y + 0.9, peer.position.z]}>
+      <mesh>
+        <capsuleGeometry args={[0.3, 0.7, 4, 8]} />
+        <meshStandardMaterial color="#0096FF" metalness={0.3} roughness={0.7} />
+      </mesh>
+      <mesh position={[0, 0.7, 0]}>
+        <sphereGeometry args={[0.25, 16, 16]} />
+        <meshStandardMaterial color="#0096FF" metalness={0.2} roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+function WorldScene() {
+  const worldManager = WorldManager.getInstance();
+  const entities = worldManager.getEntities(worldManager.getCurrentWorld());
+  const playerPosition = worldManager.getPlayerPosition();
+
+  return (
+    <>
+      <Sky sunPosition={[100, 100, 20]} turbidity={0.1} />
+      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade />
+      <Grid args={[100, 100]} cellSize={1} cellThickness={0.5} cellColor="#444444" sectionSize={5} sectionThickness={1} sectionColor="#666666" />
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[10, 20, 10]} intensity={1} castShadow shadow-mapSize={[2048, 2048]} />
+      <directionalLight position={[-10, 20, -10]} intensity={0.3} />
+      <pointLight position={[0, 10, 0]} intensity={0.5} />
+
+      <PlayerAvatar position={playerPosition} />
+      <color attach="background" args={['#1a1a2e']} />
+      <fog attach="fog" args={['#1a1a2e', 20, 100]} />
+    </>
+  );
+}
+
+// ============================================================================
+// MAIN APP COMPONENT
+// ============================================================================
+
+export default function App() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    console.log('Initializing THE HIVE Gamified UI...');
+    WorldManager.getInstance().initialize();
+    NPCManager.getInstance().initialize();
+    PortalManager.getInstance().initialize();
+    ColonyManager.getInstance().initialize();
+    MultiplayerManager.getInstance().initialize();
+    MissionTracker.getInstance().initialize();
+    AchievementTracker.getInstance().initialize();
+
+    const timer = setTimeout(() => setLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5 }}>
+          <div style={{ fontSize: 72, marginBottom: 16 }}>🏰</div>
+          <h1 style={{ fontSize: 48, fontWeight: 'bold', color: 'white' }}>THE HIVE</h1>
+          <p style={{ color: '#94a3b8', marginTop: 8 }}>Loading gamified world...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: '#0f172a', overflow: 'hidden' }}>
+      <Canvas shadows camera={{ position: [0, 8, 15], fov: 60 }} gl={{ antialias: true, alpha: false }}>
+        <PerspectiveCamera makeDefault position={[0, 8, 15]} fov={60} />
+        <OrbitControls enableDamping dampingFactor={0.05} minDistance={2} maxDistance={200} maxPolarAngle={Math.PI / 2 - 0.1} enablePan={true} />
+        <Suspense fallback={null}>
+          <WorldScene />
+        </Suspense>
+        <Stats />
+      </Canvas>
+    </div>
+  );
+}
