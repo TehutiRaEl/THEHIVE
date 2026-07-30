@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface GatewayConsoleOverlayProps {
   active: boolean;
@@ -13,6 +14,9 @@ interface GatewayConsoleOverlayProps {
 // (RivalSearch/DeepCrawl/OpenAlexSearch/DuckDuckGoSearch) and Activity Log —
 // every tool makes a real, keyless network call rather than faking data.
 export default function GatewayConsoleOverlay({ active, onClose }: GatewayConsoleOverlayProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(active, panelRef);
+
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
@@ -25,12 +29,20 @@ export default function GatewayConsoleOverlay({ active, onClose }: GatewayConsol
   if (!active) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-void-black animate-fadeIn flex flex-col">
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Gateway Console"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 bg-void-black animate-fadeIn flex flex-col"
+    >
       <div className="flex items-center justify-between px-4 h-11 shrink-0 bg-void-900/90 border-b border-white/10">
         <span className="text-slate-400 text-xs tracking-widest uppercase">
           Gateway Console — press Esc to exit
         </span>
         <button
+          type="button"
           onClick={onClose}
           aria-label="Close Gateway Console"
           className="h-8 w-8 grid place-items-center rounded-lg bg-void-800 border border-white/10 text-slate-300 hover:text-cyan-glow hover:border-cyan-glow/40"

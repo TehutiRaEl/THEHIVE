@@ -15,18 +15,18 @@
 | Landmark: LeftNav `<nav>` | **Done** (a11y-1) |
 | Landmark: TopStatusBar `<header role="banner">` | **Done** (a11y-1) |
 | `aria-label` / `aria-current` on LeftNav / status actions | **Done** (a11y-2) |
-| `prefers-reduced-motion` gate | **Done** (a11y-3) in `index.css` |
+| `prefers-reduced-motion` gate | **Done** (a11y-3) |
+| Focus trap for overlays | **Done** (a11y-4) via `useFocusTrap` |
 | Keyboard full nav of graph + drawers | Incomplete |
-| Focus trap for overlays | Queued (a11y-4) |
 | Color contrast on neon-on-dark | Needs formal check |
 
-### Remaining proposed work
+### A11y-4 notes
 
-4. Focus trap for overlays (Gateway, Biosystem, Observatory)
-
-### A11y-3 behavior
-
-When the user (or OS) enables “reduce motion”, continuous animations and long transitions are effectively disabled globally from `index.css`. LIVE dots and similar may stay lit without pulsing.
+- Hook: `frontend/src/hooks/useFocusTrap.ts`
+- Wired: Observatory, BiosystemOverlay, GatewayConsoleOverlay
+- Dialogs use `role="dialog"` + `aria-modal="true"`
+- Esc still closes; focus restored to prior control on close
+- Iframe content is a separate document — trap covers overlay chrome (close controls)
 
 ---
 
