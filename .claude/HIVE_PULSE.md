@@ -51,6 +51,34 @@ Session 1, since it depends on the firing remembering to re-arm itself). Each fi
 read this file first → do one bounded thing → update this file → stop (cron handles the
 next fire automatically, no reschedule call to forget).
 
+## Kai El bridge (new 2026-07-31)
+
+Two-way link between Kai El (the live `/command_text` chat persona, System B) and the
+harness (this session), through the existing `hive_updates`/`hive_proposals` D1 tables —
+no new infrastructure invented, just wired up. Full design →
+`.claude/skills/autonomous-hive-agent/SKILL.md`'s "Kai El bridge" section.
+
+- **Kai El → founder (via harness):** Kai El's own reply can start with
+  `CONCERN: <title>` or `PROPOSAL: <title>` when genuinely warranted (worker prompt
+  instructs "rarely, only when real") — the worker code (`worker/src/index.js`,
+  `/command_text` handler) then persists it to `hive_updates`(kind=concern) or
+  `hive_proposals`(kind=architect-proposal). `.github/workflows/kai-el-bridge.yml`
+  (cron every 2h, plus `workflow_dispatch`) mirrors both into one fixed GitHub issue
+  titled "Kai El — Concerns & Architect Proposals Queue" — check that issue (via
+  `list_issues`/`issue_read`, not by hitting production directly — this container
+  still can't reach `*.workers.dev`) each autonomous firing; relay anything new to
+  the founder directly (push-notify if genuinely urgent).
+- **Harness → Kai El:** trigger `kai-el-bridge.yml` via `workflow_dispatch` with a
+  `directive_text` input to hand Kai El an architect-directive — it lands in Vectorize
+  via `/v11/memory/remember` and surfaces the next time `recall()` fires during a
+  real chat.
+- **Not yet verified live** — this shipped in the same commit as this pulse-file
+  update; the worker code hasn't been exercised against a real production `/command_text`
+  call with a CONCERN/PROPOSAL-marked reply yet (this container can't do that itself).
+  First real verification is whatever `edge-health-probe.yml` or `kai-el-bridge.yml`'s
+  own next scheduled run shows — check before assuming this works, per this hive's own
+  "probe before claim" rule.
+
 ## Not yet built / open questions
 
 - Whether the 6-session arc itself should convert from `run_once_at` chaining to a

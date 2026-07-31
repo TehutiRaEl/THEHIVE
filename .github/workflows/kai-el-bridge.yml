@@ -1,0 +1,115 @@
+name: Kai El Bridge
+
+# The bridge between Kai El (the in-app chat persona at POST /command_text,
+# worker/src/index.js) and the harness (this repo's engineering session), and
+# through the harness, the founder — built 2026-07-31 at the founder's request
+# ("put Kai El to work as the architect he is").
+#
+# Same reason this exists as edge-health-probe.yml: dev containers cannot reach
+# *.workers.dev directly (egress proxy), so a GitHub-hosted runner is the only
+# thing that can carry data between production and the harness automatically.
+#
+# Two directions, one workflow:
+#   Kai El -> founder (via harness): Kai El's own replies can durably log a
+#   CONCERN or PROPOSAL (see worker/src/index.js's /command_text handler) into
+#   hive_updates / hive_proposals. This job reads those and mirrors the current
+#   list into one fixed tracking issue, so the harness's own scheduled sessions
+#   (which DO have GitHub API access from inside the container) can just read
+#   one issue instead of needing production reach themselves.
+#   Harness -> Kai El: optional workflow_dispatch input `directive_text` POSTs
+#   straight into Kai El's own memory (POST /v11/memory/remember, already a
+#   public, rate-limited, no-new-secret-needed endpoint) tagged
+#   kind=architect-directive, so recall() can surface it in a later chat.
+
+on:
+  workflow_dispatch:
+    inputs:
+      directive_text:
+        description: 'Optional: a note/directive to hand to Kai El (written into its memory as an architect-directive). Leave blank to just run the concerns/proposals sync.'
+        required: false
+        default: ''
+  schedule:
+    # every 2 hours — concerns are meant to reach the founder sooner than the
+    # 6-hourly edge-health-probe cadence, without adding a third heartbeat class
+    - cron: '11 */2 * * *'
+  push:
+    paths:
+      - .github/workflows/kai-el-bridge.yml
+
+permissions:
+  issues: write
+
+jobs:
+  bridge:
+    name: Sync Kai El concerns/proposals + optional harness->Kai El directive
+    runs-on: ubuntu-latest
+    env:
+      BASE: https://thehive.sovereignhive.workers.dev
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Harness -> Kai El (optional directive)
+        if: ${{ github.event.inputs.directive_text != '' }}
+        # DIRECTIVE_TEXT passed via env, never interpolated straight into the
+        # script — a workflow_dispatch input textually substituted into `run:`
+        # would be a shell-injection hole even though this trigger is manual-only.
+        env:
+          DIRECTIVE_TEXT: ${{ github.event.inputs.directive_text }}
+        run: |
+          payload=$(jq -n --arg t "$DIRECTIVE_TEXT" '{text: $t, kind: "architect-directive"}')
+          curl -sS -m 20 -X POST "${BASE}/v11/memory/remember" \
+            -H "Content-Type: application/json" \
+            --data "$payload" | tee /tmp/directive_result.json
+          echo "── posted directive to Kai El's memory (recall() will surface it when relevant) ──"
+
+      - name: Fetch current concerns + pending architect proposals
+        run: |
+          curl -sS -m 20 "${BASE}/v11/updates?limit=30" -o /tmp/updates.json || echo '{"updates":[]}' > /tmp/updates.json
+          curl -sS -m 20 "${BASE}/v11/proposals?limit=50" -o /tmp/proposals.json || echo '{"proposals":[]}' > /tmp/proposals.json
+          jq '[.updates[]? | select(.kind=="concern")]' /tmp/updates.json > /tmp/concerns.json
+          jq '[.proposals[]? | select(.status=="pending" and .kind=="architect-proposal")]' /tmp/proposals.json > /tmp/architect_proposals.json
+          echo "concerns: $(jq length /tmp/concerns.json)  pending architect proposals: $(jq length /tmp/architect_proposals.json)"
+
+      - name: Render tracking-issue body
+        run: |
+          {
+            echo "Auto-synced by \`.github/workflows/kai-el-bridge.yml\` — do not edit by hand, it is fully overwritten each run."
+            echo
+            echo "This issue mirrors what Kai El (the live \`/command_text\` persona) has flagged as a"
+            echo "CONCERN or PROPOSAL in conversation with the founder — see \`worker/src/index.js\`'s"
+            echo "\`/command_text\` handler for how a reply becomes one of these. The harness's own"
+            echo "scheduled sessions read this issue (not production directly — dev containers can't"
+            echo "reach \`*.workers.dev\`) to relay anything new to the founder."
+            echo
+            echo "## Open concerns ($(jq length /tmp/concerns.json))"
+            echo
+            if [ "$(jq length /tmp/concerns.json)" = "0" ]; then
+              echo "_None right now._"
+            else
+              jq -r '.[] | "- **" + .title + "** (`" + .ts + "`)\n\n  " + (.body // "" | gsub("\n";"\n  ")) + "\n"' /tmp/concerns.json
+            fi
+            echo
+            echo "## Pending architect proposals ($(jq length /tmp/architect_proposals.json))"
+            echo
+            if [ "$(jq length /tmp/architect_proposals.json)" = "0" ]; then
+              echo "_None right now._"
+            else
+              jq -r '.[] | "- **" + .title + "** (`" + .ts + "`, id `" + (.id|tostring) + "`) — decide via founder-key-gated `POST /v11/proposals/" + (.id|tostring) + "/decide`\n\n  " + (.body // "" | gsub("\n";"\n  ")) + "\n"' /tmp/architect_proposals.json
+            fi
+            echo
+            echo "_Last synced: $(date -u +%Y-%m-%dT%H:%M:%SZ)_"
+          } > /tmp/issue_body.md
+
+      - name: Create or update the tracking issue
+        run: |
+          TITLE="Kai El — Concerns & Architect Proposals Queue"
+          NUM=$(gh issue list --repo "${{ github.repository }}" --search "in:title \"${TITLE}\"" --state all --json number,title \
+            | jq -r --arg t "$TITLE" '.[] | select(.title==$t) | .number' | head -n1)
+          if [ -z "$NUM" ]; then
+            # no --label: an unrecognized label would fail the whole create call,
+            # and this issue's identity is its exact title, not a label
+            gh issue create --repo "${{ github.repository }}" --title "$TITLE" --body-file /tmp/issue_body.md
+          else
+            # re-open if a prior sync (or someone) closed it, then overwrite body
+            gh issue reopen --repo "${{ github.repository }}" "$NUM" 2>/dev/null || true
+            gh issue edit --repo "${{ github.repository }}" "$NUM" --body-file /tmp/issue_body.md
+          fi

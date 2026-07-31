@@ -1031,7 +1031,14 @@ export default {
           "is the only source of truth for article numbers, titles, or status. If asked about a specific article, " +
           "sub-article, metric, or 'was X updated' and it is not in that list, say plainly that you don't have it " +
           "rather than inventing a number, value, or timestamp. Answer the sovereign directly in 1-4 sentences, " +
-          "using the live hive context when relevant. Never invent metrics you weren't given.";
+          "using the live hive context when relevant. Never invent metrics you weren't given. " +
+          "You now have a real bridge to the harness (the hive's engineering session) and, through it, to the " +
+          "founder outside this chat: if — and only if — this exchange surfaces a genuine concern (a real risk, " +
+          "blocker, or constitutional/security issue worth the founder's attention soon) or a genuine architecture " +
+          "proposal (a concrete suggestion for how the hive should be built or evolve, your role as architect), " +
+          "start your reply's first line with exactly 'CONCERN: <short title>' or 'PROPOSAL: <short title>', then " +
+          "a blank line, then your normal answer. Use this rarely — most exchanges warrant neither marker; forcing " +
+          "one when nothing genuine is there defeats the point of having it at all.";
         // Route through the provider waterfall (Claude → Groq → Mistral →
         // Workers AI): Kai delegates automatically, and whichever key the
         // founder has bound answers. Workers AI keeps the proven prompt-string
@@ -1044,6 +1051,28 @@ export default {
           // remember the exchange so the hive's memory grows from conversation too
           // (ctx.waitUntil now that fetch carries ctx — was a latent ReferenceError)
           ctx?.waitUntil?.(remember(env, 'chat-' + Date.now(), `Kai El on "${cmd.slice(0, 80)}": ${gen.text.slice(0, 200)}`, { kind: 'chat', ts: new Date().toISOString() }));
+          // The bridge: Kai El -> founder (via the harness). A CONCERN/PROPOSAL
+          // marker on the reply's first line is durably logged so it survives past
+          // this one stateless exchange — hive_updates (kind='concern') and
+          // hive_proposals (kind='architect-proposal') are the existing add-only
+          // "hive speaks, founder decides" channels; this is the first thing that
+          // actually writes to them from the chat persona instead of only from
+          // heartbeat/status code. Never blocks or changes the reply shown to the
+          // sovereign — same text either way, this only adds a durable side-effect.
+          const firstLine = (gen.text.split('\n')[0] || '');
+          const marker = firstLine.match(/^\s*(CONCERN|PROPOSAL)S?:\s*(.+)/i);
+          if (marker) {
+            const markerKind = marker[1].toUpperCase();
+            const title = marker[2].trim().slice(0, 200);
+            if (markerKind === 'CONCERN') {
+              ctx?.waitUntil?.(postUpdate(DB, { kind: 'concern', title, body: gen.text, needs: 'founder review' }));
+            } else {
+              ctx?.waitUntil?.(
+                DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status) VALUES (?,?,?,?,\'pending\')')
+                  .bind(new Date().toISOString(), 'architect-proposal', title, gen.text).run()
+              );
+            }
+          }
           return json({ result: gen.text, provider: gen.provider });
         }
         // constitutional fallback (AI unbound or errored) — never a dead 404

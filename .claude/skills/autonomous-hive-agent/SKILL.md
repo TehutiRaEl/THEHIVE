@@ -82,6 +82,46 @@ expand scope beyond what's asked — new cron Routines are reversible (`delete_t
 is one call) but still a standing resource commitment, named plainly to the founder when
 created, same as any other durable decision.
 
+## Kai El bridge — the organism gets a second voice
+
+Built 2026-07-31, same request that named the organism: "put Kai El to work as the
+architect he is" — Kai El (the live `/command_text` chat persona in `worker/src/index.js`,
+System B, the thing the founder actually talks to in the Command Center) had no way to
+durably reach the founder beyond one stateless reply, and no way for this harness to hand
+it anything either. Built on infrastructure that already existed rather than inventing new
+tables:
+
+- **Kai El → founder, through the harness.** Kai El's own system prompt (unchanged
+  otherwise) now permits — rarely, only when genuinely warranted — starting a reply's
+  first line with `CONCERN: <title>` or `PROPOSAL: <title>`. The worker code detects that
+  marker and persists it: `CONCERN` → `hive_updates` (kind=`concern`, the table's own
+  header comment already calls it the "hive → founder update channel" — nothing before
+  this wrote to it from chat, only from heartbeat/status code); `PROPOSAL` →
+  `hive_proposals` (kind=`architect-proposal`, the existing hive-suggests/founder-decides
+  table, `POST /proposals/:id/decide` already founder-key-gated — Kai El proposing
+  architecture and the founder deciding is exactly what this table was built for, just
+  never fed from the chat persona before). The reply shown to the founder is unchanged
+  either way — the marker is a durable side-effect, not a UI change.
+- **The relay.** This container cannot reach `*.workers.dev` (same constraint
+  `edge-health-probe.yml` exists for) — so `.github/workflows/kai-el-bridge.yml` (a
+  GitHub-hosted runner, which can reach production) polls `hive_updates`/`hive_proposals`
+  every 2 hours and mirrors the current concern/pending-proposal list into one fixed,
+  fully-overwritten-each-run GitHub issue ("Kai El — Concerns & Architect Proposals
+  Queue"). An autonomous firing reads that issue via the GitHub MCP tools it already has
+  — no new production reach needed on this side either.
+- **Harness → Kai El.** The same workflow accepts a `workflow_dispatch` input
+  (`directive_text`) that POSTs straight to the already-public `POST /v11/memory/remember`
+  endpoint, tagged `kind=architect-directive` — Vectorize's `recall()` (already called by
+  `/command_text` on every turn) surfaces it the next time it's semantically relevant.
+  This is genuinely how "you being able to send certain messages to Kai El" works: not a
+  new channel, the existing memory-recall path, fed deliberately instead of only from
+  chat exhaust.
+- **Honest status:** shipped, syntax-checked, not yet exercised against live production
+  by this session (can't reach it directly) — first real confirmation is
+  `kai-el-bridge.yml`'s own next scheduled run or a manual `workflow_dispatch`. Say so
+  plainly until then; this is exactly the discipline `devils-advocate-audit` exists to
+  enforce, applied to this skill's own newest work rather than only to older code.
+
 ## Where this leaves the caveman question
 
 Always-on caveman (terse day-to-day replies) and `polymath-lens` (verbose only at
