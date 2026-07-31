@@ -74,9 +74,13 @@ class WalletManager:
 
     def credit(self, agent_name: str, amount: float, reason: str = ""):
         """Credit SOUL to agent (off-chain ledger)."""
+        self.create_wallet(agent_name)
+        # create_wallet() closes the thread-local connection when it's done,
+        # so conn must be (re)fetched after it returns — fetching before and
+        # holding the cursor across that call operates on a closed sqlite3
+        # connection (get_db() reconnects lazily, but only on its own next call).
         conn = get_db()
         c = conn.cursor()
-        self.create_wallet(agent_name)
         c.execute("""
             UPDATE agent_wallets
             SET soul_balance = soul_balance + ?,

@@ -55,6 +55,7 @@ async function main() {
   );
 
   const rawPub = new Uint8Array(await crypto.subtle.exportKey('raw', publicKey));
+  // did:key multicodec prefix for ed25519-pub
   const prefixed = new Uint8Array(2 + rawPub.length);
   prefixed[0] = 0xed;
   prefixed[1] = 0x01;
@@ -65,6 +66,7 @@ async function main() {
   const sig = new Uint8Array(await crypto.subtle.sign({ name: 'Ed25519' }, privateKey, data));
   const ok = await crypto.subtle.verify({ name: 'Ed25519' }, publicKey, sig, data);
 
+  // Never print private key material
   const report = {
     ok,
     did,
