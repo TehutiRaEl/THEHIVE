@@ -13,10 +13,9 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-07-31, ~22:25 UTC)
+## Right now (updated 2026-07-31, ~22:30 UTC)
 
-- **Open PRs: #139** (dead-code sweep findings + this file's own consolidation) —
-  just opened, CI mid-run, check fresh. #138 merged to `main` at `65e8a1e` earlier.
+- **Open PRs: none.** #139 merged to `main` at `a97c88b`. Session branch reset fresh.
 - **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no
   more "Session N/6" framing (removed 2026-07-31, backlog outgrew 6 sessions). Next
   fire `2026-08-01T09:00:00Z`. Maximize each firing's own window rather than cramming;
