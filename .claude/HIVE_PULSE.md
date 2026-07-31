@@ -13,11 +13,23 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-07-31, ~22:47 UTC, daily heartbeat)
+## Right now (updated 2026-07-31, ~23:10 UTC — federation-wide PR audit)
 
-- **Open PRs: none.** #140 (parallel session's Phase G/H/I, reviewed clean) and #141
-  (this session's own pulse sync) both merged to `main` (`d4c69ea`, `4854470`). Session
-  branch reset to fresh `main`.
+- **Open PRs: #142 only** (this session's own trivial pulse sync, green). Every PR ever
+  opened across ALL 10 federation repos is merged — confirmed by checking each repo
+  directly (NAR2/4DBRAIN/aether/automatisch/Kimi-K2/LocalAGI/build-your-own-x/
+  free-programming-books/freeCodeCamp), not assumed. The mid-July "L5 merge stragglers"
+  item is fully resolved.
+- **Two investigations running in background** (founder wants understanding before any
+  deletion, not a simple rm): (1) why the 12 orphaned `backend/guilds/*.py` modules +
+  4 duplicate-file pairs got orphaned — superseded-elsewhere vs genuinely-unfinished,
+  git history checked, duplicates diffed for unique content, high-risk files flagged
+  for review not auto-merge; (2) the 56-file second frontend effort ("Mistral Frontend
+  Command Center Branch") catalogued group-by-group into duplicate/genuinely-new/
+  not-wanted, with what integrating the genuinely-new parts would actually require.
+  Results pending — check for completion notifications before re-deriving either.
+- **Grok bridge activation (L2):** founder said "not sure yet" — tracked as **undecided**,
+  not open, not dropped. Don't nag about it; don't drop it either.
 - **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no
   more "Session N/6" framing (removed 2026-07-31, backlog outgrew 6 sessions). Next
   fire `2026-08-01T09:00:00Z`. Maximize each firing's own window rather than cramming;
