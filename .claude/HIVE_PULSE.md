@@ -20,14 +20,18 @@ that's the discipline this file exists to model, not just describe.
   directly (NAR2/4DBRAIN/aether/automatisch/Kimi-K2/LocalAGI/build-your-own-x/
   free-programming-books/freeCodeCamp), not assumed. The mid-July "L5 merge stragglers"
   item is fully resolved.
-- **Two investigations running in background** (founder wants understanding before any
-  deletion, not a simple rm): (1) why the 12 orphaned `backend/guilds/*.py` modules +
-  4 duplicate-file pairs got orphaned — superseded-elsewhere vs genuinely-unfinished,
-  git history checked, duplicates diffed for unique content, high-risk files flagged
-  for review not auto-merge; (2) the 56-file second frontend effort ("Mistral Frontend
-  Command Center Branch") catalogued group-by-group into duplicate/genuinely-new/
-  not-wanted, with what integrating the genuinely-new parts would actually require.
-  Results pending — check for completion notifications before re-deriving either.
+- **Both dead-code depth investigations DONE, logged in `AUDIT_LEDGER.md`** (two
+  2026-07-31 follow-up entries). Guilds/duplicates: 7 of 12 stubs safe-to-delete
+  (job executed elsewhere for real), 1 partial finding (`treasury_guild.py`'s
+  revenue-split feature has no live implementation anywhere), 5 genuinely unfinished
+  low-priority; 2 of 4 duplicates safe-to-delete, 2 (`constitution.py`, `rate_limiter.py`)
+  flagged high-risk for founder review, not auto-merged. Second frontend: correction —
+  13 of the "56" files are NOT orphaned (already lazy-imported live by `KaiElOS.tsx`);
+  real standouts worth integrating are `MemoryGraphEnhanced.tsx`+`ConstitutionVisualizer.tsx`
+  (real D3 graph + tiered constitution view, already wired to live API, just needs
+  re-skinning) and `services/sentry.ts` (near-zero-cost — error tracking already
+  declared in `package.json`, never actually initialized). All founder-decision items,
+  nothing deleted/wired yet.
 - **Grok bridge activation (L2):** founder said "not sure yet" — tracked as **undecided**,
   not open, not dropped. Don't nag about it; don't drop it either.
 - **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no

@@ -202,6 +202,66 @@ built for a real reason and later superseded (safe to delete), or abandoned mid-
   founder's own instruction to understand before acting. Dispositions above are ready
   for the founder to actually decide on.
 
+### 2026-07-31 — Follow-up: cataloguing the 56-file second frontend effort (founder-requested depth pass)
+
+**Verdict: correction to the original sweep's count, plus a real per-file usable/skip/new catalog**
+
+- **Correction to the earlier sweep:** 13 of the "56 unreachable" files
+  (`components/command-center/tabs/*.tsx` — HIVE/DREAM/ARCANE/WORLD/SOUL/GOVERN/
+  MISSIONS/API/4D/ARENA/WOW/NO_MANS_SKY/SETTINGS) are **not actually orphaned** —
+  `KaiElOS.tsx` lazy-imports every one of them directly as its "full-takeover" tabs.
+  The tab *content* was already salvaged into the live app; only the routing shell
+  around it (`TabNavigator.tsx` + 4 page files) is still genuinely unreachable.
+- **Skip — inferior duplicate of something already live:** the page/router shell
+  (superseded by `KaiElOS.tsx`'s graph-navigator, which the founder deliberately chose);
+  `components/colony/*` (10 fake consoles simulating CPU/memory with `Math.random()` —
+  `ColonyZoomPanel.tsx`, already live, does the same job with real `/colony/health`
+  calls); `TesseractChamber.tsx` (basic wireframe cubes vs. the already-live
+  `TesseractRenderer.tsx`'s real 6-plane 4D→3D projection); `MemoryGraph.tsx` (older,
+  simpler sibling of `MemoryGraphEnhanced.tsx`, redundant once that one's taken).
+- **Skip — mismatched/fictional data, firmly not wanted:** `data/{colonies,constitution,
+  memories,missions}.ts` invent sci-fi content ("Alpha Centauri Prime," fictional laws)
+  that would actively misrepresent the real system (real colonies are the 10 GitHub
+  repos, the real constitution is `soul.md`'s F-001–F-006) — not a quality problem, a
+  correctness problem. The presentational components built against this data
+  (`MissionBoard`/`Card`/`Details`, `QuickStats`, `ResourceBar`, `AgentAvatar`,
+  `ColonyCard`, `MemoryVault`, `MemoryDetails`/`Item`, `ConstitutionHall`) inherit the
+  same problem and would need full re-binding + re-skinning to the live design tokens,
+  not a lift.
+- **Skip — buggy or low-quality:** `useColonyHealth.ts` calls `getHiveStatus()` →
+  `/v11/hive/status`, which **does not exist anywhere in `worker/src/index.js`**
+  (grepped, confirmed absent) — would silently fail in production. `useNeuralUI.ts`
+  fakes a "prediction confidence" counter with no real learning behind it.
+  `useAsyncState.ts` is redundant with the live app's already-established fetch pattern
+  (`useHiveData.ts`). `utils/constitutional.ts`'s policy checks are permissive no-ops.
+  `gameStore.ts` ties to the `worlds/` module `FUTURE_MODULES.md` already deferred on
+  purpose — not re-litigated here.
+- **Genuinely new capability, real integration value, not yet built live:**
+  - **`MemoryGraphEnhanced.tsx` + `ConstitutionVisualizer.tsx`** — the strongest find.
+    Both already call the real, live `services/api.ts` functions
+    (`getMemoryGraph()`/`getConstitutionLaws()`), and `ConstitutionVisualizer`'s
+    fallback data correctly states F-001–F-006 (unlike the fictional `data/` files).
+    Live's current equivalents (`DreamLogs.tsx`, `ConstitutionViewer.tsx`) are flat
+    lists/markdown with no graph, no tiering, no history — a real capability gap.
+    Integration is a re-skin job (swap inline `theme.*` styles for the live
+    cyan-glow/void-black Tailwind tokens), not a data job — data-wise already correct.
+  - **`services/sentry.ts`** — near-zero-cost win. `@sentry/react`/`@sentry/tracing`
+    are already declared in `package.json` but `initSentry()` is never called anywhere
+    — **the live app currently ships with zero error tracking.** Needs one call from
+    `main.tsx` plus a `VITE_SENTRY_DSN` env var; the file itself needs no changes.
+  - **`services/github.ts`** — `sendGrokBridgeDispatch`/`fetchGrokToken` call real,
+    confirmed-present Worker endpoints (`/admin/grok-token`, `/bridge/grok-token`) that
+    nothing in the live UI currently exposes a trigger for.
+  - **`stores/uiStore.ts`** — a complete generic notification/modal/toast system; live
+    panels currently hand-roll every overlay via ad hoc `useState`. Self-contained,
+    only needs its stock theme palette swapped or dropped.
+  - **Minor/low-priority:** `AchievementToast`/`LevelUpNotification` (the underlying
+    XP/level data already exists on `RoadmapEntry`, nothing renders it yet — revisit if
+    that surfaces later, not urgent); `usePersistedForm.ts` (clean, cheap, nothing
+    currently needs it); `components/common/{Button,Card,Modal}` (flags a real gap — no
+    shared component library exists live — but wrong palette means rewrite, not port).
+- **Nothing wired, moved, or deleted in this pass** — investigation only.
+
 ---
 
 ## Not yet audited by this skill (do not assume clean)
