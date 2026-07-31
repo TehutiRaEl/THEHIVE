@@ -13,10 +13,10 @@ than short — keep every line true as of the moment you touch it.
 
 ---
 
-## Right now (updated 2026-07-31)
+## Right now (updated 2026-07-31, hourly heartbeat)
 
-- **Open PRs on THEHIVE:** #136 (Kai EL OS roadmap panel) — `state: open`,
-  `mergeable_state: clean`, CI last checked green. No other open PRs on this repo.
+- **Open PRs on THEHIVE:** #136 (Kai EL OS roadmap panel + Kai El bridge) — `state: open`,
+  `mergeable_state: clean`, CI green, no new review comments. No other open PRs.
 - **Autonomous 6-session arc:** `trig_013BTxUthvLX3C4nLs7MypVC` — Session 1/6 done
   (agency.py + staking.py coverage). Session 2/6 scheduled `2026-07-31T22:30:00Z`.
   Sessions 3-6: nightly 2 AM Los Angeles time. Full detail →
@@ -72,12 +72,19 @@ no new infrastructure invented, just wired up. Full design →
   `directive_text` input to hand Kai El an architect-directive — it lands in Vectorize
   via `/v11/memory/remember` and surfaces the next time `recall()` fires during a
   real chat.
-- **Not yet verified live** — this shipped in the same commit as this pulse-file
-  update; the worker code hasn't been exercised against a real production `/command_text`
-  call with a CONCERN/PROPOSAL-marked reply yet (this container can't do that itself).
-  First real verification is whatever `edge-health-probe.yml` or `kai-el-bridge.yml`'s
-  own next scheduled run shows — check before assuming this works, per this hive's own
-  "probe before claim" rule.
+- **Verified live, 2026-07-31, real (unstaged) round trip.** The routine
+  `edge-health-probe.yml` smoke-test call to `/command_text` got a real Kai El reply
+  that began `CONCERN: ...` — the worker persisted it, and a `kai-el-bridge.yml` sync
+  mirrored it into issue #137 ("Kai El — Concerns & Architect Proposals Queue"). Full
+  loop confirmed working, not just deployed.
+- **Calibration flag, not yet resolved:** that first CONCERN fired on a generic test
+  prompt, on the small unbound-keys edge model (Workers AI `llama-3.2-1b-instruct` —
+  Claude/Groq/Mistral keys all unbound), and the concern text itself was vague/generic
+  rather than a substantive finding. One data point isn't a trend — watch a few more
+  real firings via issue #137 before deciding the marker wording needs tightening.
+  Founder told, not yet acted on.
+- **Harness → Kai El direction (`directive_text` dispatch input) still genuinely
+  untested** — only the Kai-El → founder direction has fired for real so far.
 
 ## Not yet built / open questions
 
