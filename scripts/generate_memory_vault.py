@@ -817,8 +817,46 @@ def main():
     if fed["nodes"]:
         print(f"  + {len(fed['nodes'])} federation repo nodes from {FEDERATION_ROOT}")
 
+    # _federation.json — live snapshot of all discovered colony identities
+    federation_snapshot: list[dict] = []
+    queen_soul = ROOT / "soul.md"
+    queen_hash = ""
+    if queen_soul.exists():
+        import hashlib
+        queen_hash = hashlib.sha256(queen_soul.read_bytes()).hexdigest()[:16]
+    # Always include THEHIVE itself
+    thehive_cj_path = ROOT / "colony.json"
+    if thehive_cj_path.exists():
+        try:
+            thehive_cj = json.loads(thehive_cj_path.read_text(encoding="utf-8", errors="ignore"))
+            federation_snapshot.append({**thehive_cj, "soul_md_hash": queen_hash, "source": "local"})
+        except Exception:
+            pass
+    # Append sibling colonies
+    if FEDERATION_ROOT.is_dir():
+        for repo_dir in sorted(FEDERATION_ROOT.iterdir()):
+            if not repo_dir.is_dir() or repo_dir.name.startswith(".") or repo_dir == ROOT:
+                continue
+            cj_path = repo_dir / "colony.json"
+            if cj_path.exists():
+                try:
+                    cj = json.loads(cj_path.read_text(encoding="utf-8", errors="ignore"))
+                    soul_hash = ""
+                    soul_path = repo_dir / "soul.md"
+                    if soul_path.exists():
+                        import hashlib
+                        soul_hash = hashlib.sha256(soul_path.read_bytes()).hexdigest()[:16]
+                    federation_snapshot.append({**cj, "soul_md_hash": soul_hash, "source": "local"})
+                except Exception:
+                    pass
+    fed_dir = MEMORY / "colonies"
+    fed_dir.mkdir(parents=True, exist_ok=True)
+    fed_json_path = fed_dir / "_federation.json"
+    fed_json_path.write_text(json.dumps(federation_snapshot, indent=2), encoding="utf-8")
+    print(f"  wrote memory/colonies/_federation.json ({len(federation_snapshot)} colonies)")
+
     total = sum(1 for _ in MEMORY.rglob("*.md"))
-    print(f"\nDone — {total} Markdown files, 1 graph JSON in memory/")
+    print(f"\nDone — {total} Markdown files, 2 graph JSON files in memory/")
 
 
 if __name__ == "__main__":
