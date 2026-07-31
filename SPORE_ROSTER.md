@@ -1,8 +1,24 @@
-# SPORE_ROSTER — the 101 roles, reframed as autonomous agentic spores
+# SPORE_ROSTER — the hive's role catalogs, reframed as autonomous agentic spores
 
-Source: `canvases/thehive-unity-migration/canvases/thehive-studio-onboarding/CANVAS.md`
-("THE HIVE: Complete Studio Onboarding & Role Creation Plan") — a 101-role, $3.6M-7.4M,
-150-human-headcount plan to turn THE HIVE into a funded Unity/Unreal AAA-MMORPG studio.
+Two sources, two different natures — kept separate rather than mechanically stapled
+together, because treating them the same would misrepresent both:
+
+- **Part 1 — `canvases/thehive-unity-migration/canvases/thehive-studio-onboarding/CANVAS.md`**
+  ("THE HIVE: Complete Studio Onboarding & Role Creation Plan") — a *speculative*
+  101-headcount, $3.6M-7.4M, 150-human plan to turn THE HIVE into a funded Unity/Unreal
+  AAA-MMORPG studio. Never adopted, never acted on.
+- **Part 2 — `docs/ROLES.md`** ("Sovereign Hive — Role Catalog") — a *real, currently live*
+  documentation convention: the `[ROLE: <Title>]` commit/PR tag every contributor (human
+  or AI, this session included) already uses across all 10 federation repos, referenced
+  directly by every colony's `docs/GOVERNANCE.md`. This one lists **111** roles (101 in
+  the main 10-tier table + 10 more under "Federation AI Session Roles") — not 101; noted
+  here rather than silently rounded, since precision is the whole point of this document.
+
+Combined: 78 distinct role-types (Part 1) + 111 (Part 2) = **189** named roles across both
+catalogs — not the "202" first estimated before either was read in full; corrected here
+rather than left as a round-number placeholder.
+
+## Part 1 — CANVAS.md (speculative game-studio plan)
 
 ## Read this before the table — the honest reframe
 
@@ -200,9 +216,44 @@ Not an adoption of CANVAS.md's literal business plan (funding rounds, physical o
 speculative pivot document, un-acted-on. This document only extracts and re-targets its
 role taxonomy, per this hive's own MANDATE_TRIAGE discipline.
 
+---
+
+## Part 2 — docs/ROLES.md (real, live convention — 111 roles)
+
+Different nature from Part 1, so a different treatment: `docs/ROLES.md` is not a
+speculative plan, it's a **currently active documentation convention** — the
+`[ROLE: <Title>]` tag GOVERNANCE.md asks every commit/PR across all 10 federation repos
+to carry. It says so itself: "a convention, not an access-control system." Most of these
+don't need an ACTIVE/NEW/DECLINED verdict the way Part 1's roles did, because the
+convention itself is already live; what's worth recording here is which tiers map onto
+real spores/skills today and which are still just a tag with no autonomous agent behind
+it yet.
+
+**By tier:**
+
+| Tier | Roles | Spore mapping |
+|---|---|---|
+| Governance Kernel (1-6) | Constitution Steward, Role Catalog Curator, Compliance Auditor, Conflict Resolver, Convention Enforcer, Federation Liaison | ACTIVE — `hive-conductor`'s governance gate + `MANDATE_TRIAGE.md` cover this tier's actual work today |
+| Executive (7-18) | 10 colony directors + Release/Budget stewards | ACTIVE per-colony (each colony's own harness), `hive-organism` at the federation level |
+| Domain Lead (19-29) | API/Data/Messaging/Auth/etc. leads | ACTIVE — `agent-harness`'s per-domain manifests are this tier made executable |
+| Director (30-40) | DB Reliability, API Contract, Network Resilience, Secrets/Signing, etc. | ACTIVE — `devils-advocate-audit`'s priority-3 targets (money/permissions/HMAC) are exactly this tier's concern |
+| Middle Management (41-48) | Sprint Coordinator ×7, Cross-Repo Dependency Coordinator | ACTIVE (narrow) — `.claude/HIVE_PULSE.md` is this tier's real THEHIVE instance; the other 6 colonies don't have an equivalent pulse file yet — **NEW**, one per colony |
+| Senior Architect/Staff (49-64) | 16 named architecture-ownership roles | ACTIVE — each corresponds to a real, named module (`hive_mesh.py`, `wallet.py`, `validator.py`, `agency.py`, etc.); `devils-advocate-audit`'s ledger is where this tier's actual verification work is recorded |
+| Mid-level Engineer (65-81) | Backend/Frontend/DB/Test/Doc/CI/Release Engineer, per repo | ACTIVE — this is what most of this session's own commits *are* |
+| Apprentice/Validator (82-90) | Code Reviewer Apprentice ×7, Link/Lesson Validator | PARTIAL — `merge-readiness`/`pr-retrospective` cover THEHIVE's own PRs; no first-pass reviewer spore exists yet for the other 9 repos |
+| Frontline Support (91-96) | Issue Triage ×4, Onboarding Guide, Community Q&A | NEW — same real gap Part 1 found in Community & Marketing; no live issue-triage spore exists |
+| Janitorial/Ops (97-101) | Dependency Hygiene, **Dead Code Sweep**, Artifact Cleanup, Log Hygiene, CI Minutes Steward | PARTIAL — `#98 Dead Code Sweep` is literally the founder's separate ask this same message (see below); the other four are real, currently-manual gaps |
+| AI Session (102-111) | Sovereign Architect, Memory Architect, Agent Engineer, Knowledge Curator, Infra Engineer, Federation Engineer, Performance Engineer, Frontend Engineer, Governance Kernel, Sovereign Strategist | ACTIVE — **this is the tier this session itself operates under** every time it commits; no reframe needed, it already describes real autonomous-AI work |
+
+**What's genuinely new here, distinct from Part 1's gaps:** a per-colony `HIVE_PULSE.md`
+equivalent (tier 41-48's real gap), a first-pass PR-reviewer spore for the 9 non-THEHIVE
+repos (tier 82-90), and issue-triage automation (tier 91-96, same shape as Part 1's
+Community-department gap). Three concrete, named next candidates — not built this pass.
+
 ## Next
 
-The 8 **NEW** roles (mostly Community & Marketing) are real candidates for a future
-`skill-creator` pass, gated by `MANDATE_TRIAGE.md` before any of them ship as real. Not
-built in this pass — named here so a future session doesn't have to re-derive this table
-to find the actual gaps.
+Part 1's 8 **NEW** roles (mostly Community & Marketing) and Part 2's 3 newly-identified
+gaps (per-colony pulse files, cross-repo PR-review spore, issue-triage automation) are all
+real candidates for a future `skill-creator` pass, gated by `MANDATE_TRIAGE.md` before any
+of them ship as real. Not built in this pass — named here so a future session doesn't have
+to re-derive this table to find the actual gaps.
