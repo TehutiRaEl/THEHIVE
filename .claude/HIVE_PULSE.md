@@ -4,144 +4,79 @@ One page, kept small on purpose (target: under ~1000 tokens). Every scheduled
 Routine/heartbeat firing reads **this file first, in full — nothing else** — and only
 opens a linked file below if this page says that specific thing changed since the last
 firing. This is the token/context-economy mechanism described in
-`.claude/skills/autonomous-hive-agent/SKILL.md`'s "circulatory system" section: the
-lever that makes frequent, cheap, always-on presence possible without every firing
-re-reading the whole repo/history to get oriented.
+`.claude/skills/autonomous-hive-agent/SKILL.md`'s "circulatory system" section.
 
 **Update this file at the end of every autonomous firing.** Stale-but-wrong is worse
-than short — keep every line true as of the moment you touch it.
+than short — keep every line true. When a section grows past what's actually current,
+compress it (like this pass did) rather than let it accumulate resolved history —
+that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-07-31, ~21:55 UTC, hourly heartbeat)
+## Right now (updated 2026-07-31, ~22:20 UTC — PR #138 merged)
 
-- **Open PRs on THEHIVE: #138 only.** hive-organism subagent + SPORE_ROSTER.md +
-  FABLE_DNA doctrine section — `state: open`, `mergeable_state: clean`, CI green, no
-  new review comments as of this check. #136 merged earlier (`160b92c`) — don't check
-  it again, it's closed history now.
-- **Autonomous 6-session arc:** `trig_013BTxUthvLX3C4nLs7MypVC` — Session 1/6 done
-  (agency.py + staking.py coverage). Session 2/6 scheduled `2026-07-31T22:30:00Z`.
-  Sessions 3-6: nightly 2 AM Los Angeles time. Full detail →
-  `.claude/Fable_memory.md`, latest "Session N/6 (autonomous arc)" entry.
-- **PR check-in heartbeat:** converted 2026-07-31 from a manual send_later
-  re-arm chain (13 one-shot triggers created across the day, one per hour, each
-  depending on the prior firing remembering to re-arm it) to a single native cron
-  Routine — `trig_01Dd9ysNpDiCcfVVEKzM54DX`, `58 * * * *` (hourly), no reschedule
-  call needed ever again. See "Circulatory system" below for why this matters.
-- **devils-advocate-audit sweep:** 4 modules checked (`wallet.py` bug found+fixed,
-  `staking.py`/`agency.py`/`colony.py` confirmed correct). Full list of what's still
-  unaudited → `.claude/skills/devils-advocate-audit/AUDIT_LEDGER.md`, "Not yet audited"
-  section — check there before picking the next target, don't re-derive from scratch.
-- **Coverage sweep next targets:** `backend/economy/utility_economy.py` (24%),
-  `backend/core/genome.py` (24%), `backend/core/llm_router.py` (17%, the real
-  `core/` one — not the dead root-level duplicate, flagged for founder to delete).
-- **Rolling logs that may have changed since you last read them (check dates, don't
-  assume stale = current):** `.claude/Fable_memory.md` (session harvest),
-  `.claude/skills/recursive-growth/LESSONS.md`, `.claude/skills/recursive-growth/SKILL_CHANGELOG.md`,
-  `.claude/skills/workflow-optimizer/` (no dedicated notes file yet — see its SKILL.md),
-  `PR_LESSONS.md` (latest: L-09).
-- **Roadmap:** published artifact + in-app panel (PR #136) both reflect the same
-  `frontend/src/data/roadmapData.ts` — update that file, not the two surfaces
-  separately, when status changes.
+- **Open PRs: none.** #138 (hive-organism subagent, `SPORE_ROSTER.md`, FABLE_DNA
+  doctrine section) merged to `main` at `65e8a1e`. Session branch reset to fresh `main`.
+- **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no
+  more "Session N/6" framing (removed 2026-07-31, backlog outgrew 6 sessions). Next
+  fire `2026-08-01T09:00:00Z`. Maximize each firing's own window rather than cramming;
+  read that trigger's own prompt (`list_triggers`) for the full current priority order.
+- **PR-heartbeat: native hourly cron only** — `trig_01Dd9ysNpDiCcfVVEKzM54DX`
+  (`58 * * * *`). Don't start a new `send_later` chain for the next PR; this cron
+  already checks whatever this file lists as open.
+- **Kai El bridge: live, verified real round trip** (issue #137, `hive_updates`/
+  `hive_proposals` D1 tables, `.github/workflows/kai-el-bridge.yml`). Harness→Kai-El
+  direction (`directive_text` dispatch) still genuinely untested. Calibration flag:
+  first real `CONCERN` was vague/generic, fired on the small unbound-keys edge model —
+  watch a few more via issue #137 before deciding the marker wording needs tightening.
+- **`devils-advocate-audit` sweep:** 4 modules checked (`wallet.py` bug found+fixed;
+  `staking.py`/`agency.py`/`colony.py` confirmed correct). Next target →
+  `AUDIT_LEDGER.md`'s "Not yet audited" section, don't re-derive.
+- **Coverage sweep next targets:** `utility_economy.py` (24%), `genome.py` (24%),
+  `llm_router.py` (17%, the real `core/` one).
+- **Dead-code sweep: done, logged in `AUDIT_LEDGER.md`** (2026-07-31 entry). Headline:
+  12 orphaned `backend/guilds/*.py` modules + 2 more duplicate files (4 total now, not
+  2) + `backend/mcp/` — all need a founder-confirmed batch-delete pass, not yet deleted.
+  Bigger finding: 56 of frontend's "unreachable" files are a coherent second app
+  (`pages/CommandCenter.tsx`, `HiveDashboard`, `ConstitutionHall`, etc.,
+  self-identified as the "Mistral Frontend Command Center Branch") — the physical
+  presence of `CLAUDE.md`'s already-flagged unreconciled second frontend effort.
+  Founder decision needed: delete or revive.
+- **Token economy:** `.claude/TOKEN_ECONOMY_LEDGER.md` — `caveman` measured at 65%
+  (`/caveman-stats`); founder's 96% target not yet reached/fully measured. Two open
+  macro questions there for founder input, not decided unilaterally.
+- **`SPORE_ROSTER.md`:** 189 roles total (78 from CANVAS.md's speculative game-studio
+  plan + 111 from `docs/ROLES.md`'s real, live federation role-tag convention). 3 new
+  gaps found: no per-colony pulse-file equivalent, no cross-repo PR-review spore, no
+  issue-triage automation.
+- **Backlog, priority order:** (1) unified flip-the-switch checklist (both
+  `FLIP_THE_SWITCHES.md` files); (2) production-readiness % / Queen's Progress meter
+  UI; (3) Command Center button/tab audit + cohesion review; (4) Venture Planner +
+  Legal-research overhaul. Also queued, no scope agreed yet: Kai El execution-access
+  design (recommended shape: extend `hive_proposals`, never raw terminal access — see
+  `Fable_memory.md` for the analysis).
+- **Roadmap:** published artifact + in-app panel both read `frontend/src/data/roadmapData.ts`
+  — update that file, not the two surfaces separately.
+- **Rolling logs — check dates, don't assume stale:** `.claude/Fable_memory.md`,
+  `.claude/skills/recursive-growth/LESSONS.md` + `SKILL_CHANGELOG.md`, `PR_LESSONS.md`
+  (latest: L-09).
 
 ## Circulatory system — how heartbeats stay cheap
 
-See `.claude/skills/autonomous-hive-agent/SKILL.md` for the full design. Summary: native
-`cron_expression` Routines for anything truly recurring (never a self-rescheduling
-send_later chain — that pattern is what silently stalled the 6-session arc after
-Session 1, since it depends on the firing remembering to re-arm itself). Each firing:
-read this file first → do one bounded thing → update this file → stop (cron handles the
-next fire automatically, no reschedule call to forget).
+Native `cron_expression` Routines for anything truly recurring — never a
+self-rescheduling `send_later` chain (that pattern silently stalled this arc once
+already). Each firing: read this file first → do the work → update this file → stop.
+Full design → `.claude/skills/autonomous-hive-agent/SKILL.md`.
 
-## Kai El bridge (new 2026-07-31)
+## Kai El bridge — quick reference
 
-Two-way link between Kai El (the live `/command_text` chat persona, System B) and the
-harness (this session), through the existing `hive_updates`/`hive_proposals` D1 tables —
-no new infrastructure invented, just wired up. Full design →
+Kai El's `/command_text` reply starting `CONCERN: <title>` or `PROPOSAL: <title>`
+persists to `hive_updates`/`hive_proposals`; `kai-el-bridge.yml` mirrors both into
+issue #137 every 2h. To send Kai El something: dispatch `kai-el-bridge.yml` with a
+`directive_text` input (lands in Vectorize via `/v11/memory/remember`). Full design →
 `.claude/skills/autonomous-hive-agent/SKILL.md`'s "Kai El bridge" section.
-
-- **Kai El → founder (via harness):** Kai El's own reply can start with
-  `CONCERN: <title>` or `PROPOSAL: <title>` when genuinely warranted (worker prompt
-  instructs "rarely, only when real") — the worker code (`worker/src/index.js`,
-  `/command_text` handler) then persists it to `hive_updates`(kind=concern) or
-  `hive_proposals`(kind=architect-proposal). `.github/workflows/kai-el-bridge.yml`
-  (cron every 2h, plus `workflow_dispatch`) mirrors both into one fixed GitHub issue
-  titled "Kai El — Concerns & Architect Proposals Queue" — check that issue (via
-  `list_issues`/`issue_read`, not by hitting production directly — this container
-  still can't reach `*.workers.dev`) each autonomous firing; relay anything new to
-  the founder directly (push-notify if genuinely urgent).
-- **Harness → Kai El:** trigger `kai-el-bridge.yml` via `workflow_dispatch` with a
-  `directive_text` input to hand Kai El an architect-directive — it lands in Vectorize
-  via `/v11/memory/remember` and surfaces the next time `recall()` fires during a
-  real chat.
-- **Verified live, 2026-07-31, real (unstaged) round trip.** The routine
-  `edge-health-probe.yml` smoke-test call to `/command_text` got a real Kai El reply
-  that began `CONCERN: ...` — the worker persisted it, and a `kai-el-bridge.yml` sync
-  mirrored it into issue #137 ("Kai El — Concerns & Architect Proposals Queue"). Full
-  loop confirmed working, not just deployed.
-- **Calibration flag, not yet resolved:** that first CONCERN fired on a generic test
-  prompt, on the small unbound-keys edge model (Workers AI `llama-3.2-1b-instruct` —
-  Claude/Groq/Mistral keys all unbound), and the concern text itself was vague/generic
-  rather than a substantive finding. One data point isn't a trend — watch a few more
-  real firings via issue #137 before deciding the marker wording needs tightening.
-  Founder told, not yet acted on.
-- **Harness → Kai El direction (`directive_text` dispatch input) still genuinely
-  untested** — only the Kai-El → founder direction has fired for real so far.
-
-## Founder's "fully optimized for 2am sessions" mega-directive (2026-07-31) — status
-
-Four things resolved via AskUserQuestion, in priority order the founder set:
-1. **Priority: subagent + roles/spores first (done this pass).** `.claude/agents/hive-organism.md`
-   — a real dispatchable subagent embodying `autonomous-hive-agent`'s organism design — and
-   `SPORE_ROSTER.md` — the 101-role game-studio plan (`canvases/thehive-unity-migration/`)
-   reframed onto THEHIVE's real capabilities, 54/78 role-types already ACTIVE, 8 genuinely
-   NEW (mostly Community & Marketing), 7 DECLINED (no honest THEHIVE analog).
-2. **"Enterprise level" = aspirational doctrine, not literal current-state fact.** Added to
-   `FABLE_DNA.md` right before "How a new hive inherits this" — explicitly paired with
-   `CLAUDE.md`'s honest gap-tracking, not a replacement for it.
-3. **"Flip the switch" = unified checklist, both switch-sets** (root `FLIP_THE_SWITCHES.md`
-   + `automaton/FLIP_THE_SWITCHES.md`) — **not yet built**, queued next.
-4. **Still queued, explicitly deprioritized this pass:** production-readiness % + "Queen's
-   Progress meter" UI; full Command Center button/tab audit (🧬 Biosystem, ⬡ Gateway
-   cohesion); Venture Planner + Legal-research overhaul (SCOTUS/treaties/case-law depth,
-   phase-loop clarify→research→outline→infer→build, "deviation phase" horde orchestration
-   modeled on `agency.py`'s OBSERVE→PROPOSE→EXECUTE→DEVIATE ladder).
-
-## Follow-up round, same day (2026-07-31, ~22:10 UTC) — arc uncapped, roster extended
-
-- **The "6-session arc" cap is gone.** Founder: this backlog is bigger than 6 sessions,
-  stop cramming, maximize each firing's own window instead, no fixed end. Trigger
-  `trig_013BTxUthvLX3C4nLs7MypVC` renamed/reworded accordingly (see its own prompt via
-  `list_triggers` — no more "Session N/6" marker, don't look for one). Next fire:
-  `2026-08-01T09:00:00Z` (2 AM PT), then nightly indefinitely.
-- **`SPORE_ROSTER.md` extended with Part 2** — `docs/ROLES.md`'s 111 real, currently-live
-  federation role tags (distinct from Part 1's speculative game-studio list). Combined
-  total corrected to 189 named roles (not the "202" first estimated before either was
-  read in full). Three new concrete gaps found: no per-colony `HIVE_PULSE.md` equivalent,
-  no cross-repo PR-review spore, no issue-triage automation.
-- **`.claude/TOKEN_ECONOMY_LEDGER.md`** (new) — tracks real token-savings levers.
-  Honest baseline: `caveman` is *measured* at 65% (via `/caveman-stats`); the founder's
-  96% target is not yet reached or fully measured — levers and open macro-questions
-  listed there, not asserted as already true.
-- **`autonomous-hive-agent/SKILL.md`** — new "Swarm dispatch" section: when to fire
-  multiple named subagents in parallel (≥3 genuinely independent sub-tasks, large
-  enough to keep bulk output out of the calling session's own context) vs. when not to.
-- **Dead-code sweep launched in background** (Explore agent, `backend/`/`worker/`/
-  `frontend/` scope) — result not in yet as of this note; check for a completion
-  notification before assuming it's done or re-launching it.
-- **Terminal question answered (not a bug):** Kai EL OS's `HiveTerminal.tsx` is
-  deliberately read-only — a prior session's own comment in that file states plainly
-  that wiring a public frontend to execute arbitrary commands would be a genuine RCE
-  hole. Founder's "give Kai El the terminal on his own branch" idea was answered as an
-  analysis/recommendation in chat, not built — genuinely high-stakes, flagged rather
-  than guessed at.
 
 ## Not yet built / open questions
 
-- The unified flip-the-switch checklist, the production-readiness meter, the Command
-  Center audit, and the Venture Planner overhaul — still queued, priority order per the
-  section above.
-- Kai El execution-access design (if the founder wants to proceed after the chat
-  analysis) — not started, no scope agreed yet.
-- Cross-session token-tracking aggregation and the "which number matters" question in
-  `TOKEN_ECONOMY_LEDGER.md` — open macro items for the founder, not decided unilaterally.
+See "Backlog, priority order" above — that list is current. Nothing else outstanding
+beyond what's already named there.
