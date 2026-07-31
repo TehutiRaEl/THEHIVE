@@ -13,10 +13,10 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-07-31, ~22:20 UTC — PR #138 merged)
+## Right now (updated 2026-07-31, ~22:25 UTC)
 
-- **Open PRs: none.** #138 (hive-organism subagent, `SPORE_ROSTER.md`, FABLE_DNA
-  doctrine section) merged to `main` at `65e8a1e`. Session branch reset to fresh `main`.
+- **Open PRs: #139** (dead-code sweep findings + this file's own consolidation) —
+  just opened, CI mid-run, check fresh. #138 merged to `main` at `65e8a1e` earlier.
 - **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no
   more "Session N/6" framing (removed 2026-07-31, backlog outgrew 6 sessions). Next
   fire `2026-08-01T09:00:00Z`. Maximize each firing's own window rather than cramming;
