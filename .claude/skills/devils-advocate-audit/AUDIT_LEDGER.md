@@ -106,6 +106,55 @@ exists)
   items already tracked in the roadmap. "What does the attacker do with this" is where
   the replay finding above came from.
 
+### 2026-07-31 — Dead/unused code sweep (`backend/`, `worker/src/index.js`, `frontend/src/`)
+
+**Verdict: mixed — several BUG-ADJACENT FINDINGS (dead code, not behavior bugs), one large ARCHITECTURAL FINDING, most of the rest CONFIRMED CORRECT (properly gated, not dead)**
+
+- **How it was actually checked:** a background `Explore` subagent, grep-based
+  importer/caller checks per candidate (not a read-through) — for the worker, verified
+  every top-level function has a real call site within the file; for the frontend, built
+  an actual import-reachability graph (BFS from `main.tsx`, including `lazy()`/`import()`)
+  across all 149 `.ts`/`.tsx` files rather than eyeballing folders.
+- **Confirmed dead, high confidence (needs founder confirmation before delete, not yet
+  deleted):** `backend/guilds/*.py` (all 12 modules — genuinely orphaned, *not*
+  flip-the-switch gated; `enable_guilds` config only feeds a log line, never constructs
+  any of these classes, so this is a real distinction from the worker's gated features);
+  a **third** `frequency_guild.py` duplicate (`backend/guilds/frequency_guild.py`,
+  shadowing the real `backend/core/frequency_guild.py` — same shape as the two duplicates
+  already known); a **fourth** duplicate, `backend/utils/rate_limiter.py` (shadowed by
+  `middleware.py`'s own inline `RateLimiter`); `backend/mcp/` (already self-documented as
+  dead in `backend/CLAUDE.md`, just never actually removed); 7 more zero-importer
+  standalone modules (`agent_identity.py`, `audit_chain.py`, `phase_manager.py`,
+  `resonance.py`, `sheaf_crypto.py`, `memory/episodic_memory.py`, `memory/vector_store.py`,
+  `utils/crypto.py`, `utils/helpers.py`).
+- **Correctly NOT flagged — gated, not dead:** `backend/tier3/*` (conditionally imported,
+  tested); `backend/tier2/*` shim modules (re-export the real `tesseract_math` package,
+  confirmed to exist); the worker's `processQueueBatch` (deliberately unexported per
+  `FLIP_THE_SWITCHES.md` §6, same pattern L-08 already covers).
+- **Real finding beyond dead code — an architectural one:** 56 of the frontend's 89
+  "unreachable" files are not stray dead code, they're a coherent second app —
+  `pages/CommandCenter.tsx`, a full `components/colony/` console set, `HiveDashboard`,
+  `ConstitutionHall`, `MemoryVault`, `TesseractChamber`, etc. — self-identified in
+  `frontend/src/README.md` as the "Mistral Frontend Command Center Branch." This is the
+  physical presence, in this checkout, of the second frontend effort `CLAUDE.md`'s "not
+  yet reconciled" section already named as unreconciled (`feature/gamified-ui-components`)
+  — not a new discovery of the gap, but the first confirmation of exactly what and how
+  much code is sitting there. Large and coherent enough that it may be a revival
+  candidate rather than a deletion candidate — correctly left as a founder decision, not
+  assumed either way. (The other 33 unreachable files — `worlds/`, `voxel/`, `xp/`,
+  `avatars/`, `conversation/` — are confirmed intentional per `FUTURE_MODULES.md`, not
+  part of this finding.)
+- **Dependency spot-check (not exhaustive):** `sqlalchemy`/`alembic` declared but zero
+  imports found anywhere (DB layer is raw `sqlite3`); `langchain`/`langchain-community`
+  declared but the actual code imports the undeclared `langchain_openai` instead —
+  possible declared/actual mismatch, flagged as "worth a second look," not asserted as a
+  confirmed bug.
+- **Devils-advocate questions that surfaced something:** "is there a simpler path" → the
+  guilds/ orphan set is itself the answer, a whole subsystem built and never wired, the
+  simpler path was just not building it or wiring it fully. "What's the single point of
+  failure" → not applicable here, dead code by definition isn't load-bearing, which is
+  exactly why this sweep is a lower-urgency, batchable cleanup rather than an emergency.
+
 ---
 
 ## Not yet audited by this skill (do not assume clean)
