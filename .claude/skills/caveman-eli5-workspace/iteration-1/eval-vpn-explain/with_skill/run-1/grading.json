@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "Explains a VPN routes/sends the user's internet traffic through another computer/server first",
+      "passed": false,
+      "evidence": "Describes encryption (\"wraps your data in a locked box\") and location-masking clearly, but never explicitly states traffic passes through another server/computer first \u2014 the routing mechanism is implied, not stated"
+    },
+    {
+      "text": "Explains this hides the user's real location and/or hides their browsing activity from their own ISP/network",
+      "passed": true,
+      "evidence": "\"the website sees the VPN's location instead of yours\"; \"If you don't want your internet provider or advertisers tracking exactly what you do online, a VPN hides that from them\""
+    },
+    {
+      "text": "Uses full grammatical sentences throughout, not sentence fragments",
+      "passed": true,
+      "evidence": "All five paragraphs are complete, connected sentences with explicit reasoning"
+    },
+    {
+      "text": "Avoids filler/hedging/pleasantry phrases",
+      "passed": true,
+      "evidence": "No instances found"
+    },
+    {
+      "text": "Does not use technical jargon without immediately explaining it in plain words",
+      "passed": true,
+      "evidence": "\"IP address, which is like your device's home address on the internet\" \u2014 explained on first use"
+    },
+    {
+      "text": "Does not include marketing language or brand promotion",
+      "passed": true,
+      "evidence": "Actively pushes back on hype: \"The ads you keep seeing are companies competing for your attention because privacy sells well, not because everyone secretly needs one every day\""
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 1,
+    "total": 6,
+    "pass_rate": 0.8333
+  }
+}

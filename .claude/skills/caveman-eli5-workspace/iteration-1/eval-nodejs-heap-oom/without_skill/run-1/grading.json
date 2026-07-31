@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "Explains why loading a 2GB file into memory at once causes a heap-out-of-memory crash",
+      "passed": true,
+      "evidence": "\"V8 gives your JS code a limited chunk of memory to work with \u2014 the 'heap' \u2014 ...Once you hit that ceiling, Node throws JavaScriptHeapOutOfMemory and dies\""
+    },
+    {
+      "text": "Explains what streaming means in plain language",
+      "passed": true,
+      "evidence": "\"instead of loading the whole file into memory at once, you read it in small chunks... Think of it like drinking a big lake through a straw\""
+    },
+    {
+      "text": "Uses full grammatical sentences throughout, not sentence fragments",
+      "passed": true,
+      "evidence": "Prose paragraphs are full sentences, though denser and more parenthetical-heavy than the with-skill version"
+    },
+    {
+      "text": "Avoids filler/hedging/pleasantry phrases",
+      "passed": false,
+      "evidence": "\"or just not wanting your ISP logging\" \u2014 \"just\" used as filler; no other clear violations"
+    },
+    {
+      "text": "Does not use technical jargon without immediately explaining it in plain words",
+      "passed": false,
+      "evidence": "Introduces \"backpressure control\" near the end with only a parenthetical gloss, and assumes familiarity with concepts like specific heap size ranges (1.5-4GB) and batch insert sizing \u2014 noticeably more jargon-dense and assumes more prior knowledge than the with-skill version"
+    },
+    {
+      "text": "Keeps the exact error string 'JavaScriptHeapOutOfMemory' unaltered",
+      "passed": true,
+      "evidence": "\"Node throws JavaScriptHeapOutOfMemory and dies\" \u2014 verbatim"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "total": 6,
+    "pass_rate": 0.6667
+  }
+}

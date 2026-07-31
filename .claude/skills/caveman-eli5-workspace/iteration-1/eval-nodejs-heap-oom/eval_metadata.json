@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "nodejs-heap-oom",
+  "prompt": "yo my node app keeps crashing with 'JavaScriptHeapOutOfMemory' error whenever I run a big csv import, like a 2gb file. some coworker said i need to 'stream' it but idk what that means, can you just explain what's going on and what streaming even means",
+  "assertions": [
+    "Explains why loading a 2GB file into memory at once causes a heap-out-of-memory crash",
+    "Explains what streaming means in plain language (processing the file in small pieces instead of all at once)",
+    "Uses full grammatical sentences throughout, not sentence fragments",
+    "Avoids filler/hedging/pleasantry phrases (just, basically, actually, simply, sure, certainly, happy to)",
+    "Does not use technical jargon (e.g. backpressure, buffer, chunking) without immediately explaining it in plain words",
+    "Keeps the exact error string 'JavaScriptHeapOutOfMemory' unaltered if it appears in the answer"
+  ]
+}

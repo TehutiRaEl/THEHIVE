@@ -1,0 +1,13 @@
+{
+  "eval_id": 2,
+  "eval_name": "vpn-explain",
+  "prompt": "explain like im 5 what a vpn actually does, i keep seeing ads for nordvpn and stuff but i dont get why id need one",
+  "assertions": [
+    "Explains a VPN routes/sends the user's internet traffic through another computer/server first",
+    "Explains this hides the user's real location and/or hides their browsing activity from their own internet provider or network",
+    "Uses full grammatical sentences throughout, not sentence fragments",
+    "Avoids filler/hedging/pleasantry phrases (just, basically, actually, simply, sure, certainly, happy to)",
+    "Does not use technical jargon (e.g. tunnel, encryption, IP address, ISP) without immediately explaining it in plain words",
+    "Does not include marketing language or brand promotion for VPN services"
+  ]
+}

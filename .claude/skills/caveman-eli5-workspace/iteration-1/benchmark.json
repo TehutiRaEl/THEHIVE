@@ -1,0 +1,356 @@
+{
+  "metadata": {
+    "skill_name": "caveman-eli5",
+    "skill_path": "/home/user/THEHIVE/.claude/skills/caveman-eli5",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-07-31T18:55:38Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 14.0,
+        "tokens": 46525,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Keeps the exact terms 'git rebase' and 'git merge' unaltered",
+          "passed": true,
+          "evidence": "Both terms appear verbatim in backticks throughout"
+        },
+        {
+          "text": "Explains merge combines two branches' histories together, keeping the original commits as they were",
+          "passed": true,
+          "evidence": "\"combines them into your branch by adding one new 'merge commit' on top. Nothing about your existing commits changes.\""
+        },
+        {
+          "text": "Explains rebase replays/moves commits onto a new base, which changes/rewrites commit history",
+          "passed": true,
+          "evidence": "\"replays them one by one on top of the other branch's latest commits... rebase actually rewrites your commits into new ones with new IDs\""
+        },
+        {
+          "text": "Uses full grammatical sentences throughout, not sentence fragments",
+          "passed": true,
+          "evidence": "Entire answer is written as connected paragraphs with explicit 'because' reasoning in nearly every sentence \u2014 zero bullet points or fragments"
+        },
+        {
+          "text": "Avoids filler/hedging/pleasantry phrases",
+          "passed": true,
+          "evidence": "No instances found"
+        }
+      ],
+      "notes": [],
+      "eval_name": "git-rebase-merge"
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 15.9,
+        "tokens": 46660,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Explains why loading a 2GB file into memory at once causes a heap-out-of-memory crash",
+          "passed": true,
+          "evidence": "\"tries to pull the whole file into memory as one giant piece before it does anything with it... that heap has a size limit. Your 2GB file is bigger than that limit, so Node runs out of room and crashes\""
+        },
+        {
+          "text": "Explains what streaming means in plain language",
+          "passed": true,
+          "evidence": "\"streaming reads the file in small chunks, one small piece at a time... processes each chunk... then throws that piece away before grabbing the next chunk\""
+        },
+        {
+          "text": "Uses full grammatical sentences throughout, not sentence fragments",
+          "passed": true,
+          "evidence": "Every sentence has explicit subject/verb/object across all three paragraphs; no bullet fragments"
+        },
+        {
+          "text": "Avoids filler/hedging/pleasantry phrases",
+          "passed": true,
+          "evidence": "No instances of just/really/basically/actually/simply/sure/certainly/happy to found"
+        },
+        {
+          "text": "Does not use technical jargon without immediately explaining it in plain words",
+          "passed": true,
+          "evidence": "\"chunk\" is explained on first use (\"small chunks, one small piece at a time, like a few kilobytes\"); code/API names (fs.createReadStream, csv-parser) kept exact per the skill's own rule, not prose jargon"
+        },
+        {
+          "text": "Keeps the exact error string 'JavaScriptHeapOutOfMemory' unaltered",
+          "passed": true,
+          "evidence": "\"crashes with 'JavaScriptHeapOutOfMemory'\" \u2014 verbatim"
+        }
+      ],
+      "notes": [],
+      "eval_name": "nodejs-heap-oom"
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8333,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 16.1,
+        "tokens": 46584,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Explains a VPN routes/sends the user's internet traffic through another computer/server first",
+          "passed": false,
+          "evidence": "Describes encryption (\"wraps your data in a locked box\") and location-masking clearly, but never explicitly states traffic passes through another server/computer first \u2014 the routing mechanism is implied, not stated"
+        },
+        {
+          "text": "Explains this hides the user's real location and/or hides their browsing activity from their own ISP/network",
+          "passed": true,
+          "evidence": "\"the website sees the VPN's location instead of yours\"; \"If you don't want your internet provider or advertisers tracking exactly what you do online, a VPN hides that from them\""
+        },
+        {
+          "text": "Uses full grammatical sentences throughout, not sentence fragments",
+          "passed": true,
+          "evidence": "All five paragraphs are complete, connected sentences with explicit reasoning"
+        },
+        {
+          "text": "Avoids filler/hedging/pleasantry phrases",
+          "passed": true,
+          "evidence": "No instances found"
+        },
+        {
+          "text": "Does not use technical jargon without immediately explaining it in plain words",
+          "passed": true,
+          "evidence": "\"IP address, which is like your device's home address on the internet\" \u2014 explained on first use"
+        },
+        {
+          "text": "Does not include marketing language or brand promotion",
+          "passed": true,
+          "evidence": "Actively pushes back on hype: \"The ads you keep seeing are companies competing for your attention because privacy sells well, not because everyone secretly needs one every day\""
+        }
+      ],
+      "notes": [],
+      "eval_name": "vpn-explain"
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 4,
+        "failed": 1,
+        "total": 5,
+        "time_seconds": 14.7,
+        "tokens": 40970,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Keeps the exact terms 'git rebase' and 'git merge' unaltered",
+          "passed": true,
+          "evidence": "Both appear verbatim as bolded headers"
+        },
+        {
+          "text": "Explains merge combines two branches' histories together, keeping the original commits as they were",
+          "passed": true,
+          "evidence": "\"Your original commits stay exactly as they were, unchanged.\""
+        },
+        {
+          "text": "Explains rebase replays/moves commits onto a new base, which changes/rewrites commit history",
+          "passed": true,
+          "evidence": "\"This rewrites your commit history \u2014 your commits get new IDs/hashes, even if the content is the same.\""
+        },
+        {
+          "text": "Uses full grammatical sentences throughout, not sentence fragments",
+          "passed": false,
+          "evidence": "Answer is formatted as bullet fragments with dropped subjects, e.g. \"Takes the other branch's changes and combines them into your branch with a new 'merge commit.'\" \u2014 exactly the subject-dropping/telegraphic style the skill exists to avoid for a non-expert reader"
+        },
+        {
+          "text": "Avoids filler/hedging/pleasantry phrases",
+          "passed": true,
+          "evidence": "No clear filler words found, though the bullet format itself creates a different clarity problem"
+        }
+      ],
+      "notes": [],
+      "eval_name": "git-rebase-merge"
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 4,
+        "failed": 2,
+        "total": 6,
+        "time_seconds": 17.3,
+        "tokens": 41462,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Explains why loading a 2GB file into memory at once causes a heap-out-of-memory crash",
+          "passed": true,
+          "evidence": "\"V8 gives your JS code a limited chunk of memory to work with \u2014 the 'heap' \u2014 ...Once you hit that ceiling, Node throws JavaScriptHeapOutOfMemory and dies\""
+        },
+        {
+          "text": "Explains what streaming means in plain language",
+          "passed": true,
+          "evidence": "\"instead of loading the whole file into memory at once, you read it in small chunks... Think of it like drinking a big lake through a straw\""
+        },
+        {
+          "text": "Uses full grammatical sentences throughout, not sentence fragments",
+          "passed": true,
+          "evidence": "Prose paragraphs are full sentences, though denser and more parenthetical-heavy than the with-skill version"
+        },
+        {
+          "text": "Avoids filler/hedging/pleasantry phrases",
+          "passed": false,
+          "evidence": "\"or just not wanting your ISP logging\" \u2014 \"just\" used as filler; no other clear violations"
+        },
+        {
+          "text": "Does not use technical jargon without immediately explaining it in plain words",
+          "passed": false,
+          "evidence": "Introduces \"backpressure control\" near the end with only a parenthetical gloss, and assumes familiarity with concepts like specific heap size ranges (1.5-4GB) and batch insert sizing \u2014 noticeably more jargon-dense and assumes more prior knowledge than the with-skill version"
+        },
+        {
+          "text": "Keeps the exact error string 'JavaScriptHeapOutOfMemory' unaltered",
+          "passed": true,
+          "evidence": "\"Node throws JavaScriptHeapOutOfMemory and dies\" \u2014 verbatim"
+        }
+      ],
+      "notes": [],
+      "eval_name": "nodejs-heap-oom"
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8333,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 18.5,
+        "tokens": 41295,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Explains a VPN routes/sends the user's internet traffic through another computer/server first",
+          "passed": true,
+          "evidence": "\"it actually goes to a trusted helper first (the VPN company), who unlocks it and delivers it for you\" \u2014 more explicit about the routing mechanism than the with-skill version"
+        },
+        {
+          "text": "Explains this hides the user's real location and/or hides their browsing activity from their own ISP/network",
+          "passed": true,
+          "evidence": "\"it looks like the request came from the VPN helper, not from your actual house\""
+        },
+        {
+          "text": "Uses full grammatical sentences throughout, not sentence fragments",
+          "passed": true,
+          "evidence": "Uses an extended classroom-note analogy in full connected sentences \u2014 this baseline happened to already answer in an ELI5-appropriate register"
+        },
+        {
+          "text": "Avoids filler/hedging/pleasantry phrases",
+          "passed": false,
+          "evidence": "\"or just not wanting your ISP logging every site you visit\" \u2014 \"just\" used as filler"
+        },
+        {
+          "text": "Does not use technical jargon without immediately explaining it in plain words",
+          "passed": true,
+          "evidence": "No unexplained jargon found; \"ISP\" appears once late without re-expansion but \"internet provider\" was spelled out earlier in the answer"
+        },
+        {
+          "text": "Does not include marketing language or brand promotion",
+          "passed": true,
+          "evidence": "No brand promotion; explicitly calls out that ads oversell the product"
+        }
+      ],
+      "notes": [],
+      "eval_name": "vpn-explain"
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.9444,
+        "stddev": 0.0962,
+        "min": 0.8333,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 15.3333,
+        "stddev": 1.159,
+        "min": 14.0,
+        "max": 16.1
+      },
+      "tokens": {
+        "mean": 46589.6667,
+        "stddev": 67.6782,
+        "min": 46525,
+        "max": 46660
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.7667,
+        "stddev": 0.0882,
+        "min": 0.6667,
+        "max": 0.8333
+      },
+      "time_seconds": {
+        "mean": 16.8333,
+        "stddev": 1.9425,
+        "min": 14.7,
+        "max": 18.5
+      },
+      "tokens": {
+        "mean": 41242.3333,
+        "stddev": 250.1926,
+        "min": 40970,
+        "max": 41462
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.18",
+      "time_seconds": "-1.5",
+      "tokens": "+5347"
+    }
+  },
+  "notes": [
+    "eval-git-rebase-merge is the clearest differentiator: the baseline (no skill) answered in bullet-point fragments with dropped subjects ('Takes the other branch's changes and combines them...') -- exactly the ambiguity-risk this skill exists to avoid for a non-expert reader. With-skill produced full connected prose with explicit 'because' reasoning in nearly every sentence.",
+    "eval-vpn-explain is a tie (83% both configurations) and should not be read as the skill underperforming: the user's own prompt already said 'explain like im 5', so the baseline model followed that literal instruction well even with no skill active. This eval mainly demonstrates the skill's consistency/enforcement value (same register every time) rather than a raw quality delta -- it's a weak discriminator for description-triggering purposes since an explicit request already gets ELI5-style output unprompted.",
+    "The one assertion the with-skill vpn-explain run missed ('explicitly names that traffic is routed through another server') is a real, worth-fixing gap: the answer explained encryption and location-masking clearly but left the routing mechanism implicit. Candidate for a SKILL.md revision -- add explicit guidance to name the mechanism, not just its effects.",
+    "The baseline nodejs-heap-oom run is denser and more jargon-assuming (specific heap size ranges, 'backpressure', batch-size tuning) than the with-skill version, and contains one filler-word slip ('just'). This is the strongest content-quality gap between configurations across all three evals.",
+    "Small n (1 run per configuration per eval, 3 evals total) -- this is a quick qualitative pass, not a statistically powered benchmark. Good enough to sanity-check the skill's direction; would want 3+ runs per config before treating the pass-rate delta as precise.",
+    "Token counts here are whole-subagent totals (includes reading the SKILL.md file itself, ~46-47k input tokens per with-skill run vs ~41k for baseline) -- that read cost is a one-time session overhead in real use, not a per-message tax, so this delta overstates steady-state cost. It is not evidence the skill increases per-reply token usage; that would need measuring final-answer length alone, which the with-skill answers were actually similar length to or shorter than baseline on 2 of 3 evals."
+  ]
+}

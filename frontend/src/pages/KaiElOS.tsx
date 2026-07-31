@@ -16,6 +16,7 @@ import ProposalsPanel from '../components/kai-os/ProposalsPanel';
 import LegalLearning from '../components/kai-os/LegalLearning';
 import VenturePlanner from '../components/kai-os/VenturePlanner';
 import FilesPanel from '../components/kai-os/FilesPanel';
+import RoadmapPanel from '../components/kai-os/RoadmapPanel';
 import ConstitutionViewer from '../components/kai-os/ConstitutionViewer';
 import Observatory from '../components/kai-os/Observatory';
 import BiosystemOverlay from '../components/kai-os/BiosystemOverlay';
@@ -44,7 +45,7 @@ const FULL_TABS: Record<string, ComponentType> = {
   wow: WOW, 'no-mans-sky': NO_MANS_SKY, settings: SETTINGS,
 };
 
-type PanelId = 'updates' | 'proposals' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training';
+type PanelId = 'updates' | 'proposals' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training' | 'roadmap';
 
 function TabLoadFallback() {
   return (
@@ -138,6 +139,7 @@ export default function KaiElOS() {
     },
     connectors: { title: 'Connectors', body: <p className="text-slate-500 text-sm">Not yet connected — planned.</p> },
     training: { title: 'Training', body: <p className="text-slate-500 text-sm">Not yet built — planned.</p> },
+    roadmap: { title: 'Development Roadmap', body: <RoadmapPanel /> },
   };
 
   const panel = activeSection ? panels[activeSection as PanelId] : undefined;

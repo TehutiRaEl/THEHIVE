@@ -1,0 +1,35 @@
+{
+  "expectations": [
+    {
+      "text": "Keeps the exact terms 'git rebase' and 'git merge' unaltered",
+      "passed": true,
+      "evidence": "Both appear verbatim as bolded headers"
+    },
+    {
+      "text": "Explains merge combines two branches' histories together, keeping the original commits as they were",
+      "passed": true,
+      "evidence": "\"Your original commits stay exactly as they were, unchanged.\""
+    },
+    {
+      "text": "Explains rebase replays/moves commits onto a new base, which changes/rewrites commit history",
+      "passed": true,
+      "evidence": "\"This rewrites your commit history \u2014 your commits get new IDs/hashes, even if the content is the same.\""
+    },
+    {
+      "text": "Uses full grammatical sentences throughout, not sentence fragments",
+      "passed": false,
+      "evidence": "Answer is formatted as bullet fragments with dropped subjects, e.g. \"Takes the other branch's changes and combines them into your branch with a new 'merge commit.'\" \u2014 exactly the subject-dropping/telegraphic style the skill exists to avoid for a non-expert reader"
+    },
+    {
+      "text": "Avoids filler/hedging/pleasantry phrases",
+      "passed": true,
+      "evidence": "No clear filler words found, though the bullet format itself creates a different clarity problem"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 1,
+    "total": 5,
+    "pass_rate": 0.8
+  }
+}

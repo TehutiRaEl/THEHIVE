@@ -1,0 +1,35 @@
+{
+  "expectations": [
+    {
+      "text": "Keeps the exact terms 'git rebase' and 'git merge' unaltered",
+      "passed": true,
+      "evidence": "Both terms appear verbatim in backticks throughout"
+    },
+    {
+      "text": "Explains merge combines two branches' histories together, keeping the original commits as they were",
+      "passed": true,
+      "evidence": "\"combines them into your branch by adding one new 'merge commit' on top. Nothing about your existing commits changes.\""
+    },
+    {
+      "text": "Explains rebase replays/moves commits onto a new base, which changes/rewrites commit history",
+      "passed": true,
+      "evidence": "\"replays them one by one on top of the other branch's latest commits... rebase actually rewrites your commits into new ones with new IDs\""
+    },
+    {
+      "text": "Uses full grammatical sentences throughout, not sentence fragments",
+      "passed": true,
+      "evidence": "Entire answer is written as connected paragraphs with explicit 'because' reasoning in nearly every sentence \u2014 zero bullet points or fragments"
+    },
+    {
+      "text": "Avoids filler/hedging/pleasantry phrases",
+      "passed": true,
+      "evidence": "No instances found"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}
