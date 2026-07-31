@@ -13,10 +13,21 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-07-31, ~22:25 UTC)
+## Right now (updated 2026-07-31, ~22:32 UTC)
 
-- **Open PRs: #139** (dead-code sweep findings + this file's own consolidation) —
-  just opened, CI mid-run, check fresh. #138 merged to `main` at `65e8a1e` earlier.
+- **Open PRs on THEHIVE, two:**
+  - **#141** (this session's own, doc-only: HIVE_PULSE.md sync) — trivial, low risk.
+  - **#140 — reviewed clean, opened by a DIFFERENT parallel session** (branch
+    `claude/ecstatic-rubin-9zqjoc`, session `session_017RexigvxMvRGu2pjomPrvy`):
+    Phase G/H/I federation snapshot + SSE wiring + constitution-hash CI guard. Checked
+    for real, not just the diff: `mergeable_state: clean`, all 12 checks green, and its
+    "extends existing infra, no rewrites" claim verified true by grepping `main`
+    directly (`_sse_publish`/`_sse_subscribers` in `routes.py`, `scan_federation_repos`/
+    `FEDERATION_ROOT` in `generate_memory_vault.py` both genuinely pre-existed this PR).
+    No bugs found. One minor non-blocking note: the new `_federation.json` snapshot code
+    re-walks `FEDERATION_ROOT` independently instead of reusing the existing
+    `scan_federation_repos()` — duplication, not a bug. Ready for the founder's own
+    merge call; this session does not merge another session's PR.
 - **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no
   more "Session N/6" framing (removed 2026-07-31, backlog outgrew 6 sessions). Next
   fire `2026-08-01T09:00:00Z`. Maximize each firing's own window rather than cramming;
@@ -60,6 +71,44 @@ that's the discipline this file exists to model, not just describe.
 - **Rolling logs — check dates, don't assume stale:** `.claude/Fable_memory.md`,
   `.claude/skills/recursive-growth/LESSONS.md` + `SKILL_CHANGELOG.md`, `PR_LESSONS.md`
   (latest: L-09).
+
+## Multi-session reality (confirmed 2026-07-31, founder shared two backup documents)
+
+THEHIVE has **multiple concurrent Claude Code sessions** committing to `main` the same
+day, not just this one — confirmed via that parallel session's own full backup
+(session `session_017RexigvxMvRGu2pjomPrvy`, branch `claude/ecstatic-rubin-9zqjoc`,
+the same session behind PR #140, reviewed clean above). That session documented its own
+**build-alongside rules**, worth this session adopting too:
+
+1. **Use `[ROLE: <Title>]` commit-message prefixes** — the titles from `docs/ROLES.md`
+   (e.g. `[ROLE: Governance Kernel]`, `[ROLE: Federation Engineer]`). This session has
+   NOT been doing this — start now, going forward.
+2. Base new work on `origin/main`, never a dangling branch (already this session's
+   practice via the merged-PR branch-reset rule).
+3. **Never rewrite a file another session owns — extend only, append not overwrite.**
+   Directly consistent with `autonomous-hive-agent/SKILL.md`'s own restraint.
+4. `colony.json` is the shared discovery contract — read it, never duplicate its data
+   into separate config.
+
+**Genuinely new open items from their backup, not yet in this session's backlog:**
+NAR2's `requirements-deploy.txt` (Render free-tier OOM risk from torch/sentence-transformers,
+still unguarded); Kimi-K2 needs a `render.yaml` blueprint (NAR2/4DBRAIN already have one).
+Neither started by this session.
+
+**One stale item in their list, corrected here so it doesn't get redone:** they flagged
+"FABLE_DNA.md Chromosome I alignment" as still open — it isn't; `CLAUDE.md`'s own
+changelog confirms this was reconciled 2026-07-30, three real drifts found and fixed,
+full test suite reverified. Their backup pre-dates that fix's own documentation reaching
+them, evidently — corrected here, not re-done.
+
+Older backup (a founder-shared `.md`, session `b6c97b71...`, ~2026-07-14, PR #82 "Phase E
+hardening" — D1-backed visitor tokens, rate-limit gates on arena POST routes,
+`/admin/d1-export` + weekly `d1-backup.yml`) is now historical — treated as archive, not
+an active task list; that PR's own P0 register items (L1/L3/L4 done, L2/L5 founder-side)
+predate months of subsequent work already covered elsewhere in this file. Two of its
+listed gaps are still real today, confirmed via this session's own live probe earlier:
+Vectorize (`vectorize_bound:false`) and R2/Files (`FILES:false`) remain unprovisioned —
+both are `FLIP_THE_SWITCHES.md` items #1/#2, unchanged, founder-action-gated.
 
 ## Circulatory system — how heartbeats stay cheap
 
