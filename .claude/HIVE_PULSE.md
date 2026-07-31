@@ -90,8 +90,29 @@ no new infrastructure invented, just wired up. Full design →
 - **Harness → Kai El direction (`directive_text` dispatch input) still genuinely
   untested** — only the Kai-El → founder direction has fired for real so far.
 
+## Founder's "fully optimized for 2am sessions" mega-directive (2026-07-31) — status
+
+Four things resolved via AskUserQuestion, in priority order the founder set:
+1. **Priority: subagent + roles/spores first (done this pass).** `.claude/agents/hive-organism.md`
+   — a real dispatchable subagent embodying `autonomous-hive-agent`'s organism design — and
+   `SPORE_ROSTER.md` — the 101-role game-studio plan (`canvases/thehive-unity-migration/`)
+   reframed onto THEHIVE's real capabilities, 54/78 role-types already ACTIVE, 8 genuinely
+   NEW (mostly Community & Marketing), 7 DECLINED (no honest THEHIVE analog).
+2. **"Enterprise level" = aspirational doctrine, not literal current-state fact.** Added to
+   `FABLE_DNA.md` right before "How a new hive inherits this" — explicitly paired with
+   `CLAUDE.md`'s honest gap-tracking, not a replacement for it.
+3. **"Flip the switch" = unified checklist, both switch-sets** (root `FLIP_THE_SWITCHES.md`
+   + `automaton/FLIP_THE_SWITCHES.md`) — **not yet built**, queued next.
+4. **Still queued, explicitly deprioritized this pass:** production-readiness % + "Queen's
+   Progress meter" UI; full Command Center button/tab audit (🧬 Biosystem, ⬡ Gateway
+   cohesion); Venture Planner + Legal-research overhaul (SCOTUS/treaties/case-law depth,
+   phase-loop clarify→research→outline→infer→build, "deviation phase" horde orchestration
+   modeled on `agency.py`'s OBSERVE→PROPOSE→EXECUTE→DEVIATE ladder).
+
 ## Not yet built / open questions
 
 - Whether the 6-session arc itself should convert from `run_once_at` chaining to a
   single nightly cron once its founder-requested 2 AM PT cadence is confirmed stable —
   not done yet, flagged here for a future firing to revisit, not decided unilaterally.
+- The unified flip-the-switch checklist, the production-readiness meter, the Command
+  Center audit, and the Venture Planner overhaul — see the section above, all queued.
