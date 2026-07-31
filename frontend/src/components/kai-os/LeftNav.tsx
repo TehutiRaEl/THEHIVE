@@ -15,6 +15,7 @@ const PRIMARY: NavItem[] = [
   { id: 'govern', label: 'Govern', icon: '🏛', wired: true },
   { id: 'constitution', label: 'Constitution', icon: '📜', wired: true },
   { id: 'hive', label: 'Hive', icon: '🐝', wired: true },
+  { id: 'roadmap', label: 'Roadmap', icon: '🗺', wired: true },
   { id: 'commune', label: 'Commune', icon: '💬', wired: true },
   { id: 'swarms', label: 'Swarms', icon: '🧠', wired: true },
   { id: 'arena', label: 'Arena', icon: '⚔', wired: true },
