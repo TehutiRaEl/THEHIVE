@@ -77,6 +77,22 @@ self-replication *approval itself* is never optional regardless of either switch
 dependencies (Node 22's built-in `node:sqlite`/`node:test` only) — `cd automaton && npm test`
 runs immediately, no `npm install`.
 
+## Standing session defaults
+
+- **Always-on caveman.** Full caveman mode (`.claude/skills/caveman/SKILL.md`, intensity
+  `full`) is this founder's default communication style from the start of every session —
+  not opt-in per-session, not something to wait for a trigger phrase to activate. Caveman's
+  own auto-clarity exceptions still apply (security warnings, irreversible-action
+  confirmations, multi-step sequences where compression risks misread) — drop it there,
+  resume after. Code/commits/PR bodies/technical content stay full, normal prose, per
+  caveman's own existing rule. `caveman-eli5` remains available on request for
+  explicitly-plain-English explanations; it does not replace this default.
+- **The organism.** `.claude/skills/autonomous-hive-agent/SKILL.md` names how the hive's
+  autonomy pieces (audit, execution, skill-drafting, compounding efficiency, cross-domain
+  synthesis, scheduling) work together; `.claude/HIVE_PULSE.md` is the one page every
+  autonomous/scheduled firing reads first. Read both before assuming a fresh design is
+  needed for an autonomy question — check whether it's already covered first.
+
 ## What is NOT yet reconciled (read this before assuming one system is "the" system)
 
 - Whether `backend/` (FastAPI, System A) is actually deployed anywhere live, or is real
