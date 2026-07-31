@@ -13,9 +13,22 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-07-31, ~22:30 UTC)
+## Right now (updated 2026-07-31, ~22:32 UTC)
 
-- **Open PRs: none.** #139 merged to `main` at `a97c88b`. Session branch reset fresh.
+- **Open PRs on THEHIVE, two:**
+  - **#141** (this session's own, doc-only: HIVE_PULSE.md sync) — trivial, low risk.
+  - **#140 — NEEDS REAL REVIEW, opened by a DIFFERENT parallel session** (branch
+    `claude/ecstatic-rubin-9zqjoc`, session `session_017RexigvxMvRGu2pjomPrvy`, based on
+    `main@65e8a1e`): "[ROLE: Federation Engineer] Phase G/H/I — federation snapshot, SSE
+    wiring, constitution guard" — touches `scripts/generate_memory_vault.py`,
+    `backend/api/routes.py` (SSE publish on arena_resolve/complete_task), and a new
+    `.github/workflows/governance-advisory.yml` constitution-hash-change warning step.
+    Not diff-reviewed yet by this session — do that next: check `mergeable_state`
+    directly (not just the diff, per `PR_LESSONS.md` L-09), verify claims about
+    `_sse_subscribers`/`scan_federation_repos()` already existing before trusting "no
+    rewrites" in its own description, run the real build/tests, THEN decide
+    merge-readiness. This is a different session's own PR — review it, don't just
+    assume it's fine because CI is green.
 - **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no
   more "Session N/6" framing (removed 2026-07-31, backlog outgrew 6 sessions). Next
   fire `2026-08-01T09:00:00Z`. Maximize each firing's own window rather than cramming;
