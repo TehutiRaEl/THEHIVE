@@ -13,21 +13,11 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-07-31, ~22:32 UTC)
+## Right now (updated 2026-07-31, ~22:47 UTC, daily heartbeat)
 
-- **Open PRs on THEHIVE, two:**
-  - **#141** (this session's own, doc-only: HIVE_PULSE.md sync) — trivial, low risk.
-  - **#140 — reviewed clean, opened by a DIFFERENT parallel session** (branch
-    `claude/ecstatic-rubin-9zqjoc`, session `session_017RexigvxMvRGu2pjomPrvy`):
-    Phase G/H/I federation snapshot + SSE wiring + constitution-hash CI guard. Checked
-    for real, not just the diff: `mergeable_state: clean`, all 12 checks green, and its
-    "extends existing infra, no rewrites" claim verified true by grepping `main`
-    directly (`_sse_publish`/`_sse_subscribers` in `routes.py`, `scan_federation_repos`/
-    `FEDERATION_ROOT` in `generate_memory_vault.py` both genuinely pre-existed this PR).
-    No bugs found. One minor non-blocking note: the new `_federation.json` snapshot code
-    re-walks `FEDERATION_ROOT` independently instead of reusing the existing
-    `scan_federation_repos()` — duplication, not a bug. Ready for the founder's own
-    merge call; this session does not merge another session's PR.
+- **Open PRs: none.** #140 (parallel session's Phase G/H/I, reviewed clean) and #141
+  (this session's own pulse sync) both merged to `main` (`d4c69ea`, `4854470`). Session
+  branch reset to fresh `main`.
 - **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no
   more "Session N/6" framing (removed 2026-07-31, backlog outgrew 6 sessions). Next
   fire `2026-08-01T09:00:00Z`. Maximize each firing's own window rather than cramming;
