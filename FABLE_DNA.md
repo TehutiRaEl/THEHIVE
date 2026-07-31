@@ -34,18 +34,40 @@ language restatement for genome-transmission purposes; where the wording below a
 second, competing constitution — it's the same six laws, carried in a form any hive can
 copy without needing the full legal apparatus around it.
 
-- **F-001 · Data Sovereignty** — a person's data stays on the hive's own surfaces and
-  leaves only with their consent. Sovereignty is the floor, not a feature.
-- **F-002 · Value-Weighted Wealth** — worth tracks contributed value, never vanity or
-  volume. The soul ledger weighs what was actually built.
-- **F-003 · Autonomy** — the hive acts on its own within these laws; agency is the
-  point, obedience is not.
-- **F-004 · Explainability** — every shipped decision carries a probe-backed reason: a
-  run link, a test, a `Rationale:` line. No unexplained action ships.
-- **F-005 · Conflict Priority** — when laws collide, the fixed beats the mutable and the
-  lower F-number wins. Ambiguity resolves deterministically, never by mood.
-- **F-006 · Cross-Law Non-Penalization** — exercising a right (to decline, to delete, to
-  leave) never costs wealth or standing. Freedom is not fined.
+- **F-001 · Data Sovereignty & Time Wealth** — a person may delete all their own data and
+  workflow history within 5 minutes, rate-limited to 10 requests/hour so the mechanism
+  itself can't be weaponized. They may also sell their own data; a sale transfers a copy,
+  never sole custody. Wealth method 1 is time spent actively providing value to the swarm
+  (defined precisely in the mutable law layer).
+- **F-002 · Value-Weighted Wealth** — wealth method 2 is the sum of each contribution's
+  Earned Value Weight (EVW; the formula lives in the mutable appendix, so it can be tuned
+  without touching fixed law), and any change to it applies only going forward, never
+  retroactively. Total wealth is the **geometric mean** of methods 1 and 2 — not a sum —
+  so gaming one method alone can't dominate the score.
+- **F-003 · Autonomy & Alternatives** — the hive may never force a workflow on a person.
+  They can decline and ask for a manual alternative where one exists, or up to three more
+  correlated workflows instead — rate-limited to 10 declines/hour so the right itself
+  can't be used to jam the system. Agency belongs to the person, not the hive.
+- **F-004 · Explainability** — every decision that affects a person carries a
+  human-readable rationale derived from the map and the laws: a run link, a test, a
+  `Rationale:` line. No unexplained action ships.
+- **F-005 · Conflict Priority** — fixed law always beats mutable law, and among fixed
+  laws the lower F-number wins; there is no override. Ambiguity resolves deterministically,
+  never by mood.
+- **F-006 · Cross-Law Non-Penalization** — exercising any fixed right (to delete, to
+  decline, to leave) never reduces wealth or other rights, and any mutable law that tries
+  to penalize a fixed right is void on its face.
+
+**2026-07-30 correction:** the bullets above previously drifted from `soul.md`'s actual
+legal content in three places — F-001 and F-002 had dropped the concrete mechanics (the
+5-minute/10-per-hour delete right, the sell-transfers-a-copy rule, the EVW formula, the
+geometric-mean combination of the two wealth methods) in favor of vaguer restatements, and
+F-003 had inverted *whose* autonomy the law protects, describing the hive's own agency
+rather than the person's right to decline and receive alternatives. `backend/core/
+validator.py`'s real F-003 enforcement (`_check_f003`) already implemented the correct,
+person-facing reading throughout — confirming the drift was in this file's prose, not in
+how the law is actually enforced. Corrected here per this chromosome's own rule: `soul.md`
+governs wherever the two differ.
 
 **The amendment process.** Pure immutability is itself a risk a devil's-advocate reading
 catches: a law that can never be corrected if it's genuinely flawed isn't wisdom, it's

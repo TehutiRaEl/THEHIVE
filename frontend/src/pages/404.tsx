@@ -31,7 +31,7 @@ export default function NotFound() {
       <h2 style={{ 
         fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', 
         marginBottom: '1rem',
-        fontFamily: 'Rajdhani, sans-serif'
+        fontFamily: 'Exo 2, sans-serif'
       }}>
         Lost in the Hive
       </h2>
@@ -54,7 +54,7 @@ export default function NotFound() {
             borderRadius: '8px',
             color: '#F8F9FA',
             textDecoration: 'none',
-            fontFamily: 'Rajdhani, sans-serif',
+            fontFamily: 'Exo 2, sans-serif',
             fontWeight: 600,
             transition: 'all 0.3s ease'
           }}
@@ -78,7 +78,7 @@ export default function NotFound() {
             borderRadius: '8px',
             color: '#0A0E2A',
             textDecoration: 'none',
-            fontFamily: 'Rajdhani, sans-serif',
+            fontFamily: 'Exo 2, sans-serif',
             fontWeight: 600,
             transition: 'all 0.3s ease'
           }}

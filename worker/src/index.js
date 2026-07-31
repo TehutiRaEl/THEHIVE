@@ -984,6 +984,12 @@ export default {
       // Kai El answers in persona, grounded in live hive state + (when provisioned)
       // semantic memory recall. Degrades to a constitutional canned reply if AI is unbound.
       if (p === '/command_text' && method === 'POST') {
+        // S1 (PR #132): anti-spam rate limit — same 30/min/IP as arena writes.
+        // Docs (SECURITY_DEEP_PASS.md/S1_RATE_LIMIT_PATCH.md) already claimed this was
+        // applied; the actual worker/src/index.js code was missing — added here to make
+        // that claim true rather than leave this LLM-cost-bearing endpoint unlimited.
+        const ipCmd = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!(await rateLimitOk(DB, ipCmd, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
         const body = await request.json().catch(() => ({}));
         const cmd = (body.command || body.message || '').toString().trim();
         if (!cmd) return json({ result: 'Speak, and the Hive will answer.' });
@@ -1113,6 +1119,9 @@ export default {
       }
       // POST /v11/memory/remember {text, kind?} — admin-lite manual memory write
       if (p === '/memory/remember' && method === 'POST') {
+        // S1 (PR #132): anti-spam rate limit — writes to Vectorize when bound.
+        const ipMem = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!(await rateLimitOk(DB, ipMem, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
         const b = await request.json().catch(() => ({}));
         if (!b.text) return json({ detail: 'text required' }, 400);
         const id = 'note-' + Date.now();
