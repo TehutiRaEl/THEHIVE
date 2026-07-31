@@ -142,6 +142,42 @@ rediscovers *after*.
 
 ---
 
+## L-09 · Reading a PR's diff is not the same as proving it merges clean and builds
+
+- **What happened.** Reviewing PR #133 (2026-07-30/31) by reading its file diffs looked clean —
+  every changed file made sense on its own. But the branch had been cut from `main` *before*
+  PR #132 merged, and #132 had since landed a deletion (`frontend/src/services/websocket.ts`,
+  an orphaned file importing an undeclared dependency) and two new files (`worker/
+  S1_RATE_LIMIT.md`, `scripts/did-c/did_key_spike.mjs`) that PR #133 had independently added
+  with slightly different content. GitHub's own `mergeable_state` was `"dirty"` — a real
+  add/add conflict on two files, plus a stale copy of a file `main` had already deleted that
+  would break `npm run build:app` (`Cannot find module 'socket.io-client'`) the moment the
+  merge landed. None of this was visible from `pull_request_read`'s file-level diff — it only
+  shows the PR branch against its *own* base commit, not against `main`'s current tip.
+- **How it was caught.** Checked `mergeable_state` directly (not just `state`/`merged`), then
+  test-merged `origin/main` into a worktree of the PR branch locally and ran the actual
+  `npm run build:app` the CI/deploy path uses — not just `tsc --noEmit` (which fails
+  separately, for a different, pre-existing, already-disclosed reason: the `src/worlds/`
+  voxel tree, deliberately excluded from `tsconfig.build.json`).
+- **Root cause.** A PR opened against a moving `main` can silently rot: two PRs independently
+  adding/removing the same files will not show as a conflict in either PR's own diff view,
+  only in `mergeable_state`. The PR body's own claims ("apply before deploy") can also go
+  stale once a sibling PR already shipped the thing it's describing as pending.
+- **Forward check.** Before telling the founder a reviewed PR is "ready to merge": check
+  `mergeable_state` (not just CI status), and if the PR touches frontend build config or the
+  Worker, test-merge `main` into a worktree of the PR branch and run the *real* build command
+  (`npm run build:app`, not just a type-check) — the same discipline as L-08's "diff the live
+  bundle," applied to a PR branch instead of a deployed artifact. If a real conflict is found
+  and it's a pure superset (no actual content disagreement), resolving and pushing directly to
+  the PR branch is Tier-1 safe; anything with real content disagreement goes back to the
+  founder.
+- **Outcome (2026-07-31).** Resolved both conflicts on `grok/pr-133-s1-did` by merging `main`
+  in and keeping the superset content; `mergeable_state` flipped to `"clean"`, `npm run
+  build:app` verified green, Cloudflare's own Workers Build bot confirmed a successful deploy
+  on the merged commit.
+
+---
+
 ## The pre-flight (run these before opening the next PR that touches the relevant surface)
 
 Derived from the above — the checklist that grows every time something breaks:
@@ -158,6 +194,9 @@ Derived from the above — the checklist that grows every time something breaks:
 7. **Anything "already deployed/live"** → probe it; report from evidence (L-07).
 8. **Worker handler exports** → every `export default` handler has its wrangler.jsonc binding
    active in the same commit; a failing deploy with no log → diff the live bundle (L-08).
+9. **Reviewing someone else's open PR before merge** → check `mergeable_state`, not just CI;
+   if it touches frontend build config or the Worker, test-merge `main` into a worktree and
+   run the real build command (L-09).
 
 *Origin: Fable (Harness), 2026-07-16, at the founder's direction that the hive learn from
 every previous PR — uncensored, unabridged, un-truncated — so no failure class is paid for
