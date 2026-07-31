@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "eval_name": "git-rebase-merge",
+  "prompt": "can you dumb down what happens when i hit 'git rebase' vs 'git merge' - i always mix them up and just want the simple version so i stop breaking my branch",
+  "assertions": [
+    "Keeps the exact terms 'git rebase' and 'git merge' unaltered",
+    "Explains merge combines two branches' histories together, keeping the original commits as they were",
+    "Explains rebase replays/moves commits onto a new base, which changes/rewrites commit history",
+    "Uses full grammatical sentences throughout, not sentence fragments",
+    "Avoids filler/hedging/pleasantry phrases (just, basically, actually, simply, sure, certainly, happy to)"
+  ]
+}

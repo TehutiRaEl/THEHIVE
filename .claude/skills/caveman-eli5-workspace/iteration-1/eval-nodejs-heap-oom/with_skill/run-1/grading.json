@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "Explains why loading a 2GB file into memory at once causes a heap-out-of-memory crash",
+      "passed": true,
+      "evidence": "\"tries to pull the whole file into memory as one giant piece before it does anything with it... that heap has a size limit. Your 2GB file is bigger than that limit, so Node runs out of room and crashes\""
+    },
+    {
+      "text": "Explains what streaming means in plain language",
+      "passed": true,
+      "evidence": "\"streaming reads the file in small chunks, one small piece at a time... processes each chunk... then throws that piece away before grabbing the next chunk\""
+    },
+    {
+      "text": "Uses full grammatical sentences throughout, not sentence fragments",
+      "passed": true,
+      "evidence": "Every sentence has explicit subject/verb/object across all three paragraphs; no bullet fragments"
+    },
+    {
+      "text": "Avoids filler/hedging/pleasantry phrases",
+      "passed": true,
+      "evidence": "No instances of just/really/basically/actually/simply/sure/certainly/happy to found"
+    },
+    {
+      "text": "Does not use technical jargon without immediately explaining it in plain words",
+      "passed": true,
+      "evidence": "\"chunk\" is explained on first use (\"small chunks, one small piece at a time, like a few kilobytes\"); code/API names (fs.createReadStream, csv-parser) kept exact per the skill's own rule, not prose jargon"
+    },
+    {
+      "text": "Keeps the exact error string 'JavaScriptHeapOutOfMemory' unaltered",
+      "passed": true,
+      "evidence": "\"crashes with 'JavaScriptHeapOutOfMemory'\" \u2014 verbatim"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  }
+}

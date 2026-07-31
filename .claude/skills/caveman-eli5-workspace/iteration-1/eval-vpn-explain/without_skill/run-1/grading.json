@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "Explains a VPN routes/sends the user's internet traffic through another computer/server first",
+      "passed": true,
+      "evidence": "\"it actually goes to a trusted helper first (the VPN company), who unlocks it and delivers it for you\" \u2014 more explicit about the routing mechanism than the with-skill version"
+    },
+    {
+      "text": "Explains this hides the user's real location and/or hides their browsing activity from their own ISP/network",
+      "passed": true,
+      "evidence": "\"it looks like the request came from the VPN helper, not from your actual house\""
+    },
+    {
+      "text": "Uses full grammatical sentences throughout, not sentence fragments",
+      "passed": true,
+      "evidence": "Uses an extended classroom-note analogy in full connected sentences \u2014 this baseline happened to already answer in an ELI5-appropriate register"
+    },
+    {
+      "text": "Avoids filler/hedging/pleasantry phrases",
+      "passed": false,
+      "evidence": "\"or just not wanting your ISP logging every site you visit\" \u2014 \"just\" used as filler"
+    },
+    {
+      "text": "Does not use technical jargon without immediately explaining it in plain words",
+      "passed": true,
+      "evidence": "No unexplained jargon found; \"ISP\" appears once late without re-expansion but \"internet provider\" was spelled out earlier in the answer"
+    },
+    {
+      "text": "Does not include marketing language or brand promotion",
+      "passed": true,
+      "evidence": "No brand promotion; explicitly calls out that ads oversell the product"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 1,
+    "total": 6,
+    "pass_rate": 0.8333
+  }
+}
