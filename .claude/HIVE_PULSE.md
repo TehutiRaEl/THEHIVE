@@ -51,14 +51,6 @@ that's the discipline this file exists to model, not just describe.
   `AUDIT_LEDGER.md`'s "Not yet audited" section, don't re-derive.
 - **Coverage sweep next targets:** `utility_economy.py` (24%), `genome.py` (24%),
   `llm_router.py` (17%, the real `core/` one).
-- **Dead-code sweep: done, logged in `AUDIT_LEDGER.md`** (2026-07-31 entry). Headline:
-  12 orphaned `backend/guilds/*.py` modules + 2 more duplicate files (4 total now, not
-  2) + `backend/mcp/` — all need a founder-confirmed batch-delete pass, not yet deleted.
-  Bigger finding: 56 of frontend's "unreachable" files are a coherent second app
-  (`pages/CommandCenter.tsx`, `HiveDashboard`, `ConstitutionHall`, etc.,
-  self-identified as the "Mistral Frontend Command Center Branch") — the physical
-  presence of `CLAUDE.md`'s already-flagged unreconciled second frontend effort.
-  Founder decision needed: delete or revive.
 - **Token economy:** `.claude/TOKEN_ECONOMY_LEDGER.md` — `caveman` measured at 65%
   (`/caveman-stats`); founder's 96% target not yet reached/fully measured. Two open
   macro questions there for founder input, not decided unilaterally.
@@ -72,6 +64,12 @@ that's the discipline this file exists to model, not just describe.
   Legal-research overhaul. Also queued, no scope agreed yet: Kai El execution-access
   design (recommended shape: extend `hive_proposals`, never raw terminal access — see
   `Fable_memory.md` for the analysis).
+- **19 numbered questions sent to the founder 2026-07-31, awaiting answers** — covers
+  every dead-code/second-frontend disposition item above, the backlog order, Kai El
+  execution access, and the two token-economy open questions. Do NOT re-ask, re-decide,
+  or act unilaterally on any of these until an actual answer arrives. Full list was
+  sent directly in chat, not written to a file — check this session's own recent
+  messages for the exact numbered list if picking this up cold.
 - **Roadmap:** published artifact + in-app panel both read `frontend/src/data/roadmapData.ts`
   — update that file, not the two surfaces separately.
 - **Rolling logs — check dates, don't assume stale:** `.claude/Fable_memory.md`,
