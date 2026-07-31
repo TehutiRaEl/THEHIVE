@@ -13,14 +13,12 @@ than short — keep every line true as of the moment you touch it.
 
 ---
 
-## Right now (updated 2026-07-31, 21:0x UTC)
+## Right now (updated 2026-07-31, ~21:55 UTC, hourly heartbeat)
 
-- **Open PRs on THEHIVE:** #138 (doc-only: HIVE_PULSE.md/Fable_memory.md sync after
-  #136's merge) — check CI/mergeable_state fresh, don't assume from this line.
-  #136 (roadmap panel, devils-advocate-audit, polymath-lens, autonomous-hive-agent,
-  always-on caveman, Kai El bridge) merged to `main` at `160b92c`. The session branch
-  was reset to fresh `origin/main` right after, per this session's "merged PR ->
-  restart the branch" rule, then #138 opened on top of that fresh base.
+- **Open PRs on THEHIVE: #138 only.** hive-organism subagent + SPORE_ROSTER.md +
+  FABLE_DNA doctrine section — `state: open`, `mergeable_state: clean`, CI green, no
+  new review comments as of this check. #136 merged earlier (`160b92c`) — don't check
+  it again, it's closed history now.
 - **Autonomous 6-session arc:** `trig_013BTxUthvLX3C4nLs7MypVC` — Session 1/6 done
   (agency.py + staking.py coverage). Session 2/6 scheduled `2026-07-31T22:30:00Z`.
   Sessions 3-6: nightly 2 AM Los Angeles time. Full detail →
