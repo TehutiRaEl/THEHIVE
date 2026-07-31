@@ -28,3 +28,17 @@ jobs:
             echo "::warning::Code changed with no docs/README update. Confirm this is intentional."
           fi
           exit 0
+      - name: Constitution hash cross-check
+        run: |
+          SOUL_FILE="soul.md"
+          if [ ! -f "$SOUL_FILE" ]; then
+            echo "::warning::soul.md not found at repo root — constitution cannot be verified."
+            exit 0
+          fi
+          QUEEN_HASH=$(sha256sum "$SOUL_FILE" | awk '{print $1}')
+          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          if echo "$CHANGED" | grep -q "soul.md"; then
+            echo "::warning::soul.md was modified in this PR. Constitution hash will change from $QUEEN_HASH. Verify this is an intentional amendment (requires 2/3 guild vote + 30-day window per soul.md amendment process)."
+          else
+            echo "Constitution hash stable: ${QUEEN_HASH:0:16}… (soul.md unchanged in this PR)"
+          fi

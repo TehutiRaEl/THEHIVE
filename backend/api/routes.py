@@ -381,7 +381,9 @@ async def arena_challenge(req: ArenaChallengeCreate, auth: Dict = Depends(verify
 @router.post("/arena/resolve/{challenge_id}")
 async def arena_resolve(challenge_id: int, auth: Dict = Depends(verify_auth)):
     result = await arena.run(challenge_id)
-    await ws_manager.broadcast({"type": "arena_resolved", "challenge_id": challenge_id, "winner": result.get("winner")})
+    event = {"type": "arena_resolved", "challenge_id": challenge_id, "winner": result.get("winner")}
+    await ws_manager.broadcast(event)
+    _sse_publish("arena_resolved", event)
     return result
 
 @router.get("/arena/challenges")
@@ -664,7 +666,9 @@ async def complete_task(task_id: int, agent_name: str, auth: Dict = Depends(veri
     conn.commit()
     conn.close()
     reward = utility_economy.credit_utility(agent_name, 10.0, f"task:{row[0]}")
-    await ws_manager.broadcast({"type": "task_completed", "task_id": task_id, "agent": agent_name, "soul_reward": reward["agent_share"]})
+    event = {"type": "task_completed", "task_id": task_id, "agent": agent_name, "soul_reward": reward["agent_share"]}
+    await ws_manager.broadcast(event)
+    _sse_publish("task_completed", event)
     return {"status": "completed", "agent": agent_name, "soul_reward": reward}
 
 @router.delete("/tasks/{task_id}")
