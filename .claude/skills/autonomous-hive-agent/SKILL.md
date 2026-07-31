@@ -122,6 +122,43 @@ tables:
   plainly until then; this is exactly the discipline `devils-advocate-audit` exists to
   enforce, applied to this skill's own newest work rather than only to older code.
 
+## Swarm dispatch — running the named subagents in parallel, not just one at a time
+
+Founder's ask, 2026-07-31: use the named subagents (`hive-organism`, `colony-health-monitor`,
+`constitutional-validator`, `knowledge-cartographer`, `memory-librarian`, plus the built-in
+`Explore`/`general-purpose`/`Plan` types) as a real work swarm, not one dispatched at a
+time when parallelism would genuinely help. This is the harness's own orchestration
+policy — none of the subagents dispatch each other (none hold `Agent` tool access, by
+design, matching every existing `.claude/agents/*.md` file's restraint).
+
+**When to parallelize (fire multiple `Agent` calls in one message):**
+- The sub-tasks are genuinely independent — no sub-task's output changes what another
+  needs to do. (If task B needs task A's result, that's sequential, not parallel — forcing
+  it into a swarm shape wastes the round trip, it doesn't save one.)
+- Each sub-task is large enough that delegating it keeps bulky tool output (a full grep
+  sweep, a full colony health check, a full memory-vault rebuild) out of the calling
+  session's own context — this is a real token-economy lever, not just a speed one; see
+  `TOKEN_ECONOMY_LEDGER.md`.
+- Example: a full-repo audit sweep can run `knowledge-cartographer` (map the affected
+  concepts), `colony-health-monitor` (confirm nothing's degraded before touching it), and
+  a `general-purpose` dead-code sweep in parallel — none of the three needs the others'
+  output to start.
+
+**When NOT to parallelize:**
+- Fewer than ~3 genuinely independent sub-tasks — the coordination overhead (reading each
+  agent's report back, reconciling them) can cost more than it saves for something small
+  enough to just do directly.
+- Anything touching the same file/PR/branch from two different angles at once — that's a
+  race condition waiting to happen, not efficiency. Serialize those.
+- The task is exploratory/judgment-heavy rather than execution-heavy — a swarm of subagents
+  each reading a fragment doesn't out-perform one session reading the whole picture when
+  the actual bottleneck is synthesis, not raw coverage.
+
+**Reporting back:** per rule 5 above (log what you did and why), a swarm's combined
+findings still land in *one* record (the task's own `AUDIT_LEDGER.md`/`Fable_memory.md`
+entry, not one entry per agent) — the parallelism is an implementation detail of how the
+work got done, not something that should fragment where the founder looks for the result.
+
 ## Where this leaves the caveman question
 
 Always-on caveman (terse day-to-day replies) and `polymath-lens` (verbose only at

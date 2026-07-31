@@ -13,10 +13,12 @@ than short — keep every line true as of the moment you touch it.
 
 ---
 
-## Right now (updated 2026-07-31, hourly heartbeat)
+## Right now (updated 2026-07-31, ~21:55 UTC, hourly heartbeat)
 
-- **Open PRs on THEHIVE:** #136 (Kai EL OS roadmap panel + Kai El bridge) — `state: open`,
-  `mergeable_state: clean`, CI green, no new review comments. No other open PRs.
+- **Open PRs on THEHIVE: #138 only.** hive-organism subagent + SPORE_ROSTER.md +
+  FABLE_DNA doctrine section — `state: open`, `mergeable_state: clean`, CI green, no
+  new review comments as of this check. #136 merged earlier (`160b92c`) — don't check
+  it again, it's closed history now.
 - **Autonomous 6-session arc:** `trig_013BTxUthvLX3C4nLs7MypVC` — Session 1/6 done
   (agency.py + staking.py coverage). Session 2/6 scheduled `2026-07-31T22:30:00Z`.
   Sessions 3-6: nightly 2 AM Los Angeles time. Full detail →
@@ -86,8 +88,60 @@ no new infrastructure invented, just wired up. Full design →
 - **Harness → Kai El direction (`directive_text` dispatch input) still genuinely
   untested** — only the Kai-El → founder direction has fired for real so far.
 
+## Founder's "fully optimized for 2am sessions" mega-directive (2026-07-31) — status
+
+Four things resolved via AskUserQuestion, in priority order the founder set:
+1. **Priority: subagent + roles/spores first (done this pass).** `.claude/agents/hive-organism.md`
+   — a real dispatchable subagent embodying `autonomous-hive-agent`'s organism design — and
+   `SPORE_ROSTER.md` — the 101-role game-studio plan (`canvases/thehive-unity-migration/`)
+   reframed onto THEHIVE's real capabilities, 54/78 role-types already ACTIVE, 8 genuinely
+   NEW (mostly Community & Marketing), 7 DECLINED (no honest THEHIVE analog).
+2. **"Enterprise level" = aspirational doctrine, not literal current-state fact.** Added to
+   `FABLE_DNA.md` right before "How a new hive inherits this" — explicitly paired with
+   `CLAUDE.md`'s honest gap-tracking, not a replacement for it.
+3. **"Flip the switch" = unified checklist, both switch-sets** (root `FLIP_THE_SWITCHES.md`
+   + `automaton/FLIP_THE_SWITCHES.md`) — **not yet built**, queued next.
+4. **Still queued, explicitly deprioritized this pass:** production-readiness % + "Queen's
+   Progress meter" UI; full Command Center button/tab audit (🧬 Biosystem, ⬡ Gateway
+   cohesion); Venture Planner + Legal-research overhaul (SCOTUS/treaties/case-law depth,
+   phase-loop clarify→research→outline→infer→build, "deviation phase" horde orchestration
+   modeled on `agency.py`'s OBSERVE→PROPOSE→EXECUTE→DEVIATE ladder).
+
+## Follow-up round, same day (2026-07-31, ~22:10 UTC) — arc uncapped, roster extended
+
+- **The "6-session arc" cap is gone.** Founder: this backlog is bigger than 6 sessions,
+  stop cramming, maximize each firing's own window instead, no fixed end. Trigger
+  `trig_013BTxUthvLX3C4nLs7MypVC` renamed/reworded accordingly (see its own prompt via
+  `list_triggers` — no more "Session N/6" marker, don't look for one). Next fire:
+  `2026-08-01T09:00:00Z` (2 AM PT), then nightly indefinitely.
+- **`SPORE_ROSTER.md` extended with Part 2** — `docs/ROLES.md`'s 111 real, currently-live
+  federation role tags (distinct from Part 1's speculative game-studio list). Combined
+  total corrected to 189 named roles (not the "202" first estimated before either was
+  read in full). Three new concrete gaps found: no per-colony `HIVE_PULSE.md` equivalent,
+  no cross-repo PR-review spore, no issue-triage automation.
+- **`.claude/TOKEN_ECONOMY_LEDGER.md`** (new) — tracks real token-savings levers.
+  Honest baseline: `caveman` is *measured* at 65% (via `/caveman-stats`); the founder's
+  96% target is not yet reached or fully measured — levers and open macro-questions
+  listed there, not asserted as already true.
+- **`autonomous-hive-agent/SKILL.md`** — new "Swarm dispatch" section: when to fire
+  multiple named subagents in parallel (≥3 genuinely independent sub-tasks, large
+  enough to keep bulk output out of the calling session's own context) vs. when not to.
+- **Dead-code sweep launched in background** (Explore agent, `backend/`/`worker/`/
+  `frontend/` scope) — result not in yet as of this note; check for a completion
+  notification before assuming it's done or re-launching it.
+- **Terminal question answered (not a bug):** Kai EL OS's `HiveTerminal.tsx` is
+  deliberately read-only — a prior session's own comment in that file states plainly
+  that wiring a public frontend to execute arbitrary commands would be a genuine RCE
+  hole. Founder's "give Kai El the terminal on his own branch" idea was answered as an
+  analysis/recommendation in chat, not built — genuinely high-stakes, flagged rather
+  than guessed at.
+
 ## Not yet built / open questions
 
-- Whether the 6-session arc itself should convert from `run_once_at` chaining to a
-  single nightly cron once its founder-requested 2 AM PT cadence is confirmed stable —
-  not done yet, flagged here for a future firing to revisit, not decided unilaterally.
+- The unified flip-the-switch checklist, the production-readiness meter, the Command
+  Center audit, and the Venture Planner overhaul — still queued, priority order per the
+  section above.
+- Kai El execution-access design (if the founder wants to proceed after the chat
+  analysis) — not started, no scope agreed yet.
+- Cross-session token-tracking aggregation and the "which number matters" question in
+  `TOKEN_ECONOMY_LEDGER.md` — open macro items for the founder, not decided unilaterally.
