@@ -13,10 +13,13 @@ than short — keep every line true as of the moment you touch it.
 
 ---
 
-## Right now (updated 2026-07-31, hourly heartbeat)
+## Right now (updated 2026-07-31, 21:0x UTC — PR #136 merged)
 
-- **Open PRs on THEHIVE:** #136 (Kai EL OS roadmap panel + Kai El bridge) — `state: open`,
-  `mergeable_state: clean`, CI green, no new review comments. No other open PRs.
+- **Open PRs on THEHIVE: none.** #136 (roadmap panel, devils-advocate-audit,
+  polymath-lens, autonomous-hive-agent, always-on caveman, Kai El bridge) merged to
+  `main` at `160b92c`. The session branch (`claude/fable-5-handoff-setup-vefwlb`) was
+  reset to fresh `origin/main` right after, per this session's "merged PR ->
+  restart the branch" rule — don't stack new work on the old, now-merged history.
 - **Autonomous 6-session arc:** `trig_013BTxUthvLX3C4nLs7MypVC` — Session 1/6 done
   (agency.py + staking.py coverage). Session 2/6 scheduled `2026-07-31T22:30:00Z`.
   Sessions 3-6: nightly 2 AM Los Angeles time. Full detail →
