@@ -3,11 +3,11 @@ Middleware Module — Sovereign Hive v11.0
 Rate limiting, CORS, logging, constitution enforcement.
 """
 
+import asyncio
 import time
 import logging
 from collections import defaultdict
 from typing import Dict, Optional, Tuple
-from threading import Lock
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -31,15 +31,15 @@ class RateLimiter:
         self.requests_per_window = requests_per_window
         self.window_seconds = window_seconds
         self._buckets: Dict[str, list] = defaultdict(list)
-        self._lock = Lock()
+        self._lock = asyncio.Lock()
         self._last_cleanup = time.time()
 
-    def check(self, key: str) -> Tuple[bool, int]:
+    async def check(self, key: str) -> Tuple[bool, int]:
         """Check if request is allowed. Returns (allowed, remaining)."""
         now = time.time()
         window_start = now - self.window_seconds
 
-        with self._lock:
+        async with self._lock:
             if now - self._last_cleanup > 600:
                 self._cleanup_old_buckets(now)
                 self._last_cleanup = now
@@ -78,7 +78,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if api_key:
             client_id = f"key_{api_key[:8]}"
 
-        allowed, remaining = rate_limiter.check(client_id)
+        allowed, remaining = await rate_limiter.check(client_id)
         if not allowed:
             return JSONResponse(
                 status_code=429,
