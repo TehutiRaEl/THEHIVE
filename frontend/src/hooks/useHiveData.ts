@@ -27,6 +27,7 @@ export interface RoadmapEntry {
 }
 export interface RoadmapHoard extends RoadmapEntry { agentCount: number; totalSoul: number }
 export interface Roadmap { agents: RoadmapEntry[]; hoard: RoadmapHoard | null; stages: string[]; note?: string }
+export interface DebugEnv { bindings: Record<string, boolean>; secrets_present: string[] }
 
 export interface HiveData {
   online: boolean
@@ -46,6 +47,7 @@ export interface HiveData {
   roadmap: Roadmap | null
   memoryBound: boolean
   aiBound: boolean
+  debugEnv: DebugEnv | null
   refresh: () => void
 }
 
@@ -67,11 +69,11 @@ export function useHiveData(pollMs = 30000): HiveData {
     agents: [], challenges: [], pulse: [], governance: [], soulBoard: [],
     eloBoard: [], tasks: [], fallen: [], llm: null, tier3: null, updates: [],
     roadmap: null,
-    memoryBound: false, aiBound: false,
+    memoryBound: false, aiBound: false, debugEnv: null,
   })
 
   const load = useCallback(async () => {
-    const [health, agents, challenges, pulse, gov, soul, mem, elo, tasks, fallen, llm, tier3, updates, roadmap] = await Promise.all([
+    const [health, agents, challenges, pulse, gov, soul, mem, elo, tasks, fallen, llm, tier3, updates, roadmap, debugEnv] = await Promise.all([
       j<{ status: string; version: string; runtime: string }>('/health'),
       j<{ agents: Agent[] }>('/agents'),
       j<{ challenges: Challenge[] }>('/arena/challenges'),
@@ -86,6 +88,7 @@ export function useHiveData(pollMs = 30000): HiveData {
       j<Record<string, unknown>>('/tier3/status'),
       j<{ updates: HiveUpdate[] }>('/updates'),
       j<Roadmap>('/roadmap'),
+      j<DebugEnv>('/debug/env'),
     ])
     setState({
       online: !!health,
@@ -105,6 +108,7 @@ export function useHiveData(pollMs = 30000): HiveData {
       roadmap: roadmap ?? null,
       memoryBound: !!mem?.vectorize_bound,
       aiBound: !!mem?.ai_bound,
+      debugEnv: debugEnv ?? null,
     })
   }, [])
 
