@@ -42,6 +42,12 @@ involves checking CI, a PR, or a live endpoint: check it once, act on what you f
 either finish or hand off — do not re-check the same thing again in this firing hoping
 for a different answer. If something needs to be watched to completion, that is what
 <code>subscribe_pr_activity</code> (event-driven) is for, not a polling loop here.</li>
+<li><strong>Before starting work</strong>, set that task's <code>data-status="in-progress"</code>
+and commit that one change by itself. If a firing ever finds a task already marked
+<code>in-progress</code>: do NOT assume it's safe to restart — check git log / open PRs
+for evidence of what the last firing actually did, note the finding in the Campaign Log,
+then decide whether to resume, redo, or mark it <code>blocked</code> for the founder.
+Never silently redo work that may already be done.</li>
 <li>When the task's Acceptance criteria are met: commit, open the PR, check CI <strong>once</strong>.
 Mark the task <code>data-status="done"</code> in this file and append one line to the
 Campaign Log below (what happened, PR number, timestamp) — one line, not a narrative.</li>
@@ -55,6 +61,14 @@ next pending task rather than stalling the firing on it.</li>
 <li>Before ending the firing: verify this file was actually saved with the updated
 statuses and log line — the same "verify before you end the turn" discipline that the
 old arc's own prompt named and then failed to follow once already.</li>
+<li><strong>If no task is left <code>pending</code>: stop.</strong> Do not invent new
+scope to fill the window — log "queue empty, nothing done" in the Campaign Log and end
+the firing. Only the founder adds new tasks to this file.</li>
+<li><strong>Ceiling (placeholder, founder has not set a real number yet):</strong> before
+starting any task, count today's Campaign Log entries. If it looks unusually high for
+one day, stop and log why instead of continuing — this is a placeholder circuit breaker
+until the founder sets a real cap; do not treat its absence as permission to run
+unbounded.</li>
 </ol>
 </div>
 
@@ -131,13 +145,17 @@ old arc's own prompt named and then failed to follow once already.</li>
   <h3>7. Extend hive_proposals for Kai El execution access</h3>
   <p class="meta">Founder-approved shape, Q16 ("extend it"). Est. cost: large,
   touches worker/src/index.js production code — not batchable, own firing.</p>
-  <p><strong>Prompt:</strong> Extend <code>hive_proposals</code> (never raw terminal
-  access — that idea is explicitly tabled for later, separate discussion per the founder's
-  own words) so Kai El can propose bounded actions the founder reviews/approves, same
-  pattern as the existing architect-proposal flow.</p>
-  <p><strong>Acceptance:</strong> A real, founder-key-gated approve/reject path for a new
-  proposal kind; nothing executes without founder approval. Full design write-up in
-  <code>Fable_memory.md</code> before code, since this is architecturally significant.</p>
+  <p><strong>Prompt:</strong> Discussed with founder 2026-08-01. Add a new
+  <code>hive_proposals</code> kind (<code>action-request</code>) alongside the existing
+  <code>architect-proposal</code>. Kai El may propose a bounded action from a small fixed
+  allow-list (e.g. rerun CI on a named PR, open an issue, dispatch a named workflow) —
+  never an arbitrary command, never raw terminal/file access. The existing founder-key-gated
+  <code>/proposals/:id/decide</code> endpoint is the only path to execution; nothing runs
+  on proposal alone.</p>
+  <p><strong>Acceptance:</strong> Allow-list enforced server-side (not just prompted for) —
+  a proposal naming an action outside the list is rejected before it ever reaches the
+  founder's approval queue. Full design write-up in <code>Fable_memory.md</code> before
+  code, since this is architecturally significant.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-8">
@@ -166,21 +184,32 @@ old arc's own prompt named and then failed to follow once already.</li>
   <p><strong>Acceptance:</strong> New ledger entry per the skill's own verdict format.</p>
 </div>
 
-<h2>Blocked / needs founder input</h2>
-<div class="task" data-status="blocked" id="task-blocked-1">
-  <h3>components/common Button/Card/Modal shared library</h3>
-  <p><strong>Why blocked:</strong> Founder asked for the purpose to be re-explained (Q14) —
-  explained in-chat 2026-08-01, decision still pending. Do not start until approved.</p>
+<div class="task" data-status="pending" data-batchable="true" id="task-11">
+  <h3>11. components/common Button/Card/Modal shared library</h3>
+  <p class="meta">Approved 2026-08-01 (Q14, after explanation). Est. cost: small-medium.</p>
+  <p><strong>Prompt:</strong> Build three shared components (Button, Card, Modal) styled
+  against the live Command Center's real Tailwind tokens (not the fictional second-frontend
+  palette, already deleted). Swap them into at least the screens currently reimplementing
+  the same pattern independently.</p>
+  <p><strong>Acceptance:</strong> Real live consumers, not just the components existing;
+  no visual regression in the screens swapped over (verify by running the app).</p>
 </div>
-<div class="task" data-status="blocked" id="task-blocked-2">
-  <h3>backend/constitution.py dynamic soul.md parsing — port or delete</h3>
-  <p><strong>Why blocked:</strong> Founder asked what "porting" would mean before deciding
-  (Q6) — explained in-chat 2026-08-01, decision still pending.</p>
-</div>
-<div class="task" data-status="blocked" id="task-blocked-3">
-  <h3>Kai El raw terminal access</h3>
-  <p><strong>Why blocked:</strong> Founder explicitly tabled this for a later, separate
-  discussion (Q16) — not part of the hive_proposals extension above.</p>
+
+<div class="task" data-status="pending" data-batchable="false" id="task-12">
+  <h3>12. Port backend/constitution.py's dynamic soul.md parsing into the live file</h3>
+  <p class="meta">Approved 2026-08-01 (Q6, after explanation). Est. cost: large — this is
+  safety-critical constitutional-enforcement code, not batchable, own firing, extra
+  scrutiny required.</p>
+  <p><strong>Prompt:</strong> Give <code>backend/core/constitution.py</code> (the live,
+  imported file) the orphan's capability: parse <code>soul.md</code> at runtime instead of
+  only relying on hard-coded Python constants, so a real amendment (2/3 guild vote + 30
+  days per soul.md's own process) changing the markdown actually changes enforcement
+  without a separate code PR.</p>
+  <p><strong>Acceptance:</strong> Full existing test suite still passes. Add new tests that
+  prove parsed values match the hard-coded ones today (regression safety), plus a test that
+  changing soul.md's text changes enforcement behavior. Given the safety stakes, this PR
+  should not self-merge under any circumstance — founder review required regardless of CI
+  color.</p>
 </div>
 
 <h2>Campaign Log</h2>
@@ -189,6 +218,18 @@ old arc's own prompt named and then failed to follow once already.</li>
 2026-08-01 — Blueprint created. Founder-approved dead-code cleanup (PR #144) and
 second-frontend cleanup already executed directly this session, outside this queue
 (see AUDIT_LEDGER.md 2026-08-01 entries) — not re-listed as tasks here since they're done.
+2026-08-01 — Devil's-advocate pass over this file (founder-requested): found 5 real
+holes (no in-progress state, no stop-when-empty rule, no hard ceiling, "check once"
+enforced only by prose not mechanism, and the incoming "full unabridged everything"
+expansion request conflicts with this file needing to stay small enough to read every
+firing). Fixed the mechanical ones in-place (in-progress state, stop-when-empty,
+placeholder ceiling). Ceiling value and the full-plan-vs-operational-index split still
+need a founder decision — see this session's own chat for the full writeup. No Routine
+wired yet; still pending founder review before any live test run. Tasks 11-12
+(components/common library, constitution.py dynamic-parsing port) added, approved
+2026-08-01 (Q14, Q6). Task 7 (Kai El execution access) shape refined per live discussion
+(Q16): action-request proposal kind, fixed allow-list, server-side enforced, no raw
+terminal.
 </div>
 
 </body>
