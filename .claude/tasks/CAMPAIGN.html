@@ -238,6 +238,20 @@ full-plan-vs-operational-index question: keep them as two separate files — thi
 everything-planned reference lives in FULL_PLAN.html and this file will link/search into
 it rather than embed it, once that file lands (a background pass is compiling it).
 No Routine wired yet; still pending founder review before any live test run.
+2026-08-01 — Verified (WebSearch, Anthropic Help Center + multiple 2026-dated sources,
+not memory): the Pro plan's usage limits are a rolling 5-hour window + 7-day weekly cap,
+SHARED across claude.ai chat, Claude Code interactive, AND programmatic/Agent SDK usage
+(which is what a fired Routine runs on). Anthropic announced a split that would have
+moved Agent SDK/claude -p/GitHub Actions usage to a SEPARATE monthly credit effective
+2026-06-15 — it was paused the same day and remains paused as of the most recent sources
+(dated 2026-07-01). **Correction to this file's own ceiling entry above: the 4/day + 3M
+token/day cap is NOT a separate budget from interactive chat — it competes with whatever
+headroom is left in the SAME 5-hour/weekly pool this founder's own interactive sessions
+also draw from.** No tool in this environment can read the founder's actual real-time
+remaining quota — that's only visible to them via Settings > Usage on claude.ai or
+`/status` in an interactive terminal. Treat the numeric ceiling as a conservative
+placeholder until the founder confirms it against their real observed headroom, not a
+verified-safe number.
 </div>
 
 </body>
