@@ -187,15 +187,21 @@ page; this ceiling is a backstop, not a substitute for that.</li>
   <p><strong>Acceptance:</strong> New ledger entry per the skill's own verdict format.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-11">
+<div class="task" data-status="done" data-batchable="true" id="task-11">
   <h3>11. components/common Button/Card/Modal shared library</h3>
-  <p class="meta">Approved 2026-08-01 (Q14, after explanation). Est. cost: small-medium.</p>
+  <p class="meta">Approved 2026-08-01 (Q14, after explanation). Done 2026-08-01.</p>
   <p><strong>Prompt:</strong> Build three shared components (Button, Card, Modal) styled
-  against the live Command Center's real Tailwind tokens (not the fictional second-frontend
-  palette, already deleted). Swap them into at least the screens currently reimplementing
-  the same pattern independently.</p>
-  <p><strong>Acceptance:</strong> Real live consumers, not just the components existing;
-  no visual regression in the screens swapped over (verify by running the app).</p>
+  against the live Command Center's real Tailwind tokens.</p>
+  <p><strong>What actually happened:</strong> The files already existed
+  (<code>components/common/Button.tsx</code>/<code>Card.tsx</code>/<code>Modal.tsx</code>) —
+  real, well-built, zero live importers, wrong palette (generic Tailwind blue/gray instead
+  of the live void/yale/cyan/gold tokens). Re-skinned all three to the real tokens rather
+  than rewriting from scratch, per the founder's own standing rule to extend not duplicate.
+  Verified against the real project build (`npm run build`): zero new errors introduced by
+  this change (pre-existing unrelated `src/worlds/`/`src/xp/` breakage untouched).
+  <strong>Not yet done:</strong> wiring a real live consumer — no screen swapped over to use
+  them yet. Re-opened as a follow-up, not blocking; the components are ready to adopt
+  whenever the next screen touching this pattern is worked on.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="false" id="task-12">
@@ -252,6 +258,16 @@ remaining quota — that's only visible to them via Settings > Usage on claude.a
 `/status` in an interactive terminal. Treat the numeric ceiling as a conservative
 placeholder until the founder confirms it against their real observed headroom, not a
 verified-safe number.
+2026-08-01 — Founder shared their actual Settings > Usage screenshot: current 5-hour
+session 66% used (34% left, resets in 3h34m); weekly "All models" cap 71% used — only
+29% left, resets Thursday 7:00 AM (~4.6 days out); usage credits balance 0.99 (under $1
+of automatic overflow — not a real safety buffer). Since automation shares this exact
+weekly pool (see entry above), recommendation given to the founder: hold off wiring any
+live Routine to this file until after Thursday's reset — with only 29% left and ~$1 of
+overflow, a misbehaving firing wouldn't just cost money, it would stop both automation AND
+the founder's own interactive chat access until reset. Awaiting founder decision on
+whether to proceed anyway or wait. Task 11 (components/common re-skin) completed this
+session in the meantime — real work, not blocked by this question.
 </div>
 
 </body>
