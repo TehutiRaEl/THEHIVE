@@ -45,8 +45,11 @@ that's the discipline this file exists to model, not just describe.
 - **Kai El bridge: live, verified real round trip** (issue #137, `hive_updates`/
   `hive_proposals` D1 tables, `.github/workflows/kai-el-bridge.yml`). Harness→Kai-El
   direction (`directive_text` dispatch) still genuinely untested. Calibration flag:
-  first real `CONCERN` was vague/generic, fired on the small unbound-keys edge model —
-  watch a few more via issue #137 before deciding the marker wording needs tightening.
+  now 3+ real `CONCERN`s observed (latest two: `hive_updates` id 745 "The Discorda...",
+  id-746-adjacent "The Qapun's Lament" — both fired 2026-08-01, both still
+  vague/generic, still on the small unbound-keys edge model) — pattern holding, not
+  yet enough to unilaterally decide the marker wording needs tightening, still a
+  founder-input item.
 - **`devils-advocate-audit` sweep:** 4 modules checked (`wallet.py` bug found+fixed;
   `staking.py`/`agency.py`/`colony.py` confirmed correct). Next target →
   `AUDIT_LEDGER.md`'s "Not yet audited" section, don't re-derive.
@@ -59,12 +62,16 @@ that's the discipline this file exists to model, not just describe.
   plan + 111 from `docs/ROLES.md`'s real, live federation role-tag convention). 3 new
   gaps found: no per-colony pulse-file equivalent, no cross-repo PR-review spore, no
   issue-triage automation.
-- **Backlog, priority order:** (1) unified flip-the-switch checklist (both
-  `FLIP_THE_SWITCHES.md` files); (2) production-readiness % / Queen's Progress meter
-  UI; (3) Command Center button/tab audit + cohesion review; (4) Venture Planner +
-  Legal-research overhaul. Also queued, no scope agreed yet: Kai El execution-access
-  design (recommended shape: extend `hive_proposals`, never raw terminal access — see
-  `Fable_memory.md` for the analysis).
+- **Backlog: (1) DONE — `SWITCHBOARD.md` built** (2026-08-01, autonomous arc firing).
+  Unifies both `FLIP_THE_SWITCHES.md` files into one live-probed table, doesn't
+  duplicate either source's mechanical instructions. Fresh probe at build time:
+  only switch #5 (KV rate-limit) is flipped; everything else (Vectorize, R2, extra
+  LLM keys, founder key, Queues, both automaton switches) still off, `secrets_present:
+  []` confirms zero secrets bound at all. **Remaining priority order:** (2)
+  production-readiness % / Queen's Progress meter UI; (3) Command Center button/tab
+  audit + cohesion review; (4) Venture Planner + Legal-research overhaul. Also queued,
+  no scope agreed yet: Kai El execution-access design (recommended shape: extend
+  `hive_proposals`, never raw terminal access — see `Fable_memory.md` for the analysis).
 - **19 numbered questions sent to the founder 2026-07-31, awaiting answers** — covers
   every dead-code/second-frontend disposition item above, the backlog order, Kai El
   execution access, and the two token-economy open questions. Do NOT re-ask, re-decide,
