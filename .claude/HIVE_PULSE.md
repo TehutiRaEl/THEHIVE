@@ -13,21 +13,27 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-07-31, ~22:32 UTC)
+## Right now (updated 2026-07-31, ~23:10 UTC — federation-wide PR audit)
 
-- **Open PRs on THEHIVE, two:**
-  - **#141** (this session's own, doc-only: HIVE_PULSE.md sync) — trivial, low risk.
-  - **#140 — reviewed clean, opened by a DIFFERENT parallel session** (branch
-    `claude/ecstatic-rubin-9zqjoc`, session `session_017RexigvxMvRGu2pjomPrvy`):
-    Phase G/H/I federation snapshot + SSE wiring + constitution-hash CI guard. Checked
-    for real, not just the diff: `mergeable_state: clean`, all 12 checks green, and its
-    "extends existing infra, no rewrites" claim verified true by grepping `main`
-    directly (`_sse_publish`/`_sse_subscribers` in `routes.py`, `scan_federation_repos`/
-    `FEDERATION_ROOT` in `generate_memory_vault.py` both genuinely pre-existed this PR).
-    No bugs found. One minor non-blocking note: the new `_federation.json` snapshot code
-    re-walks `FEDERATION_ROOT` independently instead of reusing the existing
-    `scan_federation_repos()` — duplication, not a bug. Ready for the founder's own
-    merge call; this session does not merge another session's PR.
+- **Open PRs: #142 only** (this session's own trivial pulse sync, green). Every PR ever
+  opened across ALL 10 federation repos is merged — confirmed by checking each repo
+  directly (NAR2/4DBRAIN/aether/automatisch/Kimi-K2/LocalAGI/build-your-own-x/
+  free-programming-books/freeCodeCamp), not assumed. The mid-July "L5 merge stragglers"
+  item is fully resolved.
+- **Both dead-code depth investigations DONE, logged in `AUDIT_LEDGER.md`** (two
+  2026-07-31 follow-up entries). Guilds/duplicates: 7 of 12 stubs safe-to-delete
+  (job executed elsewhere for real), 1 partial finding (`treasury_guild.py`'s
+  revenue-split feature has no live implementation anywhere), 5 genuinely unfinished
+  low-priority; 2 of 4 duplicates safe-to-delete, 2 (`constitution.py`, `rate_limiter.py`)
+  flagged high-risk for founder review, not auto-merged. Second frontend: correction —
+  13 of the "56" files are NOT orphaned (already lazy-imported live by `KaiElOS.tsx`);
+  real standouts worth integrating are `MemoryGraphEnhanced.tsx`+`ConstitutionVisualizer.tsx`
+  (real D3 graph + tiered constitution view, already wired to live API, just needs
+  re-skinning) and `services/sentry.ts` (near-zero-cost — error tracking already
+  declared in `package.json`, never actually initialized). All founder-decision items,
+  nothing deleted/wired yet.
+- **Grok bridge activation (L2):** founder said "not sure yet" — tracked as **undecided**,
+  not open, not dropped. Don't nag about it; don't drop it either.
 - **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no
   more "Session N/6" framing (removed 2026-07-31, backlog outgrew 6 sessions). Next
   fire `2026-08-01T09:00:00Z`. Maximize each firing's own window rather than cramming;
@@ -45,14 +51,6 @@ that's the discipline this file exists to model, not just describe.
   `AUDIT_LEDGER.md`'s "Not yet audited" section, don't re-derive.
 - **Coverage sweep next targets:** `utility_economy.py` (24%), `genome.py` (24%),
   `llm_router.py` (17%, the real `core/` one).
-- **Dead-code sweep: done, logged in `AUDIT_LEDGER.md`** (2026-07-31 entry). Headline:
-  12 orphaned `backend/guilds/*.py` modules + 2 more duplicate files (4 total now, not
-  2) + `backend/mcp/` — all need a founder-confirmed batch-delete pass, not yet deleted.
-  Bigger finding: 56 of frontend's "unreachable" files are a coherent second app
-  (`pages/CommandCenter.tsx`, `HiveDashboard`, `ConstitutionHall`, etc.,
-  self-identified as the "Mistral Frontend Command Center Branch") — the physical
-  presence of `CLAUDE.md`'s already-flagged unreconciled second frontend effort.
-  Founder decision needed: delete or revive.
 - **Token economy:** `.claude/TOKEN_ECONOMY_LEDGER.md` — `caveman` measured at 65%
   (`/caveman-stats`); founder's 96% target not yet reached/fully measured. Two open
   macro questions there for founder input, not decided unilaterally.
@@ -66,6 +64,12 @@ that's the discipline this file exists to model, not just describe.
   Legal-research overhaul. Also queued, no scope agreed yet: Kai El execution-access
   design (recommended shape: extend `hive_proposals`, never raw terminal access — see
   `Fable_memory.md` for the analysis).
+- **19 numbered questions sent to the founder 2026-07-31, awaiting answers** — covers
+  every dead-code/second-frontend disposition item above, the backlog order, Kai El
+  execution access, and the two token-economy open questions. Do NOT re-ask, re-decide,
+  or act unilaterally on any of these until an actual answer arrives. Full list was
+  sent directly in chat, not written to a file — check this session's own recent
+  messages for the exact numbered list if picking this up cold.
 - **Roadmap:** published artifact + in-app panel both read `frontend/src/data/roadmapData.ts`
   — update that file, not the two surfaces separately.
 - **Rolling logs — check dates, don't assume stale:** `.claude/Fable_memory.md`,

@@ -155,6 +155,113 @@ exists)
   failure" → not applicable here, dead code by definition isn't load-bearing, which is
   exactly why this sweep is a lower-urgency, batchable cleanup rather than an emergency.
 
+### 2026-07-31 — Follow-up: WHY the 12 guilds stubs + 4 duplicates got orphaned (founder-requested depth pass)
+
+**Verdict: origin traced, per-file disposition assigned — not a blanket delete list**
+
+Founder explicitly declined a blanket "delete the dead code" and asked instead: were these
+built for a real reason and later superseded (safe to delete), or abandoned mid-flight
+(possibly still needed)? Checked via `git log --follow` per file, not assumed.
+
+- **Origin, traced for real:** all 12 guild stubs landed in one bulk-import commit
+  (`884eb99`, 2026-07-17, alongside `.archive/jasper_v10_complete.py` and other
+  legacy-era files) — never independently built, never wired to `routes.py`/`main.py`,
+  zero commits since. `backend/CLAUDE.md` already self-labels them "12 guild module
+  stubs." Every method returns a hardcoded/simulated value. **Verdict: never-finished
+  scaffolding for a phased roadmap, not abandoned mid-flight work.**
+- **Per-file disposition (12 stubs):** 7 safe-to-delete, their exact job now genuinely
+  executed elsewhere for real — `arena_guild.py`→`core/arena.py`,
+  `frequency_guild.py`→`core/frequency_guild.py`, `constitutional_guild.py`→real
+  `/constitution/vote` + `governance.py`, `dream_guild.py`→4DBRAIN's real
+  `tesseract_math.dream_engine`, `treasury_guild.py`'s ledger half→`wallet.py`,
+  `security_guild.py`→distributed real enforcement (`PromptInjectionMiddleware`, real
+  auth, real rate limiter). **1 partial:** `treasury_guild.py`'s ledger half is
+  superseded, but its 70/20/10 `distribute_revenue()` feature (`agent_split`/
+  `treasury_split`/`trust_split` settings) has **no live implementation anywhere** —
+  genuinely unfinished, founder decision needed on whether to build it for real.
+  **4 genuinely-unfinished, low priority** (their described Phase 4-7 features were
+  simply never reached): `commerce_guild.py` (contracts/DEX), `academy_guild.py`
+  (badges), `arcane_guild.py` (predictions), `worldbuilding_guild.py` (3D generation).
+  **1 genuinely-unfinished but its own dependencies are also dead:** `audit_guild.py`
+  wraps `agent_identity.py`/`audit_chain.py`, both themselves zero-importer orphans —
+  nothing real underneath it to wrap.
+- **Duplicate pairs — diffed for real, not assumed identical:** `llm_router.py` and
+  `frequency_guild.py` orphans are architecturally superseded (old v9 static-fallback
+  design vs. the real 8-provider OmniRoute router; 5-tone hardcoded stub vs. the real
+  10-tone DB+HDC version) — **safe-to-delete, nothing unique to port.**
+  **`constitution.py` and `rate_limiter.py` are BOTH genuinely high-risk, real
+  differences, NOT safe to auto-merge or auto-delete:** the orphan `constitution.py`
+  dynamically regex-parses the real `soul.md` at runtime (a capability the active
+  DB-backed version lacks and arguably should have, to prevent law-text drift) — a real
+  architecture question, not a bug fix, needs the founder's own call. The orphan
+  `rate_limiter.py` is `asyncio`-based (non-blocking) vs. the active
+  `threading.Lock`-based version (which has cleanup-event logging the orphan lacks) — a
+  genuine async-vs-observability tradeoff on load-bearing security enforcement, not a
+  mechanical merge.
+- **Nothing deleted, edited, or merged in this pass** — investigation only, per the
+  founder's own instruction to understand before acting. Dispositions above are ready
+  for the founder to actually decide on.
+
+### 2026-07-31 — Follow-up: cataloguing the 56-file second frontend effort (founder-requested depth pass)
+
+**Verdict: correction to the original sweep's count, plus a real per-file usable/skip/new catalog**
+
+- **Correction to the earlier sweep:** 13 of the "56 unreachable" files
+  (`components/command-center/tabs/*.tsx` — HIVE/DREAM/ARCANE/WORLD/SOUL/GOVERN/
+  MISSIONS/API/4D/ARENA/WOW/NO_MANS_SKY/SETTINGS) are **not actually orphaned** —
+  `KaiElOS.tsx` lazy-imports every one of them directly as its "full-takeover" tabs.
+  The tab *content* was already salvaged into the live app; only the routing shell
+  around it (`TabNavigator.tsx` + 4 page files) is still genuinely unreachable.
+- **Skip — inferior duplicate of something already live:** the page/router shell
+  (superseded by `KaiElOS.tsx`'s graph-navigator, which the founder deliberately chose);
+  `components/colony/*` (10 fake consoles simulating CPU/memory with `Math.random()` —
+  `ColonyZoomPanel.tsx`, already live, does the same job with real `/colony/health`
+  calls); `TesseractChamber.tsx` (basic wireframe cubes vs. the already-live
+  `TesseractRenderer.tsx`'s real 6-plane 4D→3D projection); `MemoryGraph.tsx` (older,
+  simpler sibling of `MemoryGraphEnhanced.tsx`, redundant once that one's taken).
+- **Skip — mismatched/fictional data, firmly not wanted:** `data/{colonies,constitution,
+  memories,missions}.ts` invent sci-fi content ("Alpha Centauri Prime," fictional laws)
+  that would actively misrepresent the real system (real colonies are the 10 GitHub
+  repos, the real constitution is `soul.md`'s F-001–F-006) — not a quality problem, a
+  correctness problem. The presentational components built against this data
+  (`MissionBoard`/`Card`/`Details`, `QuickStats`, `ResourceBar`, `AgentAvatar`,
+  `ColonyCard`, `MemoryVault`, `MemoryDetails`/`Item`, `ConstitutionHall`) inherit the
+  same problem and would need full re-binding + re-skinning to the live design tokens,
+  not a lift.
+- **Skip — buggy or low-quality:** `useColonyHealth.ts` calls `getHiveStatus()` →
+  `/v11/hive/status`, which **does not exist anywhere in `worker/src/index.js`**
+  (grepped, confirmed absent) — would silently fail in production. `useNeuralUI.ts`
+  fakes a "prediction confidence" counter with no real learning behind it.
+  `useAsyncState.ts` is redundant with the live app's already-established fetch pattern
+  (`useHiveData.ts`). `utils/constitutional.ts`'s policy checks are permissive no-ops.
+  `gameStore.ts` ties to the `worlds/` module `FUTURE_MODULES.md` already deferred on
+  purpose — not re-litigated here.
+- **Genuinely new capability, real integration value, not yet built live:**
+  - **`MemoryGraphEnhanced.tsx` + `ConstitutionVisualizer.tsx`** — the strongest find.
+    Both already call the real, live `services/api.ts` functions
+    (`getMemoryGraph()`/`getConstitutionLaws()`), and `ConstitutionVisualizer`'s
+    fallback data correctly states F-001–F-006 (unlike the fictional `data/` files).
+    Live's current equivalents (`DreamLogs.tsx`, `ConstitutionViewer.tsx`) are flat
+    lists/markdown with no graph, no tiering, no history — a real capability gap.
+    Integration is a re-skin job (swap inline `theme.*` styles for the live
+    cyan-glow/void-black Tailwind tokens), not a data job — data-wise already correct.
+  - **`services/sentry.ts`** — near-zero-cost win. `@sentry/react`/`@sentry/tracing`
+    are already declared in `package.json` but `initSentry()` is never called anywhere
+    — **the live app currently ships with zero error tracking.** Needs one call from
+    `main.tsx` plus a `VITE_SENTRY_DSN` env var; the file itself needs no changes.
+  - **`services/github.ts`** — `sendGrokBridgeDispatch`/`fetchGrokToken` call real,
+    confirmed-present Worker endpoints (`/admin/grok-token`, `/bridge/grok-token`) that
+    nothing in the live UI currently exposes a trigger for.
+  - **`stores/uiStore.ts`** — a complete generic notification/modal/toast system; live
+    panels currently hand-roll every overlay via ad hoc `useState`. Self-contained,
+    only needs its stock theme palette swapped or dropped.
+  - **Minor/low-priority:** `AchievementToast`/`LevelUpNotification` (the underlying
+    XP/level data already exists on `RoadmapEntry`, nothing renders it yet — revisit if
+    that surfaces later, not urgent); `usePersistedForm.ts` (clean, cheap, nothing
+    currently needs it); `components/common/{Button,Card,Modal}` (flags a real gap — no
+    shared component library exists live — but wrong palette means rewrite, not port).
+- **Nothing wired, moved, or deleted in this pass** — investigation only.
+
 ---
 
 ## Not yet audited by this skill (do not assume clean)
