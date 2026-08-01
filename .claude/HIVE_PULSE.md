@@ -13,14 +13,13 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-08-01, ~03:04 UTC, daily heartbeat)
+## Right now (updated 2026-08-01, ~04:00 UTC, daily heartbeat)
 
-- **Open PRs: #143 only.** Hit the known `test_exchange_with_eve` BB84 flake (~1%
-  expected rate, same one diagnosed on PR #136 — real probability math, not a guess)
-  on a doc-only diff (`HIVE_PULSE.md` only, confirmed via `get_files`, zero code
-  changed) — triggered `rerun_failed_jobs`, not yet confirmed green, check fresh.
-  Every PR ever opened across ALL 10 federation repos is otherwise merged — confirmed
-  by checking
+- **Open PRs: #143 only — confirmed green.** Hit the known `test_exchange_with_eve`
+  BB84 flake (~1% expected rate, same one diagnosed on PR #136) on a doc-only diff
+  (`HIVE_PULSE.md` only, verified via `get_files`, zero code changed) — reran, both
+  `Test (Python 3.11)` jobs now pass, confirmed not just assumed. Every PR ever opened
+  across ALL 10 federation repos is otherwise merged — confirmed by checking
   each repo directly (NAR2/4DBRAIN/aether/automatisch/Kimi-K2/LocalAGI/build-your-own-x/
   free-programming-books/freeCodeCamp), not assumed. The mid-July "L5 merge stragglers"
   item is fully resolved.
