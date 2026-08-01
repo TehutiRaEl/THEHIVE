@@ -53,9 +53,15 @@ and commit that one change by itself. If a firing ever finds a task already mark
 for evidence of what the last firing actually did, note the finding in the Campaign Log,
 then decide whether to resume, redo, or mark it <code>blocked</code> for the founder.
 Never silently redo work that may already be done.</li>
-<li>When the task's Acceptance criteria are met: commit, open the PR, check CI <strong>once</strong>.
-Mark the task <code>data-status="done"</code> in this file and append one line to the
-Campaign Log below (what happened, PR number, timestamp) — one line, not a narrative.</li>
+<li>When the task's Acceptance criteria are met: commit, open the PR, check CI
+<strong>once</strong>. <strong>NEVER merge, ever — no exceptions, not even a doc-only or
+test-only diff with green CI (founder-tightened 2026-08-01, overriding the old arc's prior
+self-merge allowance).</strong> The PR waits for the founder's own review and merge, full
+stop — this file's entire next test phase is specifically about proving PRs get created
+correctly and held for review, not about proving anything can merge unattended. Mark the
+task <code>data-status="done"</code> in this file (done means "PR ready for review," not
+"shipped") and append one line to the Campaign Log below (what happened, PR number,
+timestamp) — one line, not a narrative.</li>
 <li><strong>Batching:</strong> if real context budget remains and the next
 <code>pending</code> task's <code>data-batchable</code> is <code>true</code>, continue to
 it in the same firing instead of stopping. If budget is low, or the next task is
@@ -422,6 +428,21 @@ captured as real task 13. Added a standing "Findings" protocol rule so this clas
 problem (real work silently going untracked) can't recur the same way. Session usage this
 firing so far: TOKENS: 56304633 (see Gap 1 above for why this number is unusually high —
 this is one long interactive session, not a fresh per-firing baseline).
+2026-08-01 — Founder set the permission guardrail (asked for directly, confirmed via two
+questions). MERGE AUTHORITY TIGHTENED, explicit and double-confirmed: automation NEVER
+merges any PR into main, no exceptions — not even a doc-only or test-only diff with green
+CI. This overrides the old (now-defunct) arc's prior self-merge allowance. Every task's
+"done" now means "PR ready and waiting for founder review," never "shipped." Founder's own
+words: this file's real next test phase is specifically about proving PRs get created
+correctly and held for review after they wake up — not about proving anything can merge
+unattended. Protocol's own commit/PR step updated to state this as a hard rule, not a
+per-task note. The rest of the draft guardrail (pre-approved: queued task work, verified
+dead-code deletion, extend-not-duplicate re-skinning, findings logging; always-ask: soul.md/
+constitutional code, Kai El execution capability, real money/paid infra, new Routines or
+ceiling changes, ambiguous deletions, unreviewed skill drafts) was proposed and not
+separately contested — standing as drafted unless the founder says otherwise, but only the
+merge-authority piece got explicit, repeated confirmation; be honest about that distinction
+if it matters later.
 </div>
 
 </body>
