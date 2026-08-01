@@ -64,11 +64,14 @@ old arc's own prompt named and then failed to follow once already.</li>
 <li><strong>If no task is left <code>pending</code>: stop.</strong> Do not invent new
 scope to fill the window — log "queue empty, nothing done" in the Campaign Log and end
 the firing. Only the founder adds new tasks to this file.</li>
-<li><strong>Ceiling (placeholder, founder has not set a real number yet):</strong> before
-starting any task, count today's Campaign Log entries. If it looks unusually high for
-one day, stop and log why instead of continuing — this is a placeholder circuit breaker
-until the founder sets a real cap; do not treat its absence as permission to run
-unbounded.</li>
+<li><strong>Hard ceiling (founder-set 2026-08-01): 4 firings/day AND 3,000,000 tokens/day,
+whichever is hit first.</strong> Every Campaign Log entry must include this firing's own
+real token usage (input+output). Before starting any task, sum today's dated log entries:
+count of entries, and sum of their logged token counts. If count &ge; 4 OR token-sum
+&ge; 3,000,000: stop immediately, log "ceiling hit, not starting" with the actual numbers,
+end the firing. This is a self-reported estimate (no billing-API access from inside a
+firing) — the founder should still spot-check real spend on the Anthropic Console usage
+page; this ceiling is a backstop, not a substitute for that.</li>
 </ol>
 </div>
 
@@ -223,13 +226,18 @@ holes (no in-progress state, no stop-when-empty rule, no hard ceiling, "check on
 enforced only by prose not mechanism, and the incoming "full unabridged everything"
 expansion request conflicts with this file needing to stay small enough to read every
 firing). Fixed the mechanical ones in-place (in-progress state, stop-when-empty,
-placeholder ceiling). Ceiling value and the full-plan-vs-operational-index split still
-need a founder decision — see this session's own chat for the full writeup. No Routine
-wired yet; still pending founder review before any live test run. Tasks 11-12
-(components/common library, constitution.py dynamic-parsing port) added, approved
-2026-08-01 (Q14, Q6). Task 7 (Kai El execution access) shape refined per live discussion
-(Q16): action-request proposal kind, fixed allow-list, server-side enforced, no raw
-terminal.
+placeholder ceiling). Tasks 11-12 (components/common library, constitution.py
+dynamic-parsing port) added, approved 2026-08-01 (Q14, Q6). Task 7 (Kai El execution
+access) shape refined per live discussion (Q16): action-request proposal kind, fixed
+allow-list, server-side enforced, no raw terminal.
+2026-08-01 — Founder set the ceiling: 4 firings/day AND 3,000,000 tokens/day, both
+enforced together, self-logged per firing (no billing-API access from inside a firing —
+founder spot-checks real $ on the Anthropic Console usage page). Founder also decided the
+full-plan-vs-operational-index question: keep them as two separate files — this file
+(CAMPAIGN.html) stays the small thing every firing reads in full; the big unabridged
+everything-planned reference lives in FULL_PLAN.html and this file will link/search into
+it rather than embed it, once that file lands (a background pass is compiling it).
+No Routine wired yet; still pending founder review before any live test run.
 </div>
 
 </body>
