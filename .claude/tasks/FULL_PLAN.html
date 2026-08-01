@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THEHIVE — Full Plan (unabridged reference)</title>
+<style>
+  :root {
+    --bg: #0b0c10; --panel: #14161c; --panel2: #1b1e27; --border: #2a2e3a;
+    --text: #e8e9ee; --dim: #9aa0ae; --accent: #4fd1c5; --accent2: #f0c14b;
+    --danger: #ff6b6b; --ok: #67d97e; --warn: #f0c14b; --link: #7cc4ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.55; }
+  body { display: flex; height: 100vh; overflow: hidden; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  code { background: var(--panel2); padding: .1rem .35rem; border-radius: 4px; font-size: .87em; color: var(--accent); }
+  pre { background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; padding: .8rem 1rem;
+    overflow-x: auto; font-size: .82rem; white-space: pre-wrap; word-break: break-word; }
+  pre code { background: none; padding: 0; color: inherit; }
+  a { color: var(--link); }
+  h1, h2, h3, h4 { line-height: 1.25; }
+  blockquote { border-left: 3px solid var(--accent2); margin: .6rem 0; padding: .3rem 1rem; background: rgba(240,193,75,0.06); color: var(--text); }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0; font-size: .88rem; }
+  th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; vertical-align: top; }
+  th { background: var(--panel2); }
+  .src { font-size: .82rem; color: var(--dim); background: var(--panel2); border: 1px dashed var(--border);
+    border-radius: 6px; padding: .5rem .8rem; margin: .6rem 0 1.2rem; }
+  .src code { color: var(--accent2); }
+  .tag { display: inline-block; font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .03em; padding: .1rem .5rem; border-radius: 999px; margin-right: .3rem; }
+  .tag.live { background: rgba(103,217,126,.15); color: var(--ok); border: 1px solid rgba(103,217,126,.4); }
+  .tag.dead { background: rgba(255,107,107,.15); color: var(--danger); border: 1px solid rgba(255,107,107,.4); }
+  .tag.blocked { background: rgba(240,193,75,.15); color: var(--warn); border: 1px solid rgba(240,193,75,.4); }
+  .tag.decision { background: rgba(124,196,255,.15); color: var(--link); border: 1px solid rgba(124,196,255,.4); }
+  .tag.canon { background: rgba(200,120,255,.15); color: #c878ff; border: 1px solid rgba(200,120,255,.4); }
+  details { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; margin: .7rem 0; padding: .1rem .9rem .5rem; }
+  details[open] { padding-bottom: .8rem; }
+  summary { cursor: pointer; font-weight: 600; padding: .6rem 0; }
+  summary:hover { color: var(--accent); }
+  .founder-quote { border-left: 3px solid #c878ff; background: rgba(200,120,255,.06); padding: .6rem 1rem; margin: .6rem 0; font-style: italic; }
+
+  /* layout */
+  #sidebar { width: 300px; min-width: 300px; background: var(--panel); border-right: 1px solid var(--border);
+    overflow-y: auto; padding: 1rem .7rem 3rem; }
+  #sidebar h1 { font-size: 1.05rem; margin: 0 0 .2rem; }
+  #sidebar .sub { font-size: .75rem; color: var(--dim); margin-bottom: 1rem; }
+  #search { width: 100%; padding: .5rem .6rem; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--panel2); color: var(--text); font-size: .85rem; margin-bottom: .3rem; }
+  #searchResults { font-size: .8rem; max-height: 260px; overflow-y: auto; margin-bottom: .8rem; }
+  #searchResults div { padding: .35rem .4rem; border-radius: 5px; cursor: pointer; border-bottom: 1px solid var(--border); }
+  #searchResults div:hover { background: var(--panel2); }
+  #searchResults .snip { color: var(--dim); font-size: .78rem; }
+  #searchResults mark { background: var(--accent2); color: #000; }
+  nav.toc a { display: block; padding: .38rem .5rem; border-radius: 6px; color: var(--text); text-decoration: none;
+    font-size: .88rem; }
+  nav.toc a:hover { background: var(--panel2); }
+  nav.toc a.active { background: rgba(79,209,197,.15); color: var(--accent); font-weight: 600; }
+  nav.toc .domain-num { color: var(--dim); font-size: .78rem; margin-right: .3rem; }
+  nav.toc .sub-link { padding-left: 1.3rem; font-size: .8rem; color: var(--dim); }
+  nav.toc .sub-link:hover { color: var(--text); }
+
+  #main { flex: 1; overflow-y: auto; padding: 2rem 3rem 6rem; max-width: 1000px; }
+  .tab { display: none; }
+  .tab.active { display: block; }
+  .tab > h2:first-child { margin-top: 0; }
+  h2 { border-bottom: 1px solid var(--border); padding-bottom: .5rem; margin-top: 2.4rem; }
+  h3 { color: var(--accent); margin-top: 1.8rem; }
+  h4 { color: var(--accent2); margin-top: 1.3rem; }
+  .flash { outline: 2px solid var(--accent2); outline-offset: 3px; border-radius: 4px; }
+  .backtop { position: fixed; bottom: 1.2rem; right: 1.2rem; background: var(--panel2); border: 1px solid var(--border);
+    color: var(--dim); padding: .4rem .7rem; border-radius: 999px; font-size: .78rem; cursor: pointer; }
+  ul, ol { padding-left: 1.4rem; }
+  li { margin: .25rem 0; }
+  .updatecard { border: 1px solid var(--border); border-radius: 8px; padding: .8rem 1rem; margin: .8rem 0; background: var(--panel); }
+  .updatecard h4 { margin: 0 0 .4rem; color: var(--text); }
+  .updatecard .date { color: var(--dim); font-size: .78rem; }
+  .gap-note { border: 1px dashed var(--danger); background: rgba(255,107,107,.06); border-radius: 6px;
+    padding: .6rem 1rem; margin: 1rem 0; font-size: .9rem; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; height: auto; overflow: visible; }
+    #sidebar { width: auto; min-width: 0; height: auto; max-height: 40vh; }
+    #main { max-width: 100%; padding: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <h1>THEHIVE — Full Plan</h1>
+  <div class="sub">Unabridged reference. Companion to <code>.claude/tasks/CAMPAIGN.html</code>
+  (the small live task queue) — this is the big archive it will link into. Built 2026-08-01.</div>
+
+  <input id="search" type="text" placeholder="Search everything…" autocomplete="off">
+  <div id="searchResults"></div>
+
+  <nav class="toc" id="toc">
+    <a href="#" data-tab="home"><span class="domain-num">0</span>How to use this document</a>
+    <a href="#" data-tab="backend"><span class="domain-num">1</span>Backend — System A (FastAPI)</a>
+    <a href="#" data-tab="worker"><span class="domain-num">2</span>Edge Worker — System B</a>
+    <a href="#" data-tab="frontend"><span class="domain-num">3</span>Command Center / Frontend UI</a>
+    <a href="#" data-tab="federation"><span class="domain-num">4</span>Federation / Colonies</a>
+    <a href="#" data-tab="governance"><span class="domain-num">5</span>Governance / Constitution</a>
+    <a href="#" data-tab="vision"><span class="domain-num">6</span>Founder's Visionary Scope</a>
+    <a href="#" data-tab="codex"><span class="domain-num">7</span>Narrative Canon (THE_CODEX)</a>
+    <a href="#" data-tab="economy"><span class="domain-num">8</span>Token Economy Ledger</a>
+    <a href="#" data-tab="open"><span class="domain-num">9</span>Open / Pending Decisions (index)</a>
+  </nav>
+</div>
+
+<div id="main">
+
+<!-- ================= TAB 0: HOME ================= -->
+<section class="tab active" id="tab-home">
+<h2>0 · How to use this document</h2>
+<div class="src">Source: written by this session 2026-08-01, from a full read of the source files cited
+at the top of every section below. This file exists because the founder asked for "the full plan
+for everything planned so far uncensored unredacted unabated unabridged un-truncated," structured
+so it can be searched and updated rather than read start to finish.</div>
+
+<p>This is the <strong>big rich reference document</strong>. It is deliberately separate from
+<code>.claude/tasks/CAMPAIGN.html</code>, which stays small on purpose — it's the operational task
+queue every autonomous firing reads. CAMPAIGN.html will later link <em>into</em> this file as an
+index; this file does not replace it and nothing here should be copied back into it wholesale.</p>
+
+<h3>Navigation</h3>
+<ul>
+  <li>Click a domain in the left sidebar to switch tabs. Each tab covers one of the areas the
+  founder asked for, in real, unabridged detail — not one-line summaries.</li>
+  <li>Every section opens with a <span class="src">source citation box</span> like this one,
+  naming the real file(s) it was built from, so every claim here is traceable back to a file
+  you can re-read yourself.</li>
+  <li>Long verbatim material (founder quotes, full constitutional article text, full chromosome
+  text) is in open <code>&lt;details&gt;</code> blocks — expanded by default, collapsible if you
+  want to skim past something you've already read.</li>
+  <li>Use the search box at the top of the sidebar to find any word or phrase across
+  <em>every</em> tab at once (not just the one currently open) — results jump you straight to
+  the matching tab and scroll to, and briefly highlight, the exact spot.</li>
+</ul>
+
+<h3>Status tags used throughout</h3>
+<p>
+  <span class="tag live">live</span> confirmed running in production, re-verified, not assumed —
+  <span class="tag dead">dead / orphaned</span> confirmed zero real callers —
+  <span class="tag blocked">blocked</span> real work sitting behind a founder-only action —
+  <span class="tag decision">founder decision needed</span> a real fork in the road, not yet chosen —
+  <span class="tag canon">narrative canon</span> real and honored, never engineering law.
+</p>
+
+<h3>What this document is built from</h3>
+<p>Every domain below cites its real sources at the top of its own section. In total this document
+was built from a first-hand read of: <code>backend/CLAUDE.md</code>, <code>backend/core/CLAUDE.md</code>,
+<code>.claude/skills/devils-advocate-audit/AUDIT_LEDGER.md</code>, <code>SWITCHBOARD.md</code>,
+<code>FLIP_THE_SWITCHES.md</code> (root and <code>automaton/</code>), <code>automaton/ARCHITECTURE.md</code>,
+<code>frontend/src/data/roadmapData.ts</code>, all 13 files in
+<code>frontend/src/components/command-center/tabs/</code>, all 20 files in
+<code>frontend/src/components/kai-os/</code>, <code>.queen/hive.yml</code>, <code>.queen/CLAUDE.md</code>,
+<code>SPORE_ROSTER.md</code> (both parts), <code>soul.md</code>, <code>FABLE_DNA.md</code> (all nine
+chromosomes), <code>MANDATE_TRIAGE.md</code>, <code>docs/ROLES.md</code>, <code>docs/GOVERNANCE.md</code>
+(the live F-001–F-013 constitution actually shown in the UI), <code>PERMISSIONS.md</code>,
+<code>THE_CODEX.md</code>, <code>.claude/TOKEN_ECONOMY_LEDGER.md</code>, all five files in
+<code>memory/planning/</code>, all seven files in <code>Project_file/Founders Visonary Folder/VISION/</code>,
+all 49 files in <code>Project_file/Founders Visonary Folder/HIVE_UPDATES/</code>,
+<code>Project_file/Founders Visonary Folder/TEAM_CHARTERS.md</code>, the folder's own
+<code>README.md</code>/<code>INDEX.md</code>/<code>SOURCES/README.md</code>,
+<code>Project_file/Founders Visonary Folder/vision-folder/idea#1.md</code>, and the structure of both
+files under <code>Project_file/Founders Visonary Folder/MODIFICATIONS/</code>. Gaps and anything not
+read in full are disclosed honestly where they occur — see especially the end of §6.</p>
+
+<div class="gap-note"><strong>Honesty note, stated once here rather than buried:</strong> two files in
+<code>Project_file/Founders Visonary Folder/Visionary-Conversation-logs/</code> — <code>Log(3).md</code>
+(1.29 MB) and <code>Log(5).md</code> (1.57 MB) — were not read in full for this pass; at that size they
+would have consumed most of this session's remaining budget on their own, for material that is raw
+chat transcript rather than distilled plan content. Their existence, size, and location are recorded
+honestly in §6 rather than silently omitted or fabricated. Everything else listed above was read in
+full or, where explicitly noted (the two large MODIFICATIONS source-code files), read structurally
+in full with representative content quoted rather than the entire raw file reproduced.</div>
+</section>
+
+<!-- ================= TAB 1: BACKEND (SYSTEM A) ================= -->
+<section class="tab" id="tab-backend">
+<h2>1 · Backend — System A (FastAPI)</h2>
+<div class="src">Sources: <code>backend/CLAUDE.md</code>, <code>backend/core/CLAUDE.md</code>,
+<code>.claude/skills/devils-advocate-audit/AUDIT_LEDGER.md</code> (2026-08-01 entries),
+cross-checked against <code>memory/planning/2026-07-19-unified-forward-plan.md</code> Phase 3.</div>
+
+<p><span class="tag decision">not yet verified live</span> System A is the original FastAPI
+"second-brain" harness — <code>backend/main.py</code> entry point, 80+ <code>/v11/*</code> routes
+in <code>backend/api/routes.py</code>. It is real, substantial, tested code
+(51%+ coverage, 375 passing tests as of the 2026-08-01 audit re-run) sitting
+<strong>unprovisioned</strong> — its deploy target is gated behind an unset <code>ORACLE_HOST</code>
+secret. System B (the Cloudflare Worker, §2) is the one repeatedly verified live in production.
+Whether to retire System A as reference or actually provision and deploy it is an open founder
+decision (see §9).</p>
+
+<h3>Directory structure (from backend/CLAUDE.md)</h3>
+<table>
+<tr><th>Path</th><th>Contents</th></tr>
+<tr><td><code>main.py</code></td><td>FastAPI app + lifespan, CORS, middleware mounts, router includes</td></tr>
+<tr><td><code>api/routes.py</code></td><td>All 80+ <code>/v11/*</code> endpoints — the primary file to edit for new routes</td></tr>
+<tr><td><code>api/colony.py</code></td><td>Colony endpoints: <code>/colony/health</code>, <code>/colony/info</code>, <code>/colony/events</code>, etc.</td></tr>
+<tr><td><code>api/ml.py</code></td><td>ML endpoints: <code>/v11/voice/transcribe</code>, <code>/v11/image/generate</code>, <code>/v11/ml/*</code></td></tr>
+<tr><td><code>api/auth.py</code></td><td>JWT auth: <code>verify_auth</code> dependency, <code>/v11/auth/token</code></td></tr>
+<tr><td><code>api/middleware.py</code></td><td>HSTS, body size limit, IP violation counter, async <code>RateLimiter</code> (ported from sync <code>threading.Lock</code> 2026-08-01)</td></tr>
+<tr><td><code>api/models.py</code></td><td>Pydantic response models</td></tr>
+<tr><td><code>core/</code></td><td>The cerebellum — see module table below</td></tr>
+<tr><td><code>economy/</code></td><td>Staking + utility economy</td></tr>
+<tr><td><code>governance/</code></td><td>Governance patterns + recommend logic</td></tr>
+<tr><td><code>guilds/</code></td><td>Guild module stubs — see disposition table below</td></tr>
+<tr><td><code>memory/</code></td><td>Episodic memory + vector store</td></tr>
+<tr><td><code>mcp/</code></td><td><span class="tag dead">dead</span> an in-process tool registry — NOT a real MCP server; no JSON-RPC/transport, one tool (<code>web_search_tool</code>) is literally simulated, unwired from <code>routes.py</code></td></tr>
+<tr><td><code>mcp_server/</code></td><td><span class="tag live">live</span> the REAL federation MCP server (2026-07-22) — <code>hive_dispatch</code>/<code>hive_memory_recall</code>/<code>hive_law_query</code> tools, verified with a live JSON-RPC handshake over streamable-http. First consumer: LocalAGI.</td></tr>
+<tr><td><code>tier2/</code></td><td>Thin re-export shims since 2026-07-22 — the real 4D tesseract math, dream engine, hypercomplex layers, ARG-NN now live in 4DBRAIN's <code>tesseract_math</code> package (4DBRAIN being the colony whose name promised it)</td></tr>
+<tr><td><code>tier3/</code></td><td>Arena renderer, quantum bridge, sheaf guild, IPFS pubsub, tesseract model</td></tr>
+<tr><td><code>utils/</code></td><td>Crypto helpers, rate limiter, misc utils</td></tr>
+</table>
+
+<h3>Core module quick reference (backend/core/CLAUDE.md)</h3>
+<p>The cerebellum — imported by nearly everything else.</p>
+<table>
+<tr><th>File</th><th>What it does</th><th>Key exports</th></tr>
+<tr><td><code>config.py</code></td><td>Pydantic Settings (env vars)</td><td><code>settings</code> singleton</td></tr>
+<tr><td><code>db.py</code></td><td>SQLite WAL connection + 10 indexes</td><td><code>get_db()</code></td></tr>
+<tr><td><code>protocol.py</code></td><td>asyncio event bus (50ms batch, NO Redis)</td><td><code>protocol.publish()</code></td></tr>
+<tr><td><code>hive_mesh.py</code></td><td>HMAC fan-out to colonies, circuit breaker, PERMISSIONS.md tier gate (2026-07-22 — non-Tier-1-safe event types held for founder review via <code>hitl</code>, not fired)</td><td><code>hive_mesh.dispatch()</code></td></tr>
+<tr><td><code>constitution.py</code></td><td>F-001..F-006 enforcement, soul.md loader</td><td><code>ConstitutionChecker</code></td></tr>
+<tr><td><code>validator.py</code></td><td>Ma'at validation, <code>is_critical_violation()</code></td><td><code>validator.validate()</code></td></tr>
+<tr><td><code>hdc.py</code></td><td>1024-dim HDC/VSA — bind/bundle/closest, ~150 pre-built concepts</td><td><code>hdc</code> singleton</td></tr>
+<tr><td><code>wealth.py</code></td><td>EVW formula, W_total, 60s TTL cache</td><td><code>wealth.compute_wealth()</code></td></tr>
+<tr><td><code>alchemy.py</code></td><td>Capture→Propagate cycle, grief detection</td><td><code>AlchemyEngine</code></td></tr>
+<tr><td><code>genesis.py</code></td><td>Gap detection, mission generation</td><td><code>gap_detector</code>, <code>mission_generator</code></td></tr>
+<tr><td><code>agency.py</code></td><td>AgencyLevel (OBSERVE→DEVIATE), 30s TTL</td><td><code>agency.check()</code></td></tr>
+<tr><td><code>agent_engine.py</code></td><td>Agent registry, list/get/spawn</td><td><code>list_agents()</code>, <code>get_agent()</code></td></tr>
+<tr><td><code>arena.py</code></td><td>Challenge lifecycle, ELO, voxel setup</td><td><code>arena_manager</code></td></tr>
+<tr><td><code>genome.py</code></td><td>Agent genome + reproduction</td><td><code>GenomeEngine</code></td></tr>
+<tr><td><code>hitl.py</code></td><td>Human-in-the-loop approval queue</td><td><code>hitl.request_approval()</code></td></tr>
+<tr><td><code>llm_router.py</code></td><td>LLM provider waterfall (Ollama→Kimi→etc.)</td><td><code>llm_router.complete()</code></td></tr>
+<tr><td><code>ml_pipeline.py</code></td><td>Whisper, Stable Diffusion, embeddings</td><td><code>transcribe()</code>, <code>classify()</code></td></tr>
+<tr><td><code>wallet.py</code></td><td>SOUL token ledger (had a load-bearing bug, fixed — see below)</td><td><code>wallet_manager</code></td></tr>
+<tr><td><code>frequency_guild.py</code></td><td>Schumann resonance, solfeggio healing (10-tone DB+HDC version)</td><td><code>frequency_guild</code></td></tr>
+</table>
+<p><strong>What NOT to change</strong> (from backend/CLAUDE.md): <code>protocol.py</code> — the event
+bus; do not add Redis here. <code>hive_mesh.py</code> — HMAC signing logic; permissive mode when
+secret unset is intentional. <code>constitution.py</code> — fixed law enforcement; F-001 through
+F-006 are immutable.</p>
+
+<h3>The guild-stub disposition — decided 2026-08-01</h3>
+<p>The 2026-07-31 dead-code sweep found 12 guild module stubs, all landed in one bulk-import commit
+(<code>884eb99</code>, 2026-07-17) alongside <code>.archive/jasper_v10_complete.py</code> — never
+independently built, never wired to <code>routes.py</code>/<code>main.py</code>, zero commits since,
+every method returning a hardcoded/simulated value. Verdict: <strong>never-finished scaffolding for
+a phased roadmap, not abandoned mid-flight work.</strong> The founder then answered all 19 open
+items from that sweep on 2026-08-01, and each guild got a real, individual disposition — not a
+blanket delete:</p>
+<table>
+<tr><th>Guild stub</th><th>Disposition</th><th>Why</th></tr>
+<tr><td><code>arena_guild.py</code></td><td><span class="tag dead">deleted</span></td><td>job now genuinely done by <code>core/arena.py</code></td></tr>
+<tr><td><code>constitutional_guild.py</code></td><td><span class="tag dead">deleted</span></td><td>superseded by real <code>/constitution/vote</code> + <code>governance.py</code></td></tr>
+<tr><td><code>dream_guild.py</code></td><td><span class="tag dead">deleted</span></td><td>superseded by 4DBRAIN's real <code>tesseract_math.dream_engine</code></td></tr>
+<tr><td><code>frequency_guild.py</code> (the guilds/ duplicate)</td><td><span class="tag dead">deleted</span></td><td>shadowed the real <code>core/frequency_guild.py</code> (10-tone DB+HDC) with a 5-tone hardcoded stub</td></tr>
+<tr><td><code>security_guild.py</code></td><td><span class="tag dead">deleted</span></td><td>superseded by distributed real enforcement (PromptInjectionMiddleware, real auth, real rate limiter)</td></tr>
+<tr><td><code>treasury_guild.py</code></td><td><span class="tag blocked">trimmed, not deleted</span></td><td><code>credit()</code>/ledger bookkeeping removed (superseded by <code>wallet.py</code>, zero callers); <code>distribute_revenue()</code>/<code>get_balance()</code> kept — the 70/20/10 revenue-split idea is <strong>"a real plan, discuss later"</strong> per the founder, genuinely unfinished with no live implementation anywhere</td></tr>
+<tr><td><code>audit_guild.py</code> (+ deps <code>agent_identity.py</code>, <code>audit_chain.py</code>)</td><td><span class="tag decision">kept, needs real rebuild</span></td><td>founder wants the compliance-audit concept rebuilt against something real eventually, not dropped — nothing real currently underneath it to wrap</td></tr>
+<tr><td><code>commerce_guild.py</code></td><td><span class="tag blocked">still on roadmap</span></td><td>contracts/DEX — Phase 4-7 features never reached</td></tr>
+<tr><td><code>academy_guild.py</code></td><td><span class="tag blocked">still on roadmap</span></td><td>badges — never reached</td></tr>
+<tr><td><code>arcane_guild.py</code></td><td><span class="tag blocked">still on roadmap</span></td><td>predictions — never reached</td></tr>
+<tr><td><code>worldbuilding_guild.py</code></td><td><span class="tag blocked">still on roadmap</span></td><td>3D generation — never reached; zero frontend surface either (see §3 backlog)</td></tr>
+<tr><td><code>workflow_guild.py</code></td><td><span class="tag blocked">still on roadmap (corrected)</span></td><td>the 2026-07-31 sweep miscategorized this as "safe to delete, job done elsewhere" — a 2026-08-01 fresh re-read found no real live counterpart: <code>deploy_spore()</code> returns a hardcoded <code>archive.org/placeholder</code> IPFS hash, <code>create_workflow()</code> is a pass-through stub. Corrected to the "still on roadmap" bucket instead of deleted on the wrong premise.</td></tr>
+</table>
+<p>Also deleted 2026-08-01: <code>backend/llm_router.py</code> (root-level orphan; <code>backend/core/llm_router.py</code> is the real live one). <code>backend/constitution.py</code> orphan (dynamic <code>soul.md</code> regex-parser) — <strong>no action</strong>, still an open decision (see §9): it has a real capability the active DB-backed version lacks (parsing <code>soul.md</code> live to prevent law-text drift), but porting it is an architecture question needing the founder's own call, not a mechanical merge. Full suite re-run after every deletion: <strong>375 passed, zero failures/skips.</strong></p>
+
+<h3>Dead/unused code sweep — the rest of the findings (2026-07-31)</h3>
+<p>Beyond the guild stubs: 4 duplicate modules found and diffed for real (not assumed identical).
+<code>llm_router.py</code> and the <code>guilds/frequency_guild.py</code> orphans are architecturally
+superseded — safe-to-delete, nothing unique to port (now deleted, see above). <strong>Two are
+genuinely high-risk and NOT safe to auto-merge or auto-delete:</strong> the orphan
+<code>constitution.py</code> (dynamic <code>soul.md</code> parser, see above) and
+<code>utils/rate_limiter.py</code> — <code>asyncio</code>-based (non-blocking) vs. the active
+<code>threading.Lock</code>-based version (which had cleanup-event logging the orphan lacked) — a
+genuine async-vs-observability tradeoff on load-bearing security enforcement. <strong>Resolved
+2026-08-01:</strong> the live <code>RateLimiter</code> in <code>backend/api/middleware.py</code>
+was ported from <code>threading.Lock</code>/sync <code>check()</code> to <code>asyncio.Lock</code>/
+async <code>check()</code>, matching the orphan's tradeoff; the orphan itself was then deleted.
+This is the backend API's own 30/min/IP throttling — explicitly unrelated to Claude Code
+session/token cost, a separate system entirely (flagged directly so the fix isn't mistaken for a
+cost control).</p>
+<p>Other zero-importer standalone modules found: <code>agent_identity.py</code>, <code>audit_chain.py</code>,
+<code>phase_manager.py</code>, <code>resonance.py</code>, <code>sheaf_crypto.py</code>,
+<code>memory/episodic_memory.py</code>, <code>memory/vector_store.py</code>, <code>utils/crypto.py</code>,
+<code>utils/helpers.py</code> — <code>backend/mcp/</code> already self-documented as dead, just never
+actually removed.</p>
+<p><strong>Correctly NOT flagged</strong> — gated, not dead: <code>backend/tier3/*</code>
+(conditionally imported, tested); <code>backend/tier2/*</code> shim modules (re-export the real
+<code>tesseract_math</code> package, confirmed to exist); the Worker's <code>processQueueBatch</code>
+(deliberately unexported per <code>FLIP_THE_SWITCHES.md</code> §6).</p>
+<p><strong>Dependency spot-check</strong> (not exhaustive): <code>sqlalchemy</code>/<code>alembic</code>
+declared but zero imports found anywhere (DB layer is raw <code>sqlite3</code>);
+<code>langchain</code>/<code>langchain-community</code> declared but the actual code imports the
+undeclared <code>langchain_openai</code> instead — flagged as "worth a second look," not asserted
+as a confirmed bug.</p>
+
+<h3>Real bugs found and fixed by the devil's-advocate audit</h3>
+<details open>
+<summary>2026-07-31 — <code>backend/core/wallet.py</code> (WalletManager) — BUG FOUND, FIXED</summary>
+<p>This is the finding that created the <code>devils-advocate-audit</code> skill, not an output of
+running it. Found writing <code>tests/unit/test_wallet.py</code> and running it for the first time
+— not a read-through. <code>credit()</code> held a <code>get_db()</code> connection across a call to
+its own <code>create_wallet()</code>, which fetches the same thread-local connection and closes it
+— <strong>every <code>credit()</code> call (every SOUL grant, tip, arena payout) raised
+<code>sqlite3.ProgrammingError: Cannot operate on a closed database</code></strong>. Coupled-bug
+check performed: re-read <code>debit()</code>, <code>tip()</code>, <code>transfer()</code> after the
+fix; none share the same shape. Fixed via PR #135, reordering so <code>create_wallet()</code> runs
+first and <code>credit()</code> re-fetches its own connection afterward. 26 new tests, including a
+total-supply invariance check across transfers (Fixed Law #4).</p>
+</details>
+<details open>
+<summary>2026-07-31 — <code>backend/economy/staking.py</code> (StakingManager) — CONFIRMED CORRECT</summary>
+<p>Wrote <code>tests/unit/test_staking.py</code>, ran it for real. Honesty note: the first draft of
+the test suite produced 3 failures by simulating "already matured" positions via a negative
+<code>staking_lock_days</code> — that broke the reward-decay formula's own assumption. This was a
+test-fixture bug, not a <code>staking.py</code> bug — confirmed by backdating <code>locked_until</code>
+directly instead, after which all 19 tests passed. <code>claim_rewards()</code>'s call into
+<code>wallet_manager.credit()</code> was exercised for real by these tests and did not reproduce the
+earlier bug, confirming the wallet.py fix holds under a second, independent caller.</p>
+</details>
+<details open>
+<summary>2026-07-31 — <code>backend/core/agency.py</code> (SwarmAgency) — CONFIRMED CORRECT</summary>
+<p>28 tests — OBSERVE/PROPOSE/EXECUTE/DEVIATE ladder, the permanent block-list, the 30s decision
+cache, revocation semantics. One quirk documented, not fixed: the OBSERVE branch returns before the
+<code>_BLOCKED_ACTIONS</code> hard-block check runs, so a blocked action <em>name</em> at OBSERVE
+level is reported allowed. Not treated as a bug (OBSERVE is read-only by definition), but flagged
+as worth a deliberate look rather than silently fixed.</p>
+</details>
+<details open>
+<summary>2026-07-31 — <code>backend/api/colony.py</code> (_verify_hive_signature) — CONFIRMED CORRECT, one architecture-wide gap flagged</summary>
+<p>An independently hand-computed HMAC-SHA256 verification script (not reusing the test file's own
+helper) drove the real endpoint through <code>TestClient</code>. 7/7 checks passed as expected
+(permissive-when-placeholder holds; correct signature accepted; tampered body rejected; wrong secret
+rejected; empty body doesn't crash; wrong-case prefix rejected). <strong>Real finding: no replay
+protection</strong> — a validly-signed event can be resent byte-for-byte and is accepted again (no
+nonce, no enforced freshness window). Confirmed this is <strong>federation-wide</strong>, not unique
+to <code>colony.py</code> — shared by every colony's <code>/colony/events</code> implementation and
+<code>hive_mesh.py</code>'s outbound signer. Correctly not patched unilaterally in one file — logged
+for the founder to decide whether it's worth a coordinated fix across all six colonies.</p>
+</details>
+
+<h3>Not yet audited by this skill (do not assume clean)</h3>
+<p>Ordered by highest blast radius / least-verified first, per the AUDIT_LEDGER's own priority list:</p>
+<ul>
+<li><code>backend/core/hitl.py</code> (human-in-the-loop approval queue) — tests exist, written
+same-session as the read-through, not independently re-derived.</li>
+<li><code>backend/mcp_server/server.py</code> — tests use a stubbed <code>mcp</code> SDK (real SDK
+has installability problems in this sandbox); the stub's behavior matching the real FastMCP has not
+been independently re-verified.</li>
+<li>Everything merged into <code>main</code> from PR #131 (founder's own gamified-UI patch), PR #132
+and #133 (Grok's workstream) — diff-reviewed and build-verified, which catches syntax/build breaks
+but not the same discipline as re-running actual runtime behavior.</li>
+<li><code>backend/economy/utility_economy.py</code>, <code>backend/core/genome.py</code>,
+<code>backend/core/llm_router.py</code> — no tests exist yet at all (0-24% coverage last measured).</li>
+<li>Anything in <code>backend/</code> deployed nowhere live (System A) — lower real-world blast
+radius precisely because nothing depends on it running correctly <em>yet</em>, but worth a pass
+before any future decision to actually deploy it.</li>
+<li>The Cloudflare Worker's KV rate-limiter and Queues producer code (System B) — verified
+<em>live</em>, but that confirms the binding is live, not that the rate-limit math or Queue message
+shape is correct under an unusual load pattern.</li>
+</ul>
+
+<h3>Deployment plan (Phase 3 of the unified forward plan)</h3>
+<div class="src">Source: <code>memory/planning/2026-07-19-unified-forward-plan.md</code> Phase 3.</div>
+<p>Founder's decision on record: <strong>invest in deploying System A, don't freeze it.</strong>
+Four of five core modules (<code>agent_engine.py</code>'s <code>ReactAgent</code>, <code>hitl.py</code>,
+<code>agency.py</code>, <code>genesis.py</code>) are real, substantial, already wired into
+<code>routes.py</code> — only <code>phase_manager.py</code> is genuinely dead. The deploy path
+failed 165 straight times before being gated off behind an unset <code>ORACLE_HOST</code> secret;
+<code>render.yaml</code> exists as an untried alternate path (a one-click Render Blueprint).</p>
+<p>Plan: apply <code>fable-debugger</code> discipline first — root-cause <em>why</em> Oracle failed
+165 times before retrying (probe actual failure logs/history, don't just re-run the same broken
+path). Decide, with evidence, whether to fix the Oracle SSH path or switch to Render. Goal:
+<code>deploy-system-a</code>, done when <code>curl -sf &lt;deployed-host&gt;/health</code> exits 0
+from outside the container (reusing the <code>edge-health-probe.yml</code> pattern — a GitHub
+Actions runner doing the real check, since the container can't reach either target directly).
+<strong>Founder-only step:</strong> whichever path is chosen, the actual secret
+(<code>ORACLE_HOST</code>) or the Render dashboard click-through is Tier 3 — everything up to that
+point gets prepared so the founder's one action is the only remaining step. Once live: delete
+<code>backend/phase_manager.py</code> (confirmed unwired anywhere) or wire it in if a real use turns
+up during the debugger pass.</p>
+</section>
+
+<!-- ================= TAB 2: EDGE WORKER (SYSTEM B) ================= -->
+<section class="tab" id="tab-worker">
+<h2>2 · Edge Worker — System B</h2>
+<div class="src">Sources: <code>SWITCHBOARD.md</code> (full, both tables), <code>FLIP_THE_SWITCHES.md</code>
+(root), <code>automaton/FLIP_THE_SWITCHES.md</code>, <code>automaton/ARCHITECTURE.md</code>.</div>
+
+<p><span class="tag live">live</span> The Cloudflare Worker (<code>worker/src/index.js</code>) serves
+the <code>/v11</code> API plus the app from one origin at
+<code>thehive.sovereignhive.workers.dev</code> — D1 database, Workers AI, repeatedly verified live
+via the <code>edge-health-probe</code> GitHub Actions workflow (the container this session runs in
+cannot reach <code>*.workers.dev</code> directly — that workflow is the hive's real eyes on
+production).</p>
+
+<h3>SWITCHBOARD — hive-wide switches, production completeness</h3>
+<p>Live status below was probed at <strong>2026-08-01T09:01Z</strong> via <code>edge-health-probe.yml</code>'s
+real <code>GET /v11/debug/env</code> + <code>/v11/llm/status</code> + <code>/v11/memory/status</code>
+calls — not assumed from memory. Re-run that workflow any time and re-read this table before trusting
+an older copy.</p>
+<table>
+<tr><th>#</th><th>Switch</th><th>Before (now)</th><th>After flipping</th><th>Status</th><th>Founder action</th></tr>
+<tr><td>1</td><td>Sovereign memory (Vectorize)</td><td><code>vectorize_bound: false</code> — Kai El never recalls past exchanges, <code>/v11/knowledge/*</code> RAG unavailable</td><td>Memory fills every heartbeat; Kai El's commune replies get real recall context</td><td><span class="tag blocked">not flipped</span></td><td><code>npx wrangler vectorize create hive-memory --dimensions=768 --metric=cosine</code>, uncomment <code>wrangler.jsonc</code>'s <code>vectorize</code> block</td></tr>
+<tr><td>2</td><td>Files store (R2)</td><td><code>FILES: false</code> — Files panel shows <code>available:false</code>, no uploads</td><td>Files panel Upload button works for real, 10 MB cap, visitor-token gated</td><td><span class="tag blocked">not flipped</span></td><td><code>npx wrangler r2 bucket create hive-files</code>, uncomment <code>wrangler.jsonc</code>'s <code>r2_buckets</code> block</td></tr>
+<tr><td>3</td><td>Extra model voices (Claude/Groq/Mistral)</td><td><code>secrets_present: []</code> — every provider <code>bound: false</code>; <code>active_provider: workers-ai</code> only (free, small edge model)</td><td>Waterfall picks up each bound key automatically, highest-priority provider answers</td><td><span class="tag blocked">not flipped</span>, none of the three</td><td><code>npx wrangler secret put ANTHROPIC_API_KEY</code> (and/or <code>GROQ_API_KEY</code>, <code>MISTRAL_API_KEY</code>)</td></tr>
+<tr><td>4</td><td>Founder key</td><td><code>secrets_present: []</code> confirms <code>FOUNDER_KEY</code> absent — Proposals panel fails <strong>closed</strong>, nobody (not even the founder from the UI) can approve/reject anything</td><td><code>founder_auth_bound: true</code>; Approve/Reject buttons work; <code>hive_proposals</code> (including Kai El's own <code>PROPOSAL:</code>-marked suggestions) become decidable</td><td><span class="tag blocked">not flipped</span></td><td><code>npx wrangler secret put FOUNDER_KEY</code> (any strong value), paste same value into the Proposals panel</td></tr>
+<tr><td>5</td><td>Rate-limit counters (KV)</td><td>—</td><td>Anti-spam counters move off D1 onto KV, same 30/min/IP behavior, less DB write pressure</td><td><span class="tag live">FLIPPED 2026-07-23</span> (<code>RATE_LIMIT_KV: true</code>, confirmed live)</td><td>none — already done</td></tr>
+<tr><td>6</td><td>Async LLM jobs (Queues)</td><td><code>LLM_QUEUE: false</code> — <code>/v11/venture/plan</code> and <code>/v11/legal/research</code> only run synchronously</td><td><code>{"async": true}</code> on either endpoint returns a pollable job instead of blocking</td><td><span class="tag blocked">not flipped</span></td><td><code>npx wrangler queues create hive-llm-jobs</code> — <strong>and in the same commit</strong>, uncomment <code>wrangler.jsonc</code>'s <code>queues</code> block <strong>and</strong> re-attach <code>queue: processQueueBatch,</code> in <code>worker/src/index.js</code>'s <code>export default</code> (this exact mismatch broke production for ~26h once already — see <code>PR_LESSONS.md</code> L-08)</td></tr>
+</table>
+
+<h3>automaton switches — real money, real replication</h3>
+<p>Both still default OFF; neither is a small config flip.</p>
+<table>
+<tr><th>#</th><th>Switch</th><th>Before (now)</th><th>After flipping</th><th>Status</th><th>What flipping actually requires</th></tr>
+<tr><td>1</td><td>Financial autonomy</td><td>Ledger is real and persistent but simulated play-money; wallet has no real keypair</td><td><code>AUTOMATON_FINANCIAL_AUTONOMY=true</code> would move real funds</td><td><span class="tag blocked">not flipped, genuinely can't be yet</span></td><td>Real wallet adapter (hardware-backed or KMS custody, not plaintext), a real payment-rail ledger backing, and an actual legal read on money-transmission/AML/tax exposure — deliberately not a config change</td></tr>
+<tr><td>2</td><td>Replication autonomy</td><td><code>spawn_child</code> always creates the lineage row + approval-queue entry; approval never spawns a real process while this is off</td><td>Approved proposals spawn a real independent child process under <code>.automaton-home/children/&lt;lineageId&gt;/</code></td><td><span class="tag blocked">not flipped</span></td><td><code>export AUTOMATON_REPLICATION_AUTONOMY=true</code> — code is ready, this one really is just the env var. Approval itself is never optional either way.</td></tr>
+</table>
+
+<h3>The one-line current state</h3>
+<p>Free-tier edge model only, no memory, no files, no async jobs, no founder-decision capability in
+the UI, no automaton autonomy of either kind — everything else in <code>FLIP_THE_SWITCHES.md</code>'s
+"already flipped / no switch needed" section (D1, Workers AI, assets, the heartbeat, the UI shell,
+CORS, pagination, edge caching) is live now. Every switch above is founder-action-gated by design
+(<code>PERMISSIONS.md</code>'s founder-only tier) — nothing here is blocked on code that doesn't
+exist, except automaton's financial switch. Built 2026-08-01, autonomous arc firing, backlog priority
+#1.</p>
+
+<h3>FLIP_THE_SWITCHES.md — the literal commands</h3>
+<details open><summary>1 · Sovereign memory (Vectorize) → "Vectorize memory bound: true"</summary>
+<pre>npx wrangler vectorize create hive-memory --dimensions=768 --metric=cosine</pre>
+<p>Then uncomment the <code>"vectorize"</code> block in <code>wrangler.jsonc</code>, commit, push.
+Proof it worked: <code>GET /v11/memory/status</code> → <code>vectorize_bound: true</code>; memory
+fills on the next heartbeat; Kai El starts recalling past exchanges in the commune.</p></details>
+<details open><summary>2 · Files store (R2) → the Files panel uploads/lists for real</summary>
+<pre>npx wrangler r2 bucket create hive-files</pre>
+<p>Then uncomment the <code>"r2_buckets"</code> block in <code>wrangler.jsonc</code>, commit, push.
+Proof: <code>GET /v11/files</code> → <code>available: true</code>; Upload button works (visitor-token
+gated, 10 MB cap).</p></details>
+<details open><summary>3 · Extra model voices → Claude / Groq / Mistral read "online"</summary>
+<p>The Worker already routes the commune through a waterfall (Claude → Groq → Mistral → Workers AI).
+Each provider activates the moment its key exists as a Worker secret:</p>
+<pre>npx wrangler secret put ANTHROPIC_API_KEY   # Claude — reasoning
+npx wrangler secret put GROQ_API_KEY        # Groq — speed
+npx wrangler secret put MISTRAL_API_KEY     # Mistral</pre>
+<p>No config edit needed — secrets bind on the next deploy. Proof: <code>GET /v11/llm/status</code> →
+the provider's <code>bound: true</code>; Connected Models panel flips "key needed" → "online"; Kai
+El's replies return <code>provider: "claude"</code> (or whichever is highest in the waterfall). Keys
+live only as Cloudflare secrets — never in the repo, never echoed back (F-001: the debug surface
+reports names/presence only).</p></details>
+<details open><summary>4 · Founder key → the Proposals panel can actually approve/reject</summary>
+<p>The hive can draft standing suggestions ("Proposals" in the left nav) — new implementations,
+goals, changes it thinks are worth doing. Nothing is ever applied on its own; every item waits for
+the founder's explicit approve/reject. That decision endpoint is deliberately fail-closed: with no
+key bound, nobody — not even the founder, from the UI — can decide anything, rather than defaulting
+to "anyone can."</p>
+<pre>npx wrangler secret put FOUNDER_KEY   # pick any strong random value yourself</pre>
+<p>Then paste that same value into the Proposals panel's key field (stored only in the browser's
+localStorage, never sent anywhere except the <code>Authorization</code> header on decide calls).
+Proof: <code>GET /v11/proposals</code> → <code>founder_auth_bound: true</code>; Approve/Reject
+buttons work.</p></details>
+<details open><summary>5 · Rate-limit counters (KV) → ✅ FLIPPED 2026-07-23</summary>
+<p>Flipped at the founder's "go for phase 8": namespace <code>RATE_LIMIT_KV</code> (id
+<code>7ca8178dc4bc40e7bac193362e3d6be4</code>) created via the Cloudflare MCP connector, binding
+uncommented in <code>wrangler.jsonc</code>, deployed. Proof: no visible behavior change (still 30
+POSTs/min/IP) — the D1 <code>rate_limits</code> table simply stops growing, since
+<code>rateLimitOk()</code> prefers KV the moment the binding exists.</p></details>
+<details open><summary>6 · Async LLM jobs (Queues) → venture/plan and legal/research can run decoupled</summary>
+<p>Status 2026-07-23: still parked — the Cloudflare MCP connector available to sessions has no
+queue-creation tool (KV/R2/D1 only), so this needs the founder's own <code>npx wrangler queues create</code>.</p>
+<pre>npx wrangler queues create hive-llm-jobs</pre>
+<p>Then, <strong>in the same commit</strong>: uncomment the <code>"queues"</code> block in
+<code>wrangler.jsonc</code> <strong>and</strong> re-attach the consumer handler in
+<code>worker/src/index.js</code> — add <code>queue: processQueueBatch,</code> inside the
+<code>export default { ... }</code> object (the function already exists just above it). These two
+must always move together: a Worker that exports a <code>queue()</code> consumer handler while the
+<code>queues.consumers</code> binding is commented out fails Workers Builds' pre-deploy validation —
+this exact mismatch silently broke every production deploy from 2026-07-21 until diagnosed
+2026-07-22 (see <code>PR_LESSONS.md</code>). Proof: <code>POST /v11/venture/plan</code> (or
+<code>/v11/legal/research</code>) with <code>{"async": true}</code> in the body now returns
+<code>202 {job_id, poll: "/v11/jobs?id=..."}</code> instead of <code>503</code>; <code>GET /v11/jobs?id=&lt;job_id&gt;</code>
+then shows <code>status</code> moving from <code>queued</code> to <code>done</code> (or
+<code>error</code>) once the Queues consumer runs.</p></details>
+<p><strong>Already flipped / no switch needed:</strong> D1 database, Workers AI, assets, the 30-min
+heartbeat — live now. The UI (graph web, neon theme, Updates, Legal Learning, Files panel shell) —
+ships with the frontend build, no provisioning. CORS scoping, list-endpoint pagination, and Cache API
+edge-caching (<code>/agents</code>, <code>/roadmap</code>, <code>/llm/status</code>) — all code-only,
+no resource to provision, live on the next deploy.</p>
+
+<h3>The automaton — self-improving, self-replicating agent (2026-07-21)</h3>
+<p>Reverse-engineered from <code>Conway-Research/automaton</code> (MIT) at the founder's request.
+See §6 for the full devil's-advocate writeup and the founder's own directive. Decoupled from
+Conway's proprietary cloud in favor of THEHIVE's own Worker + provider waterfall
+(<code>POST /v11/automaton/infer</code>, reusing the existing <code>generate()</code> function
+verbatim). Zero runtime dependencies (Node 22's built-in <code>node:sqlite</code>/<code>node:test</code>
+only) — <code>cd automaton && npm test</code> runs immediately, no <code>npm install</code>. 15/15
+gap-closure tests green.</p>
+
+<h4>The request flow for a money-moving or replication action</h4>
+<pre>tool call (agent/tools.js)
+      │
+      ▼
+policy request { tool, inputSource, moneyMovementCents?, targetPath?, ... }
+      │
+      ▼
+PolicyEngine.evaluate()  — agent/policy-engine.js
+  runs every rule in agent/policy-rules/*.js, priority order
+      │
+      ├─ any rule returns 'deny'   → stop immediately, nothing executes
+      ├─ a rule returns 'pending_approval', no deny fired
+      │        → ApprovalQueue.enqueue()  — a real, durable row
+      │        → tool returns { ok:false, pending:true, approvalId }
+      │        → execution happens ONLY via `--approve &lt;id&gt;`, a
+      │          creator-sourced CLI action, never something the agent or
+      │          a heartbeat tick can trigger itself
+      └─ nothing fired            → 'allow' → the action actually executes</pre>
+<p>Every decision (allow/deny/pending) is written to <code>policy_decisions</code> regardless of
+outcome — this table plus <code>approval_queue</code> plus <code>modifications</code> is the
+complete audit trail.</p>
+
+<h4>The five gaps this rebuild closes</h4>
+<ol>
+<li><strong><code>quarantine</code> was a soft deny, not an approval gate.</strong> Fix:
+<code>pending_approval</code> is a distinct engine state; <code>agent/approval-queue.js</code> is a
+real table + resolve() workflow; <code>src/index.js --approve/--reject</code> is the only way a
+queued action ever executes.</li>
+<li><strong><code>fund_child</code> (replication funding) bypassed every rate/cap rule that
+<code>transfer_credits</code> had.</strong> Fix: <code>ledger/ledger.js</code> has exactly one debit
+path, <code>requestDebit()</code>; every money-moving tool calls it — no second, uncapped path to
+bypass.</li>
+<li><strong>The agent could edit its own financial/authority rule files</strong> (only thin wrapper
+files were protected, not the actual rule implementations). Fix:
+<code>policy-rules/path-protection.js</code>'s <code>PROTECTED_WRITE_PATHS</code> is the one
+canonical list, imported by both the policy engine's write-rule AND <code>self-mod/code.js</code>.</li>
+<li><strong>Real, unencrypted private key on disk by default.</strong> Fix:
+<code>identity/wallet.js</code>'s default path never generates a real keypair — flipping
+<code>AUTOMATON_FINANCIAL_AUTONOMY</code> on without also writing a real wallet adapter throws
+loudly rather than fabricating one.</li>
+<li><strong>The only "supervised approval" concept in the codebase
+(<code>orchestration/plan-mode.ts</code>) was a non-functional stub</strong> — <code>"auto"</code>
+mode always approved regardless of cost, <code>"supervised"</code> mode threw an unhandled
+exception. Fix: replication approval is unconditional and always real, regardless of
+<code>AUTOMATON_REPLICATION_AUTONOMY</code> — that switch only controls whether an
+<em>already-approved</em> proposal can execute a real spawn.</li>
+</ol>
+
+<h4>What stayed the same as upstream (the parts that were genuinely good)</h4>
+<ul>
+<li>The overall policy-engine shape (ordered rules, first-deny-wins).</li>
+<li>Survival tiers (<code>high</code>/<code>normal</code>/<code>low_compute</code>/<code>critical</code>/<code>dead</code>) and their thresholds.</li>
+<li>The self-authored <code>SOUL.md</code> identity-document concept, and its size/injection validation.</li>
+<li>Lineage tracking with a constitution hash for tamper-evidence between parent and child.</li>
+<li>Injection-defense's detector categories (instruction patterns, authority claims, ChatML markers,
+encoding obfuscation, multi-language, financial manipulation, self-harm).</li>
+<li>The <code>EXTERNAL_BLOCKED_TOOLS</code> defense-in-depth concept — kept, but now explicitly
+documented as a <em>secondary</em> layer (treating it as the only restriction was part of gap #2's
+root cause).</li>
+</ul>
+
+<h4>Deliberate architectural changes beyond the five gaps</h4>
+<ul>
+<li><strong>Decoupled from Conway Cloud.</strong> <code>src/ledger/ledger.js</code> replaces
+<code>src/conway/{client,credits,topup,x402}.ts</code> entirely with a local, simulated ledger.
+<code>src/inference/thehive-provider.js</code> replaces Conway's inference gateway with a call to
+<code>POST /v11/automaton/infer</code>, falling back to <code>src/inference/simulate-provider.js</code>
+when unreachable.</li>
+<li>Zero native/npm dependencies.</li>
+<li>Replication spawns a real local child process (<code>node:child_process</code>) instead of
+provisioning a cloud VM and <code>git clone</code>-ing <code>main</code> — genuinely testable
+anywhere Node is installed.</li>
+</ul>
+
+<h4>Not built as code this pass — real follow-up work, catalogued not dropped</h4>
+<ul>
+<li>Real on-chain identity (ERC-8004 on Base) and a real wallet adapter — gated behind
+<code>AUTOMATON_FINANCIAL_AUTONOMY</code>, deliberately unwired.</li>
+<li>Agent-to-agent social protocol and the on-chain discovery registry (upstream's <code>social/</code>
+and <code>registry/</code> layers).</li>
+<li>Native per-vendor LLM function-calling — this rebuild uses a simple, provider-agnostic
+fenced-JSON tool-call convention instead.</li>
+</ul>
+</section>
+
+<!-- ================= TAB 3: FRONTEND / COMMAND CENTER ================= -->
+<section class="tab" id="tab-frontend">
+<h2>3 · Command Center / Frontend UI plan</h2>
+<div class="src">Sources: <code>frontend/src/data/roadmapData.ts</code> (full, the real roadmap data
+structure driving the live UI roadmap panel), all 13 files in
+<code>frontend/src/components/command-center/tabs/</code>, all 20 files in
+<code>frontend/src/components/kai-os/</code>, plus AUDIT_LEDGER.md's frontend-catalog entries.</div>
+
+<p>Kai El OS (<code>frontend/</code> → built to <code>docs/app/</code>) is the live, canonical
+frontend — a React OS wired to real <code>/v11</code> endpoints. <code>roadmapData.ts</code> is the
+single in-repo source of truth for the development roadmap; it mirrors a published tracker artifact
+and explicitly supersedes four scattered session artifacts (07-04 → 07-18). Update it when work
+lands; redeploy the mirrored artifact from the same data when it drifts.</p>
+
+<h3>Founder actions still needed (blocked on the founder, from roadmapData.ts)</h3>
+<table>
+<tr><th>Item</th><th>Status</th><th>What it needs</th></tr>
+<tr><td>Set <code>FOUNDER_KEY</code> so Proposals approve/reject works</td><td><span class="tag blocked">needs you</span></td><td>Code fails closed on purpose. <code>npx wrangler secret put FOUNDER_KEY</code>, wait ~10 min for redeploy, paste same value into the panel.</td></tr>
+<tr><td>Create the Vectorize index (long-term memory)</td><td><span class="tag blocked">needs you</span></td><td>Still commented out in <code>wrangler.jsonc</code> on purpose. <code>npx wrangler vectorize create hive-memory --dimensions=768 --metric=cosine</code>, then tell Claude — binding uncomment + redeploy is a one-line follow-up.</td></tr>
+<tr><td>Create the R2 bucket (file uploads)</td><td><span class="tag blocked">needs you</span></td><td>Also still commented out. <code>npx wrangler r2 bucket create hive-files</code>, then tell Claude to uncomment the binding.</td></tr>
+<tr><td>Create the Queues consumer (async LLM jobs)</td><td><span class="tag blocked">needs you</span></td><td>No MCP tool exists to create a Cloudflare Queue, so this is founder-only regardless. <code>npx wrangler queues create hive-llm-jobs</code>, then tell Claude — producer/consumer code is already written and activation-ready.</td></tr>
+<tr><td>Confirm the PAT secret + backup keys are actually set</td><td><span class="tag decision">unverified</span></td><td>The workflows exist (<code>distribute-pat.yml</code>, <code>grok-pat-distribute.yml</code>, weekly D1 backup) — whether the underlying secrets (PAT, WORKER_ADMIN_KEY, WORKER_URL) are populated isn't something code can confirm from here. A green run in the Actions tab is the tell.</td></tr>
+</table>
+
+<h3>Decisions pending (from roadmapData.ts)</h3>
+<table>
+<tr><th>Item</th><th>Body</th></tr>
+<tr><td>System A — retire or actually deploy it?</td><td>Real, tested code (51%+ coverage, 350+ passing tests) sitting unprovisioned — Oracle Cloud deploy target gated on an unset <code>ORACLE_HOST</code> secret. System B (the Worker) is the one verified live. See §1 for the deployment plan already prepared.</td></tr>
+<tr><td>Which frontend is canonical?</td><td>This React Command Center (what's actually deployed) vs. a separate "gamified UI" set merged via <code>feature/gamified-ui-components</code> (HiveDashboard, TesseractChamber, ConstitutionHall, MemoryVault). Both are real; only one should be "the" one going forward. See the second-frontend catalog below.</td></tr>
+<tr><td>Two dead duplicate backend files — delete or keep?</td><td><code>backend/constitution.py</code> and <code>backend/llm_router.py</code> have zero importers — real, live versions are <code>backend/core/constitution.py</code> and <code>backend/core/llm_router.py</code>. <code>llm_router.py</code> was deleted 2026-08-01; <code>constitution.py</code>'s disposition is still open (see §1, §9).</td></tr>
+<tr><td>n8n integration — pursue or drop?</td><td>Proposed 2026-07-05 (colony health events → n8n automations). Zero implementation exists anywhere — confirmed absent, not just unfinished.</td></tr>
+<tr><td>Real money — forming a business entity</td><td>LLC formation, business bank account, Stripe — none of this can or should be automated. By the hive's own rules this always stays the founder's, with a real accountant or lawyer.</td></tr>
+</table>
+
+<h3>In progress</h3>
+<ul>
+<li><strong>6-session autonomous development arc</strong> — self-paced Routine, fires back into the
+same session every 3–8h based on workload: reviews new PRs first, then continues the coverage
+sweep, self-merging only pure test-file-only diffs with green CI. Stops and sends one consolidated
+report after session 6. (session 1/6 complete as of the roadmap snapshot)</li>
+<li><strong>Backend test-coverage sweep</strong> — started at 46%, CI floor locked at 45% so it can
+only grow, 51% and climbing. WalletManager.credit() bug (see §1) was the one real production bug
+found so far. Next targets: <code>utility_economy.py</code>, <code>genome.py</code>, <code>llm_router.py</code>.</li>
+</ul>
+
+<h3>Completed phases (the full record)</h3>
+<details open><summary>Foundation — Colony Standard Layer, Core Engine, Governance (Phases 1–3)</summary>
+<ul>
+<li>All 7 colonies speak the same <code>/colony/{health,info,manifest,events,agents,capabilities}</code> contract, HMAC-signed, permissive-when-unset by design.</li>
+<li>Core: WAL SQLite + 10 indexes, batched event protocol (50ms window, no Redis — deliberate rule), 60s wealth-cache TTL, JWT <code>iss</code> claim.</li>
+<li>Governance: GOVERNANCE.md, 110-role ROLES.md across 11 tiers, advisory (non-blocking) CI across Tier-1 repos.</li>
+</ul></details>
+<details open><summary>Colony consoles, memory vault, full-federation HMAC (Phases 4–6)</summary>
+<ul>
+<li>Per-colony consoles, D3 colony-zoom panel, auto-generated 101-node memory vault.</li>
+<li>Every 07-04/07-05-era build blocker resolved (aether package.json, 4DBRAIN port, LocalAGI URL, colony.json).</li>
+<li>Non-Python HMAC shipped for real: timingSafeEqual (automatisch/Express), hmac.Equal (LocalAGI/Go).</li>
+</ul></details>
+<details open><summary>Command Center UI — all 13 tabs, live data, no mocks (supersedes the 25-gap 2026-07-05 plan)</summary>
+<ul>
+<li>4D tesseract tab, DREAM guild tab, ARCANE (ML) guild tab, MISSIONS lifecycle tab, API explorer tab — all built; three separate constitution surfaces exist across the two frontend efforts.</li>
+<li>Grafana dashboards — <code>monitoring/grafana/</code> and <code>docker/grafana/</code> both exist now.</li>
+<li><code>GET /v11/constitution/history</code> is a real, live endpoint.</li>
+<li>Roadmap/evolution bars in SOUL, Legal Guild research assistant, real (not mock) gateway-console tool registry, R2 file panel, honest LLM provider status, venture reasoning-tree panel.</li>
+</ul></details>
+<details open><summary>Edge Worker (System B) — the live production system (Phase 8 + heartbeat)</summary>
+<ul>
+<li>CORS scoping, list-endpoint pagination, Cache API for slow-changing GETs.</li>
+<li>KV rate-limiting flipped live — 30 req/min on write endpoints, real namespace bound.</li>
+<li>Queues producer/consumer fully written, activation-ready — blocked only on the founder creating the queue.</li>
+<li>Heartbeat cron (resolve/spawn/pulse), Workers-AI-generated propositions.</li>
+<li><code>/v11/automaton/infer</code> reuses the existing <code>generate()</code> provider waterfall verbatim — no new attack surface.</li>
+</ul></details>
+<details open><summary>Colony deep-integration — Phases A–G, shipped 2026-07-22</summary>
+<ul>
+<li>A — proprietary LICENSE across NAR2/4DBRAIN/aether; aether's missing HMAC fixed; Kimi-K2's duplicate Node bridge retired.</li>
+<li>B — tesseract/hypercomplex/dream-engine math repatriated into 4DBRAIN's own <code>tesseract_math</code> package.</li>
+<li>C — <code>colony_sdk</code> consolidated into one real shared Python package + a Node equivalent.</li>
+<li>D — automatisch native <code>apps/thehive/</code> trigger + action, AGPL-clean (HTTP-only boundary).</li>
+<li>E — a real THEHIVE MCP server for LocalAGI.</li>
+<li>F — PERMISSIONS.md tiers enforced in code before <code>hive_mesh.dispatch()</code> fires.</li>
+<li>G — <code>colonies.json</code> cross-repo harness manifest.</li>
+</ul></details>
+<details open><summary>The automaton — rebuilt from a 5-gap security review (2026-07-21)</summary>
+<p>See §2 for full detail.</p></details>
+<details open><summary>Constitution reconciliation — FABLE_DNA.md vs. soul.md (2026-07-30)</summary>
+<p>See §5 for full detail.</p></details>
+<details open><summary>PR review + environment recovery + SOUL-ledger bug fix (2026-07-30/31)</summary>
+<ul>
+<li>Three PRs actually reviewed, not glanced at: a truncated class + syntax error; S1 rate-limiting documented but missing from Worker code plus a broken build from an undeclared dependency; a PR clean-looking by diff but with mergeable_state "dirty" (now PR_LESSONS.md L-09).</li>
+<li>System Python kept hitting RECORD-file conflicts on repeated pip installs — a project-local <code>.venv</code> sidesteps the whole class of problem.</li>
+<li><code>wallet.py</code> coverage work surfaced the credit() bug (see §1) — fixed, 26 tests including total-supply invariance (Fixed Law #4).</li>
+</ul></details>
+
+<h3>Backlog (confirmed pending)</h3>
+<table>
+<tr><th>Item</th><th>Body</th></tr>
+<tr><td>Dynamic <code>COLONY_BASE_URLS</code></td><td>Still a hardcoded <code>frontend/src/utils/constants.ts</code> map — every colony URL change is a manual edit. <code>/v11/hive/status</code> already returns all colony URLs with health; wiring it up is a small, real task.</td></tr>
+<tr><td>Worldbuilding Guild UI</td><td>Backend stub exists (<code>backend/guilds/worldbuilding_guild.py</code>, disabled), zero frontend surface — world creation form, token supply, zone editor never built.</td></tr>
+<tr><td>Agent genome viewer + arena cross-breed UI</td><td>Real reproduction logic exists in <code>backend/core/genome.py</code> — no frontend ever surfaced it. DNA visualization, trait breakdown, 2-agent cross-breed selector all still on paper.</td></tr>
+<tr><td>HDC/VSA layer — dedicated UI + docs</td><td><code>backend/core/hdc.py</code> is real and 100% test-covered — hyperdimensional computing for agent-to-agent comms — but never surfaced or explained anywhere in the UI.</td></tr>
+<tr><td>Skill-set cross-referencing</td><td>Two skill sets exist side by side with zero cross-references. <code>skill-census</code> would show the gap directly but hasn't been re-run since first noticed.</td></tr>
+</table>
+
+<h3>Federation summary table (from roadmapData.ts)</h3>
+<table>
+<tr><th>Colony</th><th>Role</th><th>Lang</th><th>HMAC</th><th>Status</th></tr>
+<tr><td>THEHIVE</td><td>Queen · governance · Layer 1</td><td>Python/FastAPI + Worker</td><td>✓</td><td>live</td></tr>
+<tr><td>NAR2</td><td>Security · Layer 5</td><td>Python</td><td>✓</td><td>integrated</td></tr>
+<tr><td>4DBRAIN</td><td>Cognitive · tesseract math · Layer 3</td><td>Python</td><td>✓</td><td>integrated</td></tr>
+<tr><td>Kimi-K2</td><td>Mind · Layer 3</td><td>Python</td><td>✓</td><td>integrated</td></tr>
+<tr><td>aether</td><td>Commerce · Layer 7</td><td>TypeScript/Next.js</td><td>✓</td><td>integrated</td></tr>
+<tr><td>automatisch</td><td>Workflow · Layer 7</td><td>Node.js/Express</td><td>✓</td><td>integrated</td></tr>
+<tr><td>LocalAGI</td><td>Body/swarm · Layer 3</td><td>Go</td><td>✓</td><td>integrated + MCP consumer</td></tr>
+</table>
+<p>Snapshot: 9 phases done, 1 arc active, 5 backlog items, 5 pending decisions.</p>
+
+<h3>The 13 Command Center tabs (frontend/src/components/command-center/tabs/)</h3>
+<div class="src">Per AUDIT_LEDGER.md's 2026-07-31 second-frontend catalog: 13 of the original "56
+unreachable" files audit finding were <strong>not actually orphaned</strong> — <code>KaiElOS.tsx</code>
+lazy-imports every one of these tabs directly as its "full-takeover" tabs. The tab content was already
+salvaged into the live app; only the older routing shell around it (<code>TabNavigator.tsx</code> + 4
+page files) is still genuinely unreachable.</div>
+<table>
+<tr><th>Tab file</th><th>Size</th></tr>
+<tr><td><code>4D.tsx</code></td><td>78 lines — the 4D tesseract tab</td></tr>
+<tr><td><code>API.tsx</code></td><td>239 lines — the API explorer tab</td></tr>
+<tr><td><code>ARCANE.tsx</code></td><td>136 lines — the ML guild visualization tab</td></tr>
+<tr><td><code>ARENA.tsx</code></td><td>149 lines — Gladiator Arena viewer (fixed 2026-07-18: rendered <code>&lt;LiveArenaViewer /&gt;</code> with no <code>challengeId</code> prop, sat permanently empty; now wired to the latest challenge by default, challenge rows clickable to retarget)</td></tr>
+<tr><td><code>DREAM.tsx</code></td><td>117 lines — the DREAM guild tab</td></tr>
+<tr><td><code>GOVERN.tsx</code></td><td>157 lines — governance log (fixed 2026-07-18: status table claimed "Online" unconditionally, hardcoded; now wires what can honestly be known from the browser and labels what can't)</td></tr>
+<tr><td><code>HIVE.tsx</code></td><td>117 lines</td></tr>
+<tr><td><code>MISSIONS.tsx</code></td><td>365 lines — the mission lifecycle tab, the largest of the 13</td></tr>
+<tr><td><code>NO_MANS_SKY.tsx</code></td><td>114 lines</td></tr>
+<tr><td><code>SETTINGS.tsx</code></td><td>228 lines</td></tr>
+<tr><td><code>SOUL.tsx</code></td><td>189 lines — Soul Ledger + the Roadmap-of-Becoming evolutionary bars (RoadmapAvatar per agent + Hoard aggregate)</td></tr>
+<tr><td><code>WORLD.tsx</code></td><td>106 lines</td></tr>
+<tr><td><code>WOW.tsx</code></td><td>107 lines — colony list (fixed 2026-07-18: claimed "✅ Online" unconditionally, hardcoded — same fix pattern as GOVERN.tsx)</td></tr>
+</table>
+<p><strong>The fable-debugger UI pass (2026-07-18, PR #116/#117)</strong> found: none of these 13
+legacy tabs' CSS classes were defined anywhere in the repo — they rendered as bare unstyled HTML
+until <code>frontend/src/styles/legacy-tabs.css</code> was added. <code>4D.tsx</code> had a fully
+redundant dead "4D Controls" section duplicating real, working controls <code>TesseractRenderer</code>
+already renders itself — removed. ~50 buttons across ARENA/GOVERN/NO_MANS_SKY/WOW/MISSIONS had no
+<code>onClick</code> at all (Restart/Shutdown, Add/Remove Agent, ship controls, Scan All Colonies) —
+looked clickable, did nothing silently; a new <code>PlannedControl</code> component now renders these
+honestly disabled with a "not yet wired" tooltip. Some of these could become real features later —
+each would need a genuine backend action first; none exist yet.</p>
+
+<h3>The kai-os/ live component set (frontend/src/components/kai-os/)</h3>
+<table>
+<tr><th>Component</th><th>Purpose (from what each was built to fix/do)</th></tr>
+<tr><td><code>BiosystemOverlay.tsx</code></td><td>Full-screen overlay serving the founder's own standalone Biosystem Architecture HTML (72-system Brain/Body/Neuro/Health registry), written verbatim to <code>docs/biosystem.html</code>. A "🧬 Biosystem" button in the top status bar opens it, desktop and mobile.</td></tr>
+<tr><td><code>BottomActivityFeed.tsx</code></td><td>Live activity stream, mobile bottom sheet.</td></tr>
+<tr><td><code>CenterGraph.tsx</code></td><td>The D3 force graph — fixed 2026-07-18: connecting lines used <code>preserveAspectRatio="xMidYMid"</code> while node bubbles were positioned by percentage — two different coordinate systems, so the "web" never connected on wide screens. Fixed with <code>preserveAspectRatio="none"</code>; added ring + cross-link lines, travelling signal pulses, gold Kai El center node.</td></tr>
+<tr><td><code>ConnectedModels.tsx</code></td><td>Live Claude → Groq → Mistral → Workers AI provider waterfall status — reads live bound/unbound status, not a static "simulation" placeholder.</td></tr>
+<tr><td><code>ConstitutionViewer.tsx</code></td><td>Fetches and renders live <code>docs/GOVERNANCE.md</code> — so every future constitutional edit shows up in the UI automatically.</td></tr>
+<tr><td><code>DreamLogs.tsx</code></td><td>Flat list, no graph/tiering/history yet — <code>MemoryGraphEnhanced.tsx</code> (orphaned, see below) is a real, not-yet-integrated upgrade candidate.</td></tr>
+<tr><td><code>FilesPanel.tsx</code></td><td>Real Worker-backed <code>/v11/files</code> (list/upload/download, R2-gated) — shows an honest "not provisioned yet, here are your exact steps" state rather than faking a listing.</td></tr>
+<tr><td><code>GatewayConsoleOverlay.tsx</code></td><td>Iframe overlay for <code>docs/gateway-console.html</code> — the founder's pasted "Command Center v9" HTML, wired to real Tool Registry calls (see §6 for the full detail on what got made real).</td></tr>
+<tr><td><code>HiveTerminal.tsx</code></td><td>Terminal-style command interface.</td></tr>
+<tr><td><code>HiveUpdates.tsx</code></td><td>The Updates panel — <code>GET /v11/updates</code>, the runtime (D1, last 100 rows) half of the two-surface Updates channel (§6 has the durable half).</td></tr>
+<tr><td><code>KaiCommune.tsx</code></td><td>The chat interface with Kai El — grounded in the real, current <code>docs/GOVERNANCE.md</code> article list (fetched live, not hardcoded) and instructed to say "I don't have that" rather than invent a number (fixed after a real confabulation incident, see §6).</td></tr>
+<tr><td><code>KaiSigil.tsx</code></td><td>The sacred-geometry sigil — moved to its own element under the web (per the founder's sketch) instead of fused into the graph center; opens the Observatory.</td></tr>
+<tr><td><code>LeftNav.tsx</code></td><td>Left navigation — accessibility-hardened 2026-07-30 by Grok (<code>&lt;nav&gt;</code> landmark, <code>aria-label</code>/<code>aria-current</code>, decorative icons <code>aria-hidden</code>).</td></tr>
+<tr><td><code>LegalLearning.tsx</code></td><td>The Legal-Learning surface: curated links to Cornell LII, the annotated Constitution, Bouvier's Law Dictionary, Latin legal maxims, etymology, plus a real Q&amp;A box (<code>POST /v11/legal/research</code>) — a real research assistant, hard disclaimer, never claims a bar exam or license.</td></tr>
+<tr><td><code>Observatory.tsx</code></td><td>Overlay, hardened 2026-07-30 with dialog semantics + focus trap + explicit Close control for keyboard users.</td></tr>
+<tr><td><code>ProposalsPanel.tsx</code></td><td>The hive-suggests/founder-decides channel — <code>hive_proposals</code> table, <code>founderAuthOk</code> fail-closed gate, a founder-key field stored only in browser localStorage.</td></tr>
+<tr><td><code>RoadmapAvatar.tsx</code></td><td>The rescued/reskinned version of Mistral's orphaned <code>AgentAvatar.tsx</code> — animated-fill progress bar + circular avatar disc (framer-motion), driven by the real <code>RoadmapEntry</code> shape (<code>stage</code>, <code>nextStage</code>, <code>soul</code>, <code>soulToNext</code>, <code>progressPct</code>) plus derived <code>level</code>/<code>xp</code>/<code>xpToNextLevel</code> — the founder explicitly wanted the fictional level/XP framing kept, driven by real data.</td></tr>
+<tr><td><code>RoadmapPanel.tsx</code></td><td>Per-agent + Hoard-aggregate roadmap bars, backed by <code>GET /v11/roadmap</code> (F-008D/F-009E stages: Germination → Mycelium → Fruiting → Transformation → Senescence → Seed, an infinite cycle).</td></tr>
+<tr><td><code>TopStatusBar.tsx</code></td><td>Header/status bar — accessibility-hardened 2026-07-30 (<code>&lt;header role="banner"&gt;</code>, polite live status for LIVE/OFFLINE, button <code>aria-label</code>s). Carries the neon underline signature motif reused across the legacy tabs' headers.</td></tr>
+<tr><td><code>VenturePlanner.tsx</code></td><td>Real LLM-backed goal→departments→tasks decomposition (<code>POST /v11/venture/plan</code>), reusing the Worker's existing provider waterfall. Never executes anything real (no account creation, no posting, no spend) — everything funnels through the founder-gated Proposals channel. Seeded with the founder's own venture example (book-merch dropshipping + faceless multi-platform social, SEO-driven trending-niche discovery).</td></tr>
+<tr><td><code>WorkflowsDrawer.tsx</code></td><td>Workflow drawer panel.</td></tr>
+</table>
+
+<h3>The second frontend effort — full catalog (feature/gamified-ui-components)</h3>
+<div class="src">Source: AUDIT_LEDGER.md's 2026-07-31 depth-pass entry, correcting the original sweep's
+count and cataloguing per-file disposition.</div>
+<p>56 files were originally flagged "unreachable" in the frontend import-reachability graph. 13 turned
+out not to be orphaned (the command-center tabs above, salvaged via <code>KaiElOS.tsx</code>). Of the
+remaining ~43 (plus the routing shell), the real disposition:</p>
+<h4>Skip — inferior duplicate of something already live</h4>
+<ul>
+<li>The page/router shell (<code>TabNavigator.tsx</code> + 4 page files) — superseded by
+<code>KaiElOS.tsx</code>'s graph-navigator, which the founder deliberately chose.</li>
+<li><code>components/colony/*</code> — 10 fake consoles simulating CPU/memory with
+<code>Math.random()</code> — <code>ColonyZoomPanel.tsx</code>, already live, does the same job with
+real <code>/colony/health</code> calls.</li>
+<li><code>TesseractChamber.tsx</code> — basic wireframe cubes vs. the already-live
+<code>TesseractRenderer.tsx</code>'s real 6-plane 4D→3D projection. <strong>Founder placed an
+explicit hold on deleting this one</strong> — not yet executed.</li>
+<li><code>MemoryGraph.tsx</code> — older, simpler sibling of <code>MemoryGraphEnhanced.tsx</code>,
+redundant once that one's taken.</li>
+</ul>
+<h4>Skip — mismatched/fictional data, firmly not wanted</h4>
+<ul>
+<li><code>data/{colonies,constitution,memories,missions}.ts</code> — invents sci-fi content ("Alpha
+Centauri Prime," fictional laws) that would actively misrepresent the real system (real colonies are
+the 10 GitHub repos, the real constitution is <code>soul.md</code>'s F-001–F-006) — not a quality
+problem, a correctness problem.</li>
+<li>The presentational components built against that data (<code>MissionBoard</code>/<code>Card</code>/<code>Details</code>,
+<code>QuickStats</code>, <code>ResourceBar</code>, <code>AgentAvatar</code> [before rescue],
+<code>ColonyCard</code>, <code>MemoryVault</code>, <code>MemoryDetails</code>/<code>Item</code>,
+<code>ConstitutionHall</code>) inherit the same problem — would need full re-binding + re-skinning
+to the live design tokens, not a lift.</li>
+</ul>
+<h4>Skip — buggy or low-quality</h4>
+<ul>
+<li><code>useColonyHealth.ts</code> calls <code>getHiveStatus()</code> → <code>/v11/hive/status</code>,
+which <strong>does not exist anywhere in <code>worker/src/index.js</code></strong> (grepped, confirmed
+absent) — would silently fail in production.</li>
+<li><code>useNeuralUI.ts</code> fakes a "prediction confidence" counter with no real learning behind it.</li>
+<li><code>useAsyncState.ts</code> is redundant with the live app's already-established fetch pattern
+(<code>useHiveData.ts</code>).</li>
+<li><code>utils/constitutional.ts</code>'s policy checks are permissive no-ops.</li>
+<li><code>gameStore.ts</code> ties to the <code>worlds/</code> module <code>FUTURE_MODULES.md</code>
+already deferred on purpose.</li>
+</ul>
+<h4>Genuinely new capability, real integration value, not yet built live</h4>
+<ul>
+<li><strong><code>MemoryGraphEnhanced.tsx</code> + <code>ConstitutionVisualizer.tsx</code></strong> —
+the strongest find. Both already call the real, live <code>services/api.ts</code> functions
+(<code>getMemoryGraph()</code>/<code>getConstitutionLaws()</code>), and
+<code>ConstitutionVisualizer</code>'s fallback data correctly states F-001–F-006 (unlike the
+fictional <code>data/</code> files). Live's current equivalents (<code>DreamLogs.tsx</code>,
+<code>ConstitutionViewer.tsx</code>) are flat lists/markdown with no graph, no tiering, no history —
+a real capability gap. Integration is a re-skin job (swap inline theme.* styles for the live
+cyan-glow/void-black Tailwind tokens), not a data job.</li>
+<li><strong><code>services/sentry.ts</code></strong> — near-zero-cost win. <code>@sentry/react</code>/
+<code>@sentry/tracing</code> are already declared in <code>package.json</code> but
+<code>initSentry()</code> is never called anywhere — <strong>the live app currently ships with zero
+error tracking.</strong> Needs one call from <code>main.tsx</code> plus a
+<code>VITE_SENTRY_DSN</code> env var; the file itself needs no changes. <span class="tag decision">not
+yet wired — Q8 of the 2026-08-01 founder answers</span></li>
+<li><strong><code>services/github.ts</code></strong> — <code>sendGrokBridgeDispatch</code>/
+<code>fetchGrokToken</code> call real, confirmed-present Worker endpoints (<code>/admin/grok-token</code>,
+<code>/bridge/grok-token</code>) that nothing in the live UI currently exposes a trigger for.</li>
+<li><strong><code>stores/uiStore.ts</code></strong> — a complete generic notification/modal/toast
+system; live panels currently hand-roll every overlay via ad hoc <code>useState</code>.
+Self-contained, only needs its stock theme palette swapped or dropped.</li>
+<li><strong>Minor/low-priority:</strong> <code>AchievementToast</code>/<code>LevelUpNotification</code>
+(the underlying XP/level data already exists on <code>RoadmapEntry</code>, nothing renders it yet);
+<code>usePersistedForm.ts</code> (clean, cheap, nothing currently needs it);
+<code>components/common/{Button,Card,Modal}</code> (flags a real gap — no shared component library
+exists live — but wrong palette means rewrite, not port).</li>
+</ul>
+<div class="gap-note">2026-08-01 status: the founder answered Q1–Q7 of the original 19-question
+audit (executed — see §1's guild disposition table and the rate-limiter port). <strong>Q8–Q14 of the
+second-frontend catalog (sentry.ts wiring, <code>components/common</code> library, skip-bucket
+deletion minus the explicit <code>TesseractChamber</code> hold) are answered but not yet
+executed</strong> — a fresh <code>Explore</code> pass was dispatched the same session to re-verify
+the exact skip-bucket file list before deleting anything there. Record the outcome in
+AUDIT_LEDGER.md when it lands, not a new file.</div>
+
+<h3>The Grok campaign — parallel UI workstream (docs/ tracking files, PRs #132/#133)</h3>
+<div class="src">Source: HIVE_UPDATES 022–043 (all read in full — see §6 for the founder-directive
+capture around Grok's role expansion).</div>
+<p>Grok was activated 2026-07-29 beyond feedback-only co-builder into Detective Researcher +
+Full-Stack Developer/Engineer + Frontend UI/UX Master Architect (previously assumed Mistral duties)
++ Strategist, on a dedicated branch (<code>grok/detective-fullstack</code>, later
+<code>grok/pr-133-s1-did</code>) with a hard rule: never overwrite Claude/other-role work, prefer
+additive commits, role-tagged <code>[ROLE: Strategist+Detective+FullStack]</code> messages.</p>
+<h4>Founder decisions locked (D1–D7, recorded in docs/GROK_FOUNDER_DECISIONS.md)</h4>
+<ul>
+<li><strong>D1</strong> — Unify design tokens (multi-session effort; mapping doc + M1 CSS aliases
+shipped, full unify M0–M5 still open)</li>
+<li><strong>D2</strong> — Future modules (worlds/voxel/xp/avatars/conversation) formally labeled in
+<code>frontend/src/FUTURE_MODULES.md</code>; integrate into the OS map only when needed</li>
+<li><strong>D3</strong> — Floating menu: hybrid policy (stage-0 design note shipped, no UI code yet)</li>
+<li><strong>D4</strong> — Performance first (perf inventory + lazy-loaded legacy tabs shipped)</li>
+<li><strong>D5</strong> — Founder-key default required on new state-changing endpoints</li>
+<li><strong>D6</strong> — Security checklist mandatory on every PR touching this lane (shipped as a
+per-commit checklist template, visible on every HIVE_UPDATES entry from this workstream)</li>
+<li><strong>D7</strong> — DID (decentralized identity) pursued near-term, after security basics —
+extensive DID/SIOPv2/OpenID4VP research shipped as docs, no live DID login built</li>
+</ul>
+<h4>What actually shipped on this branch (docs + real code, chronological)</h4>
+<ul>
+<li><code>docs/GROK_CAMPAIGN_WORK_PLAN.md</code> — the multi-session plan itself (Sessions 0–10+)</li>
+<li><code>frontend/src/FUTURE_MODULES.md</code>, <code>docs/PERF_INVENTORY.md</code>,
+<code>docs/PR_SECURITY_CHECKLIST.md</code></li>
+<li><code>docs/FRONTEND_COMPONENT_INVENTORY.md</code>, <code>docs/DESIGN_TOKENS.md</code> (three
+token systems catalogued + a founder choice needed), <code>docs/WIP_VOXEL_WORLDS_STATUS.md</code>
+(formal marker, options A–D), <code>docs/FLOATING_MENU_INTEGRATION_PROPOSAL.md</code>,
+<code>docs/A11Y_PERF_BASELINE.md</code>, <code>docs/VISIONARY_GUIDANCE_PROTOCOL.md</code>
+(explain → options → why → ask → implement-only-after-direction, the recursive loop this whole
+workstream follows)</li>
+<li>Perf: removed a dead <code>socket</code> Vite manualChunk, added <code>phaser@^3.80.1</code> as
+a real declared dependency (matching what was already dynamically imported), converted the 13
+legacy command-center tabs to <code>React.lazy</code> + <code>Suspense</code> (load on open, not on
+first paint)</li>
+<li>Tokens: <code>--hive-*</code> canonical CSS variables added to <code>:root</code>, aligned with
+Tailwind Kai EL OS colors — legacy <code>--color-*</code>/<code>--bg-*</code> vars left unchanged so
+nothing breaks; <code>docs/DESIGN_TOKEN_UNIFY_MAP.md</code> (phases M0–M5)</li>
+<li>Accessibility (A11y-1 through A11y-4, all shipped): <code>LeftNav</code>/<code>TopStatusBar</code>
+landmarks and ARIA labels; <code>prefers-reduced-motion</code> media query collapsing
+animation/transition durations; a new <code>useFocusTrap.ts</code> hook wired into Observatory,
+BiosystemOverlay, GatewayConsoleOverlay dialogs with focus restore</li>
+<li>F1 — removed a duplicate Google Fonts stylesheet load path (kept the single
+<code>src/index.css</code> @import for Cinzel + Exo 2 + Orbitron)</li>
+<li>S1 — real rate limiting added to <code>POST /v11/command_text</code> and
+<code>POST /v11/memory/remember</code> (same <code>rateLimitOk</code> helper already used by arena
+writes, 30 POSTs/IP/min, KV if bound else D1)</li>
+<li>DID research (docs only, no live login): <code>docs/DID_NEAR_TERM_SPIKE.md</code> (did:key
+recommendation, stages D0–D4, options DID-A/B/C), <code>docs/DID_AUTHENTICATION_METHODS.md</code>,
+<code>docs/DID_METHOD_COMPATIBILITY.md</code>, <code>docs/DID_KEY_ROTATION_LIMITS.md</code>,
+<code>docs/DID_WEB_ROTATION_METHODS.md</code>, <code>docs/SIOPV2_IMPLEMENTATION.md</code>,
+<code>docs/SIOPV2_INTEGRATION.md</code>, <code>docs/OPENID4VP_INTEGRATION.md</code>. Recommendation
+throughout: stay on DID-C (offline spike, <code>scripts/did-c/did_key_spike.mjs</code>) until the
+founder green-lights DID-B (experimental Worker-side verify); do not implement a full SIOPv2 RP yet.</li>
+<li><code>docs/SECURITY_DEEP_PASS.md</code> — write-endpoint gate inventory, S1–S3 options (S1
+shipped, S2/S3 open)</li>
+</ul>
+<p>Every single commit on this branch carries the same 4-line security checklist (secrets handling
+changed? new public write endpoint? keys/secrets in committed files? irreversible without founder?)
+— all "no" across all ~20 entries reviewed, i.e. this entire workstream self-certified as
+additive/reversible the whole way through.</p>
+
+<h3>Founder's macro-universe vision — Command Center as 3D navigation (cataloged, not built)</h3>
+<div class="src">Source: <code>VISION/2026-07-18-vision-macro-universe-colony-worlds-3d-avatar-002.md</code>,
+captured via <code>founder-directive-capture</code>.</div>
+<div class="founder-quote">"the game of fire part of the command center is to be able to see the hive
+and enter the hive in a 3-D world later on updated by unreal engine no bro goal is to have a universe
+that's connected by worlds which are colonies that have their own tribes that create other colonies
+and tribes on their worlds that are all sub colonies of the original first colony of each world in
+which the goal is to be able to utilize the desktop version to be able to travel into each colony
+world and then be able to zoom back out into the universe, which is connected like a web, and the
+planets could be the colonies and then the other information around the colony are connected to the
+colony files like the graph we were talking about to be used to connect them, but they could be like
+the asteroids, the moon, their son, and all that type of stuff utilized when in universe mode in
+earth mode and then there's colony mode that way there's a different perspective from macro to
+micro, and when you get to micro which you talk to avatar directly, which is a 3-D avatar"</div>
+<p><strong>Three nested zoom levels of navigation, not three separate apps:</strong></p>
+<ol>
+<li><strong>Universe mode (macro)</strong> — the whole federation as a web of connected worlds. Each
+colony is a planet. The connections are the same web already modeled in
+<code>memory/_graph.json</code> (the 101-node knowledge graph) — the graph <em>is</em> the map, not a
+separate data structure to build.</li>
+<li><strong>Colony mode (meso)</strong> — flying into one planet enters that colony's own world. Its
+tribes found their own sub-colonies on that world (a real hierarchy, not infinite flattening).
+Orbiting bodies (moons, asteroids) represent the colony's associated files/logs/satellite data —
+graph-node metadata rendered spatially instead of as a list.</li>
+<li><strong>Avatar mode (micro)</strong> — descending further reaches a single agent as a 3D avatar
+you talk to directly. This is the eventual destination of the Roadmap-of-Becoming work
+(<code>/v11/roadmap</code>, <code>RoadmapAvatar.tsx</code>) — those flat progress bars are the
+<em>data</em> this 3D avatar would eventually visualize.</li>
+</ol>
+<p>What already exists toward this: <code>memory/_graph.json</code> (101 nodes, real data);
+<code>frontend/src/worlds/</code>, <code>frontend/src/voxel/</code>, <code>frontend/src/xp/</code> — a
+3D/voxel-world tree already scaffolded, with <strong>~247 real TypeScript errors</strong> and
+excluded entirely from the production build (<code>tsconfig.build.json</code>); real, substantial
+prior work, unfinished, not nonexistent. <code>RoadmapAvatar.tsx</code> is the 2D precursor already
+shipped. Unreal Engine itself is not integrated anywhere in this repo and would be an entirely new
+rendering pipeline — the founder's own phrasing ("later on") already treats it as a distinct future
+phase.</p>
+<p><strong>Devil's advocate on this vision:</strong> the existing worlds/voxel tree has real,
+uncorrected type errors — building on top of it without fixing that foundation first would compound
+debt. "Colonies spawning sub-colonies" needs a real governance answer (who can found one, under what
+constitutional article) before it's a UI feature — Chromosome-level genome work, not just a 3D-scene
+hierarchy. Unreal Engine is a completely different tech stack from the Worker + React stack this hive
+runs today — likely a separate service the Worker/D1 backend feeds data to, not a
+<code>frontend/</code> npm package. Status: <strong>cataloged, not built.</strong> Phase 2 of the
+unified forward plan (wiring the orphaned gamified-UI components as a supplementary view) is the
+concrete first runway toward it, not the whole vision.</p>
+
+<h3>The Unity/Unreal MMORPG game-studio plan — full architecture document</h3>
+<div class="src">Source: <code>Project_file/Founders Visonary Folder/MODIFICATIONS/unity-migration-unreal-engine-architecture-plan</code>
+(3,047 lines) and <code>MODIFICATIONS/floating-menu-hub</code> (2,452 lines of real React/Three.js
+source) plus the related <code>vision-folder/idea#1.md</code> comprehensive vision document. Read
+structurally in full (every section header) with representative content quoted below rather than
+the entire raw file reproduced — see the honesty note at the top of this document.</div>
+<p>This is the same speculative game-studio pivot document <code>SPORE_ROSTER.md</code> Part 1
+reframes into real hive-equivalent roles (§4 covers that reframe in full). Its own separate,
+extremely detailed technical architecture plan exists as a real committed file. Structure:</p>
+<h4>Part 1 — Unity Migration Details (lines 16–1307)</h4>
+<ul>
+<li>1.1 Current State Assessment — what exists in React/Three.js today vs. what's needed for a real
+MMORPG (persistent servers, authoritative netcode, anti-cheat, matchmaking)</li>
+<li>1.2 Unity Migration Strategy — Phase 1 Foundation (Month 1–2) through Phase 4 Launch Preparation
+(Month 6), with Phase 2 (Core Systems, Month 2–4) the largest single section in the whole document
+(lines 114–855)</li>
+<li>1.3 Unity Project Structure, 1.4 Technical Specifications (hardware/software requirements), 1.5
+Team Requirements, 1.6 Timeline &amp; Milestones, 1.7 Budget Estimate</li>
+</ul>
+<h4>Part 2 — Unreal Engine Architecture Plan (lines 1308–2608)</h4>
+<ul>
+<li>2.1 Why Unreal Engine?, 2.2 Unreal Engine Architecture — Core Systems, with real, complete C++
+header/source pairs written out in full: <code>THEHIVEGameModeBase</code>, <code>THEHIVEGameState</code>,
+<code>THEHIVECharacter</code> (with <code>HealthComponent</code>/<code>ManaComponent</code>/
+<code>InventoryComponent</code>), <code>Guild</code>, <code>Castle</code>,
+<code>WorldStreamingManager</code> — genuine Unreal Engine 5 boilerplate (<code>#pragma once</code>,
+<code>GameFramework/</code> includes, <code>.generated.h</code> reflection macros), not pseudocode</li>
+<li>2.3 Unreal Engine Implementation Timeline, 2.4 Team Requirements, 2.5 Budget Estimate, 2.6
+Hardware Requirements</li>
+</ul>
+<h4>Part 3 — Migration Path Comparison (lines 2609–2764)</h4>
+<ul>
+<li>3.1 Unity vs. Unreal Engine Comparison, 3.2 Recommended Migration Path with three named options:
+<strong>Option A — Unity First, Then Unreal (Recommended)</strong>, Option B — Unreal Only
+(Aggressive), Option C — Hybrid Approach; 3.3 Final Recommendation</li>
+</ul>
+<h4>Part 4 — Implementation Checklists (lines 2765–2927)</h4>
+<p>Full pre-migration through launch checklists for both engines, phase by phase.</p>
+<h4>Part 5 — Next Steps &amp; Action Plan (lines 2928 to end)</h4>
+<p>5.1 Immediate Actions (Next 2 Weeks), 5.2 Month 1 Goals.</p>
+
+<h4>The Floating Menu 3D Hub — real component source (MODIFICATIONS/floating-menu-hub)</h4>
+<p>A complete, real React + <code>@react-three/fiber</code> + <code>framer-motion</code> component
+implementation (not pseudocode) for an "Anime MMO Floating Menu System," explicitly inspired by Log
+Horizon, Sword Art Online, VRChat, Ready Player One. Structure, in order:</p>
+<ul>
+<li>A full color palette const (cyan/electric-purple SAO-and-Log-Horizon-inspired theme) and an
+animation-presets const (fadeIn, slideUp, slideDown, scaleIn, pulse, float, hoverGlow) shared across
+every panel</li>
+<li><code>HubPortal</code> — the 3D portal entry point component</li>
+<li><code>FloatingMenuPanel</code> — the base floating-panel shell every sub-panel mounts inside</li>
+<li>Eight full sub-panels, each a real, complete component: <code>ProfilePanel</code>,
+<code>QuestsPanel</code>, <code>InventoryPanel</code>, <code>SocialPanel</code>,
+<code>CraftingPanel</code>, <code>ShopPanel</code>, <code>SettingsPanel</code>,
+<code>WorldMapPanel</code></li>
+<li><code>export default function App()</code> — the top-level assembly wiring all eight panels
+together</li>
+</ul>
+<p><strong>Status per the Grok audit (§3 above) and AUDIT_LEDGER.md:</strong> this is a real,
+substantial design/code artifact under <code>MODIFICATIONS/</code>, not yet primary navigation.
+<code>docs/FLOATING_MENU_INTEGRATION_PROPOSAL.md</code> is the docs-first proposal for bringing it
+into Kai EL OS as an optional additive panel (D3's "hybrid" decision — <code>docs/FLOATING_MENU_HYBRID_STAGE0.md</code>
+lays out the stage ladder). No UI code from this file has been wired into the live app as of this
+document's writing.</p>
+<p><strong>Overall status of the whole Unity/Unreal MMORPG plan:</strong> real, extensively detailed,
+<em>planning-only</em> — not product. Grok's own 2026-07-29 reality baseline states this directly:
+"Live Unity/Unreal MMORPG, 1k+ concurrent players, Fish-Net authority, full studio of 101 hired
+roles" belongs in the "Not product (planning only)" bucket, distinct from what's actually landed and
+real. See §6 for the parallel, less MMORPG-scoped "gamified platform" vision document
+(<code>vision-folder/idea#1.md</code>) and §4 for how <code>SPORE_ROSTER.md</code> re-targets its 101
+human roles onto real hive equivalents.</p>
+</section>
+
+<!-- ================= TAB 4: FEDERATION / COLONIES ================= -->
+<section class="tab" id="tab-federation">
+<h2>4 · Federation / Colonies</h2>
+<div class="src">Sources: <code>.queen/hive.yml</code> (full), <code>.queen/CLAUDE.md</code>,
+<code>memory/planning/</code> (all five files, full — colony deep-integration phases),
+<code>SPORE_ROSTER.md</code> (full, both Part 1 and Part 2).</div>
+
+<h3>The colony manifest (.queen/hive.yml)</h3>
+<p>Authoritative registry. Queen: <code>TehutiRaEl/sovereign-hive-meta</code>,
+<code>soul_md_hash: "a54f80ce8ca38ce96236685a6f1e4f94e023858eb59dca6027f142ab0dd0c828"</code>. Used by
+<code>backend/core/hive_mesh.py</code> to configure fan-out targets.</p>
+<table>
+<tr><th>Colony</th><th>Role</th><th>Repo</th><th>Guilds</th><th>Description</th></tr>
+<tr><td>THEHIVE</td><td>core</td><td>TehutiRaEl/THEHIVE</td><td>constitutional, audit, treasury, frequency, arena</td><td>Core governance engine, agent population, SOUL ledger, Gladiator Arena</td></tr>
+<tr><td>aether</td><td>revenue</td><td>TehutiRaEl/aether</td><td>treasury, commerce</td><td>License authority, revenue splitting, SOUL settlement, cross-colony orchestration</td></tr>
+<tr><td>automatisch</td><td>automation</td><td>TehutiRaEl/automatisch</td><td>workflow</td><td>Hive automation bus — cross-colony event routing, webhook triggers</td></tr>
+<tr><td>kimi-gateway</td><td>llm</td><td>TehutiRaEl/Kimi-K2</td><td>—</td><td>Free LLM gateway — waterfalls through Kimi, SiliconFlow, DeepSeek, Groq, OpenRouter</td></tr>
+<tr><td>academy-books</td><td>knowledge</td><td>TehutiRaEl/free-programming-books</td><td>academy</td><td>Programming knowledge corpus — RAG source for agent training (390K+ star resource)</td></tr>
+<tr><td>academy-camp</td><td>curriculum</td><td>TehutiRaEl/freeCodeCamp</td><td>academy</td><td>Full CS/math curriculum — agent tasks and training missions</td></tr>
+<tr><td>outer-colony-a</td><td>unknown</td><td>TehutiRaEl/NAR2</td><td>—</td><td>Private colony — role TBD pending repo access (per hive.yml's own placeholder text; note this predates the colony deep-integration work below, which did establish NAR2's real role as Security · Layer 5)</td></tr>
+<tr><td>outer-colony-b</td><td>unknown</td><td>TehutiRaEl/4DBRAIN</td><td>—</td><td>Private colony — role TBD pending repo access (same note — deep-integration established this as Cognitive · tesseract math · Layer 3)</td></tr>
+<tr><td>n8n</td><td>workflow (infra)</td><td>n8nio/n8n, self-hosted</td><td>workflow</td><td>Complex multi-step agent workflows — complements automatisch for long-running tasks. <span class="tag decision">placeholder, unconfigured</span></td></tr>
+<tr><td>postgres</td><td>storage (infra)</td><td>—, self-hosted</td><td>audit, treasury</td><td>Persistent colony state — replaces SQLite for durability across restarts. <span class="tag decision">placeholder, unconfigured</span></td></tr>
+<tr><td>redis</td><td>cache (infra)</td><td>—, self-hosted</td><td>—</td><td>Session cache, rate limiting, health score cache, OmniRoute latency state. <span class="tag decision">placeholder, unconfigured</span></td></tr>
+<tr><td>ml-pipeline</td><td>ml (infra)</td><td>—, same as THEHIVE</td><td>dream, arcane</td><td>Whisper STT, Stable Diffusion, HuggingFace transformers — local inference. <span class="tag decision">placeholder, unconfigured</span></td></tr>
+</table>
+<div class="src"><strong>Two versions of soul.md exist</strong> (per .queen/CLAUDE.md): <code>.queen/soul.md</code>
+— shorter, canonical, machine-readable (6 fixed laws + cardinal + mutable). Root <code>soul.md</code>
+— longer, narrative, for human reading, synced via the <code>constitution-receive.yml</code> workflow.
+<strong>Cardinal Laws</strong> (from <code>.queen/soul.md</code>): 1) Childlike wonder is the engine —
+capability grows from curiosity. 2) Remedy is the purpose — the hive heals, it does not punish. 3)
+All internal communication uses HD vectors (<code>backend/core/hdc.py</code>).</div>
+
+<h3>Colony deep-integration — Phases A–G, shipped 2026-07-22 (the full record)</h3>
+<div class="src">Source: <code>memory/planning/2026-07-19-unified-forward-plan.md</code> Phase 10.
+Founder directive: "is there a way to fully utilize the software in each repo that was just built on
+top of" — bridge or extend the existing agentic mesh/harness protocol rather than inventing a new
+one. Protocol decision: <strong>bridge, don't invent</strong> — the existing HMAC-HTTP colony-standard
+layer for lifecycle/health/constitution-sync, and MCP for agentic tool-calling/task-dispatch.</div>
+<details open><summary>Phase A — mechanical fixes, all 6 colonies</summary>
+<p>Proprietary hive-internal LICENSE added to NAR2/4DBRAIN/aether (none existed); aether's
+<code>/colony/events</code> route given real HMAC verification (it accepted any unauthenticated JSON
+body — the one real security gap among the six colonies); <code>aether/LAUpackage.json</code>
+renamed to <code>package.json</code>, CI <code>cp</code> workaround removed; Kimi-K2's duplicate Node
+colony bridge (<code>colony-server.js</code>, <code>Dockerfile.colony</code>) retired in favor of its
+real Python bridge; NAR2's README architecture drift fixed.</p></details>
+<details open><summary>Phase B — tesseract math repatriated to 4DBRAIN</summary>
+<p>The tesseract/hypercomplex/dream-engine math (previously living duplicated in
+<code>backend/tier2/</code>) moved into a real, pip-installable <code>4DBRAIN/tesseract_math/</code>
+package — 4DBRAIN being the colony whose name always implied it owned this math. This repo's
+<code>tier2/*.py</code> and NAR2's <code>rotation_matrix.py</code> are now thin re-export shims over
+it. Found and fixed a real crashing bug: 4DBRAIN's <code>backend/main.py</code> had a dead
+<code>from colony import router</code> import (nonexistent module, <code>ImportError</code> on any
+real run).</p></details>
+<details open><summary>Phase C — colony_sdk consolidated into a real package</summary>
+<p><code>colony_sdk.py</code> (previously hand-copied byte-identical into NAR2, 4DBRAIN, Kimi-K2)
+promoted into a real package (<code>colony_sdk/</code>, <code>sovereign-hive-colony-sdk</code> on
+git), consumed as a pinned dependency by all three. Found and fixed a real bug: NAR2's
+<code>main.py</code> used a relative <code>from .colony_sdk import ...</code>, which would have
+broken once <code>colony_sdk.py</code> stopped being a sibling file. Also found and fixed this repo's
+own <code>backend/api/colony.py</code> — it had <strong>zero</strong> HMAC verification on
+<code>POST /colony/events</code>, the one place this repo's own colony-standard-layer implementation
+was less secure than every colony consuming it.</p></details>
+<details open><summary>Phase D — automatisch native app (AGPL-clean)</summary>
+<p>automatisch (AGPL-3.0) gets a native <code>packages/backend/src/apps/thehive/</code> app — a real
+"Hive Dispatch Received" trigger and "Send to Hive Mesh" action, not a bolt-on route.
+<code>/colony/manifest</code> now reports a real <code>source: {repo, commit, license}</code> field
+(live <code>git rev-parse HEAD</code>) to satisfy AGPL Section 13's corresponding-source obligation;
+this repo's own code still only ever talks to automatisch over HTTP, never in-process, so AGPL never
+crosses into the rest of the federation. The orphaned <code>packages/colony-server/</code> sidecar
+was retired.</p></details>
+<details open><summary>Phase E — a real MCP server for LocalAGI</summary>
+<p>Built at <code>backend/mcp_server/</code> (the existing <code>backend/mcp/</code> confirmed dead —
+no JSON-RPC, no transport, one simulated tool, never wired to <code>routes.py</code>) exposing
+<code>hive_dispatch</code>, <code>hive_memory_recall</code>, <code>hive_law_query</code> as native
+tools any MCP client can call. First consumer: LocalAGI, which already speaks MCP natively
+(<code>core/agent/mcp.go</code>) — no LocalAGI-side code change needed, just operator config pointing
+at <code>http://&lt;host&gt;:8100/mcp</code>. Verified with a real JSON-RPC <code>initialize</code>
+handshake over streamable-http.</p></details>
+<details open><summary>Phase F — Tier-1-safe event allow-list</summary>
+<p><code>hive_mesh.dispatch()</code> previously fired any <code>event_type</code> to every colony
+blind. Added a Tier-1-safe allow-list per <code>PERMISSIONS.md</code>'s own tier definitions
+(<code>health_check</code>, <code>manifest_query</code>, <code>capabilities_query</code>,
+<code>info_query</code>, <code>constitution_update</code>, <code>constitution_sync</code>,
+<code>ping</code>); anything else (e.g. automatisch's <code>task_dispatch</code>) is now held for
+founder review through the existing HITL queue instead of dispatching. Also fixed a real bug found
+while re-verifying: Tier 3 <code>backend/tier3/tesseract_model.py</code>'s
+<code>TesseractModelTorch</code> had no <code>wealth_forecast</code>, so
+<code>POST /v11/tesseract/forecast</code> crashed with <code>AttributeError</code> whenever torch was
+installed (the default path).</p></details>
+<details open><summary>Phase G — the colonies.json harness manifest</summary>
+<p><code>.claude/skills/agent-harness/assets/harnesses/colonies.json</code> built — the real manifest
+behind hive-conductor's previously-aspirational "colonies" domain lane. Hand-authored (documented as
+the one deliberate exception, since the six colonies are sibling repos, not a
+<code>.claude/skills</code>-shaped folder <code>harness_manifest_builder.py</code> can scan) with a
+new <code>scripts/colony_verify.py</code> — deterministic, stdlib-only, real structural checks
+against each sibling checkout. Fed through the real harness machinery end to end:
+<code>goal_compiler.py</code> compiled a real goal against it, <code>loop_controller.py</code> drove
+init → execute → verify, reaching <code>"status": "verified"</code>.</p></details>
+<details open><summary>Phase H — parked, not built this pass</summary>
+<p>Real deployment of NAR2/4DBRAIN/aether requires an account-level deploy (Tier 3, founder-only)
+plus this repo's own System A deployed first. Documented as the natural next step, not scheduled
+work.</p></details>
+<p><strong>Per-repo PRs:</strong> NAR2 #18, 4DBRAIN #14, aether #13, automatisch #13, Kimi-K2 #14 —
+each its own PR. <strong>Done when:</strong> each phase's own done-when line independently verified
+— all satisfied with real commands (fresh-venv installs, real FastAPI/Node HMAC round-trips, a live
+MCP JSON-RPC handshake, a synthetic Tier-3-shaped dispatch proven rejected, all 18
+<code>colony_verify.py</code> checks across 6 colonies passing).</p>
+
+<h3>SPORE_ROSTER — Part 1: the CANVAS.md speculative game-studio plan, reframed</h3>
+<div class="src">Source: <code>canvases/thehive-unity-migration/canvases/thehive-studio-onboarding/CANVAS.md</code>
+("THE HIVE: Complete Studio Onboarding &amp; Role Creation Plan") — a speculative 101-headcount,
+$3.6M-7.4M, 150-human plan to turn THE HIVE into a funded Unity/Unreal AAA-MMORPG studio.
+<strong>Never adopted, never acted on.</strong></div>
+<p>Per this hive's own MANDATE_TRIAGE discipline (devil's-advocate first, extract genuine value,
+verdict — never rubber-stamp): the literal content is a human hiring/funding plan for a business
+THEHIVE is not currently building. What's genuinely valuable: a comprehensive, well-organized
+division-of-labor taxonomy — 7 departments, ~78 distinct role types — re-targeted at what THEHIVE
+actually is (edge Worker + SOUL economy + colony federation + Command Center), mapped to whichever
+existing skill/subagent already covers it.</p>
+<p><strong>Status key:</strong> ACTIVE (existing skill/subagent already does this job) · ACTIVE
+(reframed) (same, but literal role had to be retargeted to make sense) · PARTIAL (something covers
+part of it, real gap remains) · NEW (genuinely not built, real skill-creator candidate) · DECLINED
+(no honest THEHIVE analog exists). Spore lifecycle terms (THE_CODEX.md): dormant → germinating →
+propagating → fruiting. ACTIVE = fruiting; NEW = dormant; PARTIAL = germinating.</p>
+
+<h4>Department 1 — Executive Leadership (7 role-types)</h4>
+<table>
+<tr><th>Role</th><th>Hive equivalent</th><th>Status</th></tr>
+<tr><td>CEO / Studio Director</td><td>The founder — not a spore, the seat this whole system serves</td><td>N/A (human-held, by design)</td></tr>
+<tr><td>CTO / Technical Director</td><td><code>hive-conductor</code> + <code>agent-harness</code></td><td>ACTIVE</td></tr>
+<tr><td>CPO / Product Director</td><td>Roadmap ownership (<code>roadmapData.ts</code>, <code>RoadmapPanel</code>)</td><td>ACTIVE — vision judgment stays the founder's</td></tr>
+<tr><td>CFO / Finance Director</td><td><code>wallet.py</code>, <code>staking.py</code>, <code>utility_economy.py</code></td><td>PARTIAL — ledger exists, no agentic "finance directorate" persona yet</td></tr>
+<tr><td>CMO / Marketing Director</td><td><code>internal-comms</code>, <code>gpt-tasteskill</code></td><td>PARTIAL — comms tooling exists, no dedicated marketing-strategy spore</td></tr>
+<tr><td>COO / Operations Director</td><td><code>hive-conductor</code>'s governance gate + <code>merge-readiness</code></td><td>ACTIVE</td></tr>
+<tr><td>Studio Producer</td><td><code>agent-harness</code>'s <code>loop_controller</code></td><td>ACTIVE</td></tr>
+</table>
+
+<h4>Department 2 — Engineering (25 headcount / 22 role-types)</h4>
+<table>
+<tr><th>Role</th><th>Hive equivalent</th><th>Status</th></tr>
+<tr><td>Lead Unity Engineer</td><td><code>fable-debugger</code> + <code>agent-harness</code> — reframed to <code>worker/src/index.js</code></td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Senior Unity Engineer ×3</td><td><code>backend/core/</code> module ownership (hdc.py/protocol.py/hive_mesh.py)</td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Unity Engineer ×4</td><td><code>fable-debugger</code> + <code>refactor-safely</code></td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Network Engineer</td><td><code>hive_mesh.py</code> + colony-health-monitor</td><td>ACTIVE</td></tr>
+<tr><td>Backend Engineer</td><td><code>backend/api/*</code> + <code>agent-harness</code></td><td>ACTIVE</td></tr>
+<tr><td>Tools Engineer</td><td><code>skill-creator</code></td><td>ACTIVE</td></tr>
+<tr><td>DevOps Engineer</td><td><code>merge-readiness</code> + <code>.github/workflows/*</code></td><td>ACTIVE</td></tr>
+<tr><td>QA Engineer</td><td><code>webapp-testing</code> + the coverage sweep (<code>devils-advocate-audit</code>)</td><td>ACTIVE</td></tr>
+<tr><td>Technical Artist</td><td><code>theme-factory</code>/<code>frontend-design</code> — reframed from shaders to Kai EL OS's visual system</td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Build Engineer</td><td><code>ci.yml</code> + <code>merge-readiness</code></td><td>ACTIVE</td></tr>
+<tr><td>Unreal Engineering roles (5 listed, header says 8)</td><td>—</td><td>DECLINED — no game-engine surface exists in THEHIVE; forcing a mapping would be exactly the ungrounded claim this document exists to avoid</td></tr>
+<tr><td>AI Systems Engineer</td><td><code>backend/core/agency.py</code> (SwarmAgency ladder)</td><td>ACTIVE</td></tr>
+<tr><td>AI Content Designer</td><td><code>THE_CODEX.md</code> + <code>research-to-dna</code></td><td>ACTIVE</td></tr>
+<tr><td>AI Automation Engineer</td><td><code>agent-harness</code> + <code>hive-organism</code></td><td>ACTIVE</td></tr>
+<tr><td>AI Research Engineer</td><td>4DBRAIN's <code>tesseract_math</code> package</td><td>ACTIVE (in the 4DBRAIN colony)</td></tr>
+<tr><td>AI Tooling Engineer</td><td><code>skill-creator</code></td><td>ACTIVE</td></tr>
+<tr><td>AI QA Engineer</td><td><code>devils-advocate-audit</code></td><td>ACTIVE</td></tr>
+<tr><td>AI Content Generator</td><td><code>research-to-dna</code> + <code>polymath-lens</code></td><td>ACTIVE</td></tr>
+</table>
+
+<h4>Department 3 — Art &amp; Animation (20 headcount / 14 role-types)</h4>
+<table>
+<tr><th>Role</th><th>Hive equivalent</th><th>Status</th></tr>
+<tr><td>Art Director</td><td><code>taste-skill</code>/<code>theme-factory</code> — reframed to Kai EL OS + roadmap artifact visual direction</td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Lead 3D Artist</td><td><code>algorithmic-art</code>/<code>canvas-design</code></td><td>PARTIAL (no literal 3D pipeline)</td></tr>
+<tr><td>Character Artist ×3</td><td>arena renderer (agent avatars in Gladiator Arena battles)</td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Environment Artist ×2</td><td>arena renderer's world/voxel generation</td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Prop Artist ×2</td><td>—</td><td>DECLINED — no prop system exists</td></tr>
+<tr><td>VFX Artist ×2</td><td>arena renderer's frame effects</td><td>PARTIAL</td></tr>
+<tr><td>Lead 2D Artist</td><td><code>imagegen-frontend-web</code>/<code>brand-guidelines</code></td><td>ACTIVE</td></tr>
+<tr><td>UI/UX Designer ×2</td><td><code>ux-design</code> + <code>frontend-design</code> (Kai EL OS panels)</td><td>ACTIVE</td></tr>
+<tr><td>Texture Artist</td><td><code>theme-factory</code> (token/palette system)</td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Concept Artist</td><td><code>imagegen-frontend-web</code>/<code>algorithmic-art</code></td><td>ACTIVE</td></tr>
+<tr><td>Lead Animator</td><td>arena renderer's 30-frame battle simulation</td><td>ACTIVE (reframed) — genuinely direct fit</td></tr>
+<tr><td>Character Animator ×2</td><td>arena renderer</td><td>ACTIVE</td></tr>
+<tr><td>Creature Animator</td><td>arena renderer</td><td>ACTIVE</td></tr>
+<tr><td>Technical Animator</td><td>tier3 quantum-bridge math (rigging-equivalent simulation)</td><td>PARTIAL</td></tr>
+</table>
+
+<h4>Department 4 — Design (18 headcount / 10 role-types)</h4>
+<table>
+<tr><th>Role</th><th>Hive equivalent</th><th>Status</th></tr>
+<tr><td>Lead Game Designer</td><td><code>design-system</code>/<code>gpt-tasteskill</code></td><td>ACTIVE</td></tr>
+<tr><td>Systems Designer ×2</td><td><code>backend/economy/*</code> — reframed as the real SOUL economy</td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Level Designer ×3</td><td>arena renderer's challenge generation</td><td>ACTIVE (reframed)</td></tr>
+<tr><td>Content Designer ×2</td><td><code>THE_CODEX.md</code> + <code>research-to-dna</code></td><td>ACTIVE</td></tr>
+<tr><td>Narrative Designer</td><td><code>THE_CODEX.md</code> itself</td><td>ACTIVE — direct fit</td></tr>
+<tr><td>UI/UX Designer</td><td><code>ux-design</code>/<code>frontend-design</code></td><td>ACTIVE</td></tr>
+<tr><td>World Director</td><td>the six-colony federation map (<code>.queen/hive.yml</code>) — colonies <strong>are</strong> the worlds</td><td>ACTIVE (reframed) — direct fit</td></tr>
+<tr><td>Senior World Builder ×2</td><td>colony-health-monitor + each colony's own dev work</td><td>ACTIVE</td></tr>
+<tr><td>World Builder ×3</td><td>per-colony feature work</td><td>ACTIVE</td></tr>
+<tr><td>Dungeon Designer ×2</td><td>arena renderer's per-challenge instanced content</td><td>ACTIVE (reframed)</td></tr>
+</table>
+
+<h4>Department 5 — Production &amp; Management (10 headcount / 6 role-types)</h4>
+<table>
+<tr><th>Role</th><th>Hive equivalent</th><th>Status</th></tr>
+<tr><td>Head of Production</td><td><code>hive-conductor</code></td><td>ACTIVE — direct fit</td></tr>
+<tr><td>Senior Producer ×2</td><td><code>agent-harness</code>'s <code>loop_controller</code>, per domain</td><td>ACTIVE</td></tr>
+<tr><td>Producer ×3</td><td>whichever subagent/skill is doing the task at hand</td><td>ACTIVE</td></tr>
+<tr><td>Associate Producer ×2</td><td><code>TodoWrite</code> task tracking within a session</td><td>ACTIVE</td></tr>
+<tr><td>Project Coordinator</td><td><code>.claude/HIVE_PULSE.md</code> + <code>roadmapData.ts</code></td><td>ACTIVE — direct fit, literally this job</td></tr>
+<tr><td>Scrum Master</td><td><code>workflow-optimizer</code> (<code>WORKFLOW_NOTES.md</code>)</td><td>ACTIVE</td></tr>
+</table>
+
+<h4>Department 6 — Community &amp; Marketing (12 headcount / 8 role-types) — the weakest-covered department</h4>
+<table>
+<tr><th>Role</th><th>Hive equivalent</th><th>Status</th></tr>
+<tr><td>Head of Community</td><td>—</td><td>NEW</td></tr>
+<tr><td>Community Manager ×2</td><td>Slack connector exists, connected, unused</td><td>NEW — connector present, no skill wraps it</td></tr>
+<tr><td>Social Media Manager</td><td>Zapier connector (9,000+ app bridge) exists, unused</td><td>NEW</td></tr>
+<tr><td>Content Creator ×2</td><td><code>internal-comms</code> + <code>research-to-dna</code> for text; no video/stream generation</td><td>PARTIAL</td></tr>
+<tr><td>PR Manager</td><td>—</td><td>NEW</td></tr>
+<tr><td>Influencer Manager</td><td>—</td><td>DECLINED — not a real need for a single-founder-user system</td></tr>
+<tr><td>Event Coordinator</td><td>—</td><td>DECLINED — no events program exists</td></tr>
+<tr><td>Localization Manager</td><td><code>caveman</code>'s "preserve user's dominant language" rule is the only trace of this today</td><td>NEW — a real, genuinely useful gap</td></tr>
+<tr><td>Customer Support Lead</td><td>Kai El's <code>/command_text</code> — the founder is the only "customer"</td><td>ACTIVE (narrow)</td></tr>
+<tr><td>Support Specialist ×2</td><td>the Kai El bridge (<code>CONCERN</code>/<code>PROPOSAL</code> markers)</td><td>ACTIVE — direct fit</td></tr>
+</table>
+
+<h4>Department 7 — Operations &amp; Support (9 role-types)</h4>
+<table>
+<tr><th>Role</th><th>Hive equivalent</th><th>Status</th></tr>
+<tr><td>HR Manager</td><td><code>skill-creator</code>, gated by <code>MANDATE_TRIAGE.md</code></td><td>ACTIVE (reframed) — the hive "hires" by drafting new skills</td></tr>
+<tr><td>Recruiter</td><td><code>skill-census</code></td><td>PARTIAL (an audit, not literal recruiting)</td></tr>
+<tr><td>IT Manager</td><td><code>.venv</code> environment-recovery discipline + <code>agent-harness</code> infra</td><td>ACTIVE</td></tr>
+<tr><td>IT Support</td><td><code>fable-debugger</code></td><td>ACTIVE</td></tr>
+<tr><td>Legal Counsel</td><td the Worker's <code>/legal/research</code> Legal Guild endpoint</td><td>ACTIVE — founder has already asked to expand this (Supreme Court case law, treaties), tracked separately</td></tr>
+<tr><td>Finance Manager</td><td><code>backend/economy/*</code> + <code>wallet.py</code></td><td>ACTIVE</td></tr>
+<tr><td>Office Manager</td><td>—</td><td>DECLINED — no physical office exists</td></tr>
+<tr><td>Data Analyst</td><td><code>dataviz</code></td><td>ACTIVE — direct fit</td></tr>
+<tr><td>Security Officer</td><td><code>threat-sandbox</code> + <code>security-review</code> + <code>devils-advocate-audit</code></td><td>ACTIVE</td></tr>
+</table>
+
+<h4>Tally</h4>
+<ul>
+<li><strong>ACTIVE / ACTIVE (reframed):</strong> 54 of 78 role-types (~69%) — already fruiting</li>
+<li><strong>PARTIAL:</strong> 8 (~10%) — germinating, real gap in the covered portion</li>
+<li><strong>NEW:</strong> 8 (~10%) — dormant, genuine <code>skill-creator</code> candidates
+(Community &amp; Marketing accounts for 5 of these 8 — the honestly weakest department)</li>
+<li><strong>DECLINED:</strong> 7 (~9%) — no honest THEHIVE analog; recorded, not silently dropped</li>
+<li><strong>N/A (human-held):</strong> 1 — the founder's own seat, by design, never a spore</li>
+</ul>
+<p>This document is <strong>not</strong> an adoption of CANVAS.md's literal business plan (funding
+rounds, physical office, 150 human hires, Unity/Unreal engines) — that content stays exactly what it
+always was, a speculative, un-acted-on pivot document. Only the role taxonomy is extracted and
+re-targeted.</p>
+
+<h3>SPORE_ROSTER — Part 2: docs/ROLES.md, the real, live convention (111 roles)</h3>
+<div class="src">Different nature from Part 1: this is not a speculative plan, it's a currently
+active documentation convention — the <code>[ROLE: &lt;Title&gt;]</code> commit/PR tag every
+contributor already uses across all 10 federation repos, referenced directly by every colony's
+<code>docs/GOVERNANCE.md</code>. It says so itself: "a convention, not an access-control system."
+111 roles: 101 in the main 10-tier table + 10 more under "Federation AI Session Roles."</div>
+<p><strong>Combined tally:</strong> 78 distinct role-types (Part 1) + 111 (Part 2) = <strong>189</strong>
+named roles across both catalogs — not the "202" first estimated before either was read in full.</p>
+<table>
+<tr><th>Tier</th><th>Roles</th><th>Spore mapping</th></tr>
+<tr><td>Governance Kernel (1-6)</td><td>Constitution Steward, Role Catalog Curator, Compliance Auditor, Conflict Resolver, Convention Enforcer, Federation Liaison</td><td>ACTIVE — <code>hive-conductor</code>'s governance gate + <code>MANDATE_TRIAGE.md</code></td></tr>
+<tr><td>Executive (7-18)</td><td>10 colony directors + Release/Budget stewards</td><td>ACTIVE per-colony, <code>hive-organism</code> at the federation level</td></tr>
+<tr><td>Domain Lead (19-29)</td><td>API/Data/Messaging/Auth/etc. leads</td><td>ACTIVE — <code>agent-harness</code>'s per-domain manifests made executable</td></tr>
+<tr><td>Director (30-40)</td><td>DB Reliability, API Contract, Network Resilience, Secrets/Signing, etc.</td><td>ACTIVE — <code>devils-advocate-audit</code>'s priority-3 targets (money/permissions/HMAC) are exactly this tier's concern</td></tr>
+<tr><td>Middle Management (41-48)</td><td>Sprint Coordinator ×7, Cross-Repo Dependency Coordinator</td><td>ACTIVE (narrow) — <code>.claude/HIVE_PULSE.md</code> is THEHIVE's real instance; the other 6 colonies don't have an equivalent yet — <strong>NEW, one per colony</strong></td></tr>
+<tr><td>Senior Architect/Staff (49-64)</td><td>16 named architecture-ownership roles</td><td>ACTIVE — each corresponds to a real, named module</td></tr>
+<tr><td>Mid-level Engineer (65-81)</td><td>Backend/Frontend/DB/Test/Doc/CI/Release Engineer, per repo</td><td>ACTIVE — this is what most of this session's own commits <em>are</em></td></tr>
+<tr><td>Apprentice/Validator (82-90)</td><td>Code Reviewer Apprentice ×7, Link/Lesson Validator</td><td>PARTIAL — <code>merge-readiness</code>/<code>pr-retrospective</code> cover THEHIVE's own PRs; no first-pass reviewer spore exists yet for the other 9 repos</td></tr>
+<tr><td>Frontline Support (91-96)</td><td>Issue Triage ×4, Onboarding Guide, Community Q&amp;A</td><td>NEW — same real gap Part 1 found in Community &amp; Marketing</td></tr>
+<tr><td>Janitorial/Ops (97-101)</td><td>Dependency Hygiene, Dead Code Sweep, Artifact Cleanup, Log Hygiene, CI Minutes Steward</td><td>PARTIAL — #98 Dead Code Sweep is literally the founder's 2026-08-01 ask (see §1); the other four are real, currently-manual gaps</td></tr>
+<tr><td>AI Session (102-111)</td><td>Sovereign Architect, Memory Architect, Agent Engineer, Knowledge Curator, Infra Engineer, Federation Engineer, Performance Engineer, Frontend Engineer, Governance Kernel, Sovereign Strategist</td><td>ACTIVE — this is the tier this session itself operates under every time it commits</td></tr>
+</table>
+<p><strong>Genuinely new, distinct from Part 1's gaps:</strong> a per-colony <code>HIVE_PULSE.md</code>
+equivalent, a first-pass PR-reviewer spore for the 9 non-THEHIVE repos, and issue-triage automation
+— three concrete, named next candidates, real <code>skill-creator</code> candidates gated by
+<code>MANDATE_TRIAGE.md</code>, none built yet.</p>
+
+<h3>Master-plan lineage (memory/planning/, chronological)</h3>
+<div class="src">These five files are the episodic memory of the project's planning process, each
+superseding the last. Read newest-first per <code>memory/planning/CLAUDE.md</code>'s own instruction.</div>
+<details><summary><code>2026-07-19-unified-forward-plan.md</code> — CURRENT MASTER PLAN (405 lines, full content already distributed across §1/§2/§3/§4 above per phase)</summary>
+<p>Supersedes <code>harness-plan-2026-07-10.md</code>, <code>hive-master-plan-2026-07-04.md</code>,
+and this file's own prior content. Built from three research passes (a chronological
+founder-directive audit across HIVE_UPDATES/VISION; a structural-reconciliation audit of System A/B,
+orphaned branches, skill sets, PERMISSIONS.md, TEAM_CHARTERS.md; a GitHub/CI/colony state audit) plus
+a synthesis pass. <strong>Closed ground, do not re-plan:</strong> System B live and repeatedly
+verified; Kai El OS as the one canonical live frontend; mobile-responsive layout + desktop-view
+toggle; the hive→founder Updates channel; the Proposals channel; live Constitution viewer;
+chat-overlay fix + grounding; the fable-debugger UI pass; the Biosystem dashboard; the gateway-console
+Tool Registry; Chromosome IX + PERMISSIONS.md + Legal-Learning panel; the roadmap evolutionary bars;
+the <code>threat-sandbox</code> skill; the Sub-Architect charter; <code>POST /v11/venture/plan</code>
++ VenturePlanner.tsx; Legal Guild v1; <code>agent-harness</code> wired end-to-end. Phase 0 (fix
+<code>ui-live-probe.yml</code>) closed 2026-07-19 — root cause was Cloudflare's real ~10-15 min
+Workers Builds deploy lag with zero tolerance in the check; fixed with bounded retry/backoff.
+Phases 1 (reconciliation: constitution triangle, skills-vs-commands split, two planning lineages,
+stale branch audit), 2 (wire the orphaned gamified-UI as a supplementary view), 4 (Scribe-Pro v1
+copywriting service), 6 (harness manifests for remaining colonies), 7 (Sub-Architect seat, optional)
+remain the real open backlog beyond what's tracked in §3/§9. Phase 5 (founder-blocked track) —
+tracked in <code>Project_file/Founders Visonary Folder/HIVE_UPDATES/BLOCKED_ON_FOUNDER.md</code>,
+never scheduled as an autonomous task: venture colony repo connection, <code>FOUNDER_KEY</code>
+binding, Vectorize/R2 provisioning.</p></details>
+<details><summary><code>architecture-gap-assessment-2026-07-13.md</code> — the research-dump triage</summary>
+<p>The founder shared an AI-produced research briefing (Sovereign Hive master prompt + MCP-harness +
+enterprise-agentic + memory-core material) — directionally excellent but containing unverified/
+fabricated package names. <strong>Verified-fake:</strong> <code>neuromcp</code>/<code>npx neuromcp</code>
+(claimed "Sovereign Memory MCP" — PyPI 404, no npm, likely hallucinated) and <code>uga-cli</code>/UGA
+HOST (claimed "PaaS wrapping Cloudflare deploy" — npm 404, likely hallucinated). <strong>Exists but
+unverified as the described tool:</strong> <code>m3-memory</code>, <code>kestrel-sovereign</code>,
+<code>imara</code>, <code>pywrangler</code>. Standing rule established: <strong>probe before claim,
+verify before install</strong> — installing arbitrary registry packages by an AI-suggested name is a
+supply-chain attack vector. The briefing's actual <em>architecture</em> (multi-level MCP harness,
+constitutional governance, hybrid memory retrieval, multi-agent orchestration) was sound and mostly
+already true of the hive — formalized via the real <code>agent-harness</code> skill rather than any
+of the fictional packages.</p></details>
+<details><summary><code>harness-plan-2026-07-10.md</code> — superseded, kept for reference</summary>
+<p>Phase E Worker Hardening (2026-07-14): <code>ensureTables()</code>/<code>rateLimitOk()</code>
+(D1 sliding window)/<code>tokenOk()</code> wired to arena endpoints; <code>/auth/token</code> D1-backed
+1hr TTL; <code>GET /admin/d1-export</code>; weekly D1 backup workflow. HDC unit tests: 68 tests across
+17 classes. Second/Third Brain Harness: root + 8 per-folder CLAUDE.md nav docs, <code>.claude/</code>
+harness (settings, 4 sub-agents, 9 slash commands, <code>/v11/brain/*</code> API), the memory vault.
+Four-seat team structure (Founder, Fable=Harness, Sonnet=Backend/Edge, Mistral=Frontend,
+Grok=Strategy) — see TEAM_CHARTERS.md in §6.</p></details>
+<details><summary><code>hive-master-plan-2026-07-04.md</code> — Fable 5's original master plan</summary>
+<p>Milestones 1–7, several already closed on that branch: arena voxel projection end-to-end; SSE
+consumer + live feed; take the Command Center public (<code>?backend=</code> override); tier 3 truth
+audit (quantum/sheaf/pubsub/tesseract/arena_renderer wired behind guarded imports); colony
+intelligence round-out (capabilities parity for 4 colonies); "the constitution machine, real for the
+first time" — <code>constitution-sync.yml</code> replacing the inert <code>.queen/</code> scaffold,
+propagating to all six colonies. Standing constraints re-affirmed: free tier only (Oracle Cloud
+Always Free), feature-branch PR policy, HMAC permissive mode when no secret configured, advisory-only
+governance CI.</p></details>
+<details><summary><code>reconstructed-state-2026-07-04.md</code> — forensic reconstruction after a lost plan</summary>
+<p>The original planning doc never survived a container reset — reconstructed from what's actually
+committed, not recalled. Found THEHIVE shipped <strong>three</strong> separate frontends at that time
+(<code>docs/index.html</code> 13 tabs, <code>frontend/index.html</code> 10 tabs,
+<code>frontend/see-app.html</code> 9-tile picker) — the origin of "13 tabs." The Arena voxel stream
+backend existed (<code>backend/tier3/arena_renderer.py</code>, live at
+<code>GET /arena/render/voxels/{colony}</code>) with zero frontend canvas wired up — a real, concrete
+gap at the time, since closed. <code>docs/MATHEMATICAL_TEARDOWN.md</code>'s quantum/crypto/VSA math
+(Shamir's Secret Sharing, BB84 QKD, Grover's search, quaternion SLERP, Ollivier-Ricci curvature) was
+flagged as unverified/aspirational at that point — since wired behind guarded imports per Milestone
+4 above.</p></details>
+</section>
+
+</div>
+
+<button class="backtop" id="backtop" style="display:none">↑ top</button>
+
+<script>
+// ============ TAB SWITCHING ============
+const tabs = Array.from(document.querySelectorAll('.tab'));
+const navLinks = Array.from(document.querySelectorAll('#toc a[data-tab]'));
+
+function showTab(id, scrollToTop) {
+  tabs.forEach(t => t.classList.toggle('active', t.id === 'tab-' + id));
+  navLinks.forEach(a => a.classList.toggle('active', a.dataset.tab === id));
+  if (scrollToTop !== false) document.getElementById('main').scrollTop = 0;
+  history.replaceState(null, '', '#' + id);
+}
+
+navLinks.forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    showTab(a.dataset.tab);
+  });
+});
+
+// boot to hash if present
+(function boot() {
+  const h = location.hash.replace('#', '');
+  if (h && document.getElementById('tab-' + h)) showTab(h);
+})();
+
+// ============ BACK TO TOP ============
+const mainEl = document.getElementById('main');
+const backtop = document.getElementById('backtop');
+mainEl.addEventListener('scroll', () => {
+  backtop.style.display = mainEl.scrollTop > 400 ? 'block' : 'none';
+});
+backtop.addEventListener('click', () => mainEl.scrollTo({top:0, behavior:'smooth'}));
+
+// ============ SEARCH ============
+const searchBox = document.getElementById('search');
+const resultsEl = document.getElementById('searchResults');
+
+function collectSearchableNodes() {
+  // Index headings + paragraphs + list items + summary/details text, per tab
+  const nodes = [];
+  tabs.forEach(tab => {
+    const tabId = tab.id.replace('tab-', '');
+    const els = tab.querySelectorAll('h2, h3, h4, p, li, summary, blockquote, td, .founder-quote, .updatecard');
+    els.forEach((el, i) => {
+      const text = el.textContent.trim();
+      if (text.length > 2) {
+        if (!el.dataset.sid) el.dataset.sid = tabId + '-' + i + '-' + Math.random().toString(36).slice(2,7);
+        nodes.push({ tabId, el, text });
+      }
+    });
+  });
+  return nodes;
+}
+let searchIndex = null;
+
+function runSearch(q) {
+  if (!searchIndex) searchIndex = collectSearchableNodes();
+  resultsEl.innerHTML = '';
+  if (!q || q.length < 2) return;
+  const ql = q.toLowerCase();
+  const matches = searchIndex.filter(n => n.text.toLowerCase().includes(ql)).slice(0, 40);
+  if (matches.length === 0) {
+    resultsEl.innerHTML = '<div style="color:var(--dim)">No matches</div>';
+    return;
+  }
+  matches.forEach(m => {
+    const idx = m.text.toLowerCase().indexOf(ql);
+    const start = Math.max(0, idx - 30);
+    const snippet = (start > 0 ? '…' : '') + m.text.slice(start, idx) +
+      '<mark>' + m.text.slice(idx, idx + q.length) + '</mark>' +
+      m.text.slice(idx + q.length, idx + q.length + 40) + '…';
+    const div = document.createElement('div');
+    div.innerHTML = '<div>' + snippet + '</div><div class="snip">in ' + m.tabId + '</div>';
+    div.addEventListener('click', () => jumpTo(m));
+    resultsEl.appendChild(div);
+  });
+}
+
+function jumpTo(m) {
+  showTab(m.tabId);
+  // open any parent <details>
+  let node = m.el;
+  let p = node.closest('details');
+  while (p) { p.open = true; p = p.parentElement ? p.parentElement.closest('details') : null; }
+  setTimeout(() => {
+    m.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    m.el.classList.add('flash');
+    setTimeout(() => m.el.classList.remove('flash'), 1800);
+  }, 30);
+}
+
+searchBox.addEventListener('input', e => runSearch(e.target.value));
+</script>
+</body>
+</html>
