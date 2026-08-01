@@ -54,6 +54,18 @@ that's the discipline this file exists to model, not just describe.
   token-tracking infra, SPORE_ROSTER's 3 new gaps — all founder-approved, still queued,
   not started. Backlog order unchanged (founder confirmed, Q15): (2) production-readiness
   %% meter next, then (3) Command Center audit, (4) Venture Planner overhaul.
+- **Second-frontend skip bucket: DELETED for real 2026-08-01** (51 files, PR #144) —
+  fake colony consoles, invented data files, the dead HiveDashboard shell built on them,
+  buggy hooks, dead page/router shell. Verified zero-importer via a fresh `Explore` pass
+  before deletion (full method + file list in `AUDIT_LEDGER.md`'s 2026-08-01 entry).
+  `TesseractChamber/` excluded and confirmed to survive as a clean standalone orphan
+  (its only importer was the now-deleted `HiveDashboard.tsx`) — held for joint founder
+  review, not touched. `MissionCard.tsx`/`MissionTimeline.tsx` also excluded — they call
+  the real API, just unwired; that's a separate founder decision, not skip-bucket trash.
+  **Found along the way, unrelated to this change:** `npm run build` is currently broken
+  on pre-existing `src/worlds/`/`src/xp/` TypeScript errors — confirmed via `git stash`
+  that the exact same errors exist with or without this PR's diff. Not fixed here, not
+  caused here — flagging so a future firing doesn't waste time re-diagnosing it as new.
 - **Real correction delivered to the founder 2026-08-01**: the Worker's API rate limiter
   (30/min/IP, `backend/api/middleware.py`) is unrelated to Claude Code session/token
   cost — a real $40-in-7-minutes incident was the Routine snowball above, not this file.
