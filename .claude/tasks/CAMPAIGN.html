@@ -82,7 +82,7 @@ page; this ceiling is a backstop, not a substitute for that.</li>
 
 <h2>Task queue</h2>
 
-<div class="task" data-status="in-progress" data-batchable="true" id="task-1">
+<div class="task" data-status="done" data-batchable="true" id="task-1">
   <h3>1. Production-readiness % / "Queen's Progress" meter UI</h3>
   <p class="meta">Priority 2 (founder-confirmed order, Q15). Est. cost: medium.</p>
   <p><strong>Prompt:</strong> Build a real, live-probed completion percentage for
@@ -273,6 +273,24 @@ overflow, a misbehaving firing wouldn't just cost money, it would stop both auto
 the founder's own interactive chat access until reset. Awaiting founder decision on
 whether to proceed anyway or wait. Task 11 (components/common re-skin) completed this
 session in the meantime — real work, not blocked by this question.
+2026-08-01 — TEST RUN (founder-requested, supervised in-session, no live Routine
+created): followed this file's own protocol literally for one firing. Real findings:
+(1) ceiling check is currently unenforceable — no prior log entry carries a token count,
+so "sum today's logged tokens" has nothing to sum; needs real per-firing logging before
+it's a real backstop, not just a placebo. (2) Completed task 1 for real: re-probed
+production once (edge-health-probe.yml), read real coverage (52% vs 45% floor), built
+`frontend/src/utils/readiness.ts` + wired a live "Queen X%" badge into TopStatusBar —
+verified against the real build, zero new errors, degrades honestly to "—" if the probe
+fails. (3) CI checked once on push: still `pending`, not yet confirmed green — logged
+honestly rather than assumed, per this file's own "never fake a green" rule. (4) Stopped
+after one task rather than batching into task 2, a deliberate call given the tight weekly
+budget from the founder's own usage screenshot, not a protocol failure. (5) Separately,
+mid-test, a background agent dispatched much earlier (compiling FULL_PLAN.html) turned
+out to still be running — its mid-write output had already been read and committed as if
+finished. Corrected once the real completion notification arrived. Real lesson for this
+file's own protocol: a background agent's file existing on disk is not the same signal as
+the agent reporting done — wait for the actual completion notification, not a stop-hook's
+"there are untracked files" nudge.
 </div>
 
 </body>
