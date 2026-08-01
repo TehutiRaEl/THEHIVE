@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>THEHIVE — Autonomous Campaign Blueprint</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #1a1a1a; background: #fdfdfb; }
+  h1 { font-size: 1.4rem; } h2 { font-size: 1.1rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: .3rem; }
+  .protocol { background: #fff8e1; border: 1px solid #e8d98a; border-radius: 6px; padding: 1rem; }
+  .task { border: 1px solid #ccc; border-radius: 6px; padding: .8rem 1rem; margin: .8rem 0; }
+  .task[data-status="pending"] { border-left: 4px solid #999; }
+  .task[data-status="in-progress"] { border-left: 4px solid #e0a800; }
+  .task[data-status="done"] { border-left: 4px solid #2e7d32; opacity: .7; }
+  .task[data-status="blocked"] { border-left: 4px solid #c62828; }
+  .meta { font-size: .85rem; color: #555; }
+  .log { font-family: monospace; font-size: .85rem; white-space: pre-wrap; }
+  code { background: #f0f0f0; padding: .1rem .3rem; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>THEHIVE — Autonomous Campaign Blueprint</h1>
+<p class="meta">Single source of truth for every unattended firing. Not a checklist —
+this file IS the workflow plan, playbook, and running log, spanning as many sessions
+as it takes. Built 2026-08-01 after the Routine incident (see
+<code>.claude/HIVE_PULSE.md</code> and <code>AUDIT_LEDGER.md</code>'s 2026-08-01 entries
+for what went wrong before). No Routine is wired to this file yet — the founder holds
+that step until this blueprint itself is reviewed.</p>
+
+<div class="protocol">
+<h2>Protocol — read this every firing, before anything else</h2>
+<ol>
+<li><strong>Caveman mode on for the whole firing</strong> (per <code>CLAUDE.md</code>'s
+standing default) — terse, token-efficient, full precision, all the way through.</li>
+<li>Find the first <code>&lt;div class="task" data-status="pending"&gt;</code> below, in
+document order. That is the only task under consideration. Ignore everything marked
+<code>done</code> or <code>blocked</code>.</li>
+<li>Read that task's Prompt and Acceptance sections. Do the work for real — run it, don't
+just read it.</li>
+<li><strong>One status check per thing being watched. Never a loop.</strong> If a task
+involves checking CI, a PR, or a live endpoint: check it once, act on what you find, and
+either finish or hand off — do not re-check the same thing again in this firing hoping
+for a different answer. If something needs to be watched to completion, that is what
+<code>subscribe_pr_activity</code> (event-driven) is for, not a polling loop here.</li>
+<li>When the task's Acceptance criteria are met: commit, open the PR, check CI <strong>once</strong>.
+Mark the task <code>data-status="done"</code> in this file and append one line to the
+Campaign Log below (what happened, PR number, timestamp) — one line, not a narrative.</li>
+<li><strong>Batching:</strong> if real context budget remains and the next
+<code>pending</code> task's <code>data-batchable</code> is <code>true</code>, continue to
+it in the same firing instead of stopping. If budget is low, or the next task is
+<code>data-batchable="false"</code> (needs a fresh, unclouded context), stop cleanly.</li>
+<li>If a task is blocked on something only the founder can decide, mark it
+<code>data-status="blocked"</code>, write why in its Acceptance section, and move to the
+next pending task rather than stalling the firing on it.</li>
+<li>Before ending the firing: verify this file was actually saved with the updated
+statuses and log line — the same "verify before you end the turn" discipline that the
+old arc's own prompt named and then failed to follow once already.</li>
+</ol>
+</div>
+
+<h2>Task queue</h2>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-1">
+  <h3>1. Production-readiness % / "Queen's Progress" meter UI</h3>
+  <p class="meta">Priority 2 (founder-confirmed order, Q15). Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Build a real, live-probed completion percentage for
+  THEHIVE — not a guess. Base it on <code>SWITCHBOARD.md</code>'s real switch states
+  (6 hive-wide + 2 automaton) plus whatever other concrete, checkable completion signals
+  exist (test coverage floor, open founder-decision items). Surface it as a UI element in
+  the Command Center (<code>frontend/</code>) — a "Queen's Progress" meter.</p>
+  <p><strong>Acceptance:</strong> The percentage must be computed from real, re-probable
+  signals (cite what each point of the number is derived from), not asserted. Must degrade
+  honestly if a probe can't run (say "last probed X" rather than assume). Wired into the
+  live Command Center, not just a design doc.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-2">
+  <h3>2. Command Center button/tab audit + cohesion review</h3>
+  <p class="meta">Priority 3 (Q15). Est. cost: medium-large.</p>
+  <p><strong>Prompt:</strong> Walk every tab/button in the live Command Center
+  (<code>KaiElOS.tsx</code>'s real tree). For each: does it call a real endpoint, is the
+  endpoint live (probe it), does the UI degrade honestly when a switch is unflipped
+  (see <code>SWITCHBOARD.md</code>). Note anything dead, broken, or misleading.</p>
+  <p><strong>Acceptance:</strong> A real findings list (not vibes) — same evidence
+  standard as the dead-code audit: cite the grep/probe, not a description.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-3">
+  <h3>3. Venture Planner + Legal-research overhaul</h3>
+  <p class="meta">Priority 4 (Q15). Est. cost: large — likely not batchable with
+  anything after it; treat as its own firing unless task 1+2 leave a lot of room.</p>
+  <p><strong>Prompt:</strong> Review current state of <code>/v11/venture/plan</code> and
+  <code>/v11/legal/research</code> (both sync-only until Queues switch #6 flips per
+  <code>SWITCHBOARD.md</code>). Scope what "overhaul" concretely means before building —
+  this task's first real step is probably scoping, not code.</p>
+  <p><strong>Acceptance:</strong> A concrete scoped plan at minimum; real implementation
+  if the window allows after scoping.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-4">
+  <h3>4. Wire up services/sentry.ts</h3>
+  <p class="meta">Founder-approved, Q9. Est. cost: small.</p>
+  <p><strong>Prompt:</strong> Initialize Sentry behind an env var/DSN. Disable default PII
+  collection. Set a conservative sample rate. Tag errors by which frontend (React Command
+  Center vs. legacy <code>docs/index.html</code>) they came from.</p>
+  <p><strong>Acceptance:</strong> <code>initSentry()</code> actually called at app entry,
+  gated so it's a no-op with no DSN set. Needs a founder-supplied Sentry DSN to go fully
+  live — if absent, wire the code and mark <code>blocked</code> with that reason, don't fake it.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-5">
+  <h3>5. services/github.ts UI trigger (Grok bridge, bidirectional)</h3>
+  <p class="meta">Founder-approved, Q11 ("works both ways"). Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Build a real UI trigger for the existing Grok-bridge-dispatch
+  endpoints, and confirm/build the return path so status/results flow back into the UI too
+  — not fire-and-forget.</p>
+  <p><strong>Acceptance:</strong> A founder can dispatch from the UI and see a real result
+  or status come back in the UI, not just in logs.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-6">
+  <h3>6. Adopt stores/uiStore.ts</h3>
+  <p class="meta">Founder-approved, Q12 ("worth the churn"). Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Wire the centralized notification/modal store into the live
+  Command Center, replacing any one-off notification/modal handling that currently exists.</p>
+  <p><strong>Acceptance:</strong> At least one real live consumer using it, no regressions
+  in existing notification/modal behavior (verify by running the app, not just compiling).</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="false" id="task-7">
+  <h3>7. Extend hive_proposals for Kai El execution access</h3>
+  <p class="meta">Founder-approved shape, Q16 ("extend it"). Est. cost: large,
+  touches worker/src/index.js production code — not batchable, own firing.</p>
+  <p><strong>Prompt:</strong> Extend <code>hive_proposals</code> (never raw terminal
+  access — that idea is explicitly tabled for later, separate discussion per the founder's
+  own words) so Kai El can propose bounded actions the founder reviews/approves, same
+  pattern as the existing architect-proposal flow.</p>
+  <p><strong>Acceptance:</strong> A real, founder-key-gated approve/reject path for a new
+  proposal kind; nothing executes without founder approval. Full design write-up in
+  <code>Fable_memory.md</code> before code, since this is architecturally significant.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-8">
+  <h3>8. Cross-session token-savings tracking infra</h3>
+  <p class="meta">Founder-approved, Q17 ("worth it"). Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Design and build a way to track token/cost savings across
+  sessions (not just per-session <code>/caveman-stats</code>), per
+  <code>.claude/TOKEN_ECONOMY_LEDGER.md</code>'s open macro questions.</p>
+  <p><strong>Acceptance:</strong> Real numbers pulled from somewhere verifiable, not
+  estimated. Update <code>TOKEN_ECONOMY_LEDGER.md</code> with the result.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-9">
+  <h3>9. SPORE_ROSTER's 3 new gaps</h3>
+  <p class="meta">Founder-approved, Q19 ("worth building"). Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Build the 3 gaps found in <code>SPORE_ROSTER.md</code>: a
+  per-colony pulse-file equivalent, a cross-repo PR-review spore, issue-triage automation.</p>
+  <p><strong>Acceptance:</strong> Each one real and running, not just designed.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-10">
+  <h3>10. Continue devils-advocate-audit sweep</h3>
+  <p class="meta">Standing/ongoing. Est. cost: small-medium, good filler for leftover budget.</p>
+  <p><strong>Prompt:</strong> Check <code>AUDIT_LEDGER.md</code>'s "not yet audited" list,
+  re-verify the next module by actually running it, not reading it.</p>
+  <p><strong>Acceptance:</strong> New ledger entry per the skill's own verdict format.</p>
+</div>
+
+<h2>Blocked / needs founder input</h2>
+<div class="task" data-status="blocked" id="task-blocked-1">
+  <h3>components/common Button/Card/Modal shared library</h3>
+  <p><strong>Why blocked:</strong> Founder asked for the purpose to be re-explained (Q14) —
+  explained in-chat 2026-08-01, decision still pending. Do not start until approved.</p>
+</div>
+<div class="task" data-status="blocked" id="task-blocked-2">
+  <h3>backend/constitution.py dynamic soul.md parsing — port or delete</h3>
+  <p><strong>Why blocked:</strong> Founder asked what "porting" would mean before deciding
+  (Q6) — explained in-chat 2026-08-01, decision still pending.</p>
+</div>
+<div class="task" data-status="blocked" id="task-blocked-3">
+  <h3>Kai El raw terminal access</h3>
+  <p><strong>Why blocked:</strong> Founder explicitly tabled this for a later, separate
+  discussion (Q16) — not part of the hive_proposals extension above.</p>
+</div>
+
+<h2>Campaign Log</h2>
+<p class="meta">One line per completed/blocked task. Append, never rewrite history.</p>
+<div class="log" id="campaign-log">
+2026-08-01 — Blueprint created. Founder-approved dead-code cleanup (PR #144) and
+second-frontend cleanup already executed directly this session, outside this queue
+(see AUDIT_LEDGER.md 2026-08-01 entries) — not re-listed as tasks here since they're done.
+</div>
+
+</body>
+</html>
