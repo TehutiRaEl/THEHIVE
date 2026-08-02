@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
+import { useUIStore } from '../../../stores/uiStore';
 
 interface Setting {
   id: string;
@@ -72,11 +73,15 @@ const SETTINGS: React.FC = () => {
     );
   };
 
+  const addNotification = useUIStore((s) => s.addNotification);
+
   const handleSave = () => {
     // Save settings to localStorage or API
     console.log('Settings saved:', settings);
     localStorage.setItem('appSettings', JSON.stringify(settings));
-    alert('Settings saved successfully!');
+    // Task 6 (2026-08-02): was a raw browser alert() — swapped for the real
+    // centralized notification store, rendered by App.tsx's NotificationHost.
+    addNotification({ type: 'success', title: 'Settings saved', message: 'Your changes were saved locally.' });
   };
 
   const handleReset = () => {

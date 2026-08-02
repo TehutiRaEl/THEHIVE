@@ -32,6 +32,7 @@ const SECONDARY: NavItem[] = [
   { id: 'world', label: 'Projects', icon: '📂', wired: true },
   { id: 'training', label: 'Training', icon: '🎓', wired: false },
   { id: 'dream', label: 'Dream Logs', icon: '🌙', wired: true },
+  { id: 'grok-bridge', label: 'Grok Bridge', icon: '🌉', wired: true },
 ];
 
 interface LeftNavProps {
