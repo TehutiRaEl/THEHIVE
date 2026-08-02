@@ -457,6 +457,40 @@ private reasoning.</li>
   never silently drop or silently trust them) if built.</p>
 </div>
 
+<div class="task" data-status="blocked" data-batchable="true" id="task-18">
+  <h3>18. Founder's "Dissertation" vision document — disposition</h3>
+  <p class="meta">Captured 2026-08-02. A large founder-shared philosophy/architecture
+  document (data colonialism, F-007-F-011, 14-layer mythology, draft code). Devil's-
+  advocate + childlike-wonder pass done in chat (see this session's own transcript for
+  full reasoning) — NOT merged as-is: found a security regression (pasted
+  <code>hive_mesh.py</code> drops real HMAC signing), fake-validation-theater in
+  <code>validator.py</code> (F-007-F-011 checks accept any action with the right string
+  flag, verify nothing real), an undefined-name crash bug in <code>wealth.py</code>
+  (<code>TTLCache</code>), a fabricated-looking "500x speedup" claim in
+  <code>qhdc.py</code>, and duplicate reinvention of the already-live Proposals system.
+  Real, distilled, non-duplicate pieces captured as tasks 19-20 below. The narrative
+  layer (Naunet/Nun/Trinity/Daemon/Solomon/14 layers) is a THE_CODEX.md candidate, not
+  a build task — not queued here.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-19">
+  <h3>19. Real privacy self-audit — what THEHIVE actually observes/logs</h3>
+  <p class="meta">Distilled from task 18's real kernel. Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Audit what the live Worker and any backend code actually
+  logs/observes about visitors (D1 tables, console logs, analytics if any). Compare
+  against F-001's real data-minimization principle.</p>
+  <p><strong>Acceptance:</strong> A real, evidence-cited findings list (what's logged,
+  where, why, whether it's minimized) — not a philosophical essay.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-20">
+  <h3>20. Scope treasury_guild.py's revenue-split idea (connects task 18's F-007 kernel)</h3>
+  <p class="meta">This is the SAME open item already logged 2026-08-01 (Q2: "real plan,
+  discuss later") — not a new task, just noting the founder's dissertation independently
+  arrived at the same real idea from a different angle. No new task created; see
+  <code>backend/guilds/treasury_guild.py</code>'s own comment and this file's history.</p>
+</div>
+
 <h2>Campaign Log</h2>
 <p class="meta">One line per completed/blocked task. Append, never rewrite history.</p>
 <div class="log" id="campaign-log">
