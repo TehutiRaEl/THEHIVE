@@ -9,6 +9,16 @@
 <meta name="theme-color" content="#00e8ff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 
+<!--
+  Sentry (task 4, 2026-08-02): the React Command Center (frontend/src/main.tsx)
+  now calls initSentry() at boot, gated no-op with no VITE_SENTRY_DSN set. This
+  legacy page has no build step (CDN scripts + inline Babel below) so it can't
+  import that module — it stays genuinely unwired for now, not silently
+  covered. If this surface is still wanted live, wiring it needs its own
+  Sentry Browser SDK CDN <script> tag + a raw DSN (no Vite env substitution
+  available here) — real work, not done in this pass since no DSN exists yet
+  to test against either way.
+-->
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>

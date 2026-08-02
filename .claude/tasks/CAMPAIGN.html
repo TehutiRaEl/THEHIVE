@@ -218,15 +218,27 @@ private reasoning.</li>
   so it's findable later); real implementation if the window allows after scoping.</p>
 </div>
 
-<div class="task" data-status="in-progress" data-batchable="true" id="task-4">
+<div class="task" data-status="blocked" data-batchable="true" id="task-4">
   <h3>4. Wire up services/sentry.ts</h3>
-  <p class="meta">Founder-approved, Q9. Est. cost: small.</p>
+  <p class="meta">Founder-approved, Q9. Est. cost: small. Code done 2026-08-02.</p>
   <p><strong>Prompt:</strong> Initialize Sentry behind an env var/DSN. Disable default PII
   collection. Set a conservative sample rate. Tag errors by which frontend (React Command
   Center vs. legacy <code>docs/index.html</code>) they came from.</p>
   <p><strong>Acceptance:</strong> <code>initSentry()</code> actually called at app entry,
   gated so it's a no-op with no DSN set. Needs a founder-supplied Sentry DSN to go fully
-  live — if absent, wire the code and mark <code>blocked</code> with that reason, don't fake it.</p>
+  live — if absent, wire the code and mark <code>blocked</code> with that reason, don't fake it.
+  <strong>Blocked reason:</strong> code is real and wired — <code>main.tsx</code> now calls
+  <code>initSentry()</code> at boot, <code>tracesSampleRate</code> dropped to 0.1,
+  <code>sendDefaultPii: false</code> set explicitly, <code>beforeSend</code> strips
+  request cookies/headers, tagged <code>frontend_surface: 'react-command-center'</code>.
+  Legacy <code>docs/command-center.html</code> (the real legacy surface —
+  <code>docs/index.html</code> is only a redirect stub to the live app) left honestly
+  unwired with an explanatory comment: it has no build step so can't import the module,
+  needs its own CDN-script wiring if ever wanted live. No <code>VITE_SENTRY_DSN</code>
+  exists anywhere in the repo/env — grepped, confirmed absent, not assumed. Verified
+  <code>npm run build</code> introduces zero new TypeScript errors (243 before and after,
+  stash-compared). Blocked on the founder supplying a real Sentry DSN before this can go
+  live in production.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-5">
@@ -466,6 +478,7 @@ private reasoning.</li>
 2026-08-02 — Self-audit against the founder's original instructions found real drift: in-progress-alone commits were done correctly for task 1 and 2a, then silently dropped for 2b/2c/2d during batching (confirmed via git log, not assumed) — direct evidence for finding (6) above. The "one line, not a narrative" log rule was violated in literally every entry all night (3-29 lines, up to 375 words each), directly undermining this file's own reason for existing (small enough to read every firing). Log compressed retroactively to real one-liners here; detailed findings remain in their own dated devils-advocate-audit/ files, not lost.
 2026-08-02 — TEST RUN #4 (fresh session): ceiling check found 0 real TOKENS: lines ever logged despite the rule mandating them — prior firings logged prose ("Real delta: N tokens") instead of the literal grep-able format; fixing going forward, flagged as a real gap in this report. Task 2e done: overlays/dashboards audit, 8/8 clean pass, task 2's full 33-component decomposition now closed.
 2026-08-02 — Task 3 done: scoped venture/legal overhaul, found both endpoints already solid, fixed one real gap (missing per-IP rate limit on /venture/plan + /legal/research, added matching existing pattern). 3 further findings routed as new pending tasks 15-17 (worker test infra; session history/export; citation verification — latter two flagged founder-confirm-scope).
+2026-08-02 — Task 4 blocked (as designed): sentry.ts wired for real (initSentry() at main.tsx boot, PII off, 0.1 sample rate, frontend_surface tag), legacy command-center.html left honestly unwired (no build step) with an explanatory comment, zero new build errors (243/243 stash-verified). No VITE_SENTRY_DSN anywhere — blocked on founder-supplied DSN, per the task's own written acceptance path.
 
 
 </body>
