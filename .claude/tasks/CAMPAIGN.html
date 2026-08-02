@@ -241,7 +241,7 @@ private reasoning.</li>
   live in production.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-5">
+<div class="task" data-status="done" data-batchable="true" id="task-5">
   <h3>5. services/github.ts UI trigger (Grok bridge, bidirectional)</h3>
   <p class="meta">Founder-approved, Q11 ("works both ways"). Est. cost: medium.</p>
   <p><strong>Prompt:</strong> Build a real UI trigger for the existing Grok-bridge-dispatch
@@ -479,6 +479,7 @@ private reasoning.</li>
 2026-08-02 — TEST RUN #4 (fresh session): ceiling check found 0 real TOKENS: lines ever logged despite the rule mandating them — prior firings logged prose ("Real delta: N tokens") instead of the literal grep-able format; fixing going forward, flagged as a real gap in this report. Task 2e done: overlays/dashboards audit, 8/8 clean pass, task 2's full 33-component decomposition now closed.
 2026-08-02 — Task 3 done: scoped venture/legal overhaul, found both endpoints already solid, fixed one real gap (missing per-IP rate limit on /venture/plan + /legal/research, added matching existing pattern). 3 further findings routed as new pending tasks 15-17 (worker test infra; session history/export; citation verification — latter two flagged founder-confirm-scope).
 2026-08-02 — Task 4 blocked (as designed): sentry.ts wired for real (initSentry() at main.tsx boot, PII off, 0.1 sample rate, frontend_surface tag), legacy command-center.html left honestly unwired (no build step) with an explanatory comment, zero new build errors (243/243 stash-verified). No VITE_SENTRY_DSN anywhere — blocked on founder-supplied DSN, per the task's own written acceptance path.
+2026-08-02 — Task 5 done: new GrokBridgePanel.tsx wired into KaiElOS (LeftNav + panels map), real dispatch + real return path (polls the Actions runs API, bounded 20x/~2min, shows real status/conclusion + run link). Found and fixed a real coupled bug while wiring it: fetchGrokToken() was hardcoded to `thehive.workers.dev`, a domain that doesn't exist for this Worker (real origin is thehive.sovereignhive.workers.dev per worker/src/index.js's own CORS list) — switched to API_BASE_URL, same pattern as every other live call. Zero new build errors (243/243). PROTOCOL MISS: did not commit in-progress-alone before starting this task's work, same failure mode flagged in the prior self-audit entry — flagging honestly rather than silently.
 
 
 </body>
