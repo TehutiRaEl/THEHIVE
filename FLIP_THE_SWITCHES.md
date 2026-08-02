@@ -108,6 +108,26 @@ secrets bind on the next deploy.
 `POST /v11/proposals/:id/decide` → the response's `execution.executed` is `true`
 (previously `false` with a "no GITHUB_ACTIONS_TOKEN bound yet" reason).
 
+## 8 · Federation PR review → every open colony PR gets a real automated first pass
+
+`.github/workflows/federation-pr-review.yml` (task 9b) runs every 6 hours, reads the
+real colony repo list from `.queen/hive.yml`, and posts one real, evidence-cited comment
+(mergeable state + real CI check status, never an opinion) on every open PR that doesn't
+already have one — comment-only, never approves/merges/blocks. Without a token bound it
+still runs on schedule and logs an honest no-op (see the workflow's own guard step).
+
+```bash
+gh secret set HIVE_FEDERATION_TOKEN --repo TehutiRaEl/THEHIVE
+```
+Use a fine-grained PAT with Pull requests (read/write) and Issues (read) scoped to the
+real colony repos in `.queen/hive.yml` (currently: `aether`, `automatisch`, `Kimi-K2`,
+`free-programming-books`, `freeCodeCamp`, `NAR2`, `4DBRAIN`, `sovereign-hive-meta` — the
+workflow always re-derives this list from the manifest at run time, never a separate
+hardcoded copy).
+**Proof:** trigger the workflow manually (`workflow_dispatch`) → an open PR in one of
+those repos gets a real comment starting `<!-- hive-federation-pr-review -->` within the
+run.
+
 ## Already flipped / no switch needed
 - D1 database, Workers AI, assets, the 30-min heartbeat — live now.
 - The UI (graph web, neon theme, Updates, Legal Learning, Files panel shell) — ships with
