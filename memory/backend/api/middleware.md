@@ -15,7 +15,6 @@ Middleware Module — Sovereign Hive v11.0
 ## Functions
 
 - `scan_for_injection()` — Scan text for prompt injection patterns.
-- `check()` — Check if request is allowed. Returns (allowed, remaining).
 
 ## Links
 

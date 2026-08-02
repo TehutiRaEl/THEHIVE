@@ -346,11 +346,6 @@
       "group": "module"
     },
     {
-      "id": "backend/guilds/arena_guild",
-      "label": "arena_guild",
-      "group": "module"
-    },
-    {
       "id": "backend/guilds/audit_guild",
       "label": "audit_guild",
       "group": "module"
@@ -358,26 +353,6 @@
     {
       "id": "backend/guilds/commerce_guild",
       "label": "commerce_guild",
-      "group": "module"
-    },
-    {
-      "id": "backend/guilds/constitutional_guild",
-      "label": "constitutional_guild",
-      "group": "module"
-    },
-    {
-      "id": "backend/guilds/dream_guild",
-      "label": "dream_guild",
-      "group": "module"
-    },
-    {
-      "id": "backend/guilds/frequency_guild",
-      "label": "frequency_guild",
-      "group": "module"
-    },
-    {
-      "id": "backend/guilds/security_guild",
-      "label": "security_guild",
       "group": "module"
     },
     {
@@ -393,11 +368,6 @@
     {
       "id": "backend/guilds/worldbuilding_guild",
       "label": "worldbuilding_guild",
-      "group": "module"
-    },
-    {
-      "id": "backend/llm_router",
-      "label": "llm_router",
       "group": "module"
     },
     {
@@ -533,11 +503,6 @@
     {
       "id": "backend/utils/helpers",
       "label": "helpers",
-      "group": "module"
-    },
-    {
-      "id": "backend/utils/rate_limiter",
-      "label": "rate_limiter",
       "group": "module"
     },
     {
