@@ -491,6 +491,70 @@ private reasoning.</li>
   <code>backend/guilds/treasury_guild.py</code>'s own comment and this file's history.</p>
 </div>
 
+<div class="task" data-status="pending" data-batchable="true" id="task-21">
+  <h3>21. [ROLE: Governance Kernel] Reconcile the real `soul` score against the exact EVW formula</h3>
+  <p class="meta">Atom-level finding 2026-08-02 from the founder's dissertation pass.
+  F-002's EVW formula is real law (soul.md), and a real wealth score (`soul`) already
+  drives the live roadmap — but the specific weighted terms
+  (Hours_Saved×0.4 + Adoption_Count×0.3 + Novelty_Score×0.2 + Dispute_Resilience×0.1)
+  aren't verifiably what computes `soul` today. Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Trace exactly how `soul` gets incremented today (arena wins?
+  direct grants? something else?). Either show it's a real, honest approximation of EVW's
+  intent, or build the real formula and reconcile the two.</p>
+  <p><strong>Acceptance:</strong> A cited trace of the real increment logic, plus either a
+  real reconciliation or an honest "these are currently different things" disclosure —
+  never asserted without checking.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-22">
+  <h3>22. [ROLE: Frontend Architect] Add a real "modify/counter-propose" option to ProposalsPanel</h3>
+  <p class="meta">Atom-level finding: the pasted <code>acceptance.py</code>'s one genuinely
+  new idea beyond what's already live — the real <code>ProposalsPanel.tsx</code> only
+  supports binary approve/reject today (checked directly), no modify path. Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Add a real modify/counter-propose action to the existing live
+  Proposals system (`/v11/proposals/:id/decide` and the panel) — still founder-key-gated,
+  still fail-closed, extending the real system rather than duplicating it.</p>
+  <p><strong>Acceptance:</strong> Real working modify path, verified against the live build,
+  same founder-key gating as approve/reject.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-23">
+  <h3>23. [ROLE: Governance Kernel] Draft a real MANDATE_TRIAGE proposal for F-007's Agent Valuation formula</h3>
+  <p class="meta">F-007-F-011 are not real law — they haven't gone through soul.md's real
+  amendment process (2/3 guild vote + 30 days). F-007's Agent Valuation is the one piece
+  with genuine formula-like structure worth taking through that real process, if the
+  founder wants it pursued. Est. cost: medium. <strong>Not started without founder
+  confirmation</strong> — this is a real constitutional change, highest scrutiny.</p>
+  <p><strong>Prompt:</strong> Rigorously define "Commercial Potential" and the other
+  under-specified terms in F-007's formula, then draft it as a real MANDATE_TRIAGE-reviewed
+  proposal — devil's-advocate critique first, per that document's own real process.</p>
+  <p><strong>Acceptance:</strong> A real proposal document following MANDATE_TRIAGE.md's
+  actual format, not a paste of the founder's draft text.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-24">
+  <h3>24. [ROLE: Knowledge Steward] Reconcile the 14-layer mythology into THE_CODEX.md</h3>
+  <p class="meta">Naunet/Nun/Trinity/Daemon/Solomon/the Gate of Truth — real, honored
+  narrative canon, same status as THE_CODEX.md's existing mythology, never engineering
+  law. Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Check for contradictions with THE_CODEX.md's existing canon
+  before integrating; note where this independently re-describes something already real
+  (e.g., F-011's "Elders relay wisdom to the Queen via MD files" maps directly onto the
+  already-live Kai El bridge + Fable_memory.md pattern — worth naming that connection
+  explicitly rather than treating it as a new idea).</p>
+  <p><strong>Acceptance:</strong> A real PR to THE_CODEX.md, contradiction-checked, with
+  explicit cross-references to the real systems it describes where they already exist.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-25">
+  <h3>25. [ROLE: Knowledge Steward] Reconcile the pasted "101 roles" against SPORE_ROSTER.md's 189</h3>
+  <p class="meta">Check for genuinely new roles not yet covered by the existing
+  reconciliation (CANVAS.md's 78 + docs/ROLES.md's 111 = 189, done 2026-07-31/08-01) rather
+  than assuming full overlap. Est. cost: small.</p>
+  <p><strong>Acceptance:</strong> A real diff — which of the pasted 101 are genuinely new,
+  which are already covered, cited against the real SPORE_ROSTER.md.</p>
+</div>
+
 <h2>Campaign Log</h2>
 <p class="meta">One line per completed/blocked task. Append, never rewrite history.</p>
 <div class="log" id="campaign-log">
