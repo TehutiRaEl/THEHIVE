@@ -180,7 +180,7 @@ private reasoning.</li>
   <p><strong>Acceptance:</strong> same as parent task 2 — real findings, evidence-cited,
   written to a dated file under <code>.claude/skills/devils-advocate-audit/</code>.</p>
 </div>
-<div class="task" data-status="pending" data-batchable="true" id="task-2b">
+<div class="task" data-status="done" data-batchable="true" id="task-2b">
   <h3>2b. Audit: legacy command-center tabs</h3>
   <p class="meta">Split from task 2. 4D, API, ARCANE, ARENA, DREAM, GOVERN, HIVE, MISSIONS,
   NO_MANS_SKY, SETTINGS, SOUL, WORLD, WOW — the 13-tab legacy system.</p>
@@ -241,7 +241,10 @@ private reasoning.</li>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-6">
   <h3>6. Adopt stores/uiStore.ts</h3>
-  <p class="meta">Founder-approved, Q12 ("worth the churn"). Est. cost: medium.</p>
+  <p class="meta">Founder-approved, Q12 ("worth the churn"). Est. cost: medium. Real
+  candidate found 2026-08-02 (task 2b's audit): <code>SETTINGS.tsx</code>'s save
+  confirmation is a raw browser <code>alert()</code> — a real, concrete one-off to
+  replace, not a hypothetical example.</p>
   <p><strong>Prompt:</strong> Wire the centralized notification/modal store into the live
   Command Center. <strong>Bounded scope</strong>: grep for existing one-off
   notification/modal handling first, replace what's found up to a reasonable number for
