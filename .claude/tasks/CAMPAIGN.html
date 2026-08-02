@@ -339,6 +339,24 @@ private reasoning.</li>
   <code>components/common</code>, verified by running the app, no regression.</p>
 </div>
 
+<div class="task" data-status="pending" data-batchable="false" id="task-14">
+  <h3>14. Real-time Command Center updates via Cloudflare Durable Objects</h3>
+  <p class="meta">Captured 2026-08-01 during the 13-branch investigation. Est. cost:
+  large — new Worker-side infrastructure, not batchable, own firing.</p>
+  <p><strong>Prompt:</strong> 6 old disconnected-history branches all carried the same
+  <code>useWebSocket.ts</code>/<code>services/websocket.ts</code> pair using
+  <code>socket.io-client</code> — verified dead-on-arrival, no compatible server exists on
+  either backend (live Worker has zero WebSocket support; the unverified-live FastAPI
+  backend has plain <code>websockets</code>, not <code>python-socketio</code>, incompatible
+  protocol either way). Do NOT port that file. If real-time push is still wanted (replacing
+  <code>useHiveData</code>'s 30s poll), build it fresh: a Durable Object on the live Worker
+  handling native WebSocket upgrade + broadcast, with a new client hook written against
+  that, from scratch.</p>
+  <p><strong>Acceptance:</strong> A real, live, working round trip — a Command Center
+  client actually receiving a pushed update from the Worker, verified by observing it
+  happen, not just code that compiles.</p>
+</div>
+
 <h2>Campaign Log</h2>
 <p class="meta">One line per completed/blocked task. Append, never rewrite history.</p>
 <div class="log" id="campaign-log">
@@ -443,6 +461,30 @@ ceiling changes, ambiguous deletions, unreviewed skill drafts) was proposed and 
 separately contested — standing as drafted unless the founder says otherwise, but only the
 merge-authority piece got explicit, repeated confirmation; be honest about that distinction
 if it matters later.
+2026-08-01 — Founder asked for a full 13-branch audit (real ahead/behind + content check,
+not assumed). Findings: 5 branches (TehutiRaEl-patch-1, claude/ecstatic-rubin-9zqjoc,
+grok/detective-fullstack, grok/pr-133-s1-did, security/redact-env-example-secrets) are 0
+commits ahead of main — fully absorbed, nothing to merge. The other 6
+(feature/gamified-ui-components, cloudflare/workers-autoconfig,
+claude/session-continuation-owj5wr, grok-strategist-main, mistral/frontend-command-center,
+feature/voxel-world) share ZERO git history with main (main was deliberately rebuilt from
+a clean template 2026-07-17; these 6 predate that and still carry 520-580 commits of the
+disconnected old history) — a real, structural reason they were never merged, not an
+oversight. Real content check (not just history) found their only unique non-duplicate
+content was a `socket.io-client`-based WebSocket pair — verified DEAD, no compatible
+server exists on either backend. Corrected an earlier over-claim in-session (had called
+this "real, low-risk value" before actually checking server compatibility) rather than
+silently wiring in more dead code. Captured as real task 14 (build real-time push fresh
+against Cloudflare Durable Objects, don't port). Founder confirmed: delete all 11 stale
+branches (the 5 absorbed + the 6 disconnected). **Blocked on tooling**: no available tool
+can delete a GitHub branch from this session — `git push --delete` returns 403 (this
+environment's git proxy blocks it) and the GitHub MCP server has no delete-ref method.
+Founder needs to delete these 11 branches directly (GitHub UI: repo → branches → delete),
+or grant a tool that can. List: TehutiRaEl-patch-1, claude/ecstatic-rubin-9zqjoc,
+grok/detective-fullstack, grok/pr-133-s1-did, security/redact-env-example-secrets,
+feature/gamified-ui-components, cloudflare/workers-autoconfig,
+claude/session-continuation-owj5wr, grok-strategist-main, mistral/frontend-command-center,
+feature/voxel-world.
 </div>
 
 </body>
