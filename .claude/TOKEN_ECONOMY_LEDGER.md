@@ -22,14 +22,25 @@ tagged with whether it's measured, estimated, or still just a hypothesis.
 | Delegating broad/repetitive reads to a background subagent (`Agent` tool, `run_in_background: true`) | Keeps the calling session's own context window from absorbing large tool outputs it doesn't need in full | Estimated — used this session for the dead-code sweep (see `Fable_memory.md`) rather than grepping everything inline |
 | `workflow-optimizer` / `recursive-growth` | Don't re-derive a workflow's steps or a bug's root cause if it's already recorded | Structural (compounds over time, not a single measured number) |
 
-## Levers not yet built (macro — bringing these to the founder, not deciding alone)
+## Levers now built (macro, founder-approved 2026-08-02, Q17 "worth it")
 
-- **Cross-session aggregate tracking.** `/caveman-stats` measures one session at a time;
-  nothing currently sums that across sessions/days to show a real trend line toward (or
-  away from) 96%. Building this needs a place to persist numbers across ephemeral
-  containers — the obvious candidate is a `hive_updates`-style D1 row written at
-  session-harvest time, but that's a real design decision (schema, who writes it, whether
-  it's founder-visible in the Command Center) worth discussing before building.
+- **Cross-session aggregate tracking — BUILT 2026-08-02 (CAMPAIGN.html task 8).**
+  `.claude/scripts/token-ledger-aggregate.sh` sums the real, already-logged
+  `TOKENS: <n>` lines from `CAMPAIGN.html`'s own Campaign Log (one genuine line per
+  firing, written by `session-usage.sh` at the end of every firing per the ceiling-check
+  rule) — it does not re-solve the per-session read, only aggregates what's already there.
+  Deliberately avoided standing up a new D1 table / `hive_updates`-style row for this: the
+  Campaign Log is already the real, git-tracked, per-firing source of truth, so a second
+  parallel store would duplicate it rather than aggregate it — a genuinely new persistence
+  layer stays a separate, still-open macro decision if the founder wants numbers surfaced
+  in the Command Center UI itself, not assumed needed here.
+  **Real result as of this pass** (n=1 genuine `TOKENS:` line — the Campaign Log's own
+  2026-08-02 self-audit found 0 real ones existed before that, a separate logged gap):
+  `firings=1 total_tokens=402748 avg_per_firing=402748 min=402748 max=402748`. This is
+  real but thin — one data point, not yet a trend line; the number will only become
+  meaningful once several more firings' genuine `TOKENS:` lines accumulate. Run
+  `.claude/scripts/token-ledger-aggregate.sh` any time to re-pull the current real total,
+  never assume this snapshot stays current.
 - **Whether 96% is reachable without quality loss.** `caveman`'s own `ultra` tier already
   documents a hard floor (stripping conjunctions/abbreviations stopped saving tokens and
   started costing clarity — measured zero token saving under the tokenizer). Whether
@@ -54,5 +65,7 @@ tagged with whether it's measured, estimated, or still just a hypothesis.
 
 ## Next
 
-Cross-session aggregate tracking and the "which number matters" question are the two
-concrete macro items open for the founder's input. Not built this pass.
+Cross-session aggregate tracking is now built (see above) — thin (n=1) but real and
+growing by one genuine data point per firing going forward. The "which number matters"
+question (output tokens vs. total tokens vs. dollar cost) remains the one open macro item
+for the founder's input; not decided this pass.
