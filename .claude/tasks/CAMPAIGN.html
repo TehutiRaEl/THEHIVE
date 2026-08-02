@@ -93,7 +93,13 @@ real usage straight from its Claude Code session transcript — the same source
 <code>caveman-stats</code> uses, no estimation) and append its exact
 <code>TOKENS: &lt;n&gt;</code> line to the Campaign Log entry for this firing. At the
 START of every firing, before touching any task: <code>grep '^TOKENS:' </code> today's
-dated log entries, sum the numbers, and count today's entries. If count &ge; 4 OR
+dated log entries, sum the numbers, and count today's entries.
+<strong>Every `TOKENS: n` line must be a genuine per-firing/per-task delta (end usage
+minus start usage), never a running cumulative total</strong> — a real bug found
+2026-08-02 mixed the two under the same label and would have wrongly re-triggered the
+ceiling on a stale number. If a log entry needs to mention overall session usage for
+context, label it differently (e.g. "session cumulative at this point") so it's never
+mistaken for a summable delta. If count &ge; 4 OR
 token-sum &ge; 3,000,000: stop immediately, log "ceiling hit, not starting" with the
 actual numbers, end the firing. Still self-reported (no billing-API access from inside a
 firing, and the sum deliberately excludes cheap cache-read tokens — see the script's own
@@ -477,8 +483,13 @@ and would have rebuilt it (updated to extend, not duplicate), and task 11's own
 acknowledged leftover work (live consumer wiring) was sitting only in prose, not tracked —
 captured as real task 13. Added a standing "Findings" protocol rule so this class of
 problem (real work silently going untracked) can't recur the same way. Session usage this
-firing so far: TOKENS: 56304633 (see Gap 1 above for why this number is unusually high —
-this is one long interactive session, not a fresh per-firing baseline).
+firing so far: CUMULATIVE-SNAPSHOT-NOT-A-DELTA: 56304633 (see Gap 1 above for why this
+number is unusually high — this is one long interactive session's running total at that
+point in time, not a fresh per-firing delta. Relabeled 2026-08-02 after finding the
+ceiling-check sum was conflating this with real per-task deltas like the 60,444 below —
+a real bug, not a hypothetical one. The ceiling check must only ever sum genuine
+`TOKENS: n` delta lines, never a running cumulative total — fixed by removing this one
+from that format going forward.)
 2026-08-01 — Founder set the permission guardrail (asked for directly, confirmed via two
 questions). MERGE AUTHORITY TIGHTENED, explicit and double-confirmed: automation NEVER
 merges any PR into main, no exceptions — not even a doc-only or test-only diff with green
