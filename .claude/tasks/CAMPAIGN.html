@@ -146,22 +146,44 @@ private reasoning.</li>
   live Command Center, not just a design doc.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-2">
-  <h3>2. Command Center button/tab audit + cohesion review</h3>
-  <p class="meta">Priority 3 (Q15). Est. cost: likely underestimated as one task —
-  ~13 command-center tabs + ~20 kai-os components (see FULL_PLAN.html's frontend tab).
-  <strong>Flagged for decomposition</strong>: first sub-step is scoping this into
-  per-tab or per-component chunks (each its own task), not one giant audit.</p>
-  <p><strong>Prompt:</strong> Walk every tab/button in the live Command Center
-  (<code>KaiElOS.tsx</code>'s real tree). For each: does it call a real endpoint, is the
-  endpoint live (probe it), does the UI degrade honestly when a switch is unflipped
-  (see <code>SWITCHBOARD.md</code>). Note anything dead, broken, or misleading.</p>
-  <p><strong>Acceptance:</strong> Real findings, evidence-cited (grep/probe, not
-  description), written to a new dated file under
-  <code>.claude/skills/devils-advocate-audit/</code> (this is a real audit, use its
-  ledger) — not left only in this task's own prose. If the scope genuinely doesn't fit
-  one firing, decompose per this file's own protocol rule and log the split.</p>
+<div class="task" data-status="blocked" data-batchable="true" id="task-2">
+  <h3>2. Command Center button/tab audit + cohesion review — decomposed</h3>
+  <p class="meta"><strong>Decomposed 2026-08-02 (test run #2)</strong>, per this task's own
+  flag. Real scope check: 13 command-center tabs + 20 kai-os components = 33 pieces,
+  grouped by function into tasks 2a-2e below. This parent stays blocked as a pointer.</p>
 </div>
+
+<div class="task" data-status="in-progress" data-batchable="true" id="task-2a">
+  <h3>2a. Audit: core navigation/shell</h3>
+  <p class="meta">Split from task 2. LeftNav, TopStatusBar, CenterGraph, KaiSigil,
+  BottomActivityFeed, WorkflowsDrawer — the always-visible chrome.</p>
+  <p><strong>Acceptance:</strong> same as parent task 2 — real findings, evidence-cited,
+  written to a dated file under <code>.claude/skills/devils-advocate-audit/</code>.</p>
+</div>
+<div class="task" data-status="pending" data-batchable="true" id="task-2b">
+  <h3>2b. Audit: legacy command-center tabs</h3>
+  <p class="meta">Split from task 2. 4D, API, ARCANE, ARENA, DREAM, GOVERN, HIVE, MISSIONS,
+  NO_MANS_SKY, SETTINGS, SOUL, WORLD, WOW — the 13-tab legacy system.</p>
+  <p><strong>Acceptance:</strong> same as parent task 2.</p>
+</div>
+<div class="task" data-status="pending" data-batchable="true" id="task-2c">
+  <h3>2c. Audit: Kai El interaction surfaces</h3>
+  <p class="meta">Split from task 2. KaiCommune, HiveTerminal, GatewayConsoleOverlay,
+  ConnectedModels.</p>
+  <p><strong>Acceptance:</strong> same as parent task 2.</p>
+</div>
+<div class="task" data-status="pending" data-batchable="true" id="task-2d">
+  <h3>2d. Audit: governance/constitution surfaces</h3>
+  <p class="meta">Split from task 2. ConstitutionViewer, ProposalsPanel, LegalLearning.</p>
+  <p><strong>Acceptance:</strong> same as parent task 2.</p>
+</div>
+<div class="task" data-status="pending" data-batchable="true" id="task-2e">
+  <h3>2e. Audit: overlays/dashboards</h3>
+  <p class="meta">Split from task 2. BiosystemOverlay, Observatory, DreamLogs, HiveUpdates,
+  FilesPanel, RoadmapPanel, RoadmapAvatar, VenturePlanner.</p>
+  <p><strong>Acceptance:</strong> same as parent task 2.</p>
+</div>
+
 
 <div class="task" data-status="pending" data-batchable="true" id="task-3">
   <h3>3. Venture Planner + Legal-research overhaul</h3>
