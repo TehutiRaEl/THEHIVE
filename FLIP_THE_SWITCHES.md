@@ -87,6 +87,55 @@ returns `202 {job_id, poll: "/v11/jobs?id=..."}` instead of `503`; `GET /v11/job
 then shows `status` moving from `queued` to `done` (or `error`, with the reason) once the
 Queues consumer runs.
 
+## 7 · Action-request execution → approved Kai El action-requests actually run
+
+The hive can now propose a small set of bounded, allow-listed real actions
+(`rerun_ci`, `open_issue`, `dispatch_workflow` on a fixed workflow allow-list — see
+`worker/src/index.js`'s `ACTION_ALLOWLIST`) via `POST /v11/proposals/action-request`.
+Creation is already gated (off-allow-list requests are rejected with 400 before they
+ever become a pending proposal) and approval is already gated (`FOUNDER_KEY`, same as
+every other proposal decision) — this switch only controls whether an *approved* one
+can actually reach GitHub, or just gets recorded as approved with nothing executed.
+
+```bash
+npx wrangler secret put GITHUB_ACTIONS_TOKEN
+```
+Use a fine-grained PAT scoped only to `TehutiRaEl/THEHIVE`, with the minimum
+permissions the three allow-listed actions need: Actions (read/write, for reruns and
+workflow dispatch) and Issues (write, for opening issues). No config edit needed —
+secrets bind on the next deploy.
+**Proof it worked:** approve a pending `action-request` proposal via
+`POST /v11/proposals/:id/decide` → the response's `execution.executed` is `true`
+(previously `false` with a "no GITHUB_ACTIONS_TOKEN bound yet" reason).
+
+## 8 · Federation PR review → every open colony PR gets a real automated first pass
+
+`.github/workflows/federation-pr-review.yml` (task 9b) runs every 6 hours, reads the
+real colony repo list from `.queen/hive.yml`, and posts one real, evidence-cited comment
+(mergeable state + real CI check status, never an opinion) on every open PR that doesn't
+already have one — comment-only, never approves/merges/blocks. Without a token bound it
+still runs on schedule and logs an honest no-op (see the workflow's own guard step).
+
+```bash
+gh secret set HIVE_FEDERATION_TOKEN --repo TehutiRaEl/THEHIVE
+```
+Use a fine-grained PAT with Pull requests (read/write) and Issues (read) scoped to the
+real colony repos in `.queen/hive.yml` (currently: `aether`, `automatisch`, `Kimi-K2`,
+`free-programming-books`, `freeCodeCamp`, `NAR2`, `4DBRAIN`, `sovereign-hive-meta` — the
+workflow always re-derives this list from the manifest at run time, never a separate
+hardcoded copy).
+**Proof:** trigger the workflow manually (`workflow_dispatch`) → an open PR in one of
+those repos gets a real comment starting `<!-- hive-federation-pr-review -->` within the
+run.
+
+The same `HIVE_FEDERATION_TOKEN` also gates `.github/workflows/federation-issue-triage.yml`
+(task 9c) — one secret, two federation-wide read/label workflows, no separate token needed.
+That one labels untriaged open issues (best-effort bug/enhancement/question + a narrow,
+explicit urgent-keyword flag — see the workflow's own header for the exact list) and
+mirrors results into one "Federation Issue Triage Queue" tracking issue in THEHIVE, same
+shape as `kai-el-bridge.yml`'s concerns/proposals queue. Never transfers, closes, or
+assigns an issue.
+
 ## Already flipped / no switch needed
 - D1 database, Workers AI, assets, the 30-min heartbeat — live now.
 - The UI (graph web, neon theme, Updates, Legal Learning, Files panel shell) — ships with

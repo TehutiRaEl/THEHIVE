@@ -187,6 +187,112 @@ function founderAuthOk(request, env) {
   return !!key && key === env.FOUNDER_KEY;
 }
 
+// ── Kai El "action-request" proposals (task 7, 2026-08-02) ───────────────
+// Extends hive_proposals with a kind that can eventually cause a real,
+// bounded side effect — never an arbitrary command, never raw terminal/file
+// access. Two independent gates, both enforced server-side (never just
+// prompted for):
+//   1. CREATION time: the action + params must match ACTION_ALLOWLIST's
+//      shape exactly, or the proposal is rejected outright — it never even
+//      reaches the founder's pending queue as a mis-shapen or off-list item.
+//   2. EXECUTION time: /proposals/:id/decide re-validates the stored action
+//      against the same allow-list before calling GitHub — approval alone
+//      never runs anything; a missing GITHUB_ACTIONS_TOKEN degrades to a
+//      recorded approval with no execution, same flip-the-switch honesty as
+//      every other gated resource in this file (see SWITCHBOARD.md #7).
+const WORKFLOW_DISPATCH_ALLOWLIST = ['grok-bridge.yml', 'edge-health-probe.yml'];
+
+const ACTION_ALLOWLIST = {
+  rerun_ci: {
+    describe: (p) => `rerun CI workflow run #${p.run_id}`,
+    validate(params) {
+      const run_id = Number(params?.run_id);
+      if (!Number.isInteger(run_id) || run_id <= 0) return 'run_id must be a positive integer';
+      return null;
+    },
+  },
+  open_issue: {
+    describe: (p) => `open issue "${p.title}"`,
+    validate(params) {
+      const title = (params?.title || '').toString().trim();
+      if (!title || title.length > 200) return 'title required, max 200 chars';
+      const body = (params?.body ?? '').toString();
+      if (body.length > 4000) return 'body max 4000 chars';
+      return null;
+    },
+  },
+  dispatch_workflow: {
+    describe: (p) => `dispatch workflow ${p.workflow} on ${p.ref || 'main'}`,
+    validate(params) {
+      const workflow = (params?.workflow || '').toString();
+      if (!WORKFLOW_DISPATCH_ALLOWLIST.includes(workflow)) {
+        return `workflow must be one of: ${WORKFLOW_DISPATCH_ALLOWLIST.join(', ')}`;
+      }
+      const ref = (params?.ref ?? 'main').toString();
+      if (!/^[A-Za-z0-9._/-]{1,100}$/.test(ref)) return 'ref must be a plain branch/tag name';
+      return null;
+    },
+  },
+};
+
+// Returns { ok:true, action, params } or { ok:false, reason }. Never throws.
+function validateActionRequest(action, params) {
+  const spec = ACTION_ALLOWLIST[action];
+  if (!spec) return { ok: false, reason: `action "${action}" is not on the allow-list (${Object.keys(ACTION_ALLOWLIST).join(', ')})` };
+  const err = spec.validate(params || {});
+  if (err) return { ok: false, reason: err };
+  return { ok: true, action, params: params || {} };
+}
+
+// Executes an already-validated action against the real GitHub API. Only
+// ever called after founderAuthOk() has passed on /decide AND the action has
+// been re-validated against ACTION_ALLOWLIST — never on proposal creation
+// alone. Degrades honestly (executed:false, reason) with no
+// GITHUB_ACTIONS_TOKEN bound, matching every other flip-the-switch resource.
+async function executeApprovedAction(env, action, params) {
+  const revalidated = validateActionRequest(action, params);
+  if (!revalidated.ok) return { executed: false, reason: 'failed re-validation at execution time: ' + revalidated.reason };
+  if (!env.GITHUB_ACTIONS_TOKEN) {
+    return { executed: false, reason: 'no GITHUB_ACTIONS_TOKEN bound yet — approved, but nothing executes until the founder provisions one (see FLIP_THE_SWITCHES.md #7)' };
+  }
+  const REPO = 'TehutiRaEl/THEHIVE';
+  const gh = (path, init = {}) => fetch(`https://api.github.com/repos/${REPO}${path}`, {
+    ...init,
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${env.GITHUB_ACTIONS_TOKEN}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'thehive-worker',
+      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init.headers || {}),
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  try {
+    if (action === 'rerun_ci') {
+      const r = await gh(`/actions/runs/${params.run_id}/rerun`, { method: 'POST' });
+      if (!r.ok && r.status !== 201) return { executed: false, reason: `GitHub API ${r.status}: ${await r.text().catch(() => '')}` };
+      return { executed: true, detail: `rerun requested for run ${params.run_id}` };
+    }
+    if (action === 'open_issue') {
+      const r = await gh('/issues', { method: 'POST', body: JSON.stringify({ title: params.title, body: params.body || '' }) });
+      if (!r.ok) return { executed: false, reason: `GitHub API ${r.status}: ${await r.text().catch(() => '')}` };
+      const d = await r.json();
+      return { executed: true, detail: `issue #${d.number} opened`, url: d.html_url };
+    }
+    if (action === 'dispatch_workflow') {
+      const r = await gh(`/actions/workflows/${params.workflow}/dispatches`, {
+        method: 'POST', body: JSON.stringify({ ref: params.ref || 'main' }),
+      });
+      if (!r.ok && r.status !== 204) return { executed: false, reason: `GitHub API ${r.status}: ${await r.text().catch(() => '')}` };
+      return { executed: true, detail: `dispatched ${params.workflow} on ${params.ref || 'main'}` };
+    }
+    return { executed: false, reason: 'unreachable: action passed validation but has no execution branch' };
+  } catch (e) {
+    return { executed: false, reason: 'GitHub API call failed: ' + String(e) };
+  }
+}
+
 // D1 table initialisation — called once per heartbeat to ensure all tables exist.
 async function ensureTables(DB) {
   await DB.batch([
@@ -807,12 +913,41 @@ export default {
         if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         const kind = (body.kind || 'suggestion').toString().slice(0, 40);
+        // 'action-request' is deliberately NOT creatable through this general,
+        // freely-typed endpoint — it can only reach the queue via
+        // POST /proposals/action-request, which enforces ACTION_ALLOWLIST
+        // server-side before insertion. Without this guard, anyone could type
+        // kind:"action-request" here and skip that gate entirely.
+        if (kind === 'action-request') {
+          return json({ detail: "action-request proposals must go through POST /v11/proposals/action-request (allow-list enforced there)" }, 400);
+        }
         const title = (body.title || '').toString().trim().slice(0, 200);
         const detail = (body.body || '').toString().slice(0, 4000);
         if (!title) return json({ detail: 'title required' }, 400);
         await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status) VALUES (?,?,?,?,\'pending\')')
           .bind(new Date().toISOString(), kind, title, detail).run();
         return json({ ok: true });
+      }
+      // POST /proposals/action-request — the ONLY way an 'action-request' kind
+      // proposal gets created. Kind is NOT freely settable here (unlike the
+      // general POST /proposals below) — action/params must match
+      // ACTION_ALLOWLIST's exact shape or the request is rejected outright,
+      // before anything is ever written to hive_proposals. This is what
+      // "rejected before it ever reaches the founder's approval queue" means
+      // in practice: an invalid request never becomes a pending row at all.
+      if (p === '/proposals/action-request' && method === 'POST') {
+        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        const body = await request.json().catch(() => ({}));
+        const action = (body.action || '').toString();
+        const params = body.params || {};
+        const v = validateActionRequest(action, params);
+        if (!v.ok) return json({ ok: false, detail: 'action-request rejected — never reached the approval queue: ' + v.reason }, 400);
+        const spec = ACTION_ALLOWLIST[action];
+        const title = `[action-request] ${spec.describe(params)}`.slice(0, 200);
+        const storedBody = JSON.stringify({ action, params, description: (body.description || '').toString().slice(0, 2000) });
+        await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status) VALUES (?,?,?,?,\'pending\')')
+          .bind(new Date().toISOString(), 'action-request', title, storedBody).run();
+        return json({ ok: true, title, note: 'queued as a pending proposal — nothing executes until the founder approves via /proposals/:id/decide' });
       }
       const decideMatch = p.match(/^\/proposals\/(\d+)\/decide$/);
       if (decideMatch && method === 'POST') {
@@ -827,14 +962,31 @@ export default {
         const body = await request.json().catch(() => ({}));
         const decision = body.decision === 'approved' ? 'approved' : body.decision === 'rejected' ? 'rejected' : null;
         if (!decision) return json({ detail: "decision must be 'approved' or 'rejected'" }, 400);
-        const note = (body.note || '').toString().slice(0, 2000);
+        let note = (body.note || '').toString().slice(0, 2000);
+        // Fetch kind+body BEFORE the state-changing UPDATE, since only an
+        // 'action-request' proposal that is being APPROVED ever executes
+        // anything — approval alone on every other kind still just records a
+        // decision, same as before this task.
+        const existing = await DB.prepare('SELECT kind, body FROM hive_proposals WHERE id=? AND status=\'pending\'').bind(id).first();
+        if (!existing) return json({ detail: `proposal ${id} not found or already decided` }, 404);
+        let execResult = null;
+        if (decision === 'approved' && existing.kind === 'action-request') {
+          try {
+            const { action, params } = JSON.parse(existing.body || '{}');
+            execResult = await executeApprovedAction(env, action, params);
+            note = (note ? note + ' | ' : '') + (execResult.executed ? `executed: ${execResult.detail}` : `NOT executed: ${execResult.reason}`);
+          } catch (e) {
+            execResult = { executed: false, reason: 'could not parse stored action body: ' + String(e) };
+            note = (note ? note + ' | ' : '') + `NOT executed: ${execResult.reason}`;
+          }
+        }
         const result = await DB.prepare(
           "UPDATE hive_proposals SET status=?, decided_at=?, founder_note=? WHERE id=? AND status='pending'"
         ).bind(decision, new Date().toISOString(), note, id).run();
         if (!result.meta?.changes) {
           return json({ detail: `proposal ${id} not found or already decided` }, 404);
         }
-        return json({ ok: true, id, decision });
+        return json({ ok: true, id, decision, ...(execResult ? { execution: execResult } : {}) });
       }
       // Sub-Architect's first workflow (TEAM_CHARTERS.md, 2026-07-18): decompose a
       // founder-initiated venture brief into a structured CEO->departments->tasks

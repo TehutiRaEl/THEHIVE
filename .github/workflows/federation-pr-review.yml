@@ -1,0 +1,119 @@
+name: Federation PR Review
+
+# Cross-repo PR-review spore (CAMPAIGN.html task 9b, 2026-08-02). A standing mechanism
+# that gives every open PR across the federation's real, owned colony repos (read from
+# .queen/hive.yml, the authoritative colony manifest — never a separate hardcoded list)
+# at least one real, evidence-cited automated first pass, instead of sitting unreviewed
+# until a human happens to look. Reuses THEHIVE's own review discipline (real checks,
+# real citations, never a rubber-stamp) rather than inventing a new one:
+#   - CI status is READ from the PR's real checks, never asserted.
+#   - The comment states plainly what was and wasn't checked.
+#   - This workflow NEVER approves, merges, or requests changes that block anything —
+#     comment-only, same "never merge, ever" discipline this repo holds itself to
+#     (CAMPAIGN.html's own protocol), extended here rather than assumed safe to relax
+#     just because the target is a different repo.
+#   - Idempotent: skips a PR that already has this workflow's marker comment, so it
+#     never spams the same PR every run.
+#
+# Cross-repo access needs a real PAT (the default GITHUB_TOKEN this repo's other
+# workflows use is scoped to THEHIVE only, by GitHub's own design) — flip-the-switch
+# pattern, same honesty as every other gated resource in this hive (see
+# SWITCHBOARD.md / FLIP_THE_SWITCHES.md). Ships now; degrades to an honest, logged
+# no-op run until HIVE_FEDERATION_TOKEN is bound.
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # every 6 hours — PR review is lower-urgency than the 2h Kai El concern bridge,
+    # higher-urgency than a once-daily sweep
+    - cron: '23 */6 * * *'
+  push:
+    paths:
+      - .github/workflows/federation-pr-review.yml
+      - .queen/hive.yml
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Real, evidence-cited first-pass review on every open federation PR
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.HIVE_FEDERATION_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard — honest no-op if the federation token isn't bound yet
+        id: guard
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "No HIVE_FEDERATION_TOKEN secret bound yet — this run does nothing"
+            echo "real, on purpose (see FLIP_THE_SWITCHES.md's switch for this"
+            echo "workflow). Not faking a review, not failing the job either."
+            echo "bound=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "bound=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Discover real colony repos from the authoritative manifest
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          # .queen/hive.yml is the single source of truth for colony repos — never a
+          # separate hardcoded list that could drift from it. Keep only real,
+          # TehutiRaEl-owned repos; skip THEHIVE itself (already covered by this
+          # repo's own review discipline) and any externally-owned/forked
+          # infrastructure entry (e.g. n8nio/n8n) this hive doesn't own and has no
+          # standing to auto-comment on.
+          grep -oP '(?<=repo: )\S+' .queen/hive.yml \
+            | grep -E '^TehutiRaEl/' \
+            | grep -v '^TehutiRaEl/THEHIVE$' \
+            | sort -u > /tmp/federation_repos.txt
+          echo "Real federation repos this run will check:"
+          cat /tmp/federation_repos.txt
+
+      - name: Review every open PR in every real federation repo
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          MARKER="<!-- hive-federation-pr-review -->"
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            echo "── $REPO ──"
+            # A repo THEHIVE's manifest lists but this token can't see (private,
+            # not shared, deleted) degrades to a skipped line, never a hard failure —
+            # one inaccessible repo must not stop the rest of the sweep.
+            PRS=$(gh pr list --repo "$REPO" --state open --json number,title,url,updatedAt,isDraft 2>/dev/null) || { echo "  (could not list PRs — skipping, token may lack access)"; continue; }
+            COUNT=$(echo "$PRS" | jq 'length' 2>/dev/null || echo 0)
+            echo "  $COUNT open PR(s)"
+            for NUM in $(echo "$PRS" | jq -r '.[].number' 2>/dev/null); do
+              # Idempotency: skip if this workflow already left its marker comment.
+              ALREADY=$(gh pr view "$NUM" --repo "$REPO" --json comments 2>/dev/null \
+                | jq -r --arg m "$MARKER" '[.comments[]? | select(.body | contains($m))] | length' 2>/dev/null || echo 0)
+              if [ "${ALREADY:-0}" != "0" ]; then
+                echo "  PR #$NUM: already has a federation review comment, skipping"
+                continue
+              fi
+              # Real evidence, not an opinion: mergeable state + real check-run status.
+              PRVIEW=$(gh pr view "$NUM" --repo "$REPO" --json mergeable,mergeStateStatus,isDraft,title,updatedAt 2>/dev/null)
+              MERGEABLE=$(echo "$PRVIEW" | jq -r '.mergeable // "UNKNOWN"')
+              MERGE_STATE=$(echo "$PRVIEW" | jq -r '.mergeStateStatus // "UNKNOWN"')
+              CHECKS=$(gh pr checks "$NUM" --repo "$REPO" 2>&1 || echo "no checks reported")
+              BODY=$(cat <<EOF
+          $MARKER
+          **Automated federation first-pass review** (\`.github/workflows/federation-pr-review.yml\`, THEHIVE — the Queen node of this federation).
+
+          - Mergeable: \`$MERGEABLE\` (GitHub's own real-time computation)
+          - Merge state: \`$MERGE_STATE\`
+          - Checks:
+          \`\`\`
+          $CHECKS
+          \`\`\`
+
+          This is a real, evidence-cited first pass — not a rubber stamp, and not a substitute for a real human/maintainer review. It never approves, merges, or blocks; it only surfaces what's real and checkable so nothing sits unreviewed. Re-run manually (workflow_dispatch) any time to refresh; this comment won't repeat on the same PR.
+          EOF
+          )
+              gh pr comment "$NUM" --repo "$REPO" --body "$BODY" 2>/dev/null \
+                && echo "  PR #$NUM: real review comment posted" \
+                || echo "  PR #$NUM: could not comment (token may lack write access to $REPO)"
+            done
+          done < /tmp/federation_repos.txt

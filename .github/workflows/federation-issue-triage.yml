@@ -1,0 +1,153 @@
+name: Federation Issue Triage
+
+# Automated first-pass issue triage across the federation (CAMPAIGN.html task 9c,
+# 2026-08-02). Explicitly modeled on kai-el-bridge.yml's existing pattern — mirror real
+# state into ONE fixed tracking issue in THEHIVE, rather than inventing a new mechanism
+# or attempting cross-repo issue transfers (a real, mostly-irreversible action this
+# workflow deliberately never takes).
+#
+# What "triage" means here, concretely and honestly — not a claim of real NLP
+# understanding, a small set of explainable, keyword-based heuristics, documented in the
+# workflow itself so no one mistakes this for more than it is:
+#   - LABEL: best-effort bug/enhancement/question guess + always `hive-triaged` (the
+#     idempotency marker — an issue with this label is never re-processed).
+#   - FLAG genuinely urgent ones: a narrow, explicit keyword list (security/vulnerability/
+#     critical/production down/data loss/CVE) — a real, checkable signal, not a vibe.
+#   - ROUTE: mirrored into one tracking issue in THEHIVE (same shape as the Kai El bridge's
+#     concerns/proposals queue) so the founder has one place to see federation-wide issue
+#     state instead of checking every colony repo separately.
+# Never transfers, closes, assigns, or reprioritizes an issue — comment/label only.
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # offset from federation-pr-review.yml's :23 so both don't contend on shared runners
+    - cron: '41 */3 * * *'
+  push:
+    paths:
+      - .github/workflows/federation-issue-triage.yml
+      - .queen/hive.yml
+
+permissions:
+  issues: write
+
+jobs:
+  triage:
+    name: Real first-pass label + urgent-flag + mirror-to-tracking-issue
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.HIVE_FEDERATION_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard — honest no-op if the federation token isn't bound yet
+        id: guard
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "No HIVE_FEDERATION_TOKEN bound yet — see FLIP_THE_SWITCHES.md's"
+            echo "switch for this workflow. This run genuinely does nothing, on"
+            echo "purpose, rather than faking a triage pass."
+            echo "bound=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "bound=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Discover real colony repos from the authoritative manifest
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          # Same discovery method as federation-pr-review.yml, deliberately kept
+          # identical rather than reinvented — one source of truth (.queen/hive.yml),
+          # never a separately-hardcoded repo list that could drift.
+          grep -oP '(?<=repo: )\S+' .queen/hive.yml \
+            | grep -E '^TehutiRaEl/' \
+            | grep -v '^TehutiRaEl/THEHIVE$' \
+            | sort -u > /tmp/federation_repos.txt
+          echo "Real federation repos this run will triage:"
+          cat /tmp/federation_repos.txt
+
+      - name: Triage every untriaged open issue in every real federation repo
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          : > /tmp/triaged_this_run.tsv
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            echo "── $REPO ──"
+            ISSUES=$(gh issue list --repo "$REPO" --state open --json number,title,body,labels 2>/dev/null) \
+              || { echo "  (could not list issues — skipping, token may lack access)"; continue; }
+            COUNT=$(echo "$ISSUES" | jq 'length' 2>/dev/null || echo 0)
+            echo "  $COUNT open issue(s)"
+            echo "$ISSUES" | jq -c '.[]' | while read -r ISSUE; do
+              NUM=$(echo "$ISSUE" | jq -r '.number')
+              TITLE=$(echo "$ISSUE" | jq -r '.title')
+              BODY_TEXT=$(echo "$ISSUE" | jq -r '.body // ""')
+              ALREADY=$(echo "$ISSUE" | jq -r '[.labels[]?.name] | any(. == "hive-triaged")')
+              if [ "$ALREADY" = "true" ]; then
+                continue
+              fi
+              HAY=$(echo "$TITLE $BODY_TEXT" | tr '[:upper:]' '[:lower:]')
+              # Explicit, explainable keyword heuristics — never claimed as more than that.
+              LABEL="needs-triage"
+              case "$HAY" in
+                *bug*|*error*|*crash*|*broken*|*fails*) LABEL="bug" ;;
+                *feature*|*enhancement*|*request*) LABEL="enhancement" ;;
+                *question*|*how\ do*|*why\ does*) LABEL="question" ;;
+              esac
+              URGENT="false"
+              case "$HAY" in
+                *security*|*vulnerability*|*critical*|*production\ down*|*data\ loss*|*cve*) URGENT="true" ;;
+              esac
+              # Create labels if missing (best-effort — a repo the token can create
+              # labels in gets them; one that can't still gets hive-triaged attempted).
+              for L in "$LABEL" "hive-triaged" "urgent"; do
+                gh label create "$L" --repo "$REPO" --color "ededed" 2>/dev/null || true
+              done
+              APPLY="$LABEL,hive-triaged"
+              [ "$URGENT" = "true" ] && APPLY="$APPLY,urgent"
+              gh issue edit "$NUM" --repo "$REPO" --add-label "$APPLY" 2>/dev/null \
+                && echo "  issue #$NUM: labeled $APPLY" \
+                || echo "  issue #$NUM: could not label (token may lack write access)"
+              printf '%s\t%s\t%s\t%s\t%s\n' "$REPO" "$NUM" "$TITLE" "$LABEL" "$URGENT" >> /tmp/triaged_this_run.tsv
+            done
+          done < /tmp/federation_repos.txt
+          echo "Triaged this run: $(wc -l < /tmp/triaged_this_run.tsv)"
+
+      - name: Render tracking-issue body (mirrors kai-el-bridge.yml's exact pattern)
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          {
+            echo "Auto-synced by \`.github/workflows/federation-issue-triage.yml\` — do not edit by hand, fully overwritten each run."
+            echo
+            echo "First-pass triage only: explicit keyword heuristics (see the workflow's own header comment for the exact list), never a claim of real understanding. Never transfers, closes, assigns, or reprioritizes — label + mirror only. Real human review still decides everything that matters."
+            echo
+            URGENT_COUNT=$(awk -F'\t' '$5=="true"' /tmp/triaged_this_run.tsv | wc -l)
+            echo "## Flagged urgent this run ($URGENT_COUNT)"
+            echo
+            if [ "$URGENT_COUNT" = "0" ]; then
+              echo "_None this run._"
+            else
+              awk -F'\t' '$5=="true" { print "- **" $3 "** — `" $1 "` #" $2 }' /tmp/triaged_this_run.tsv
+            fi
+            echo
+            echo "## All newly triaged this run ($(wc -l < /tmp/triaged_this_run.tsv))"
+            echo
+            if [ ! -s /tmp/triaged_this_run.tsv ]; then
+              echo "_None this run — nothing untriaged found across the federation._"
+            else
+              awk -F'\t' '{ print "- `" $1 "` #" $2 " — " $3 " (label: `" $4 "`" ($5=="true" ? ", **urgent**" : "") ")" }' /tmp/triaged_this_run.tsv
+            fi
+            echo
+            echo "_Last synced: $(date -u +%Y-%m-%dT%H:%M:%SZ)_"
+          } > /tmp/issue_body.md
+
+      - name: Create or update the tracking issue
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          TITLE="Federation Issue Triage Queue"
+          NUM=$(gh issue list --repo "${{ github.repository }}" --search "in:title \"${TITLE}\"" --state all --json number,title \
+            | jq -r --arg t "$TITLE" '.[] | select(.title==$t) | .number' | head -n1)
+          if [ -z "$NUM" ]; then
+            gh issue create --repo "${{ github.repository }}" --title "$TITLE" --body-file /tmp/issue_body.md
+          else
+            gh issue reopen --repo "${{ github.repository }}" "$NUM" 2>/dev/null || true
+            gh issue edit --repo "${{ github.repository }}" "$NUM" --body-file /tmp/issue_body.md
+          fi
