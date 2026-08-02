@@ -615,6 +615,27 @@ evidence the batching design works: marginal cost per task drops once a firing i
 warmed up on a familiar kind of work, not just theoretical. Stopping here per explicit
 instruction. Task 2's decomposition is now 4 of 5 sub-tasks done (2a-2d); 2e (overlays/
 dashboards) is the one piece left.
+2026-08-02 — DEVIL'S ADVOCATE ON TONIGHT'S OWN EXECUTION (founder-requested, applied to
+results not just the plan). Six real findings, ranked by severity: (1) both ceiling-check
+bugs fixed this run existed silently for hours — "component tested" (the script alone)
+was mistaken for "integration tested" (the protocol's literal command against real file
+content) until caught by chance; open question of what else hasn't been exercised the same
+way. (2) The protocol was told to check `workflow-optimizer` before repeating a known
+procedure, then that rule was skipped in the very next task — a real, immediate
+self-inconsistency. (3) `task_budget` is written into the protocol as real guidance but was
+never confirmed to actually be supported by the Routine-firing mechanism — aspirational,
+not verified, flagged honestly rather than left looking settled. (4) "Never merge" is still
+prose, not a technical barrier — nothing was ever actually tested attempting a merge to
+confirm anything blocks it. (5) Every test tonight (#1, #2, #3) ran inside ONE continuous
+session — fresh-session firing, crashed-mid-task recovery, blocked-task skip, and
+empty-queue behavior remain completely unexercised; the actual failure mode from the
+original incident has still never been genuinely tested. (6) Honest self-check on the
+batching-efficiency finding (55,665 for 3 tasks vs 60,444 for 1): read as real pattern-
+familiarity efficiency, but the stricter alternate read — less careful checking as the
+batch went on, not just more efficient — can't be fully ruled out; asserting false
+confidence here would be exactly what this exercise exists to catch. None of these are
+resolved tonight — logged as the real, current state of "still needs another look," not
+smoothed over.
 </div>
 
 </body>
