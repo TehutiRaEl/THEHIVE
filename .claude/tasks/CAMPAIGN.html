@@ -76,7 +76,15 @@ timestamp) — one line, not a narrative.</li>
 <li><strong>Batching:</strong> if real context budget remains and the next
 <code>pending</code> task's <code>data-batchable</code> is <code>true</code>, continue to
 it in the same firing instead of stopping. If budget is low, or the next task is
-<code>data-batchable="false"</code> (needs a fresh, unclouded context), stop cleanly.</li>
+<code>data-batchable="false"</code> (needs a fresh, unclouded context), stop cleanly.
+<strong>An unreviewed PR is never a reason to stop</strong> (founder correction,
+2026-08-02) — the founder reviews on their own schedule, not synchronously with each
+firing; waiting for review before continuing defeats the entire point of unattended work.
+Keep working through the queue regardless of whether earlier PRs from this or prior
+firings have been looked at yet, so multiple independent, reviewable PRs are waiting
+whenever the founder next checks — not one stalled task. Prefer one focused PR per
+task or coherent group of tasks over stacking everything onto a single sprawling PR —
+several small, reviewable PRs serve "check each one" better than one giant one.</li>
 <li>If a task is blocked on something only the founder can decide, mark it
 <code>data-status="blocked"</code>, write why in its Acceptance section, and move to the
 next pending task rather than stalling the firing on it.</li>
