@@ -12,7 +12,7 @@ interface WorkflowItem {
 const WORKFLOWS: WorkflowItem[] = [
   { label: 'Coding', wired: true, detail: 'fable-debugger + pocket-dimensions' },
   { label: 'Research', wired: true, detail: 'research-to-dna' },
-  { label: 'Automation', wired: true, detail: 'merge-readiness (verify → PR → CI-autofix → merge)' },
+  { label: 'Automation', wired: true, detail: 'merge-readiness (verify → PR → CI-autofix → hold for founder review)' },
   { label: 'Morning Routine', wired: false, detail: 'not yet built' },
   { label: 'Content', wired: false, detail: 'not yet built' },
   { label: 'Book Writing', wired: false, detail: 'not yet built' },

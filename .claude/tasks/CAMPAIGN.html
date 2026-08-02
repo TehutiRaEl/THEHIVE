@@ -153,7 +153,7 @@ private reasoning.</li>
   grouped by function into tasks 2a-2e below. This parent stays blocked as a pointer.</p>
 </div>
 
-<div class="task" data-status="in-progress" data-batchable="true" id="task-2a">
+<div class="task" data-status="done" data-batchable="true" id="task-2a">
   <h3>2a. Audit: core navigation/shell</h3>
   <p class="meta">Split from task 2. LeftNav, TopStatusBar, CenterGraph, KaiSigil,
   BottomActivityFeed, WorkflowsDrawer — the always-visible chrome.</p>
@@ -528,6 +528,25 @@ supervised, in-session, manual simulation, which is a genuinely different mode f
 automation and cannot fully stand in for it. Recommendation before any live Routine is
 created: run at least one real `create_new_session_on_fire` test (fresh session, real
 task, real TOKENS: log) before trusting these numbers.
+2026-08-02 — Founder corrected the ceiling math (mathematician + devil's-advocate lens,
+founder-directed): 56.3M tokens was NOT one 5-hour window's usage — this session spans
+55.3 real elapsed hours (~11 rolling 5-hour billing windows), averaging ~5.1M/window, not
+56M. "Average 3M and 56M" isn't valid math — they measure different things (a per-firing
+budget for a clean fresh session vs. one 55-hour session's bloated cumulative total, ~696M
+of it cheap cache-reads and ~54.5M expensive cache-creation from an ever-growing context —
+the same mechanism as the original incident). Real ceiling calibration needs real
+fresh-firing data, not this session's number either way — confirmed by continuing the test
+with real work and measuring the actual delta: decomposing task 2 into 2a-2e (real scoping
+against the real 33-component count), auditing 2a's 6 core-shell components for real
+(5 honestly wired, 1 real bug found — WorkflowsDrawer.tsx's Automation description was
+stale re: tonight's merge-authority change, fixed, verified against the real build), and
+writing real findings to
+<code>.claude/skills/devils-advocate-audit/2026-08-02-command-center-core-shell.md</code>
+cost exactly TOKENS: 60444 (56983432 → 57043876) — a real, useful data point for what a
+meaningfully-scoped real sub-task costs, even allowing this session's own overhead to
+inflate it somewhat above a truly fresh session's cost. Ceiling number itself still not
+finalized — real recommendation stands: needs actual fresh-session measurement, not a
+guess from either end of this session's range.
 </div>
 
 </body>
