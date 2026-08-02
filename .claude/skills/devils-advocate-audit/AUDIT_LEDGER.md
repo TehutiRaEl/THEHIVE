@@ -302,3 +302,52 @@ Ordered by the SUSPECT priority in SKILL.md — highest blast radius / least-ver
   asked about directly. Any future audit finding that would have benefited from a live
   web/docs search and didn't get one should be marked here the same honest way, not
   silently treated as equivalent to having had the tool.
+
+### 2026-08-01 — Dead-code dispositions executed, founder's 19-question answers
+
+**Verdict: BUG FOUND (in the prior audit itself) — FIXED, plus real deletions/edits,
+all re-verified by running the suite, not read-through.**
+
+Founder answered all 19 open items from the 2026-07-31 dead-code/second-frontend audit.
+Before deleting anything, re-verified each target fresh (imports, git history, direct
+file reads) rather than trusting the prior summary — this caught one real error in the
+prior audit:
+
+- **`workflow_guild.py` was miscategorized.** The prior sweep filed it under "safe to
+  delete, job done elsewhere" (the founder's Q1 "one more folded into these"). A fresh
+  read shows it has no real live counterpart — `deploy_spore()` returns a hardcoded
+  `archive.org/placeholder` IPFS hash, `create_workflow()` is a pass-through stub. This
+  belongs with Q3's "genuinely unfinished, still on roadmap" bucket instead. **Not
+  deleted** — corrected here rather than deleted on the wrong premise.
+- **Deleted for real** (Q1 confirmed-safe + Q5, all re-verified zero-importer via fresh
+  grep before removal): `backend/guilds/arena_guild.py`, `constitutional_guild.py`,
+  `dream_guild.py`, `frequency_guild.py`, `security_guild.py`; `backend/llm_router.py`
+  (root-level orphan, `backend/core/llm_router.py` is the real live one).
+- **`backend/guilds/treasury_guild.py`** — trimmed, not deleted (Q1+Q2 together): removed
+  `credit()`/ledger bookkeeping (confirmed superseded for real by `wallet.py`, zero
+  callers), kept `distribute_revenue()`/`get_balance()` — the 70/20/10 revenue-split idea
+  the founder said is "a real plan, discuss later," not dead.
+- **Rate limiter (Q7)** — live `RateLimiter` in `backend/api/middleware.py` ported from
+  `threading.Lock`/sync `check()` to `asyncio.Lock`/async `check()`, matching the tradeoff
+  the dead orphan (`backend/utils/rate_limiter.py`, deleted) represented. Correction for
+  the founder mid-session: this is the Worker-unrelated **backend API** rate limiter
+  (30/min/IP throttling); it has nothing to do with Claude Code session/token cost, which
+  is a separate system entirely — flagged directly so the fix isn't mistaken for a cost
+  control.
+- **`audit_guild.py`** (+ its dead deps `agent_identity.py`, `audit_chain.py`) — **not
+  deleted** (Q4: founder wants the compliance-audit concept rebuilt against something
+  real eventually, not dropped).
+- **4 low-priority stubs** (`commerce_guild.py`, `academy_guild.py`, `arcane_guild.py`,
+  `worldbuilding_guild.py`) + now `workflow_guild.py` — **not deleted** (Q3: still on
+  roadmap).
+- **`backend/constitution.py` orphan** (dynamic `soul.md` parser) — **no action**, Q6
+  asked for an explanation of what "porting" would mean before deciding; given directly
+  in-session, decision still pending.
+- **Full suite re-run after every deletion/edit**: `375 passed`, zero failures/skips —
+  the actual verification this ledger exists to require, not a read-through.
+
+Second-frontend Q8–Q14 dispositions (sentry.ts wiring, `components/common` library,
+skip-bucket deletion minus `TesseractChamber` per founder's explicit hold) not yet
+executed — a fresh `Explore` pass was dispatched the same session to re-verify the exact
+skip-bucket file list before deleting anything there, same discipline as above. Record
+the outcome here when it lands, not a new file.

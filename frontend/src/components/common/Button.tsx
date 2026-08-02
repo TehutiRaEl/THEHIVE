@@ -27,12 +27,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const getVariantStyles = () => {
       switch (variant) {
-        case 'primary': return 'bg-blue-600 hover:bg-blue-700 text-white';
-        case 'secondary': return 'bg-gray-200 hover:bg-gray-300 text-gray-800';
-        case 'danger': return 'bg-red-600 hover:bg-red-700 text-white';
-        case 'ghost': return 'bg-transparent hover:bg-gray-100 text-gray-700 border border-gray-300';
-        case 'text': return 'bg-transparent hover:bg-gray-50 text-gray-700';
-        default: return 'bg-blue-600 hover:bg-blue-700 text-white';
+        case 'primary': return 'bg-yale hover:bg-yale-light text-white shadow-glow';
+        case 'secondary': return 'bg-void-700 hover:bg-void-800 text-cyan-glow border border-cyan-dim';
+        case 'danger': return 'bg-red-900 hover:bg-red-800 text-white border border-red-500/40';
+        case 'ghost': return 'bg-transparent hover:bg-void-700 text-cyan-glow border border-cyan-dim';
+        case 'text': return 'bg-transparent hover:bg-void-700 text-cyan-glow';
+        default: return 'bg-yale hover:bg-yale-light text-white shadow-glow';
       }
     };
 
@@ -50,9 +50,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={`
           inline-flex items-center justify-center
-          font-medium rounded-lg
+          font-body font-medium rounded-lg
           transition-colors duration-200
-          focus:outline-none focus:ring-2 focus:ring-offset-2
+          focus:outline-none focus:ring-2 focus:ring-cyan-glow focus:ring-offset-2 focus:ring-offset-void-900
           disabled:opacity-50 disabled:cursor-not-allowed
           ${getVariantStyles()}
           ${getSizeStyles()}

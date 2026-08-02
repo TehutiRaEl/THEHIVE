@@ -13,26 +13,63 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-08-01, ~04:15 UTC, daily heartbeat)
+## Right now (updated 2026-08-01, ~all automation PAUSED — read this section first)
 
-- **Open PRs: #143 only** (`mergeable_state: clean`, CI green, no new comments as of
-  this check). Every PR ever opened across ALL 10 federation repos is otherwise merged
-  — confirmed by checking
-  each repo directly (NAR2/4DBRAIN/aether/automatisch/Kimi-K2/LocalAGI/build-your-own-x/
-  free-programming-books/freeCodeCamp), not assumed. The mid-July "L5 merge stragglers"
-  item is fully resolved.
-- **Both dead-code depth investigations DONE, logged in `AUDIT_LEDGER.md`** (two
-  2026-07-31 follow-up entries). Guilds/duplicates: 7 of 12 stubs safe-to-delete
-  (job executed elsewhere for real), 1 partial finding (`treasury_guild.py`'s
-  revenue-split feature has no live implementation anywhere), 5 genuinely unfinished
-  low-priority; 2 of 4 duplicates safe-to-delete, 2 (`constitution.py`, `rate_limiter.py`)
-  flagged high-risk for founder review, not auto-merged. Second frontend: correction —
-  13 of the "56" files are NOT orphaned (already lazy-imported live by `KaiElOS.tsx`);
-  real standouts worth integrating are `MemoryGraphEnhanced.tsx`+`ConstitutionVisualizer.tsx`
-  (real D3 graph + tiered constitution view, already wired to live API, just needs
-  re-skinning) and `services/sentry.ts` (near-zero-cost — error tracking already
-  declared in `package.json`, never actually initialized). All founder-decision items,
-  nothing deleted/wired yet.
+- **ALL Routines deleted by the founder 2026-08-01 after a real incident — nothing fires
+  automatically right now, on purpose.** Root cause (confirmed from trigger history, not
+  guessed): every recurring Routine — the hourly PR-heartbeat cron AND the nightly 2am
+  arc AND an earlier `send_later` chain — used `persist_session:true` pointed at one
+  long-lived session, so 24+ resumes/day all snowballed ONE conversation's context
+  instead of firing clean; a literal 6+-firing identical-message chain from 2026-07-31
+  compounded it. **Do not recreate any Routine until the founder approves a redesign.**
+  Founder's design brief (2026-08-01, verbatim intent): fresh session per firing, never
+  this one; replace polling with `subscribe_pr_activity` (event-driven, zero-cost when
+  idle) for PR/CI watching; each unit of background work lives in its own file/directory
+  with its own prompt + a README stating what's next and what "done right" means, and the
+  trigger's own stored prompt becomes tiny — "go there, do it, update it, stop"; a
+  session should only open its PR once its task is fully done, check CI, then — if
+  context budget allows — move to the next queued task rather than stopping or
+  cramming. Redesign not yet built (founder chose "hold off" on timing, then continued
+  brainstorming — check this session's own transcript or `Fable_memory.md` for whether
+  a build decision has landed since this line was written).
+- **Open PRs: #143 only**, last confirmed `mergeable_state: clean`, CI green — **not
+  re-checked since Routines were deleted**, no heartbeat has run. Re-verify before
+  trusting this line.
+- **Dead-code 19-question round: answered by founder 2026-08-01, mostly executed.**
+  Deleted for real (verified zero-importer, full suite re-run, 375 passed):
+  `arena_guild.py`, `constitutional_guild.py`, `dream_guild.py`, `frequency_guild.py`,
+  `security_guild.py`, root-level `backend/llm_router.py` orphan, `backend/utils/
+  rate_limiter.py` orphan (ported into `middleware.py`'s live limiter as asyncio).
+  `treasury_guild.py` trimmed (ledger half removed, revenue-split idea kept per founder
+  — "real plan, discuss later"). **Correction to the prior audit**: `workflow_guild.py`
+  was wrongly filed as "safe to delete" — re-check found it's genuinely unfinished
+  scaffolding (hardcoded placeholder IPFS hash), not superseded anywhere; moved to the
+  "still on roadmap" bucket instead, not deleted. Full detail →
+  `AUDIT_LEDGER.md`'s 2026-08-01 entry. **Not yet done**: second-frontend skip-bucket
+  deletion (an `Explore` pass is re-verifying the exact file list; `TesseractChamber` is
+  explicitly held out — founder says it's essential to 4DBRAIN's real work and wants to
+  review it together before any decision, not delete), `sentry.ts` wiring, shared
+  `components/common` library, `services/github.ts` UI trigger, `stores/uiStore.ts`
+  adoption, `hive_proposals` extension for Kai El execution access, cross-session
+  token-tracking infra, SPORE_ROSTER's 3 new gaps — all founder-approved, still queued,
+  not started. Backlog order unchanged (founder confirmed, Q15): (2) production-readiness
+  %% meter next, then (3) Command Center audit, (4) Venture Planner overhaul.
+- **Second-frontend skip bucket: DELETED for real 2026-08-01** (51 files, PR #144) —
+  fake colony consoles, invented data files, the dead HiveDashboard shell built on them,
+  buggy hooks, dead page/router shell. Verified zero-importer via a fresh `Explore` pass
+  before deletion (full method + file list in `AUDIT_LEDGER.md`'s 2026-08-01 entry).
+  `TesseractChamber/` excluded and confirmed to survive as a clean standalone orphan
+  (its only importer was the now-deleted `HiveDashboard.tsx`) — held for joint founder
+  review, not touched. `MissionCard.tsx`/`MissionTimeline.tsx` also excluded — they call
+  the real API, just unwired; that's a separate founder decision, not skip-bucket trash.
+  **Found along the way, unrelated to this change:** `npm run build` is currently broken
+  on pre-existing `src/worlds/`/`src/xp/` TypeScript errors — confirmed via `git stash`
+  that the exact same errors exist with or without this PR's diff. Not fixed here, not
+  caused here — flagging so a future firing doesn't waste time re-diagnosing it as new.
+- **Real correction delivered to the founder 2026-08-01**: the Worker's API rate limiter
+  (30/min/IP, `backend/api/middleware.py`) is unrelated to Claude Code session/token
+  cost — a real $40-in-7-minutes incident was the Routine snowball above, not this file.
+  Don't let a future firing re-conflate the two.
 - **Grok bridge activation (L2):** founder said "not sure yet" — tracked as **undecided**,
   not open, not dropped. Don't nag about it; don't drop it either.
 - **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no

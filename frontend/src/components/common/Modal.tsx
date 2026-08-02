@@ -90,7 +90,7 @@ export const Modal = ({
       className={`
         fixed inset-0 z-50
         flex items-center justify-center
-        bg-black bg-opacity-50
+        bg-void-black/70
         backdrop-blur-sm
         ${overlayClassName}
       `}
@@ -98,9 +98,10 @@ export const Modal = ({
     >
       <div
         className={`
-          bg-white
+          bg-void-800
+          border border-cyan-dim
           rounded-lg
-          shadow-xl
+          shadow-panel-neon
           overflow-hidden
           ${getSizeStyles()}
           w-full
@@ -109,12 +110,12 @@ export const Modal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {(title || showCloseButton) && (
-          <div className="modal-header flex justify-between items-center p-4 border-b border-gray-200">
-            {title && <h2 className="text-lg font-semibold text-gray-900">{title}</h2>}
+          <div className="modal-header flex justify-between items-center p-4 border-b border-void-700">
+            {title && <h2 className="font-display text-lg font-semibold text-cyan-glow">{title}</h2>}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-white/40 hover:text-cyan-glow transition-colors"
                 aria-label="Close modal"
               >
                 <svg
@@ -152,7 +153,7 @@ export const ModalFooter: React.FC<ModalFooterProps> = ({
   children,
   className = ''
 }) => (
-  <div className={`modal-footer p-4 border-t border-gray-200 bg-gray-50 ${className}`}>
+  <div className={`modal-footer p-4 border-t border-void-700 bg-void-900 ${className}`}>
     {children}
   </div>
 );

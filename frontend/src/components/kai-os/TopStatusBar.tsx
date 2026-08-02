@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { HiveData } from '../../hooks/useHiveData';
+import { computeReadiness } from '../../utils/readiness';
 
 // Thematic constant, not a computed metric — same spirit as utils/constants.ts's
 // SCHUMANN_HZ. Displayed plainly as branding, never implied to be measured.
@@ -31,6 +32,7 @@ export default function TopStatusBar({ hive, onOpenBiosystem, onOpenGatewayConso
   const topSoul = hive.soulBoard[0]?.soul;
   const topElo = hive.eloBoard[0]?.rating;
   const connectionLabel = hive.online ? 'Hive connection live' : 'Hive connection offline';
+  const readiness = computeReadiness(hive.debugEnv);
 
   return (
     <header
@@ -70,6 +72,17 @@ export default function TopStatusBar({ hive, onOpenBiosystem, onOpenGatewayConso
       </span>
       <span className="text-slate-400">
         Models <span className="text-slate-100">{hive.aiBound ? (hive.llm?.active_provider ?? 'bound') : 'simulation'}</span>
+      </span>
+      <span
+        className="text-slate-400"
+        title={readiness.degraded
+          ? 'Live switch probe unavailable — showing degraded (no percentage)'
+          : `Switches ${readiness.switchesPct}% · Coverage ${readiness.coveragePct}% (last measured) · Open decisions resolved ${readiness.openItemsPct}% (last reviewed) — see CAMPAIGN.html task 1 for the formula`}
+      >
+        Queen{' '}
+        <span className="text-gold-neon font-semibold" style={{ textShadow: '0 0 10px rgba(232,193,90,0.5)' }}>
+          {readiness.pct != null ? `${readiness.pct}%` : '—'}
+        </span>
       </span>
       {onOpenBiosystem && (
         <button

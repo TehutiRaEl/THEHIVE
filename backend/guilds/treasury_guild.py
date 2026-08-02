@@ -1,4 +1,7 @@
-"""Treasury Guild — manages SOUL economy and revenue splits."""
+"""Treasury Guild — 70/20/10 revenue-split proposal. Not wired to anything live yet
+(see AUDIT_LEDGER.md 2026-07-31 depth pass); the ledger-half of this file (credit/
+get-balance bookkeeping) was removed 2026-08-01 as superseded-for-real by wallet.py —
+this class now holds only the still-undecided revenue-split idea, per founder Q2."""
 from typing import Dict
 from backend.core.config import settings
 
@@ -8,10 +11,6 @@ class TreasuryGuild:
         self.name = "Treasury Guild"
         self.enabled = True
         self.balance = 0.0
-
-    async def credit(self, amount: float, reason: str) -> Dict:
-        self.balance += amount
-        return {"status": "credited", "new_balance": round(self.balance, 4), "reason": reason}
 
     async def distribute_revenue(self, total_amount: float) -> Dict:
         agent_share = total_amount * settings.agent_split

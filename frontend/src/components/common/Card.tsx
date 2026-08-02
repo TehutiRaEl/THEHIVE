@@ -24,12 +24,12 @@ export const Card = ({
 }: CardProps) => {
   const getVariantStyles = () => {
     switch (variant) {
-      case 'primary': return 'bg-blue-50 border-blue-200';
-      case 'secondary': return 'bg-gray-50 border-gray-200';
-      case 'danger': return 'bg-red-50 border-red-200';
-      case 'success': return 'bg-green-50 border-green-200';
-      case 'warning': return 'bg-yellow-50 border-yellow-200';
-      default: return 'bg-white border-gray-200';
+      case 'primary': return 'bg-void-800 border-yale-light shadow-glow';
+      case 'secondary': return 'bg-void-800 border-cyan-dim';
+      case 'danger': return 'bg-void-800 border-red-500/40';
+      case 'success': return 'bg-void-800 border-electric-green/40';
+      case 'warning': return 'bg-void-800 border-gold-dim';
+      default: return 'bg-void-800 border-void-700';
     }
   };
 
@@ -68,7 +68,7 @@ export const Card = ({
       {...props}
     >
       {header && (
-        <div className="card-header mb-4 pb-2 border-b border-gray-100">
+        <div className="card-header mb-4 pb-2 border-b border-void-700">
           {header}
         </div>
       )}
@@ -76,7 +76,7 @@ export const Card = ({
         {children}
       </div>
       {footer && (
-        <div className="card-footer mt-4 pt-2 border-t border-gray-100">
+        <div className="card-footer mt-4 pt-2 border-t border-void-700">
           {footer}
         </div>
       )}
@@ -100,8 +100,8 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
 }) => (
   <div className={`flex justify-between items-start ${className}`}>
     <div className="flex-1">
-      {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
-      {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+      {title && <h3 className="font-display text-lg font-semibold text-cyan-glow">{title}</h3>}
+      {subtitle && <p className="font-body text-sm text-white/50 mt-1">{subtitle}</p>}
     </div>
     {actions && <div className="ml-4">{actions}</div>}
   </div>
