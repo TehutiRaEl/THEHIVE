@@ -92,12 +92,15 @@ every firing, run <code>.claude/scripts/session-usage.sh</code> (reads this firi
 real usage straight from its Claude Code session transcript — the same source
 <code>caveman-stats</code> uses, no estimation) and append its exact
 <code>TOKENS: &lt;n&gt;</code> line to the Campaign Log entry for this firing. At the
-START of every firing, before touching any task: <code>grep '^TOKENS:' </code> today's
-dated log entries, sum the numbers, and count today's entries.
-<strong>Every `TOKENS: n` line must be a genuine per-firing/per-task delta (end usage
-minus start usage), never a running cumulative total</strong> — a real bug found
-2026-08-02 mixed the two under the same label and would have wrongly re-triggered the
-ceiling on a stale number. If a log entry needs to mention overall session usage for
+START of every firing, before touching any task: <code>grep -oE 'TOKENS: [0-9]+' .claude/tasks/CAMPAIGN.html</code>
+(NOT anchored to line-start with <code>^</code> — a real bug found 2026-08-02: the
+originally-specified anchored version found nothing at all, even a genuine entry, because
+it wasn't written on its own line. The unanchored form is robust to that and already
+verified working) for today's dated entries, sum the numbers, count today's entries.
+<strong>Every `TOKENS: n` occurrence must be a genuine per-firing/per-task delta (end
+usage minus start usage), never a running cumulative total</strong> — a separate real bug
+found the same day mixed the two under the same label and would have wrongly re-triggered
+the ceiling on a stale number. If a log entry needs to mention overall session usage for
 context, label it differently (e.g. "session cumulative at this point") so it's never
 mistaken for a summable delta. If count &ge; 4 OR
 token-sum &ge; 3,000,000: stop immediately, log "ceiling hit, not starting" with the
