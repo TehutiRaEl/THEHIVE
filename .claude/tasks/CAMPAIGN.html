@@ -37,6 +37,17 @@ any task below; a firing only opens it if a task's Prompt explicitly says to.</p
 <ol>
 <li><strong>Caveman mode on for the whole firing</strong> (per <code>CLAUDE.md</code>'s
 standing default) — terse, token-efficient, full precision, all the way through.</li>
+<li><strong>Efficiency, concretely, not just "be terse":</strong> real per-task cost
+averages ~83,500 tokens (n=2 measured 2026-08-02, range 60K-107K — see Campaign Log).
+(a) Set a real <code>task_budget</code> (~150,000 tokens, generous headroom over the
+measured average) at the start of the firing if the harness surface supports it — lets
+the model see a live countdown and pace itself instead of a crude after-the-fact check.
+(b) Keep this file's own content (the protocol, already-done tasks) stable across
+firings and put anything that changes turn-to-turn last — cache-creation cost, not raw
+token count, was the actual driver of the original incident's expense. (c) Before
+starting a task that's a repeat of something done before, check
+<code>workflow-optimizer</code>'s own recall step first — don't re-derive an approach
+that already has a recorded lesson.</li>
 <li>Find the first <code>&lt;div class="task" data-status="pending"&gt;</code> below, in
 document order. That is the only task under consideration. Ignore everything marked
 <code>done</code> or <code>blocked</code>.</li>
@@ -547,6 +558,28 @@ meaningfully-scoped real sub-task costs, even allowing this session's own overhe
 inflate it somewhat above a truly fresh session's cost. Ceiling number itself still not
 finalized — real recommendation stands: needs actual fresh-session measurement, not a
 guess from either end of this session's range.
+2026-08-02 — Founder proposed averaging task budgets instead of a fixed cap — good
+instinct, wrong number applied to it: the ~5.1M/window figure isn't a per-task cost, it's
+a per-5-hour-window cost covering dozens of turns/tasks/huge reads. Reconstructed a second
+real per-task measurement retroactively from commit timestamps bracketing task 1's actual
+work (23:33:13-23:37:36, 50 transcript messages): 106,553 tokens. Combined with task 2a's
+60,444: real average ~83,500 tokens/task (n=2, range 60K-107K — needs more real samples
+over time, not treated as final). At that real average, even 4 firings/day costs ~330K
+tokens total — nowhere near the 3,000,000/day ceiling. Conclusion: **the token ceiling was
+never actually binding for real work; the 4-firings/day cap always hits first.** Keeping
+3M/day as-is, correctly sized as a runaway/loop backstop, not a constraint on legitimate
+tasks. Checked for an existing "claude-token-optimizer" skill (referenced by title in this
+repo's own PR #64 history) — not actually present, a claimed import that didn't land or
+was later removed; noted, not chased further tonight. Applying real, already-documented
+Anthropic-native efficiency mechanisms instead of an open-ended GitHub search (a deliberate
+scope call, logged per this file's own Findings rule, not a silent skip): (1)
+`output_config.task_budget` — real-time in-task token pacing via a live countdown the model
+sees, replacing the current crude after-the-fact log-and-check; (2) prompt-caching
+discipline (stable content first, volatile last) directly targeting the cache-creation cost
+that actually drove this session's 55-hour bloat; (3) `workflow-optimizer` (already built,
+not yet actually invoked per-firing) — the standing recall→adapt→record loop for any
+repeated procedure, which a recurring campaign firing genuinely is. Protocol updated below
+to reference all three.
 </div>
 
 </body>
