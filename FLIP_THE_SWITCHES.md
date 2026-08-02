@@ -128,6 +128,14 @@ hardcoded copy).
 those repos gets a real comment starting `<!-- hive-federation-pr-review -->` within the
 run.
 
+The same `HIVE_FEDERATION_TOKEN` also gates `.github/workflows/federation-issue-triage.yml`
+(task 9c) — one secret, two federation-wide read/label workflows, no separate token needed.
+That one labels untriaged open issues (best-effort bug/enhancement/question + a narrow,
+explicit urgent-keyword flag — see the workflow's own header for the exact list) and
+mirrors results into one "Federation Issue Triage Queue" tracking issue in THEHIVE, same
+shape as `kai-el-bridge.yml`'s concerns/proposals queue. Never transfers, closes, or
+assigns an issue.
+
 ## Already flipped / no switch needed
 - D1 database, Workers AI, assets, the 30-min heartbeat — live now.
 - The UI (graph web, neon theme, Updates, Legal Learning, Files panel shell) — ships with
