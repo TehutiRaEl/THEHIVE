@@ -360,7 +360,7 @@ private reasoning.</li>
   <p><strong>Acceptance:</strong> Real, running, not a design doc.</p>
 </div>
 
-<div class="task" data-status="in-progress" data-batchable="true" id="task-10">
+<div class="task" data-status="done" data-batchable="true" id="task-10">
   <h3>10. Continue devils-advocate-audit sweep</h3>
   <p class="meta">Standing/ongoing. Est. cost: small-medium, good filler for leftover budget.</p>
   <p><strong>Prompt:</strong> Check <code>AUDIT_LEDGER.md</code>'s "not yet audited" list,
@@ -574,6 +574,36 @@ private reasoning.</li>
   which are already covered, cited against the real SPORE_ROSTER.md.</p>
 </div>
 
+<div class="task" data-status="pending" data-batchable="false" id="task-26">
+  <h3>26. Fix hive_mesh.dispatch()'s HITL approval dead end</h3>
+  <p class="meta">Found 2026-08-02 during task 10's devils-advocate-audit sweep
+  (<code>AUDIT_LEDGER.md</code>'s 2026-08-02 <code>backend/core/hitl.py</code> entry,
+  verdict BUG FOUND — ESCALATED). Real, evidence-cited, not hypothetical. Est. cost:
+  medium — touches the founder-approval gate for cross-colony fan-out, safety-relevant,
+  not batchable, own firing with extra scrutiny.</p>
+  <p><strong>Prompt:</strong> <code>hive_mesh.dispatch()</code> correctly holds any
+  non-Tier-1-safe event for founder review via <code>hitl.request_approval()</code>
+  instead of firing it blind — confirmed real and working. But
+  <code>POST /v11/hitl/resolve</code> approving that request only ever updates the HITL
+  row's own status; nothing anywhere reads an approval back and actually re-dispatches
+  the original held event to its target colonies (proven live via a standalone probe:
+  approving a held request never calls the real send path — see the ledger entry for the
+  exact reproduction). Decide and build the real fix: most likely a synchronous
+  re-dispatch triggered from <code>resolve_request()</code>/the
+  <code>/hitl/resolve</code> handler when the resolved request's
+  <code>action_type</code> starts with <code>hive_mesh.dispatch:</code> and
+  <code>approved=True</code>, replaying the stored <code>event_type</code>/
+  <code>payload</code>/<code>targets</code> through the real dispatch path (not the
+  held/HITL branch a second time). Consider and document what happens to a
+  long-pending-then-approved request (staleness window, if any).</p>
+  <p><strong>Acceptance:</strong> A new test that actually proves the round trip — held →
+  approved → the real colony-facing call fires (or a documented, deliberate reason it
+  shouldn't for a given case) — using the same real-execution-not-mock-only discipline
+  this bug was found with. Full existing test suite still passes. Given this gates
+  cross-colony action approval, this PR must not self-merge under any circumstance —
+  founder review required regardless of CI color, same standing as tasks 7/12.</p>
+</div>
+
 <h2>Campaign Log</h2>
 <p class="meta">One line per completed/blocked task. Append, never rewrite history.</p>
 <div class="log" id="campaign-log">
@@ -604,6 +634,7 @@ private reasoning.</li>
 2026-08-02 — Task 9a blocked (real tooling blocker, not scope): add_repo push denied by the session's auto-mode classifier for every external repo tried (4DBRAIN, aether — same denial both times). Left a real, usable COLONY_PULSE_TEMPLATE.md (modeled on HIVE_PULSE.md) for whoever has real push access to instantiate. PROTOCOL MISS logged honestly: did not commit the in-progress-alone step before this task's work (blocker was found almost immediately, but the rule says never skip it — skipped it anyway).
 2026-08-02 — Task 9b done: built .github/workflows/federation-pr-review.yml, real 6-hourly scheduled workflow, re-derives colony repo list from .queen/hive.yml (never hardcoded separately), posts one real evidence-cited comment (mergeable state + real gh pr checks output) per open PR, idempotent via marker comment, comment-only (never approves/merges/blocks, same never-merge discipline extended to federation repos). Gated behind new HIVE_FEDERATION_TOKEN secret (flip-the-switch, honest no-op logged if unbound) — SWITCHBOARD.md #8 / FLIP_THE_SWITCHES.md #8 added. Found and fixed a real bug before commit: first draft's heredoc broke YAML block-scalar parsing (column-1 lines under-indented relative to the run: | block) — caught via python3 yaml.safe_load, fixed by indenting heredoc body to the block's base indentation so YAML strips it back to zero-indent bash text; re-verified via yaml.safe_load + bash -n on every extracted step. PROTOCOL MISS (again) logged honestly: no separate in-progress-alone commit before this task's work either — same batching-drops-the-step pattern flagged in earlier firings' self-audits, still not actually fixed in practice.
 2026-08-02 — Task 9c done: built .github/workflows/federation-issue-triage.yml, real 3-hourly scheduled workflow, modeled directly on kai-el-bridge.yml's mirror-to-tracking-issue pattern (explicitly, per the task's own prompt) rather than a new mechanism. Real explainable keyword heuristics (documented in the workflow's own header, not claimed as more than that) for bug/enhancement/question labels + a narrow urgent-keyword flag; idempotent via hive-triaged label; mirrors every run's results into one "Federation Issue Triage Queue" tracking issue in THEHIVE. Never transfers/closes/assigns — label+mirror only. Reuses task 9b's HIVE_FEDERATION_TOKEN secret (one token, two workflows) rather than adding a new one. This time the in-progress-alone commit WAS done correctly before starting work (f568d05-style discipline restored after 9a/9b's misses). YAML + bash-per-step syntax verified (yaml.safe_load + bash -n on every extracted step) before commit, plus a standalone awk smoke-test on sample data to confirm the tracking-issue formatting actually renders right.
+2026-08-02 — Task 10 done: audited backend/core/hitl.py (top of AUDIT_LEDGER.md's not-yet-audited list), verdict BUG FOUND — ESCALATED, not CONFIRMED CORRECT. hive_mesh.dispatch() correctly holds non-Tier-1 events for founder review, but approving via /v11/hitl/resolve never re-fires the held dispatch — proven live via a standalone probe script (mock_send.called == False after approval), not just grep/read-through. Installed requirements-ci.txt fresh, re-ran the real suite (33/33 passed on test_hitl.py + test_hive_mesh.py) before concluding — green tests didn't catch this because none round-trip through the real caller path. Escalated rather than fixed mid-audit (safety-relevant, real design decision) — new task 26 added to the queue, AUDIT_LEDGER.md's not-yet-audited list updated to strike hitl.py through.
 
 </body>
 </html>

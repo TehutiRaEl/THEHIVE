@@ -268,8 +268,8 @@ built for a real reason and later superseded (safe to delete), or abandoned mid-
 
 Ordered by the SUSPECT priority in SKILL.md — highest blast radius / least-verified first:
 
-- `backend/core/hitl.py` (human-in-the-loop approval queue) — same caveat: tests exist,
-  written same-session as the read-through, not independently re-derived.
+- ~~`backend/core/hitl.py`~~ — **audited 2026-08-02, see Entries above.** Bug found
+  (approval doesn't re-fire the held action), escalated as CAMPAIGN.html task 26.
 - `backend/mcp_server/server.py` — tests use a stubbed `mcp` SDK, not the real one (the
   real SDK has installability problems in this sandbox); the stub's behavior matching
   the real FastMCP's behavior has not been independently re-verified against the real
@@ -351,3 +351,64 @@ skip-bucket deletion minus `TesseractChamber` per founder's explicit hold) not y
 executed — a fresh `Explore` pass was dispatched the same session to re-verify the exact
 skip-bucket file list before deleting anything there, same discipline as above. Record
 the outcome here when it lands, not a new file.
+
+### 2026-08-02 — `backend/core/hitl.py` (`HumanInTheLoop`) + its one real caller, `hive_mesh.dispatch()`
+
+**Verdict: BUG FOUND — ESCALATED** (CAMPAIGN.html task 10, next item off the priority
+list). Re-run for real via a standalone probe script, not a read-through — full command
+and output below.
+
+`hive_mesh.dispatch()` correctly holds any non-Tier-1-safe event for founder review
+instead of firing it blind (`backend/core/hive_mesh.py` lines 96-111): it calls
+`hitl.request_approval(...)`, publishes a `hive.dispatch.held` event, and returns
+`{cid: "held_for_review", ...}` — confirmed real by both existing tests
+(`tests/unit/test_hive_mesh.py::test_non_tier1_event_is_held_for_review_not_dispatched`
+and `::test_synthetic_tier3_shaped_dispatch_is_rejected_before_reaching_colony`) and a
+fresh full-suite run (`python3 -m pytest tests/unit/test_hitl.py
+tests/unit/test_hive_mesh.py -q` → **33 passed**, this session, after installing
+`requirements-ci.txt` fresh — no cached result trusted).
+
+**The real gap, found by tracing what happens AFTER approval, which no existing test
+does:** `POST /v11/hitl/resolve` → `hitl.resolve_request()` only ever updates the HITL
+request's own status (in-memory dict + `hitl_requests` D1/SQLite row) to
+`approved`/`rejected`. Nothing anywhere reads that result back and re-invokes the
+original held dispatch. `grep`-confirmed across the whole `backend/` tree: the string
+`hive_mesh.dispatch:` (the `action_type` prefix `hive_mesh.py` stores the held event
+under) appears in exactly one place — the line that writes it — never in a read/branch
+anywhere else. Proven live, not just by absence-of-code:
+
+```python
+mesh = HiveMesh()
+with patch.object(mesh, '_send_to_colony', new=AsyncMock(return_value='sent-ok')) as mock_send:
+    result = await mesh.dispatch('first_contact', {'msg': 'hello colony'}, targets=['nar2'])
+    # result == {'nar2': 'held_for_review'}
+    req_id = <the matching pending hitl request's id>
+    approve_result = await hitl.resolve_request(req_id, approved=True, resolved_by='founder')
+    # approve_result == {'request_id': ..., 'approved': True, 'resolved_by': 'founder', 'status': 'approved'}
+    print(mock_send.called)  # -> False
+```
+`mock_send.called` is `False` after approval — the founder clicking "approve" on a held
+`hive_mesh` dispatch currently does nothing beyond marking a database row. The event
+never actually reaches the colony it was meant for, approved or not. This is the same
+class of gap `automaton`'s upstream review flagged (a human-approval mechanism that looks
+real but doesn't cause the approved thing to happen) — mirror-imaged: there it was
+"confirmation-required" behaving like a hard deny; here it's "approved" behaving like
+silence. Every existing HITL test (`test_hitl.py`) only exercises `HumanInTheLoop` in
+isolation and never round-trips through `hive_mesh.dispatch()`'s real caller path, so
+nothing caught this until this pass traced the actual call graph instead of trusting that
+green tests meant the feature worked end-to-end.
+
+**Why ESCALATED, not fixed here:** this is CAMPAIGN.html task 10's scope (ledger entry,
+not a code fix) for a genuinely safety-relevant mechanism (the founder-approval gate for
+cross-colony fan-out) — deciding the right re-dispatch shape (synchronous callback at
+resolve time? a poller that re-checks approved `hive_mesh.dispatch:*` rows and replays
+them? should a stale/long-approved request still fire, or does approval need to happen
+within some freshness window?) is a real design decision, not a one-line patch, and
+touches the exact machinery `PERMISSIONS.md`'s Tier gate depends on being trustworthy.
+Routed as a new `pending` CAMPAIGN.html task (26) rather than fixed unilaterally
+mid-audit, per this skill's and the campaign protocol's own rule not to expand a task's
+scope silently. **Also true and worth naming:** System A's backend (where this lives) is
+not verified live in production this session (per `CLAUDE.md`'s own open-items section),
+so the real-world blast radius today is zero — this is a correctness bug in code that
+isn't yet serving traffic, not an active incident. Still worth fixing before any future
+decision to deploy System A, which is exactly why it's escalated rather than shelved.
