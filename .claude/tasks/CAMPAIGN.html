@@ -192,7 +192,7 @@ private reasoning.</li>
   ConnectedModels.</p>
   <p><strong>Acceptance:</strong> same as parent task 2.</p>
 </div>
-<div class="task" data-status="pending" data-batchable="true" id="task-2d">
+<div class="task" data-status="done" data-batchable="true" id="task-2d">
   <h3>2d. Audit: governance/constitution surfaces</h3>
   <p class="meta">Split from task 2. ConstitutionViewer, ProposalsPanel, LegalLearning.</p>
   <p><strong>Acceptance:</strong> same as parent task 2.</p>
@@ -597,6 +597,24 @@ that actually drove this session's 55-hour bloat; (3) `workflow-optimizer` (alre
 not yet actually invoked per-firing) — the standing recall→adapt→record loop for any
 repeated procedure, which a recurring campaign firing genuinely is. Protocol updated below
 to reference all three.
+2026-08-02 — TEST RUN #3 (founder-requested, "3 tasks back to back, then stop, watch for
+loop inconsistencies"): first real test of the batching mechanism itself — never exercised
+before tonight. Before starting, the ceiling check surfaced TWO real bugs, fixed on the
+spot rather than worked around: (1) a `TOKENS:` entry was a cumulative session snapshot
+mislabeled as a summable delta, would have wrongly re-triggered the ceiling on stale data
+— relabeled; (2) the protocol's own literal `grep '^TOKENS:'` (anchored to line-start)
+found NOTHING, ever, even a genuine entry, because entries were written mid-sentence —
+switched to an unanchored grep, verified working. Ran tasks 2b, 2c, 2d back to back, no
+stop between them (batching held): 2b (13 legacy tabs) found 1 real bug (fixed same-session
+earlier tonight, re-confirmed) + 1 real cross-reference logged to task 6; 2c (4 Kai El
+surfaces) clean pass, 0 bugs, stated honestly rather than manufacturing a finding; 2d
+(3 governance surfaces) clean pass, including verifying GOVERNANCE.md's fetch path isn't a
+latent 404 by cross-checking the Worker's own identical usage. Real combined delta for all
+3 tasks: TOKENS: 55665 (57142585 -> 57198250) — LESS than task 2a alone (60,444), real
+evidence the batching design works: marginal cost per task drops once a firing is already
+warmed up on a familiar kind of work, not just theoretical. Stopping here per explicit
+instruction. Task 2's decomposition is now 4 of 5 sub-tasks done (2a-2d); 2e (overlays/
+dashboards) is the one piece left.
 </div>
 
 </body>
