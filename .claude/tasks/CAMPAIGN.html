@@ -205,7 +205,7 @@ private reasoning.</li>
 </div>
 
 
-<div class="task" data-status="in-progress" data-batchable="true" id="task-3">
+<div class="task" data-status="done" data-batchable="true" id="task-3">
   <h3>3. Venture Planner + Legal-research overhaul</h3>
   <p class="meta">Priority 4 (Q15). Est. cost: large — likely not batchable with
   anything after it; treat as its own firing unless task 1+2 leave a lot of room.</p>
@@ -402,6 +402,49 @@ private reasoning.</li>
   happen, not just code that compiles.</p>
 </div>
 
+<div class="task" data-status="pending" data-batchable="true" id="task-15">
+  <h3>15. Worker test infrastructure (zero automated tests found)</h3>
+  <p class="meta">Found 2026-08-02 during task 3's scoping pass. Real gap, build-worthy —
+  routed here per the protocol's Findings rule. Est. cost: large.</p>
+  <p><strong>Prompt:</strong> <code>worker/</code> (the live production Worker, all
+  <code>/v11/*</code> routes) has zero automated tests anywhere — no test directory, no
+  <code>*.test.js</code>, confirmed by direct search, not assumed. Stand up a real test
+  harness (Node's built-in <code>node:test</code>, matching <code>automaton/</code>'s
+  zero-dependency precedent, is a reasonable default) and cover at minimum the endpoints
+  this session touched or audited (<code>/venture/plan</code>, <code>/legal/research</code>,
+  rate-limit + token gating).</p>
+  <p><strong>Acceptance:</strong> A real test command that actually runs and actually
+  asserts against real route logic, wired into CI if a worker CI workflow exists (check
+  first, don't assume one doesn't).</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-16">
+  <h3>16. Venture/legal-research session history + export</h3>
+  <p class="meta">Found 2026-08-02 during task 3's scoping pass. Idea/enhancement, not a
+  bug — <strong>founder should confirm scope</strong> before real work starts; no founder
+  ask on record for this specifically. Est. cost: medium.</p>
+  <p><strong>Prompt:</strong> Venture plans and legal-research answers are currently fully
+  ephemeral — no per-session history, no export/download. If wanted, persist results (D1
+  already used elsewhere) and add a download/export action in the UI.</p>
+  <p><strong>Acceptance:</strong> Founder confirms this is wanted before implementation
+  begins; if confirmed, real persistence + a real UI affordance, verified live.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-17">
+  <h3>17. Legal-research citation verification</h3>
+  <p class="meta">Found 2026-08-02 during task 3's scoping pass. Idea/enhancement —
+  <strong>founder should confirm scope</strong>; the system prompt already instructs the
+  model not to fabricate citations, but nothing server-side verifies that claim. Est.
+  cost: medium-large (would need a real external lookup, not just a stronger prompt).</p>
+  <p><strong>Prompt:</strong> If wanted, add a real server-side check (e.g. a lookup against
+  a real legal-reference source) that a cited case/statute in a
+  <code>/v11/legal/research</code> answer is genuine, rather than trusting the model's own
+  no-fabrication instruction alone.</p>
+  <p><strong>Acceptance:</strong> Founder confirms this is wanted and picks/approves a real
+  verification source before implementation; degrade honestly (flag unverifiable citations,
+  never silently drop or silently trust them) if built.</p>
+</div>
+
 <h2>Campaign Log</h2>
 <p class="meta">One line per completed/blocked task. Append, never rewrite history.</p>
 <div class="log" id="campaign-log">
@@ -422,6 +465,7 @@ private reasoning.</li>
 2026-08-02 — Devil's-advocate on tonight's own execution: 6 real findings — (1) both ceiling bugs existed silently for hours before being caught by chance; (2) workflow-optimizer's own new rule was skipped in the very next task; (3) task_budget is unverified as actually supported by the firing mechanism; (4) "never merge" is still prose, never technically tested; (5) every test ran inside one continuous session, never a real fresh firing; (6) can't fully rule out the batching-efficiency read being partly less-careful-checking rather than only genuine efficiency.
 2026-08-02 — Self-audit against the founder's original instructions found real drift: in-progress-alone commits were done correctly for task 1 and 2a, then silently dropped for 2b/2c/2d during batching (confirmed via git log, not assumed) — direct evidence for finding (6) above. The "one line, not a narrative" log rule was violated in literally every entry all night (3-29 lines, up to 375 words each), directly undermining this file's own reason for existing (small enough to read every firing). Log compressed retroactively to real one-liners here; detailed findings remain in their own dated devils-advocate-audit/ files, not lost.
 2026-08-02 — TEST RUN #4 (fresh session): ceiling check found 0 real TOKENS: lines ever logged despite the rule mandating them — prior firings logged prose ("Real delta: N tokens") instead of the literal grep-able format; fixing going forward, flagged as a real gap in this report. Task 2e done: overlays/dashboards audit, 8/8 clean pass, task 2's full 33-component decomposition now closed.
+2026-08-02 — Task 3 done: scoped venture/legal overhaul, found both endpoints already solid, fixed one real gap (missing per-IP rate limit on /venture/plan + /legal/research, added matching existing pattern). 3 further findings routed as new pending tasks 15-17 (worker test infra; session history/export; citation verification — latter two flagged founder-confirm-scope).
 
 
 </body>

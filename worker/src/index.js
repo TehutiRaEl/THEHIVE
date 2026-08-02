@@ -842,6 +842,8 @@ export default {
       // anything real — no accounts created, no posts sent, no money spent. The
       // output is a draft the founder can route to /proposals for a real decision.
       if (p === '/venture/plan' && method === 'POST') {
+        const ipVenture = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!await rateLimitOk(DB, ipVenture, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
         if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         const brief = (body.brief || '').toString().trim().slice(0, 2000);
@@ -895,6 +897,8 @@ export default {
       // Never claims to be licensed or to have passed a bar exam; always
       // states plainly that it is not a lawyer and this is not legal advice.
       if (p === '/legal/research' && method === 'POST') {
+        const ipLegal = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!await rateLimitOk(DB, ipLegal, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
         if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         const question = (body.question || '').toString().trim().slice(0, 1000);
