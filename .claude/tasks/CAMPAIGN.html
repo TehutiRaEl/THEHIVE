@@ -197,7 +197,7 @@ private reasoning.</li>
   <p class="meta">Split from task 2. ConstitutionViewer, ProposalsPanel, LegalLearning.</p>
   <p><strong>Acceptance:</strong> same as parent task 2.</p>
 </div>
-<div class="task" data-status="in-progress" data-batchable="true" id="task-2e">
+<div class="task" data-status="done" data-batchable="true" id="task-2e">
   <h3>2e. Audit: overlays/dashboards</h3>
   <p class="meta">Split from task 2. BiosystemOverlay, Observatory, DreamLogs, HiveUpdates,
   FilesPanel, RoadmapPanel, RoadmapAvatar, VenturePlanner.</p>
@@ -421,7 +421,8 @@ private reasoning.</li>
 2026-08-02 — TEST RUN #3: first real test of batching. Tasks 2b/2c/2d run back-to-back, no stop between them. 2b found 1 real bug (fixed) + 1 cross-ref to task 6; 2c and 2d clean passes. Real combined delta: 55,665 tokens for 3 tasks (less than 1 solo task) — real evidence batching reduces marginal cost.
 2026-08-02 — Devil's-advocate on tonight's own execution: 6 real findings — (1) both ceiling bugs existed silently for hours before being caught by chance; (2) workflow-optimizer's own new rule was skipped in the very next task; (3) task_budget is unverified as actually supported by the firing mechanism; (4) "never merge" is still prose, never technically tested; (5) every test ran inside one continuous session, never a real fresh firing; (6) can't fully rule out the batching-efficiency read being partly less-careful-checking rather than only genuine efficiency.
 2026-08-02 — Self-audit against the founder's original instructions found real drift: in-progress-alone commits were done correctly for task 1 and 2a, then silently dropped for 2b/2c/2d during batching (confirmed via git log, not assumed) — direct evidence for finding (6) above. The "one line, not a narrative" log rule was violated in literally every entry all night (3-29 lines, up to 375 words each), directly undermining this file's own reason for existing (small enough to read every firing). Log compressed retroactively to real one-liners here; detailed findings remain in their own dated devils-advocate-audit/ files, not lost.
-</div>
+2026-08-02 — TEST RUN #4 (fresh session): ceiling check found 0 real TOKENS: lines ever logged despite the rule mandating them — prior firings logged prose ("Real delta: N tokens") instead of the literal grep-able format; fixing going forward, flagged as a real gap in this report. Task 2e done: overlays/dashboards audit, 8/8 clean pass, task 2's full 33-component decomposition now closed.
+
 
 </body>
 </html>
