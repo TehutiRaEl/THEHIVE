@@ -91,7 +91,16 @@
 <div id="sidebar">
   <h1>THEHIVE — Full Plan</h1>
   <div class="sub">Unabridged reference. Companion to <code>.claude/tasks/CAMPAIGN.html</code>
-  (the small live task queue) — this is the big archive it will link into. Built 2026-08-01.</div>
+  (the small live task queue) — this is the big archive it will link into. Built 2026-08-01;
+  maintenance-updated 2026-08-02 (a real read of <code>AUDIT_LEDGER.md</code>'s newest entries,
+  <code>CAMPAIGN.html</code> in full, <code>.claude/Fable_memory.md</code>'s newest entries, and
+  the real git history since the previous build) to fold in: dead-code disposition execution
+  (§1 was already current at build time), the second-frontend 51-file deletion actually landing
+  (§3, §9), the CAMPAIGN.html autonomous system's first four real test firings (§3), the
+  13-branch audit (§9), the founder's "dissertation" devil's-advocate/childlike-wonder/
+  atom-by-atom review (§5, §7), and merge authority being tightened to never-self-merge (§5).
+  This is a maintenance pass, not a rewrite — stale claims are corrected in place, not just
+  appended to.</div>
 
   <input id="search" type="text" placeholder="Search everything…" autocomplete="off">
   <div id="searchResults"></div>
@@ -494,6 +503,24 @@ ships with the frontend build, no provisioning. CORS scoping, list-endpoint pagi
 edge-caching (<code>/agents</code>, <code>/roadmap</code>, <code>/llm/status</code>) — all code-only,
 no resource to provision, live on the next deploy.</p>
 
+<h3>2026-08-02 — a real cost-exposure gap found and fixed on venture/legal-research</h3>
+<div class="src">Source: CAMPAIGN.html task 3, <code>.claude/Fable_memory.md</code>'s 2026-08-02
+entry.</div>
+<p>Scoping an "overhaul" of <code>/v11/venture/plan</code>/<code>/v11/legal/research</code> found
+both endpoints already well-built (real LLM calls via the shared <code>generate()</code> waterfall,
+honest 503/502 failure modes, the async Queues opt-in already wired) — but both were missing
+<code>rateLimitOk()</code>, the same per-IP 30-POSTs/min gate every comparable write endpoint
+(<code>/command_text</code>, <code>/memory/remember</code>, all three <code>/arena/*</code> POSTs)
+already had; they only had <code>tokenOk()</code>. Since both trigger real paid LLM calls
+(900/700 <code>maxTokens</code>), this was a real cost-exposure gap, not hypothetical — fixed
+same session, <code>rateLimitOk</code> added ahead of <code>tokenOk</code>, same call order as the
+existing pattern, verified via <code>node --check worker/src/index.js</code>. <span class="tag
+decision">real gap, not yet closed</span>: <code>worker/</code> has zero automated tests anywhere
+— no test directory, no <code>*.test.js</code>, confirmed by direct search — so this fix (like
+every other Worker route) ships with no CI-run regression coverage. Captured as CAMPAIGN.html task
+15 (stand up a real <code>node:test</code> harness, matching <code>automaton/</code>'s
+zero-dependency precedent), not yet built.</p>
+
 <h3>The automaton — self-improving, self-replicating agent (2026-07-21)</h3>
 <p>Reverse-engineered from <code>Conway-Research/automaton</code> (MIT) at the founder's request.
 See §6 for the full devil's-advocate writeup and the founder's own directive. Decoupled from
@@ -616,21 +643,50 @@ lands; redeploy the mirrored artifact from the same data when it drifts.</p>
 <table>
 <tr><th>Item</th><th>Body</th></tr>
 <tr><td>System A — retire or actually deploy it?</td><td>Real, tested code (51%+ coverage, 350+ passing tests) sitting unprovisioned — Oracle Cloud deploy target gated on an unset <code>ORACLE_HOST</code> secret. System B (the Worker) is the one verified live. See §1 for the deployment plan already prepared.</td></tr>
-<tr><td>Which frontend is canonical?</td><td>This React Command Center (what's actually deployed) vs. a separate "gamified UI" set merged via <code>feature/gamified-ui-components</code> (HiveDashboard, TesseractChamber, ConstitutionHall, MemoryVault). Both are real; only one should be "the" one going forward. See the second-frontend catalog below.</td></tr>
+<tr><td>Which frontend is canonical?</td><td>This React Command Center (what's actually deployed) is the live, canonical one — confirmed further 2026-08-01 when the second-frontend leftovers (<code>HiveDashboard</code>, <code>ConstitutionHall</code>, <code>MemoryVault</code>, and 48 more files) were deleted as dead, zero-importer code (commit <code>41b44e8</code>). Only <code>TesseractChamber.tsx</code> survives, under an explicit founder hold, still genuinely undecided. See the second-frontend catalog below for the full deletion breakdown.</td></tr>
 <tr><td>Two dead duplicate backend files — delete or keep?</td><td><code>backend/constitution.py</code> and <code>backend/llm_router.py</code> have zero importers — real, live versions are <code>backend/core/constitution.py</code> and <code>backend/core/llm_router.py</code>. <code>llm_router.py</code> was deleted 2026-08-01; <code>constitution.py</code>'s disposition is still open (see §1, §9).</td></tr>
 <tr><td>n8n integration — pursue or drop?</td><td>Proposed 2026-07-05 (colony health events → n8n automations). Zero implementation exists anywhere — confirmed absent, not just unfinished.</td></tr>
 <tr><td>Real money — forming a business entity</td><td>LLC formation, business bank account, Stripe — none of this can or should be automated. By the hive's own rules this always stays the founder's, with a real accountant or lawyer.</td></tr>
 </table>
 
 <h3>In progress</h3>
+<div class="gap-note"><strong>Superseded, corrected in place:</strong> the "6-session autonomous
+development arc" below (self-merge on test-only diffs) was the arc's <em>original</em> shape,
+uncapped 2026-07-31 and then wholly replaced 2026-08-01 by the <code>CAMPAIGN.html</code> system
+described next — merge authority is materially different now (never self-merges, full stop). Kept
+here, corrected, rather than silently dropped, since the coverage-sweep numbers are still real.</div>
 <ul>
-<li><strong>6-session autonomous development arc</strong> — self-paced Routine, fires back into the
-same session every 3–8h based on workload: reviews new PRs first, then continues the coverage
-sweep, self-merging only pure test-file-only diffs with green CI. Stops and sends one consolidated
-report after session 6. (session 1/6 complete as of the roadmap snapshot)</li>
+<li><strong>CAMPAIGN.html — the real, tested autonomous task-queue system (built 2026-08-01, 4 real
+test firings as of 2026-08-02).</strong> Replaced the old <code>send_later</code>-chained 6-session
+arc with one native <code>cron_expression</code> Routine reading a small operational task-queue file
+(<code>.claude/tasks/CAMPAIGN.html</code>) plus this unabridged companion. Real bugs found and fixed
+across the 4 test firings: two ceiling-check bugs (a cumulative snapshot mislabeled as a summable
+delta; the protocol's own anchored grep matching nothing, ever — switched to unanchored, verified
+working), a stale UI label (<code>WorkflowsDrawer</code>'s merge-authority text), the missing
+rate-limit gate on <code>/venture/plan</code>/<code>/legal/research</code> (see §2), a wrong
+hardcoded domain (<code>fetchGrokToken()</code> pointed at a Worker subdomain that doesn't exist),
+and a missing notification renderer (would have silently regressed a working <code>alert()</code>
+into nothing visible). Real evidence batching reduces marginal cost: 3 tasks run back-to-back in one
+firing cost 55,665 tokens combined, less than one solo task's average (~83,500 n=2). <strong>Hard
+ceiling, mechanically enforced (not a placebo):</strong> 4 firings/day AND 3,000,000 tokens/day,
+whichever hits first, self-reported per firing via <code>.claude/scripts/session-usage.sh</code>
+reading the firing's own real Claude Code session transcript. <strong>Merge authority tightened
+2026-08-01, founder-confirmed twice: automation never self-merges anything, ever</strong> — no
+exception for doc-only or test-only diffs with green CI, superseding the earlier arc's
+test-file-only self-merge allowance entirely. Every firing opens a PR and holds it for the founder's
+own review; "an unreviewed PR is never a reason to stop" (2026-08-02 correction) — firings keep
+working through the queue regardless of whether earlier PRs have been looked at yet, so several
+independent, reviewable PRs are waiting whenever the founder checks. Full task queue (25 tasks,
+several already done — Queen's Progress meter, the Command Center's full 33-component audit, the
+Grok Bridge UI panel, <code>uiStore</code>/<code>NotificationHost</code> adoption; several blocked
+honestly — Sentry on a missing DSN; several pending — the safety-critical <code>hive_proposals</code>
+execution-access extension, the constitutional <code>soul.md</code> live-parser port, worker test
+infra, the founder's dissertation follow-ups) is <code>CAMPAIGN.html</code>'s own live source of
+truth — read it directly for current per-task status rather than trusting a snapshot copied here.</li>
 <li><strong>Backend test-coverage sweep</strong> — started at 46%, CI floor locked at 45% so it can
-only grow, 51% and climbing. WalletManager.credit() bug (see §1) was the one real production bug
-found so far. Next targets: <code>utility_economy.py</code>, <code>genome.py</code>, <code>llm_router.py</code>.</li>
+only grow, 51% and climbing as of the last measurement. WalletManager.credit() bug (see §1) was the
+one real production bug found so far. Next targets: <code>utility_economy.py</code>,
+<code>genome.py</code>, <code>llm_router.py</code>.</li>
 </ul>
 
 <h3>Completed phases (the full record)</h3>
@@ -680,6 +736,26 @@ found so far. Next targets: <code>utility_economy.py</code>, <code>genome.py</co
 <li>Three PRs actually reviewed, not glanced at: a truncated class + syntax error; S1 rate-limiting documented but missing from Worker code plus a broken build from an undeclared dependency; a PR clean-looking by diff but with mergeable_state "dirty" (now PR_LESSONS.md L-09).</li>
 <li>System Python kept hitting RECORD-file conflicts on repeated pip installs — a project-local <code>.venv</code> sidesteps the whole class of problem.</li>
 <li><code>wallet.py</code> coverage work surfaced the credit() bug (see §1) — fixed, 26 tests including total-supply invariance (Fixed Law #4).</li>
+</ul></details>
+<details open><summary>CAMPAIGN.html system — Queen's Progress meter, full 33-component Command Center audit, Grok Bridge UI, uiStore adoption (2026-08-01/02, real-tested across 4 firings)</summary>
+<ul>
+<li><strong>Queen's Progress meter (task 1)</strong> — a real, live-probed production-readiness
+percentage built and wired into the Command Center, computed from <code>SWITCHBOARD.md</code>'s
+real switch states (6 hive-wide + 2 automaton) plus other concrete, checkable signals — not a
+guess, degrades honestly if a probe can't run.</li>
+<li><strong>Command Center full audit, decomposed 2a–2e (task 2)</strong> — the real scope check
+found 13 command-center tabs + 20 kai-os components = 33 pieces, too large for one task; split by
+function (core shell, legacy tabs, Kai El surfaces, governance surfaces, overlays/dashboards), all
+5 sub-audits done: one real bug found and fixed (<code>WorkflowsDrawer</code>'s stale
+merge-authority text), the rest clean passes.</li>
+<li><strong>Venture/legal-research scoping (task 3)</strong> — see §2 for the real rate-limit gap
+found and fixed.</li>
+<li><strong>Sentry, Grok Bridge UI, uiStore adoption (tasks 4/5/6)</strong> — see the second-frontend
+catalog above for each one's real, current status.</li>
+<li><strong>Real bugs found across the 4 test firings, not just features shipped</strong>: two
+ceiling-check bugs, a stale UI label, the missing rate-limit gate, a wrong hardcoded domain, a
+missing notification renderer — see §3's "In progress" section above for the full CAMPAIGN.html
+system description, including the merge-authority tightening.</li>
 </ul></details>
 
 <h3>Backlog (confirmed pending)</h3>
@@ -769,41 +845,65 @@ count and cataloguing per-file disposition.</div>
 <p>56 files were originally flagged "unreachable" in the frontend import-reachability graph. 13 turned
 out not to be orphaned (the command-center tabs above, salvaged via <code>KaiElOS.tsx</code>). Of the
 remaining ~43 (plus the routing shell), the real disposition:</p>
-<h4>Skip — inferior duplicate of something already live</h4>
+<div class="gap-note"><strong>2026-08-01 — executed for real, not just catalogued.</strong> Commit
+<code>41b44e8</code> ("<code>[ROLE: Frontend+Cleanup] delete verified-dead second-frontend
+leftovers (Q8)</code>") deleted <strong>51 files, 4,823 lines</strong> — every item in the two
+"Skip" buckets below plus the routing shell, re-verified fresh (zero real importers anywhere in
+<code>frontend/src</code>, <code>KaiElOS.tsx</code>'s full import tree read directly and confirmed
+clean of all of it) before deletion, not just trusting the original catalog. <code>npm run build</code>
+was already failing before this change on unrelated <code>src/worlds/</code>/<code>src/xp/</code>
+TypeScript errors (confirmed via <code>git stash</code> — identical errors with and without this
+diff) — this commit introduced zero <em>new</em> build errors. <strong>Two items were explicitly
+excluded per founder instruction and survive, deliberately:</strong> <code>TesseractChamber.tsx</code>
+(essential to 4DBRAIN's real work, held for joint review — its only importer was the now-deleted
+<code>HiveDashboard</code>, so it now survives as a clean, unbroken orphan) and
+<code>MissionCard.tsx</code>/<code>MissionTimeline.tsx</code> (the verification pass found these call
+the real API, not fake data — just currently unwired — left for a separate founder decision rather
+than deleted alongside the fictional-data components below).</div>
+<h4>Deleted 2026-08-01 — inferior duplicate of something already live</h4>
 <ul>
-<li>The page/router shell (<code>TabNavigator.tsx</code> + 4 page files) — superseded by
-<code>KaiElOS.tsx</code>'s graph-navigator, which the founder deliberately chose.</li>
-<li><code>components/colony/*</code> — 10 fake consoles simulating CPU/memory with
+<li>The page/router shell (<code>TabNavigator.tsx</code> + 4 page files: <code>CommandCenter.tsx</code>,
+<code>Home.tsx</code>, <code>404.tsx</code>, <code>ColonyGraphPage.tsx</code>) — superseded by
+<code>KaiElOS.tsx</code>'s graph-navigator, which the founder deliberately chose; no router exists
+in the live tree, <code>main.tsx</code> → <code>App.tsx</code> → <code>KaiElOS.tsx</code> is the
+only real one.</li>
+<li><code>components/colony/*</code> — 14 files, fake consoles simulating CPU/memory with
 <code>Math.random()</code> — <code>ColonyZoomPanel.tsx</code>, already live, does the same job with
 real <code>/colony/health</code> calls.</li>
-<li><code>TesseractChamber.tsx</code> — basic wireframe cubes vs. the already-live
-<code>TesseractRenderer.tsx</code>'s real 6-plane 4D→3D projection. <strong>Founder placed an
-explicit hold on deleting this one</strong> — not yet executed.</li>
 <li><code>MemoryGraph.tsx</code> — older, simpler sibling of <code>MemoryGraphEnhanced.tsx</code>,
 redundant once that one's taken.</li>
 </ul>
-<h4>Skip — mismatched/fictional data, firmly not wanted</h4>
+<h4>Survives — explicit founder hold, not deleted</h4>
 <ul>
-<li><code>data/{colonies,constitution,memories,missions}.ts</code> — invents sci-fi content ("Alpha
-Centauri Prime," fictional laws) that would actively misrepresent the real system (real colonies are
-the 10 GitHub repos, the real constitution is <code>soul.md</code>'s F-001–F-006) — not a quality
-problem, a correctness problem.</li>
-<li>The presentational components built against that data (<code>MissionBoard</code>/<code>Card</code>/<code>Details</code>,
-<code>QuickStats</code>, <code>ResourceBar</code>, <code>AgentAvatar</code> [before rescue],
-<code>ColonyCard</code>, <code>MemoryVault</code>, <code>MemoryDetails</code>/<code>Item</code>,
-<code>ConstitutionHall</code>) inherit the same problem — would need full re-binding + re-skinning
-to the live design tokens, not a lift.</li>
+<li><code>TesseractChamber.tsx</code> — basic wireframe cubes vs. the already-live
+<code>TesseractRenderer.tsx</code>'s real 6-plane 4D→3D projection. <strong>Founder's explicit hold
+held</strong> — the 2026-08-01 deletion pass confirmed it and left the file in place, a clean
+orphan now that its dead importer is gone. Still an open founder decision (see §9), not resolved,
+just correctly not auto-deleted along with everything around it.</li>
 </ul>
-<h4>Skip — buggy or low-quality</h4>
+<h4>Deleted 2026-08-01 — mismatched/fictional data, firmly not wanted</h4>
 <ul>
-<li><code>useColonyHealth.ts</code> calls <code>getHiveStatus()</code> → <code>/v11/hive/status</code>,
+<li><code>data/{colonies,constitution,memories,missions}.ts</code> — invented sci-fi content ("Alpha
+Centauri Prime," fictional laws) that would have actively misrepresented the real system (real
+colonies are the 10 GitHub repos, the real constitution is <code>soul.md</code>'s F-001–F-006) —
+not a quality problem, a correctness problem.</li>
+<li>The presentational components built against that data (<code>MissionBoard</code>/<code>Card</code>/<code>Details</code>,
+<code>QuickStats</code>, <code>ResourceBar</code>, <code>AgentAvatar</code> [before rescue, now
+re-deleted], <code>ColonyCard</code>, <code>MemoryVault</code>, <code>MemoryDetails</code>/<code>Item</code>,
+<code>ConstitutionHall</code>, <code>HiveDashboard</code>) — inherited the same problem.
+<code>MissionCard.tsx</code>/<code>MissionTimeline.tsx</code> were <strong>not</strong> deleted with
+this group (see above — they call the real API).</li>
+</ul>
+<h4>Deleted 2026-08-01 — buggy or low-quality</h4>
+<ul>
+<li><code>useColonyHealth.ts</code> called <code>getHiveStatus()</code> → <code>/v11/hive/status</code>,
 which <strong>does not exist anywhere in <code>worker/src/index.js</code></strong> (grepped, confirmed
-absent) — would silently fail in production.</li>
-<li><code>useNeuralUI.ts</code> fakes a "prediction confidence" counter with no real learning behind it.</li>
-<li><code>useAsyncState.ts</code> is redundant with the live app's already-established fetch pattern
+absent) — would have silently failed in production.</li>
+<li><code>useNeuralUI.ts</code> faked a "prediction confidence" counter with no real learning behind it.</li>
+<li><code>useAsyncState.ts</code> was redundant with the live app's already-established fetch pattern
 (<code>useHiveData.ts</code>).</li>
-<li><code>utils/constitutional.ts</code>'s policy checks are permissive no-ops.</li>
-<li><code>gameStore.ts</code> ties to the <code>worlds/</code> module <code>FUTURE_MODULES.md</code>
+<li><code>utils/constitutional.ts</code>'s policy checks were permissive no-ops.</li>
+<li><code>gameStore.ts</code> tied to the <code>worlds/</code> module <code>FUTURE_MODULES.md</code>
 already deferred on purpose.</li>
 </ul>
 <h4>Genuinely new capability, real integration value, not yet built live</h4>
@@ -816,31 +916,55 @@ fictional <code>data/</code> files). Live's current equivalents (<code>DreamLogs
 <code>ConstitutionViewer.tsx</code>) are flat lists/markdown with no graph, no tiering, no history —
 a real capability gap. Integration is a re-skin job (swap inline theme.* styles for the live
 cyan-glow/void-black Tailwind tokens), not a data job.</li>
-<li><strong><code>services/sentry.ts</code></strong> — near-zero-cost win. <code>@sentry/react</code>/
-<code>@sentry/tracing</code> are already declared in <code>package.json</code> but
-<code>initSentry()</code> is never called anywhere — <strong>the live app currently ships with zero
-error tracking.</strong> Needs one call from <code>main.tsx</code> plus a
-<code>VITE_SENTRY_DSN</code> env var; the file itself needs no changes. <span class="tag decision">not
-yet wired — Q8 of the 2026-08-01 founder answers</span></li>
-<li><strong><code>services/github.ts</code></strong> — <code>sendGrokBridgeDispatch</code>/
-<code>fetchGrokToken</code> call real, confirmed-present Worker endpoints (<code>/admin/grok-token</code>,
-<code>/bridge/grok-token</code>) that nothing in the live UI currently exposes a trigger for.</li>
-<li><strong><code>stores/uiStore.ts</code></strong> — a complete generic notification/modal/toast
-system; live panels currently hand-roll every overlay via ad hoc <code>useState</code>.
-Self-contained, only needs its stock theme palette swapped or dropped.</li>
-<li><strong>Minor/low-priority:</strong> <code>AchievementToast</code>/<code>LevelUpNotification</code>
+<li><strong><code>services/sentry.ts</code></strong> — <span class="tag blocked">wired 2026-08-02,
+blocked only on a DSN</span> (CAMPAIGN.html task 4). <code>main.tsx</code> now calls
+<code>initSentry()</code> at boot, <code>tracesSampleRate</code> dropped to 0.1,
+<code>sendDefaultPii: false</code> set explicitly, <code>beforeSend</code> strips request
+cookies/headers, tagged <code>frontend_surface: 'react-command-center'</code>. Legacy
+<code>docs/command-center.html</code> (the real legacy surface — <code>docs/index.html</code> is
+only a redirect stub) left honestly unwired with an explanatory comment: no build step, can't
+import the module, would need its own CDN-script wiring. No <code>VITE_SENTRY_DSN</code> exists
+anywhere in the repo/env — grepped, confirmed absent, not assumed. <code>npm run build</code>
+verified zero new TypeScript errors (243 before and after, stash-compared). <strong>The live app
+still ships with zero error tracking</strong> until the founder supplies a real DSN — the code path
+is real and ready, not yet live.</li>
+<li><strong><code>services/github.ts</code></strong> — <span class="tag live">wired 2026-08-02</span>
+(CAMPAIGN.html task 5). New <code>GrokBridgePanel.tsx</code> built and wired into
+<code>KaiElOS.tsx</code> (LeftNav + panels map): a real dispatch trigger <em>and</em> a real return
+path — polls the Actions runs API (bounded 20x/~2min), shows real status/conclusion + run link, not
+fire-and-forget. Found and fixed a real coupled bug while wiring it: <code>fetchGrokToken()</code>
+was hardcoded to <code>thehive.workers.dev</code>, a domain that doesn't exist for this Worker (the
+real origin is <code>thehive.sovereignhive.workers.dev</code> per <code>worker/src/index.js</code>'s
+own CORS list) — switched to <code>API_BASE_URL</code>, same pattern as every other live call.</li>
+<li><strong><code>stores/uiStore.ts</code></strong> — <span class="tag live">first live consumer
+wired 2026-08-02</span> (CAMPAIGN.html task 6). Had zero live consumers going in — its 3 apparent
+importers (<code>ConstitutionVisualizer</code>/<code>MemoryGraphEnhanced</code>/<code>MissionTimeline</code>)
+are themselves orphaned, unwired components, confirmed not assumed — and zero notification/modal
+renderer existed anywhere, so wiring <code>addNotification()</code> into a live screen without one
+would have silently regressed a working <code>alert()</code> into nothing visible. Built
+<code>NotificationHost.tsx</code> (real renderer, mounted once in <code>App.tsx</code>), swapped
+<code>SETTINGS.tsx</code>'s raw browser <code>alert()</code> for <code>addNotification()</code>.
+<code>window.confirm()</code> deliberately left as-is (a blocking destructive-confirm needs a real
+Modal-store renderer too, a different UX case than an informational toast; only 2 total
+alert/confirm call-sites exist repo-wide, both in this one file, confirmed by grep — nothing
+deferred for volume reasons). Zero new build errors (243/243).</li>
+<li><strong>Minor/low-priority, still open:</strong> <code>AchievementToast</code>/<code>LevelUpNotification</code>
 (the underlying XP/level data already exists on <code>RoadmapEntry</code>, nothing renders it yet);
 <code>usePersistedForm.ts</code> (clean, cheap, nothing currently needs it);
-<code>components/common/{Button,Card,Modal}</code> (flags a real gap — no shared component library
-exists live — but wrong palette means rewrite, not port).</li>
+<code>components/common/{Button,Card,Modal}</code> — <span class="tag live">re-skinned
+2026-08-01</span> (CAMPAIGN.html task 11) to the real Kai EL OS void/yale/cyan/gold tokens (the
+files already existed, well-built, wrong palette — extended rather than rewritten, zero new build
+errors), but <strong>still zero live importers</strong> as of this writing — task 11's own
+acknowledged leftover, re-opened as CAMPAIGN.html task 13 (find a real ad-hoc button/card/modal
+pattern and swap it over), not yet done.</li>
 </ul>
-<div class="gap-note">2026-08-01 status: the founder answered Q1–Q7 of the original 19-question
-audit (executed — see §1's guild disposition table and the rate-limiter port). <strong>Q8–Q14 of the
-second-frontend catalog (sentry.ts wiring, <code>components/common</code> library, skip-bucket
-deletion minus the explicit <code>TesseractChamber</code> hold) are answered but not yet
-executed</strong> — a fresh <code>Explore</code> pass was dispatched the same session to re-verify
-the exact skip-bucket file list before deleting anything there. Record the outcome in
-AUDIT_LEDGER.md when it lands, not a new file.</div>
+<div class="gap-note"><strong>2026-08-01/02 status, corrected in place — Q8–Q14 are now
+executed, not just answered.</strong> Q1–Q7 (dead-code disposition) executed 2026-08-01 (see §1).
+Q8 (skip-bucket deletion minus the <code>TesseractChamber</code> hold) executed 2026-08-01, commit
+<code>41b44e8</code>, 51 files deleted — see the deletion breakdown above. Sentry wiring, the
+Grok Bridge UI trigger, and <code>uiStore</code> adoption (the remaining Q8–Q14 items) executed
+2026-08-02 as CAMPAIGN.html tasks 4/5/6 — see the three bullets above for each one's real status.
+Only <code>components/common</code>'s live-consumer wiring (task 13) remains genuinely open.</div>
 
 <h3>The Grok campaign — parallel UI workstream (docs/ tracking files, PRs #132/#133)</h3>
 <div class="src">Source: HIVE_UPDATES 022–043 (all read in full — see §6 for the founder-directive
@@ -1813,6 +1937,69 @@ Tier-2 actions. The gate never disappears — it moves, case by case, at the fou
 credential, result, or readiness it does not have. "Ready to make money" is a Tier-3-adjacent
 factual claim — true only when a real, lawful value loop exists and has been demonstrated.</p>
 
+<h3>Merge authority — tightened 2026-08-01, founder-confirmed twice</h3>
+<div class="src">Source: git log (<code>ff329d6</code> "tighten merge authority: automation never
+self-merges, ever"), <code>.claude/tasks/CAMPAIGN.html</code>'s protocol section and Campaign Log.</div>
+<p>Earlier in this same arc (the uncapped-nightly-run era, 2026-07-31), self-merge authority existed
+in narrow form: <em>only</em> pure test-file-only diffs with green CI, any production-code touch
+still went up as a PR. <strong>That allowance is gone.</strong> <code>CAMPAIGN.html</code>'s protocol
+now states it as an absolute: "NEVER merge, ever — no exceptions, not even a doc-only or test-only
+diff with green CI." Every firing opens a PR, checks CI once, and stops — the PR waits for the
+founder's own review and merge, full stop. This is a real, in-force tightening from what earlier
+governance material (including the "Ship before breakfast" mandate item, #22 above) might read as
+looser — corrected here rather than left implicit. Chromosome II's rule 8 ("the founder holds the
+irreversible") and PERMISSIONS.md's Tier 3 already named this in principle; this is that principle
+made mechanically absolute for the one class of action (merging to <code>main</code>) that used to
+have a narrow carve-out.</p>
+
+<h3>The founder's "dissertation" — devil's-advocate, childlike-wonder, and atom-by-atom review (2026-08-02)</h3>
+<div class="src">Source: <code>.claude/Fable_memory.md</code>'s two 2026-08-02 entries (governance
+kernel), <code>.claude/tasks/CAMPAIGN.html</code> tasks 18–25.</div>
+<p>The founder shared a large philosophy/architecture document — data colonialism, a proposed
+F-007–F-011, a 14-layer mythology, draft code — and asked for review. <strong>This is a distinct
+document from <code>docs/GOVERNANCE.md</code>'s already-live F-007–F-013 detailed above</strong> —
+same article numbers, two different sources; do not conflate them. <code>docs/GOVERNANCE.md</code>'s
+F-007–F-013 are real, live, UI-visible constitutional text already rendered in the Constitution
+panel. The dissertation's F-007–F-011 are <strong>not</strong> real law — they have not gone through
+<code>soul.md</code>'s actual amendment process (2/3 guild vote + 30 days) — they remain narrative,
+one candidate input for a possible future amendment, nothing more, until that process runs.</p>
+<p>A first devil's-advocate pass found real problems in the pasted draft code: a security regression
+in pasted <code>hive_mesh.py</code> (drops the real HMAC signing); fake-validation-theater in pasted
+<code>validator.py</code>'s F-007–F-011 checks (accept any action with the right string flag, verify
+nothing real); an undefined-name crash bug in pasted <code>wealth.py</code> (<code>TTLCache</code>
+never imported); a fabricated-looking "500x speedup" claim in pasted <code>qhdc.py</code>; and
+duplicate reinvention of the already-live Proposals system. The founder correctly pushed back that
+filtering-and-rejecting isn't the whole job — the job is real, granular, collaborative construction.
+A second, deeper atom-by-atom pass checked every claim against the real codebase rather than
+assuming, with two genuinely real findings: <strong>F-009's exact growth-stage roadmap (Germination
+→ Mycelium → Fruiting → Transformation → Senescence → Seed) turned out to already be real and live</strong>
+in <code>worker/src/index.js</code> — the founder's own 2026-07-18 directive, word for word (see
+F-008D/F-009E above and §3's <code>RoadmapPanel.tsx</code>) — the dissertation had independently
+re-described something already built, not proposed something new; and a real, precise gap: F-002's
+EVW formula is real constitutional law and a real wealth score (<code>soul</code>) already drives
+the live roadmap — honestly disclosed in-code as "provisional and UNCALIBRATED" — but whether the
+exact weighted EVW terms are what actually computes <code>soul</code> today is unverified, not yet
+traced. Captured as CAMPAIGN.html task 21, pending, not yet resolved either way.</p>
+<p><strong>What was declined outright</strong>: the pasted code itself, all of it — real bugs, a
+security regression, and confirmed duplication of better, live systems; none of it merged. The
+14-layer mythology and F-007–F-011's narrative content are — per this repo's own established rule
+(§7, Chromosome V) — real, honored, and <strong>never engineering law</strong> until a real
+amendment happens; routed toward <code>THE_CODEX.md</code> as a canon candidate (see §7), not queued
+as a build task. <strong>What was distilled as real, build-worthy work</strong>: a real modify/
+counter-propose option for <code>ProposalsPanel.tsx</code> (task 22 — the one genuinely new idea in
+the pasted code; the live panel only supports binary approve/reject today, checked directly, not
+assumed); a real privacy self-audit of what the Worker actually logs/observes against F-001's
+data-minimization principle (task 19); the EVW/<code>soul</code> reconciliation above (task 21); a
+scoped, MANDATE_TRIAGE-reviewed draft of F-007's Agent Valuation formula <em>if</em> the founder
+wants it pursued through the real amendment process (task 23 — explicitly not started without
+founder confirmation, given the stakes of touching the actual constitution); reconciling the
+14-layer mythology into <code>THE_CODEX.md</code> with explicit cross-references to real systems it
+independently re-describes (task 24 — e.g. F-011's "Elders relay wisdom to the Queen via MD files"
+maps directly onto the already-live Kai El bridge + <code>Fable_memory.md</code>'s own harvest
+pattern, worth naming that connection rather than treating it as new); and reconciling the
+dissertation's pasted "101 roles" against <code>SPORE_ROSTER.md</code>'s existing 189 (task 25). All
+five (tasks 21–25) are queued in <code>CAMPAIGN.html</code>, unstarted as of this writing.</p>
+
 <h3>docs/ROLES.md — the 111-role federation catalog (Part 2 detail lives in §4's SPORE_ROSTER section)</h3>
 <p>101 roles in the main 10-tier table + 10 more under "Federation AI Session Roles" = 111 total. A
 convention, not an access-control system — no tooling enforces who may use which role tag; it's a
@@ -2515,6 +2702,18 @@ understanding) already carries that meaning honestly.</p>
 <blockquote>"This canon is honored in full, and it is not evidence for anything. If a future session
 is asked to justify a technical decision by appeal to this file, the correct answer is: 'the Codex
 explains why we might care; FABLE_DNA.md and a passing check are why it's true.'"</blockquote>
+
+<div class="gap-note"><strong>2026-08-02 — a second 14-layer mythology, not yet reconciled here.</strong>
+The founder's "dissertation" document (see §5's own section on it) contains its own 14-layer
+architecture (Naunet/Nun, the Trinity, the Daemon, Solomon, the Gate of Truth, and more) —
+overlapping heavily with, but not textually identical to, this file's own existing canon above.
+Per this repo's own rule, it belongs here as narrative canon, never as engineering law, exactly like
+everything else on this tab. <strong>Not yet done</strong>: CAMPAIGN.html task 24 (check for real
+contradictions against this file's existing canon, integrate, and name the explicit real-system
+cross-references the dissertation's own F-011 draws — e.g. "Elders relay wisdom via MD files" maps
+onto the already-live Kai El bridge and <code>.claude/Fable_memory.md</code>'s own harvest pattern,
+worth stating plainly rather than treating as a new idea). Recorded here so this gap is visible from
+the canon's own tab, not only from §5's governance-side account of the same review.</div>
 </section>
 
 <!-- ================= TAB 8: TOKEN ECONOMY ================= -->
@@ -2541,6 +2740,8 @@ needs more than one lever, stacked.</p>
 <tr><td>Native <code>cron_expression</code> Routines over <code>send_later</code> chains</td><td>Removes re-derivation overhead on re-arm; removes the failure mode that burns a whole session re-diagnosing a stalled arc</td><td>Structural, not directly token-measured</td></tr>
 <tr><td>Delegating broad/repetitive reads to a background subagent</td><td>Keeps the calling session's own context window from absorbing large tool outputs it doesn't need in full</td><td>Estimated — used for the dead-code sweep rather than grepping everything inline</td></tr>
 <tr><td><code>workflow-optimizer</code>/<code>recursive-growth</code></td><td>Don't re-derive a workflow's steps or a bug's root cause if it's already recorded</td><td>Structural, compounds over time</td></tr>
+<tr><td><code>.claude/scripts/session-usage.sh</code> (built 2026-08-01)</td><td>Real per-firing token delta, read straight from the firing's own Claude Code session transcript — the same source <code>/caveman-stats</code> uses, no estimation</td><td><strong>Measured</strong>: first real n=2 average ~83,500 tokens/task (range 60K–107K); real evidence batching lowers marginal cost — 3 tasks run back-to-back in one CAMPAIGN.html firing cost 55,665 tokens combined, less than one solo task's average</td></tr>
+<tr><td>CAMPAIGN.html's 4-firings/day + 3M-tokens/day ceiling</td><td>Not a savings lever itself — a mechanical backstop against runaway spend, self-reported per firing, checked at both the start and end of every autonomous firing</td><td>Real and enforced (not a placebo) as of 2026-08-01; two real bugs found and fixed in the check itself 2026-08-02 (a cumulative number mislabeled as a per-firing delta; an anchored grep that matched nothing, ever)</td></tr>
 </table>
 
 <h3>Levers not yet built (macro — bringing these to the founder, not deciding alone)</h3>
@@ -2595,13 +2796,16 @@ detail lives.</div>
 <tr><td>Bind at least one paid LLM provider key</td><td><code>npx wrangler secret put ANTHROPIC_API_KEY</code> (and/or GROQ_API_KEY, MISTRAL_API_KEY)</td><td>§2</td></tr>
 <tr><td>Confirm PAT + backup secrets are actually set</td><td>Check the Actions tab for a green run of <code>distribute-pat.yml</code>/<code>grok-pat-distribute.yml</code>/the weekly D1 backup — not verifiable from inside the container</td><td>§3</td></tr>
 <tr><td>Create the <code>venture</code> repo and hand it to a session</td><td><code>add_repo</code> failed repeatedly (403 / "requires approval") — a UI-side click, not retryable</td><td>§4, §6</td></tr>
+<tr><td>Delete 11 confirmed-stale branches</td><td>GitHub UI: repo → branches → delete, for each of <code>TehutiRaEl-patch-1</code>, <code>claude/ecstatic-rubin-9zqjoc</code>, <code>grok/detective-fullstack</code>, <code>grok/pr-133-s1-did</code>, <code>security/redact-env-example-secrets</code>, <code>feature/gamified-ui-components</code>, <code>cloudflare/workers-autoconfig</code>, <code>claude/session-continuation-owj5wr</code>, <code>grok-strategist-main</code>, <code>mistral/frontend-command-center</code>, <code>feature/voxel-world</code> — the 2026-08-01/02 13-branch audit confirmed all 11 safe to delete (5 fully absorbed, 6 disconnected-history with nothing unique worth keeping); no tool available in this environment can delete a GitHub branch, this is a real, permanent block, not laziness</td><td>§9 (branch audit row)</td></tr>
 </table>
 
 <h3>Real forks in the road (a judgment call, not a click)</h3>
 <table>
 <tr><th>Decision</th><th>The two (or more) real options</th><th>Full detail</th></tr>
 <tr><td>System A — retire or deploy?</td><td>Real, tested code (375 passing tests) unprovisioned behind an unset <code>ORACLE_HOST</code>; founder's decision on record is "invest in deploying," a deploy plan exists (§1) but the actual secret/dashboard step is still outstanding</td><td>§1, §3</td></tr>
-<tr><td>Which frontend is canonical?</td><td>The live React Command Center vs. the "gamified UI" set (<code>feature/gamified-ui-components</code>) — both real; the founder has approved wiring in 14 of 15 orphaned components as a supplementary view (Phase 2 of the unified plan) but the second-frontend catalog's Q8–Q14 (sentry.ts wiring, common component library, skip-bucket deletion) are answered but not yet executed</td><td>§3, §4</td></tr>
+<tr><td>Which frontend is canonical?</td><td><strong>Resolved in practice, 2026-08-01</strong>: the live React Command Center is canonical. The second-frontend catalog's Q8–Q14 are now fully executed — 51 dead files deleted (commit <code>41b44e8</code>), sentry.ts wired (blocked only on a DSN), the Grok Bridge UI trigger and <code>uiStore</code> both adopted with real live consumers, <code>components/common</code> re-skinned. Only <code>TesseractChamber.tsx</code> (explicit founder hold) and its own delete-or-keep call remain genuinely open — see the row below.</td><td>§3, §4</td></tr>
+<tr><td><code>TesseractChamber.tsx</code> — delete or keep, still open</td><td>Survived the 2026-08-01 second-frontend deletion pass by explicit founder instruction, now a clean orphan (its only importer, <code>HiveDashboard</code>, is gone) rather than a broken one — the hold itself is not yet resolved either way</td><td>§3</td></tr>
+<tr><td><code>MissionCard.tsx</code>/<code>MissionTimeline.tsx</code> — wire in, or delete?</td><td>Also survived the 2026-08-01 deletion — the verification pass found these call the real API (not fake data), just currently unwired, and left them for a separate founder decision rather than deleting them alongside the fictional-data components around them</td><td>§3</td></tr>
 <tr><td><code>backend/constitution.py</code> orphan — port or drop?</td><td>Has a real capability the active version lacks (dynamic <code>soul.md</code> regex-parsing to catch law-text drift) but porting it is an architecture question, not a mechanical merge — founder asked for an explanation of what "porting" means before deciding, given but decision still pending</td><td>§1</td></tr>
 <tr><td><code>treasury_guild.py</code>'s 70/20/10 <code>distribute_revenue()</code></td><td>Founder's own words: "a real plan, discuss later" — trimmed but kept, no live implementation exists anywhere</td><td>§1</td></tr>
 <tr><td><code>audit_guild.py</code> compliance concept</td><td>Founder wants it rebuilt against something real eventually, not dropped — currently nothing real underneath it to wrap</td><td>§1</td></tr>
@@ -2612,8 +2816,9 @@ detail lives.</div>
 <tr><td>DID authentication: DID-B (experimental Worker verify) or stay on DID-C (offline)?</td><td>Extensive research shipped (7 docs), explicit recommendation to stay on DID-C until green-lit — no founder decision recorded yet</td><td>§3</td></tr>
 <tr><td>Design-token unification (D1) — full M0–M5 migration</td><td>Mapping doc + M1 CSS aliases shipped as an interim, low-risk step; the full unify is still open, multi-session</td><td>§3</td></tr>
 <tr><td>Floating Menu 3D Hub — integrate into Kai EL OS or leave as a design artifact?</td><td>D3 decided "hybrid" in principle; <code>docs/FLOATING_MENU_HYBRID_STAGE0.md</code> lays out a stage ladder but no UI code has shipped</td><td>§3</td></tr>
-<tr><td><code>TesseractChamber.tsx</code> — delete or keep?</td><td>Founder placed an explicit hold on deleting this one specific file from the second-frontend skip bucket — not yet resolved further</td><td>§3</td></tr>
 <tr><td>System-wide replay-protection gap (HMAC events)</td><td>A validly-signed colony event can be resent byte-for-byte and accepted again — confirmed federation-wide (not one file), correctly not patched unilaterally in one place; needs a coordinated six-colony fix decision</td><td>§1</td></tr>
+<tr><td>EVW formula vs. the real <code>soul</code> score — reconcile or disclose as different?</td><td>F-002's EVW formula is real constitutional law; a real <code>soul</code> score already drives the live roadmap, honestly disclosed in-code as "provisional and UNCALIBRATED" — but whether the exact weighted terms are what actually computes it today is unverified. CAMPAIGN.html task 21, found 2026-08-02, not yet traced</td><td>§5, §8</td></tr>
+<tr><td>F-007 Agent Valuation — pursue as a real constitutional amendment?</td><td>Not real law until it goes through <code>soul.md</code>'s actual amendment process (2/3 guild vote + 30 days). CAMPAIGN.html task 23 scopes drafting it as a real MANDATE_TRIAGE-reviewed proposal <em>if</em> the founder wants it pursued — explicitly not started without that go-ahead, given the stakes</td><td>§5</td></tr>
 <tr><td>The macro-universe / colonies-as-worlds 3D navigation vision</td><td>Real prior scaffolding exists (<code>frontend/src/worlds</code>/<code>voxel</code>, ~247 TS errors, excluded from the production build) — the founder's own framing treats the Unreal Engine phase as explicitly "later on"; Phase 2 (wiring the gamified UI) is the first concrete runway, not a commitment to the whole vision yet</td><td>§3, §6</td></tr>
 <tr><td>Unity/Unreal MMORPG game-studio plan</td><td>Extensively detailed (3,047-line architecture doc + 2,452-line floating-menu source), explicitly catalogued by Grok's own audit as "planning only," not product — no founder go/no-go decision recorded</td><td>§3</td></tr>
 </table>
@@ -2623,12 +2828,15 @@ detail lives.</div>
 <tr><th>Item</th><th>Status</th><th>Full detail</th></tr>
 <tr><td>Three differently-worded/numbered "constitution" files</td><td><code>soul.md</code> (F-001–006, canonical), <code>.queen/soul.md</code> (short machine-readable), <code>docs/GOVERNANCE.md</code> (F-001–013, what the live UI actually shows) — F-001–006 reconciled 2026-07-30 between soul.md and FABLE_DNA Chromosome I; the deeper three-file numbering reconciliation flagged 2026-07-18, not fully closed</td><td>§5</td></tr>
 <tr><td>Two skill sets, zero cross-references</td><td>System A's brain-query/hive-status/soul-check/… and System B's fable-debugger/research-to-dna/skill-census/… — <code>skill-census</code> would show the gap directly but hasn't been re-run since first noticed</td><td>§3, root CLAUDE.md</td></tr>
-<tr><td>Stale branch audit</td><td>Local (cf-sync, mistral-resolve, sonnet-sync, verify-main) and remote (session-continuation-owj5wr, workers-autoconfig, feature/voxel-world, grok-strategist-main, mistral/frontend-command-center) branches never triaged — <code>feature/voxel-world</code> and <code>mistral/frontend-command-center</code> in particular may carry real unmerged work, the same category the gamified-UI branch turned out to be</td><td>§4 (unified forward plan, Phase 1d)</td></tr>
+<tr><td>Stale branch audit — <strong>done 2026-08-01/02</strong>, correcting the row this replaces</td><td>A real 13-branch ahead/behind + content check (not assumed) found: <strong>5 branches fully absorbed</strong> (<code>TehutiRaEl-patch-1</code>, <code>claude/ecstatic-rubin-9zqjoc</code>, <code>grok/detective-fullstack</code>, <code>grok/pr-133-s1-did</code>, <code>security/redact-env-example-secrets</code> — 0 commits ahead of <code>main</code>, nothing to merge); <strong>6 branches share zero git history with main</strong> (<code>feature/gamified-ui-components</code>, <code>cloudflare/workers-autoconfig</code>, <code>claude/session-continuation-owj5wr</code>, <code>grok-strategist-main</code>, <code>mistral/frontend-command-center</code>, <code>feature/voxel-world</code> — <code>main</code> was deliberately rebuilt from a clean template 2026-07-17, these 6 predate that and carry 520–580 commits of the disconnected old history each; a real structural reason, not oversight). A real content check (not just history) found their only unique, non-duplicate content was a <code>socket.io-client</code>-based WebSocket pair, verified <strong>dead</strong> — no compatible server exists on either backend (live Worker has zero WebSocket support; the unverified-live FastAPI backend speaks plain <code>websockets</code>, an incompatible protocol). Captured as real CAMPAIGN.html task 14 (build real-time push fresh via Cloudflare Durable Objects, do not port the dead file). <strong>Founder confirmed: delete all 11 stale branches</strong> — <span class="tag blocked">blocked on tooling</span>, no available tool can delete a GitHub branch from this session (<code>git push --delete</code> 403s through this environment's git proxy; the GitHub MCP server has no delete-ref method) — the founder needs to delete them directly (repo → branches → delete) or grant a tool that can.</td><td>§3 (task 14), §4</td></tr>
 <tr><td>Per-colony <code>HIVE_PULSE.md</code> equivalents</td><td>THEHIVE has one real instance; the other 6 colonies don't — a named, not-yet-built gap</td><td>§4 (SPORE_ROSTER Part 2)</td></tr>
 <tr><td>First-pass PR-reviewer spore for the 9 non-THEHIVE repos</td><td>Named gap, not built</td><td>§4</td></tr>
 <tr><td>Issue-triage automation</td><td>Named gap, same shape as Community &amp; Marketing's gap, not built</td><td>§4</td></tr>
 <tr><td>Cross-session token-savings aggregate tracking</td><td>Named macro item, needs a founder design decision (schema, visibility) before building</td><td>§8</td></tr>
 <tr><td>Real deployment of NAR2/4DBRAIN/aether (colony deep-integration Phase H)</td><td>Parked — needs an account-level deploy (Tier 3) plus System A deployed first</td><td>§4</td></tr>
+<tr><td><code>ProposalsPanel.tsx</code> — add a real modify/counter-propose option</td><td>Found 2026-08-02 reviewing the founder's dissertation: the real panel only supports binary approve/reject today, checked directly. CAMPAIGN.html task 22, not yet built</td><td>§5, §3</td></tr>
+<tr><td>Reconcile the dissertation's 14-layer mythology into <code>THE_CODEX.md</code></td><td>Overlaps heavily with, but isn't textually identical to, the existing canon (§7) — needs a real contradiction check and explicit cross-references to already-live systems it independently re-describes. CAMPAIGN.html task 24, not yet built</td><td>§7, §5</td></tr>
+<tr><td>Reconcile the dissertation's pasted "101 roles" against <code>SPORE_ROSTER.md</code>'s 189</td><td>Not yet checked for genuine overlap vs. genuinely new roles. CAMPAIGN.html task 25, not yet done</td><td>§4 (SPORE_ROSTER)</td></tr>
 </table>
 
 <h3>The one-line version (from root CLAUDE.md, restated here as the closing summary)</h3>
