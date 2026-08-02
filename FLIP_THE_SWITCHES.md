@@ -87,6 +87,27 @@ returns `202 {job_id, poll: "/v11/jobs?id=..."}` instead of `503`; `GET /v11/job
 then shows `status` moving from `queued` to `done` (or `error`, with the reason) once the
 Queues consumer runs.
 
+## 7 · Action-request execution → approved Kai El action-requests actually run
+
+The hive can now propose a small set of bounded, allow-listed real actions
+(`rerun_ci`, `open_issue`, `dispatch_workflow` on a fixed workflow allow-list — see
+`worker/src/index.js`'s `ACTION_ALLOWLIST`) via `POST /v11/proposals/action-request`.
+Creation is already gated (off-allow-list requests are rejected with 400 before they
+ever become a pending proposal) and approval is already gated (`FOUNDER_KEY`, same as
+every other proposal decision) — this switch only controls whether an *approved* one
+can actually reach GitHub, or just gets recorded as approved with nothing executed.
+
+```bash
+npx wrangler secret put GITHUB_ACTIONS_TOKEN
+```
+Use a fine-grained PAT scoped only to `TehutiRaEl/THEHIVE`, with the minimum
+permissions the three allow-listed actions need: Actions (read/write, for reruns and
+workflow dispatch) and Issues (write, for opening issues). No config edit needed —
+secrets bind on the next deploy.
+**Proof it worked:** approve a pending `action-request` proposal via
+`POST /v11/proposals/:id/decide` → the response's `execution.executed` is `true`
+(previously `false` with a "no GITHUB_ACTIONS_TOKEN bound yet" reason).
+
 ## Already flipped / no switch needed
 - D1 database, Workers AI, assets, the 30-min heartbeat — live now.
 - The UI (graph web, neon theme, Updates, Legal Learning, Files panel shell) — ships with
