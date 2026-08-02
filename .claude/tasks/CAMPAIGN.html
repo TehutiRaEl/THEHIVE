@@ -485,6 +485,27 @@ grok/detective-fullstack, grok/pr-133-s1-did, security/redact-env-example-secret
 feature/gamified-ui-components, cloudflare/workers-autoconfig,
 claude/session-continuation-owj5wr, grok-strategist-main, mistral/frontend-command-center,
 feature/voxel-world.
+2026-08-01 — TEST RUN #2 (founder-requested, "what works, what fails, what's missing").
+Ran the protocol literally from the top. Real ceiling check (Gap 1's fix) actually fired:
+grep found only 1 of tonight's 9 log entries carries a `TOKENS:` line (56,304,633, logged
+during test #1) — already 18x over the 3,000,000/day cap. Per this file's own literal
+rule, STOPPED before touching task 2 rather than rationalizing past it. Two honest
+findings, not conflated: (1) real process gap — logging usage wasn't done consistently
+tonight, only 1 of 9 entries has it; (2) real methodology limit, not proven design flaw —
+that number reflects one entire long-lived session's cumulative usage because these test
+runs have all been simulated manually inside ONE persistent conversation, not real fresh
+`create_new_session_on_fire` firings as the design calls for. The ceiling mechanism cannot
+be honestly validated as well-tuned until it's exercised by real fresh sessions — that is
+the next real test, not something to fake by asserting it either way tonight. WHAT WORKED:
+the stop-condition fired correctly and was actually honored, not talked past — this is the
+single most important thing to see working before unattended firings ever go live. WHAT'S
+STILL MISSING: (a) no enforcement that every firing actually logs TOKENS: before ending —
+currently just a rule in prose, same category of gap this whole exercise exists to catch;
+(b) no real fresh-session test has ever been run — everything validated so far has been
+supervised, in-session, manual simulation, which is a genuinely different mode from live
+automation and cannot fully stand in for it. Recommendation before any live Routine is
+created: run at least one real `create_new_session_on_fire` test (fresh session, real
+task, real TOKENS: log) before trusting these numbers.
 </div>
 
 </body>
