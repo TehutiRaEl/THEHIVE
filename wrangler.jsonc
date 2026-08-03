@@ -20,23 +20,19 @@
   // index that doesn't exist yet FAILS the deploy at build time — which would
   // take the live Queen (heartbeat + API) down. So the worker code ships now and
   // no-ops (memory/status → vectorize_bound:false) until the index is created.
-  // TO ACTIVATE (founder, one time):
-  //   1) npx wrangler vectorize create hive-memory --dimensions=768 --metric=cosine
-  //   2) uncomment the "vectorize" block below, commit → Workers Builds redeploys
-  //   3) GET /v11/memory/status → vectorize_bound:true; memory fills on the next heartbeat
-  // "vectorize": [
-  //   { "binding": "VECTORIZE", "index_name": "hive-memory" }
-  // ],
+  // ACTIVATED 2026-08-03: index created (npx wrangler vectorize create
+  // hive-memory --dimensions=768 --metric=cosine), binding uncommented below.
+  "vectorize": [
+    { "binding": "VECTORIZE", "index_name": "hive-memory" }
+  ],
   // Files store (the real backend for the Files panel). Same flip-the-switch
   // pattern as Vectorize: a binding to a bucket that doesn't exist fails the
   // deploy, so it ships commented and /v11/files reports available:false.
-  // TO ACTIVATE (founder, one time):
-  //   1) npx wrangler r2 bucket create hive-files
-  //   2) uncomment the "r2_buckets" block below, commit → Workers Builds redeploys
-  //   3) GET /v11/files → available:true; the Files panel upload/list goes live
-  // "r2_buckets": [
-  //   { "binding": "FILES", "bucket_name": "hive-files" }
-  // ],
+  // ACTIVATED 2026-08-03: bucket created (npx wrangler r2 bucket create
+  // hive-files), binding uncommented below.
+  "r2_buckets": [
+    { "binding": "FILES", "bucket_name": "hive-files" }
+  ],
   // Rate-limit counters (Phase 8, 2026-07-21). FLIPPED 2026-07-23 at the
   // founder's go: namespace created via the Cloudflare MCP connector,
   // rateLimitOk() now uses KV (same 30/min/IP limit as the D1 fallback it
@@ -49,19 +45,19 @@
   // so it ships commented. Until activated, POST /v11/venture/plan and
   // POST /v11/legal/research simply ignore {"async": true} and answer
   // synchronously as they always have — nothing breaks either way.
-  // TO ACTIVATE (founder, one time):
-  //   1) npx wrangler queues create hive-llm-jobs
-  //   2) uncomment the "queues" block below, commit → Workers Builds redeploys
-  //   3) POST /v11/venture/plan or /v11/legal/research with {"async": true}
-  //      now returns 202 {job_id, poll}; GET /v11/jobs?id=<job_id> to check status
-  // "queues": {
-  //   "producers": [
-  //     { "binding": "LLM_QUEUE", "queue": "hive-llm-jobs" }
-  //   ],
-  //   "consumers": [
-  //     { "queue": "hive-llm-jobs", "max_batch_size": 5, "max_retries": 3 }
-  //   ]
-  // },
+  // ACTIVATED 2026-08-03: queue created (npx wrangler queues create
+  // hive-llm-jobs), binding uncommented below IN THE SAME COMMIT as
+  // re-attaching `queue: processQueueBatch` in worker/src/index.js's
+  // export default — see the comment there for why these two must move
+  // together (PR_LESSONS.md L-08, the 2026-07-21/22 outage).
+  "queues": {
+    "producers": [
+      { "binding": "LLM_QUEUE", "queue": "hive-llm-jobs" }
+    ],
+    "consumers": [
+      { "queue": "hive-llm-jobs", "max_batch_size": 5, "max_retries": 3 }
+    ]
+  },
   "d1_databases": [
     {
       "binding": "DB",
