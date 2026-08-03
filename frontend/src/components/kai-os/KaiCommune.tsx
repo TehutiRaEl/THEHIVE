@@ -30,6 +30,12 @@ export default function KaiCommune({ onSpeakingChange }: KaiCommuneProps) {
 
   const send = async (cmd: string) => {
     if (!cmd.trim() || loading) return;
+    // Sent back with the request so Kai El has real short-term memory of the
+    // conversation — /v11/command_text is otherwise stateless per call.
+    const history = messages
+      .filter((m) => m.sender === 'user' || m.sender === 'kai')
+      .slice(-6)
+      .map((m) => ({ sender: m.sender, content: m.content }));
     setMessages(prev => [...prev, { id: Date.now() + 'u', sender: 'user', content: cmd, timestamp: new Date() }]);
     setInputValue('');
     setLoading(true);
@@ -37,7 +43,7 @@ export default function KaiCommune({ onSpeakingChange }: KaiCommuneProps) {
       const res = await fetch(`${API_BASE_URL}/v11/command_text`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ command: cmd }),
+        body: JSON.stringify({ command: cmd, history }),
         signal: AbortSignal.timeout(30000),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

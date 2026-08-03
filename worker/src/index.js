@@ -1149,18 +1149,35 @@ export default {
         const body = await request.json().catch(() => ({}));
         const cmd = (body.command || body.message || '').toString().trim();
         if (!cmd) return json({ result: 'Speak, and the Hive will answer.' });
+        // Short-term conversation memory: the client (KaiCommune/KaiChatBox) sends its
+        // own on-screen message list back with each call, since this endpoint is
+        // otherwise fully stateless — nothing server-side ties one call to the next.
+        // Without this, Kai El answered every message cold, with no idea what it or
+        // the founder had just said, which made multi-turn exchanges (e.g. "do so
+        // now") land as a restart instead of a continuation. Capped at the last 6
+        // turns / ~150 chars each so a long-running chat can't balloon prompt cost.
+        const history = Array.isArray(body.history) ? body.history.slice(-6) : [];
+        const historyLines = history
+          .filter((m) => m && (m.sender === 'user' || m.sender === 'kai') && m.content)
+          .map((m) => (m.sender === 'user' ? 'SOVEREIGN: ' : 'KAI EL: ') + String(m.content).slice(0, 150));
 
         // gather live context the way the Scribe would
         let ctxLines = [];
         try {
-          const [ag, gov, pulseRow] = await Promise.all([
+          const [ag, gov, pulseRow, props] = await Promise.all([
             DB.prepare("SELECT name, elo FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 5").all(),
             DB.prepare('SELECT action, article FROM governance_log ORDER BY id DESC LIMIT 3').all(),
             DB.prepare('SELECT detail FROM hive_pulse ORDER BY id DESC LIMIT 1').first(),
+            DB.prepare("SELECT title, status FROM hive_proposals ORDER BY id DESC LIMIT 6").all(),
           ]);
           if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a => `${a.name}(${a.elo})`).join(', '));
           if (gov?.results?.length) ctxLines.push('Recent governance: ' + gov.results.map(g => `${g.action}/${g.article}`).join(', '));
           if (pulseRow?.detail) ctxLines.push('Last heartbeat: ' + pulseRow.detail);
+          // The actual answer to "what are you working on / what are your goals" —
+          // without this, Kai El had nothing but agent scores and governance trivia
+          // to draw on, so that question could never get a real answer no matter
+          // how the model tried.
+          if (props?.results?.length) ctxLines.push('Recent proposals (title/status): ' + props.results.map(p => `${p.title} [${p.status}]`).join(' | '));
         } catch {}
         // retrieval-augmented: pull relevant memories when the index exists
         try {
@@ -1201,6 +1218,7 @@ export default {
         // shape inside generate() — the path the heartbeat runs live.
         const userPrompt =
           (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') +
+          (historyLines.length ? 'RECENT CONVERSATION:\n' + historyLines.join('\n') + '\n\n' : '') +
           'SOVEREIGN: ' + cmd + '\n\nKAI EL:';
         const gen = await generate(env, { system: SYSTEM, prompt: userPrompt, maxTokens: 400 });
         if (gen) {
