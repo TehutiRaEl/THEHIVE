@@ -1,1 +1,0 @@
-import{j as r}from"./three-c4EWP3rE.js";function n({label:t,className:o}){return r.jsx("button",{disabled:!0,title:`${t} — not yet wired`,className:o,style:{opacity:.45,cursor:"not-allowed"},children:t})}export{n as P};
