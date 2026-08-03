@@ -807,9 +807,9 @@ export default {
     }
   },
 
-  // NOTE: no `queue` handler here on purpose — see processQueueBatch above.
-  // Re-attach as `queue: processQueueBatch` only in the same commit that
-  // uncomments wrangler.jsonc's queues block (FLIP_THE_SWITCHES.md §6).
+  // ACTIVATED 2026-08-03: re-attached in the same commit that uncomments
+  // wrangler.jsonc's queues block — see processQueueBatch above for why.
+  queue: processQueueBatch,
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -1262,6 +1262,23 @@ export default {
         if (!key) return json({ detail: 'key query param required (filename)' }, 400);
         const len = +(request.headers.get('content-length') || 0);
         if (len > 10_000_000) return json({ detail: 'file too large (10 MB max)' }, 413);
+        // R2's free tier is 10 GB-months of storage (F-001 spirit: never spend the
+        // founder's money without a real, explicit decision). Cap total bucket
+        // usage at 9 GB so this never grows into a bill on its own — once past
+        // the cap, uploads fail honestly instead of quietly crossing into paid
+        // usage. Raising this number is a founder decision, not an automatic one.
+        const R2_STORAGE_CAP_BYTES = 9_000_000_000;
+        try {
+          let used = 0, cursor;
+          do {
+            const page = await env.FILES.list({ limit: 1000, cursor });
+            for (const o of page.objects || []) used += o.size;
+            cursor = page.truncated ? page.cursor : undefined;
+          } while (cursor && used < R2_STORAGE_CAP_BYTES);
+          if (used + len > R2_STORAGE_CAP_BYTES) {
+            return json({ detail: 'hive storage cap reached (9 GB, kept under R2\'s free tier on purpose) — ask the founder to raise it before uploading more' }, 507);
+          }
+        } catch (e) { return json({ detail: 'could not verify storage cap, refusing to risk it: ' + String(e) }, 503); }
         try {
           await env.FILES.put(key, request.body, {
             httpMetadata: { contentType: request.headers.get('content-type') || 'application/octet-stream' },

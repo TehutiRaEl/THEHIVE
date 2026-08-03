@@ -6,35 +6,26 @@
 > All of these run from the repo root with `npx wrangler …` logged into the hive's Cloudflare
 > account (`npx wrangler login` once, in a terminal — not something the hive can or should do).
 
-## 1 · Sovereign memory (Vectorize) → "Vectorize memory bound: true"
+## 1 · Sovereign memory (Vectorize) → "Vectorize memory bound: true" — ✅ FLIPPED 2026-08-03
 
-```bash
-npx wrangler vectorize create hive-memory --dimensions=768 --metric=cosine
-```
-Then uncomment the `"vectorize"` block in `wrangler.jsonc`, commit, push.
+Index `hive-memory` created, binding uncommented in `wrangler.jsonc`.
 **Proof it worked:** `GET /v11/memory/status` → `vectorize_bound: true`; memory fills on the
 next heartbeat; Kai El starts recalling past exchanges in the commune.
 
-## 2 · Files store (R2) → the Files panel uploads/lists for real
+## 2 · Files store (R2) → the Files panel uploads/lists for real — ✅ FLIPPED 2026-08-03
 
-```bash
-npx wrangler r2 bucket create hive-files
-```
-Then uncomment the `"r2_buckets"` block in `wrangler.jsonc`, commit, push.
+Bucket `hive-files` created, binding uncommented in `wrangler.jsonc`. A 9 GB total-storage
+cap was added in `/files/upload` on top of the existing 10 MB per-file cap — R2's free tier
+is 10 GB-months, so the hive refuses new uploads before it could ever cross into a real
+charge (`507` with an honest reason, not a silent failure). Raising the cap is a founder
+decision, not automatic.
 **Proof:** `GET /v11/files` → `available: true`; the Files panel shows the Upload button
-working (visitor-token gated, 10 MB cap).
+working (visitor-token gated, 10 MB per-file cap, 9 GB total cap).
 
-## 3 · Extra model voices → Claude / Groq / Mistral read "online"
+## 3 · Extra model voices → Claude / Groq / Mistral read "online" — ✅ FLIPPED 2026-08-03
 
 The Worker already routes the commune through a waterfall (Claude → Groq → Mistral →
-Workers AI). Each provider activates the moment its key exists as a Worker secret:
-
-```bash
-npx wrangler secret put ANTHROPIC_API_KEY   # Claude — reasoning
-npx wrangler secret put GROQ_API_KEY        # Groq — speed
-npx wrangler secret put MISTRAL_API_KEY     # Mistral
-```
-No config edit needed — secrets bind on the next deploy.
+Workers AI). All three keys are now bound as Worker secrets.
 **Proof:** `GET /v11/llm/status` → the provider's `bound: true`; the Connected Models panel
 flips it from "key needed" to "online"; Kai El's replies return `provider: "claude"` (or
 whichever is highest in the waterfall).
@@ -42,20 +33,16 @@ whichever is highest in the waterfall).
 Keys live only as Cloudflare secrets — never in the repo, never echoed back (F-001: the
 debug surface reports names/presence only).
 
-## 4 · Founder key → the Proposals panel can actually approve/reject
+## 4 · Founder key → the Proposals panel can actually approve/reject — ✅ FLIPPED 2026-08-03
 
 The hive can now draft standing suggestions ("Proposals" in the left nav) — new
 implementations, goals, changes it thinks are worth doing. Nothing is ever applied on its own;
 every item waits for your explicit approve/reject. That decision endpoint is deliberately
 **fail-closed**: with no key bound, nobody — not even you, from the UI — can decide anything,
-rather than defaulting to "anyone can."
-
-```bash
-npx wrangler secret put FOUNDER_KEY   # pick any strong random value yourself
-```
-Then paste that same value into the Proposals panel's key field (stored only in your
+rather than defaulting to "anyone can." `FOUNDER_KEY` is now bound.
+**Proof:** `GET /v11/proposals` → `founder_auth_bound: true`; Approve/Reject buttons work
+once the same key value is pasted into the Proposals panel's key field (stored only in your
 browser's localStorage, never sent anywhere except the `Authorization` header on decide calls).
-**Proof:** `GET /v11/proposals` → `founder_auth_bound: true`; Approve/Reject buttons work.
 
 ## 5 · Rate-limit counters (KV) → anti-spam moves off D1 — ✅ FLIPPED 2026-07-23
 
@@ -65,23 +52,14 @@ uncommented in `wrangler.jsonc`, deployed. **Proof:** no visible behavior change
 30 POSTs/min/IP) — the D1 `rate_limits` table simply stops growing, since `rateLimitOk()`
 prefers KV the moment the binding exists.
 
-## 6 · Async LLM jobs (Queues) → venture/plan and legal/research can run decoupled
+## 6 · Async LLM jobs (Queues) → venture/plan and legal/research can run decoupled — ✅ FLIPPED 2026-08-03
 
-> Status 2026-07-23: still parked — the Cloudflare MCP connector available to sessions has
-> no queue-creation tool (KV/R2/D1 only), so this one still needs the founder's own
-> `npx wrangler queues create` below. Everything else about the flip is unchanged.
-
-```bash
-npx wrangler queues create hive-llm-jobs
-```
-Then, **in the same commit**: uncomment the `"queues"` block in `wrangler.jsonc` **and**
-re-attach the consumer handler in `worker/src/index.js` — add `queue: processQueueBatch,`
-inside the `export default { ... }` object (the function already exists just above it).
-These two must always move together: a Worker that exports a `queue()` consumer handler
-while the `queues.consumers` binding is commented out fails Workers Builds' pre-deploy
-validation — this exact mismatch silently broke every production deploy from 2026-07-21
-until diagnosed 2026-07-22 (see PR_LESSONS.md). Commit, push. Nothing changes for
-existing callers — both endpoints stay fully synchronous by default. **Proof:**
+Queue `hive-llm-jobs` created; `wrangler.jsonc`'s `"queues"` block and `worker/src/index.js`'s
+`queue: processQueueBatch` export were uncommented/re-attached together in the same commit,
+exactly per the warning below (this two-part rule exists because splitting them broke every
+production deploy from 2026-07-21 until diagnosed 2026-07-22 — see PR_LESSONS.md L-08).
+Nothing changes for existing callers — both endpoints stay fully synchronous by default.
+**Proof:**
 `POST /v11/venture/plan` (or `/v11/legal/research`) with `{"async": true}` in the body now
 returns `202 {job_id, poll: "/v11/jobs?id=..."}` instead of `503`; `GET /v11/jobs?id=<job_id>`
 then shows `status` moving from `queued` to `done` (or `error`, with the reason) once the
