@@ -392,6 +392,36 @@ now carries one real, new power: reviewing pending proposals against
 (`FLIP_THE_SWITCHES.md` switch 9, off until the founder flips it, and never able to
 skip the `action-request` execution gate regardless of score).
 
+## The Elders' Council — the first two of the six agents to get a real voice (2026-08-04)
+
+A follow-on audit (devils-advocate-audit, 2026-08-04) went one level deeper than the
+section above and found the honest limit of that work: naming Thoth/Sekhmet/Ptah/Horus's
+real jobs never gave any of the six non-Kai-El agents actual sight, reasoning, or agency
+— every one of those "jobs" was a code comment pointing at a pure-logic function
+(Elo math, a string-match branch, a binding-ping route) that would run identically
+whether the named agent existed at all. Only Kai El (`command_text`) and Nanuet
+(`queenReview()`) could ever perceive or decide anything.
+
+The founder, shown that finding plainly, named fixing it the next priority and — through
+a real scoping round, not by assumption — chose to pilot 3 of the 6: **Ma'at** and
+**Solomon** now seat `docs/GOVERNANCE.md` F-011B's Elders' Council for real (previously
+that check existed only as prose — "the Queen is bound by... the wisdom of the Elders" —
+with nothing in code enforcing it). Whenever the Queen's `queenReview()` would
+auto-approve a proposal (switch 9, score ≥98), Ma'at and Solomon each independently
+review the same proposal (`elderCouncilVeto()`); either can object and downgrade the
+outcome back to pending for the founder, with their reason recorded
+(`hive_proposals.elder_note`). **Sekhmet** gained a third, additive voice — an on-demand
+"explain this matchup" capability (`POST /v11/council/consult`) layered on top of, not
+replacing, her existing Elo-math job from the section above.
+
+Honest limits, not glossed over: this is a pilot of 3, not all 6 — Thoth, Ptah, and Horus
+remain exactly as described above, real jobs but no real voice. The mechanism (a live,
+synchronous consult inside one HTTP request) is a deliberate adaptation of F-011B's
+literal text (Elders relay wisdom via MD files, asynchronously) — same spirit, different
+mechanism, logged as such in AUDIT_LEDGER.md rather than claimed as literal compliance.
+And this container cannot reach production directly, so "shipped" here means syntax-clean
+and reviewed, not yet live-verified — that happens via `edge-health-probe` after merge.
+
 ## How a new hive inherits this
 
 1. Copy this file into the new hive's root. It is the genome; it carries no dependency.
