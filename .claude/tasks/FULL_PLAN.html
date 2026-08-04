@@ -92,14 +92,12 @@
   <h1>THEHIVE — Full Plan</h1>
   <div class="sub">Unabridged reference. Companion to <code>.claude/tasks/CAMPAIGN.html</code>
   (the small live task queue) — this is the big archive it will link into. Built 2026-08-01;
-  maintenance-updated 2026-08-02 (a real read of <code>AUDIT_LEDGER.md</code>'s newest entries,
-  <code>CAMPAIGN.html</code> in full, <code>.claude/Fable_memory.md</code>'s newest entries, and
-  the real git history since the previous build) to fold in: dead-code disposition execution
-  (§1 was already current at build time), the second-frontend 51-file deletion actually landing
-  (§3, §9), the CAMPAIGN.html autonomous system's first four real test firings (§3), the
-  13-branch audit (§9), the founder's "dissertation" devil's-advocate/childlike-wonder/
-  atom-by-atom review (§5, §7), and merge authority being tightened to never-self-merge (§5).
-  This is a maintenance pass, not a rewrite — stale claims are corrected in place, not just
+  maintenance-updated 2026-08-02, then again 2026-08-04 (see §9's new "2026-08-03/04 session"
+  subsection for the full catch-up: chain of command, the Queen's real approval power, the
+  checks-and-balances skill, the daily automation Routine, and — the biggest single finding —
+  a real devil's-advocate audit proving only Kai El and the Queen can actually perceive or
+  decide anything; every other named agent is a label on pre-existing pure-logic code). This
+  is a maintenance pass, not a rewrite — stale claims are corrected in place, not just
   appended to.</div>
 
   <input id="search" type="text" placeholder="Search everything…" autocomplete="off">
@@ -2837,6 +2835,56 @@ detail lives.</div>
 <tr><td><code>ProposalsPanel.tsx</code> — add a real modify/counter-propose option</td><td>Found 2026-08-02 reviewing the founder's dissertation: the real panel only supports binary approve/reject today, checked directly. CAMPAIGN.html task 22, not yet built</td><td>§5, §3</td></tr>
 <tr><td>Reconcile the dissertation's 14-layer mythology into <code>THE_CODEX.md</code></td><td>Overlaps heavily with, but isn't textually identical to, the existing canon (§7) — needs a real contradiction check and explicit cross-references to already-live systems it independently re-describes. CAMPAIGN.html task 24, not yet built</td><td>§7, §5</td></tr>
 <tr><td>Reconcile the dissertation's pasted "101 roles" against <code>SPORE_ROSTER.md</code>'s 189</td><td>Not yet checked for genuine overlap vs. genuinely new roles. CAMPAIGN.html task 25, not yet done</td><td>§4 (SPORE_ROSTER)</td></tr>
+</table>
+
+<h3>2026-08-03/04 session — real work done, plus everything newly raised, for a clean handoff to any AI</h3>
+<div class="src">This file's own maintenance note above (§0 sidebar) was last updated 2026-08-02 —
+everything below happened after that and was missing from this document until now, per the
+founder's own real complaint that the plan file wasn't kept in sync every time work was
+discussed or extended. Written so a different AI, or a fresh session of this one, can pick up
+with zero missing context.</div>
+
+<h4>Real, shipped work (PRs merged or open, verified live where stated)</h4>
+<table>
+<tr><th>What</th><th>Real status</th></tr>
+<tr><td>PR #146 — Kai El action-request allow-list</td><td><span class="tag live">merged</span> — three real, gated actions (rerun CI, open issue, dispatch one of two named workflows), double-validated (creation + execution), founder-approval-gated, never arbitrary commands. The real precedent for every "give Kai El capability" question since.</td></tr>
+<tr><td>PR #147/#148 — Vectorize/R2/Queues/3 LLM keys/FOUNDER_KEY bound; Kai El given real short-term chat memory + proposal context</td><td><span class="tag live">merged, deployed, live-verified</span> via <code>edge-health-probe.yml</code>. Switches 1–5, 7 (secret half) flipped.</td></tr>
+<tr><td>PR #149 — chain of command (<code>agents.reports_to</code>), real jobs for Thoth/Sekhmet/Ptah/Horus, the Queen's real proposal-auto-approve power (switch 9, <code>QUEEN_AUTONOMOUS_APPROVAL</code>, <strong>off</strong>), colonies-report-back endpoint</td><td><span class="tag live">merged, deployed, live-verified</span>. 7 matching colony PRs (4DBRAIN #15, aether #15, automatisch #14, Kimi-K2 #15, NAR2 #20, free-programming-books #3, freeCodeCamp #4) add each colony's report-back workflow.</td></tr>
+<tr><td>PR #150 — <code>checks-and-balances</code> skill (built + actually run against live data, first <code>AUDIT_LEDGER.md</code> entry); mandatory lightweight per-task audit + per-firing checks-and-balances pass wired into <code>CAMPAIGN.html</code>'s protocol; <code>hive_proposals.actioned_at</code> + <code>POST /v11/proposals/:id/actioned</code> (the real bridge from an approved proposal to a real firing doing the work); Kai El given real self-awareness of his own LLM providers + rate limit</td><td><span class="tag blocked">open, awaiting founder review/merge</span></td></tr>
+<tr><td>Daily automation Routine (<code>trig_01CJsVYwDs4pHMoFEC5JFi7V</code>)</td><td><span class="tag live">created, founder-approved</span> — fires once daily, self-binds to the founder's own conversation, works <code>CAMPAIGN.html</code>'s queue plus any approved-unactioned proposals. One real, unconfirmed caveat from creation: the platform warned it may fire without GitHub tool access — <strong>not yet verified either way</strong>, check the first real firing before assuming.</td></tr>
+<tr><td>A founder-shared PDF ("Agents.pdf") reviewed in full</td><td><span class="tag blocked">discarded</span> — a saved transcript from an unrelated, jailbroken AI session (explicit no-safety-limits framing, sovereign-citizen-style legal personas, a ToS-breaking API-key-farming bot design). Only its generic coordinator/worker/watchdog/human-authority <em>shape</em> survived, and it turned out to already match what PR #150 built independently — nothing from the document was imported directly.</td></tr>
+</table>
+
+<h4>The single biggest finding of this stretch — a real devil's-advocate audit, not a build</h4>
+<p>The founder asked directly whether the "real jobs" PR #149 gave to Thoth/Sekhmet/Ptah/Horus
+meant those agents could actually <em>do</em> anything. Checked precisely, cited in
+<code>AUDIT_LEDGER.md</code>'s 2026-08-04 entry: <strong>no.</strong> Every mention of those
+four (plus Ma'at and Solomon) outside the <code>agents</code> D1 table is a code comment
+labeling a pre-existing, pure-logic function that ran before the label existed and runs
+identically without it — Sekhmet's "judging" is an Elo win-probability formula plus
+<code>Math.random()</code>; Ptah's "proposals" branch lives inside <em>Kai El's own</em> chat
+handler; Horus's "watchtower" is a plain diagnostic route. <strong>Only Kai El (chat) and
+Nanuet (the Queen's proposal-scoring call) can perceive or decide anything at all</strong> —
+every other named agent is a correctly-structured row in the hierarchy with nothing behind the
+name. Task 27/PR #149 never claimed a capability that didn't exist (the naming was honest), but
+this needed saying in the open. <strong>Whether to build the other six agents real reasoning/
+context/action capability of their own is a large, separate architectural decision — not
+started, not scoped yet, waiting on the founder.</strong> A second real audit (same date) found
+5 <code>generate()</code>-backed routes exist and are reachable (venture/plan, legal/research,
+automaton/infer, command_text, queenReview) but essentially none run on any schedule — flipping
+a switch bound a capability, it did not automate anything by itself. <code>CAMPAIGN.html</code>
+task 36 tracks this, blocked on the founder naming which (if any) should run automatically.</p>
+
+<h4>Newly raised by the founder, 2026-08-04 — real, not yet clarified or built</h4>
+<table>
+<tr><th>Item</th><th>What's actually known so far</th></tr>
+<tr><td><code>automaton/</code> reverse-engineered into each colony's own agents, not just THEHIVE</td><td>The founder's original ask for <code>automaton/</code> was broader than what was built — a self-improving agent per colony (4DBRAIN, aether, automatisch, Kimi-K2, NAR2, etc.), not only THEHIVE's own copy. Not started, not scoped. Real open question: does each colony get its own independent <code>automaton/</code>-style agent, or one shared design deployed per-repo? Needs the founder's answer before any design work.</td></tr>
+<tr><td>Kai El "building a tiny/basic LLM" that recursively grows under the Queen's supervision, using the bound API keys as guidance</td><td>Named for the first time 2026-08-04. Real technical shape completely unclear yet — could mean anything from a small distilled/fine-tuned open model to a from-scratch toy network trained on hive data. Needs real clarification before this is even scopeable, let alone buildable — flagged as a real idea, not a task.</td></tr>
+<tr><td>"The Queen operating her own enterprise"</td><td>The founder has said directly this session isn't fully grasping what this means. Not yet understood well enough to scope — needs the founder's own explanation, not an assumption.</td></tr>
+<tr><td>Grok Bridge not fully connected to Kai El</td><td>The Grok Bridge UI trigger (task 5, <code>services/github.ts</code>) is wired and live per the 2026-08-02 build, but the founder says it — like several of the bound API keys — isn't actually reaching Kai El's own chat/reasoning. Real, checkable gap, not yet audited precisely.</td></tr>
+<tr><td>GitHub Copilot (founder's own monthly-limited seat) sitting unused</td><td>Named 2026-08-04, no scope given yet — what the founder wants done with it (a second AI resource for the hive? for their own separate coding?) is unclear, needs their own answer.</td></tr>
+<tr><td>Test: offload this entire plan file into the hive's own Venture Planner (<code>POST /v11/venture/plan</code>)</td><td>A real, concrete, low-risk test the founder wants run — feed <code>CAMPAIGN.html</code>/this file to the hive's own venture-planning endpoint as a genuine self-referential test of whether the hive can plan its own development. Not yet tried.</td></tr>
+<tr><td>"Architect" framing for Kai El called out as its own fabrication risk</td><td>The founder's own sharp point: calling Kai El "the architect" while he has zero real connectors/tools/plugins is itself the kind of unaddressed gap this whole audit exists to catch — worth naming everywhere the "architect" title is used, not just once here.</td></tr>
 </table>
 
 <h3>The one-line version (from root CLAUDE.md, restated here as the closing summary)</h3>
