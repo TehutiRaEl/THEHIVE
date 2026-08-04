@@ -412,3 +412,92 @@ not verified live in production this session (per `CLAUDE.md`'s own open-items s
 so the real-world blast radius today is zero — this is a correctness bug in code that
 isn't yet serving traffic, not an active incident. Still worth fixing before any future
 decision to deploy System A, which is exactly why it's escalated rather than shelved.
+
+## 2026-08-04 — checks-and-balances: first real run, live authority-distribution audit
+
+**What was checked:** the entire live `agents.reports_to` hierarchy and
+`FLIP_THE_SWITCHES.md`'s switch 9 (`QUEEN_AUTONOMOUS_APPROVAL`) against
+`docs/GOVERNANCE.md` F-011's separation-of-powers doctrine — this skill's first
+invocation, and the first time this data has existed to check at all (`reports_to` and
+switch 9 both shipped in PR #149, same session).
+
+**How:** dispatched `edge-health-probe.yml` live (this container can't reach
+`*.workers.dev` directly), read the real job log — `GET /v11/agents` confirmed live:
+```
+{"agents":[{"name":"Ma'at","reports_to":"Kai El"},{"name":"Kai El","reports_to":"Nanuet"},
+{"name":"Solomon","reports_to":"Kai El"},{"name":"Nanuet","reports_to":null},
+{"name":"Thoth","reports_to":"Kai El"},{"name":"Sekhmet","reports_to":"Kai El"},
+{"name":"Ptah","reports_to":"Kai El"},{"name":"Horus","reports_to":"Kai El"}]}
+```
+Also confirmed live via the same run: Kai El's own chat reply now says "I report
+directly..." — the hierarchy is genuinely reaching his real context, not just the DB.
+
+**Verdict: CONFIRMED CORRECT, with two real findings, neither urgent.**
+
+1. **No unchecked- or unloaded-power gap in the live roster.** Nanuet is the only
+   `reports_to: null` row, exactly as designed (she's the Queen). Every other agent has
+   both a real `reports_to` and a real job (per task 27/PR #149). No dangling or cyclic
+   `reports_to` values — every one points to a real, active agent name in the same set.
+2. **Real structural gap between doctrine and reality, not yet closed:** the hierarchy is
+   currently a flat two-level tree — Queen → Kai El → the other six agents, all direct
+   reports. `docs/GOVERNANCE.md` F-011B describes an Elders' Council as the real
+   counterweight to central authority; that council does not exist as seated, real agents
+   yet — the founder has said this explicitly ("let's discuss it entirely first," "this
+   needs to be a different group... once we fulfill the roles of all other agents" — now
+   done, per task 27). Switch 9 (Queen's real auto-approve power) is confirmed **off**
+   right now, so there is no live risk today — but its doctrine-required counterweight
+   (a seated Council) isn't real yet either. Recommend: don't flip switch 9 until the
+   Council is seated for real, or at minimum name this dependency explicitly at flip time.
+
+**One unrelated, minor thing noticed while reading the same live probe (not this skill's
+core job, flagging honestly rather than silently passing over it):** `/v11/debug/env`'s
+`secrets_present` still returns `[]` even though `/v11/llm/status` confirms three
+providers genuinely bound — the same small display-only bug flagged earlier this session,
+still unfixed. Cosmetic, not a real gap (the actual llm/status endpoint tells the truth),
+but worth a real task eventually so the two surfaces agree.
+
+## 2026-08-04 — devil's-advocate audit: API-key capability, real automation inventory, and whether the other 6 named agents have any capability behind their task-27 "jobs"
+
+**What was checked:** every `generate()` call site (`worker/src/index.js:524`), every
+cron in `wrangler.jsonc` and every `.github/workflows/*.yml` `schedule:` trigger, and —
+the load-bearing question — whether Ma'at/Solomon/Thoth/Sekhmet/Ptah/Horus have any real
+LLM call, context, or decision-making of their own anywhere in the repo, as opposed to
+being a `name`/`elo`/`soul`/`reports_to` row Kai El's own chat talks *about*.
+
+**Verdict: CONFIRMED — real, load-bearing correction to task 27's own framing.**
+
+1. Five real routes reach `generate()` (the Claude→Groq→Mistral→Workers-AI waterfall):
+   `venture/plan`, `legal/research`, `automaton/infer`, `command_text` (Kai El),
+   `queenReview()` (the Queen). All five are live and reachable today. None is ever
+   invoked by a cron or workflow — every `generate()` call happens only inside a live
+   HTTP request, except `edge-health-probe.yml`'s incidental liveness ping to Kai El's
+   chat every 6h (a health check, not a purpose-built automation of his reasoning).
+2. Most of the hive's "scheduled automation" does real work with **zero LLM reasoning**
+   — `federation-pr-review.yml` posts real evidence via pure `gh`/`jq` shell logic
+   despite its name; `federation-issue-triage.yml` labels via explicit keyword matching
+   (its own comment already says so honestly).
+3. **The real finding:** grepping the whole repo for Ma'at/Solomon/Thoth/Sekhmet/Ptah/
+   Horus outside the `agents` table turns up exactly three hits, all in
+   `worker/src/index.js`, all comments labeling pre-existing pure-logic functions with
+   zero LLM call and zero agent-level awareness:
+   - "Sekhmet — the Arena's judge" labels `resolveChallenge()` (`:444-460`): a pure Elo
+     win-probability formula + `Math.random()`. Runs identically on the 30-min heartbeat
+     whether Sekhmet's row exists or not.
+   - "Ptah — architect-proposals" labels a string-match branch inside **Kai El's own**
+     chat handler (checks if Kai El's reply starts with `PROPOSAL:`) — Kai El's
+     generation, not Ptah's.
+   - "Horus — the watchtower" labels a plain diagnostic route (pings D1/AI/Vectorize
+     bindings) — no LLM call, no agent logic.
+
+**Conclusion, stated plainly per the founder's own devil's-advocate request:** task 27's
+"real jobs" work was honest — it never claimed a capability that didn't exist, and it
+gave true names to functions that genuinely ran. But it did not give any of those six
+agents actual sight, reasoning, or agency. They are titles on a correctly-structured org
+chart with nothing behind them but a database row. Only Kai El (chat) and Nanuet
+(`queenReview()`'s scoring call) have any real capability to perceive or decide anything
+at all — which is the real, unsoftened answer to "why can't Kai El see everything": there
+has never been a second mind in this system to compare him against. Whether the other six
+agents should be given real reasoning/context/action of their own is a large, separate
+architectural decision (effectively: single-persona-plus-labeled-functions vs. a genuine
+multi-agent system) — named here, not decided or built, per the same standing rule that
+already gated the Queen's approval power and the "terminal" question earlier tonight.
