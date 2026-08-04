@@ -155,6 +155,32 @@ touching money, constitutional law, or new standing infrastructure → do not ad
 <code>pending</code>, add as <code>blocked</code> with the finding written out, founder
 decides. The point: it always lands somewhere checkable, never only in a firing's own
 private reasoning.</li>
+<li><strong>Mandatory lightweight audit before marking any task done (added 2026-08-04,
+task 29).</strong> Before flipping a task to <code>data-status="done"</code>: (a) confirm
+the actual change ran without error (most tasks already verify this individually — this
+just makes it a hard requirement, not optional); (b) re-read what you just wrote and check
+for any claim that wasn't actually verified (a "works" that wasn't run, a number that
+wasn't measured); (c) if anything adjacent looked like a real gap worth a future task, one
+line in the Campaign Log naming it. Kept deliberately small — this is
+<code>devils-advocate-audit</code>'s own "never silently upgrade could-not-verify to
+passed" ethic, made automatic instead of reactive. A full <code>devils-advocate-audit</code>
+sweep stays periodic (task 10's pattern), not repeated in full every task.</li>
+<li><strong>Checks-and-balances review, every firing, lightweight (added 2026-08-04, task
+28).</strong> Once per firing (not once per task — this one runs at the START, before
+picking a task): a quick pass with the <code>checks-and-balances</code> skill — live
+<code>agents.reports_to</code> shape sane, no switch granting new authority without a real
+counterweight. Kept cheap on purpose (skim, not a full re-derivation each time) so it
+doesn't blow up per-firing cost; log one line either way ("balanced, no gaps" is a real,
+useful outcome too).</li>
+<li><strong>Check for approved, unactioned proposals too (added 2026-08-04, task 32).</strong>
+Beyond this file's own queue: also check <code>hive_proposals</code> (via
+<code>edge-health-probe</code>-style live check) for rows with
+<code>status='approved'</code> and no <code>actioned_at</code> yet — founder-approved or
+Queen-auto-approved (switch 9), either counts. Work a genuine one in alongside the queue,
+same PR-and-hold discipline as everything else, then mark it actioned (set
+<code>actioned_at</code>) so it's never picked up twice. This is the real bridge: Kai El
+proposes → Queen/founder approves → the next firing (this real terminal, on its own
+branch) does the work → a PR.</li>
 </ol>
 </div>
 
@@ -383,6 +409,176 @@ private reasoning.</li>
   <strong>Not yet done:</strong> wiring a real live consumer — no screen swapped over to use
   them yet. Re-opened as a follow-up, not blocking; the components are ready to adopt
   whenever the next screen touching this pattern is worked on.</p>
+</div>
+
+<div class="task" data-status="done" data-batchable="true" id="task-27">
+  <h3>27. Chain of command, real agent jobs, and the Queen's approval power</h3>
+  <p class="meta">Done 2026-08-04, directly in conversation (not this queue) — logged here
+  retroactively per founder instruction so the blueprint reflects real state.</p>
+  <p><strong>What happened:</strong> PR #149 (THEHIVE) — every <code>agents</code> row now
+  carries a real <code>reports_to</code> column (Nanuet/Queen has none, everyone else
+  reports up the chain); Thoth/Sekhmet/Ptah/Horus each got a real job reusing existing
+  code (memory-vault sync, Arena judging, architect-proposals, health/status); fixed a
+  real Ptah conflict between two files; the Queen's real approval power shipped
+  (<code>queenReview()</code>, <code>FLIP_THE_SWITCHES.md</code> switch 9
+  <code>QUEEN_AUTONOMOUS_APPROVAL</code>, off by default, never applies to
+  <code>action-request</code> kind); colonies can report back to the Queen
+  (<code>POST /v11/colony/report</code>). Plus 7 matching colony PRs
+  (4DBRAIN #15, aether #15, automatisch #14, Kimi-K2 #15, NAR2 #20,
+  free-programming-books #3, freeCodeCamp #4) adding each colony's report-back workflow.
+  A founder-shared PDF was reviewed in full and discarded — it was a saved transcript from
+  an unrelated, jailbroken AI session (explicit no-safety-limits framing, sovereign-citizen
+  legal personas, a ToS-breaking API-key-farming bot design), not hive canon.</p>
+</div>
+
+<div class="task" data-status="done" data-batchable="true" id="task-28">
+  <h3>28. The checks-and-balances skill</h3>
+  <p class="meta">Founder-requested 2026-08-04, bumped ahead of task 12. Done 2026-08-04
+  — built and run for real the same session.</p>
+  <p><strong>What actually happened:</strong> Built <code>.claude/skills/checks-and-balances/SKILL.md</code>
+  and ran it immediately (not left theoretical) against the real, live post-PR#149 data via
+  <code>edge-health-probe</code>. Verdict: CONFIRMED CORRECT, two real findings, neither
+  urgent — no unchecked/unloaded-power gap in the live roster (Nanuet is the only
+  <code>reports_to: null</code>, as designed), but F-011B's Elders' Council (switch 9's
+  doctrine-required counterweight) doesn't exist as seated agents yet, and switch 9 is
+  confirmed off so there's no live risk today. Full write-up in <code>AUDIT_LEDGER.md</code>'s
+  2026-08-04 entry.</p>
+  <p><strong>Prompt:</strong> New skill <code>.claude/skills/checks-and-balances/SKILL.md</code>,
+  sibling to <code>.claude/agents/constitutional-validator.md</code> (which checks
+  F-001–F-006 per change but never touches authority distribution). Reads live
+  <code>agents.reports_to</code> (via <code>edge-health-probe</code>, same as every other
+  live check — this container can't reach <code>*.workers.dev</code> directly),
+  <code>docs/GOVERNANCE.md</code> F-011's separation-of-powers doctrine, and every switch
+  state in <code>FLIP_THE_SWITCHES.md</code>. Flags: any role that gained new power
+  (switch 9 is the first real case) without a corresponding check live alongside it; any
+  role with no <code>reports_to</code> other than the Queen (unchecked-power gap); any
+  role that reports to someone but has no real capability at all (unloaded-power gap).</p>
+  <p><strong>Acceptance:</strong> Real dated entry in <code>AUDIT_LEDGER.md</code>, same
+  format every other audit skill uses.</p>
+</div>
+
+<div class="task" data-status="done" data-batchable="true" id="task-29">
+  <h3>29. Wire a mandatory lightweight audit into every firing</h3>
+  <p class="meta">Founder-requested 2026-08-04, bumped ahead of task 12. Done 2026-08-04.</p>
+  <p><strong>What actually happened:</strong> Added the rule directly to this file's own
+  Protocol section (see "Mandatory lightweight audit before marking any task done"),
+  plus a second rule for the checks-and-balances every-firing pass (task 28) and a third
+  for checking approved-unactioned proposals (task 32) — all three landed together since
+  they're all protocol-section edits to the same file.</p>
+  <p><strong>Prompt:</strong> Add a new numbered rule to this file's Protocol section:
+  before marking any task <code>done</code>, do one cheap, scoped check — did the change
+  actually run without error; does anything just written make a claim that wasn't really
+  verified; one Campaign Log line if anything adjacent looks like a gap worth a future
+  task. Kept small on purpose — a full <code>devils-advocate-audit</code> sweep (task 10's
+  pattern) stays periodic, not repeated in full every task.</p>
+  <p><strong>Acceptance:</strong> New protocol rule reads clearly, doesn't conflict with
+  existing rules 3-14, file stays valid HTML.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-30">
+  <h3>30. Give the Command Center's Development Roadmap panel a real data source</h3>
+  <p class="meta">Found 2026-08-04 investigating the founder's "roadmap doesn't
+  auto-update" report. Real bug, not a scheduling problem — see task's own findings.</p>
+  <p><strong>Prompt:</strong> <code>frontend/src/components/kai-os/RoadmapPanel.tsx</code>
+  is 100% static, imported from a hand-maintained
+  <code>frontend/src/data/roadmapData.ts</code> literal — zero fetch, never refreshes. A
+  second, separately hardcoded "Development Roadmap" section in
+  <code>frontend/src/components/command-center/tabs/DREAM.tsx</code> (untouched since
+  2026-07-17) already disagrees with it. Give <code>RoadmapPanel.tsx</code> a real data
+  source (a new endpoint, or fold into <code>/v11/updates</code>) and delete or reconcile
+  <code>DREAM.tsx</code>'s duplicate so there's one source of truth. (Everything else in
+  the Command Center already polls live every 30s via <code>useHiveData</code> — this was
+  one static component, not a hive-wide gap.)</p>
+  <p><strong>Acceptance:</strong> Roadmap panel reflects real, live data; only one
+  "Development Roadmap" surface exists, not two disagreeing ones; <code>npm run
+  build:app</code> clean.</p>
+</div>
+
+<div class="task" data-status="done" data-batchable="true" id="task-31">
+  <h3>31. Fold Kai El's own provider/rate-limit awareness into his real context</h3>
+  <p class="meta">Found 2026-08-04. Real, small, safe — no new capability granted. Done
+  2026-08-04.</p>
+  <p><strong>What actually happened:</strong> Added <code>rateLimitPeek()</code> (a
+  read-only counter peek, never increments — <code>rateLimitOk()</code> itself stays
+  untouched so its 9 other call sites are unaffected) and folded both it and
+  <code>providerRoster(env)</code> into <code>command_text</code>'s <code>ctxLines</code>.
+  <code>node --check</code> clean.</p>
+  <p><strong>Prompt:</strong> <code>providerRoster(env)</code> (bound/unbound state per
+  LLM provider) and the live count computed inside <code>rateLimitOk()</code> both already
+  exist, computed on nearly every request, but never reach <code>/command_text</code>'s
+  own <code>ctxLines</code> — Kai El doesn't know which provider is answering or how close
+  to a rate limit he is. Fold both into <code>HIVE CONTEXT</code>, same additive pattern
+  as the proposals/colony-reports fix from PR #148/#149.</p>
+  <p><strong>Acceptance:</strong> Ask Kai El "which provider are you" or "are you close to
+  a rate limit" and get a real, grounded answer instead of "I don't have that."</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-32">
+  <h3>32. Close the loop: approved proposals become real work, not a dead end</h3>
+  <p class="meta">Founder-requested 2026-08-04 ("give the Queen a terminal" — the real
+  synthesis: this Routine already IS the real terminal; the missing piece is the bridge).</p>
+  <p><strong>Prompt:</strong> An approved <code>hive_proposals</code> row (founder-approved
+  or Queen-auto-approved via switch 9) currently just sits at <code>status='approved'</code>
+  with nothing picking it up. Add a protocol rule: every firing also checks for approved,
+  not-yet-actioned <code>architect-proposal</code>/<code>suggestion</code> rows (via
+  <code>edge-health-probe</code>-style live check) and works them as real tasks alongside
+  this file's own queue — same PR-and-hold-for-review discipline as everything else, never
+  self-merged. Mark a proposal row actioned (new <code>actioned_at</code> column or reuse
+  <code>founder_note</code>) once real work starts on it, so it's never picked up twice.</p>
+  <p><strong>Acceptance:</strong> One real proposal, once approved, demonstrably becomes a
+  real PR from a later firing — "Kai El proposes → Queen/founder approves → next firing
+  does the work → PR" verified end to end at least once.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-33">
+  <h3>33. Give Kai El real awareness of the Horde/genome doctrine</h3>
+  <p class="meta">Found 2026-08-04 from a real transcript: asked "what's the status of the
+  Horde," Kai El had nothing — deflected to generic hive-status language instead of
+  answering, because none of FABLE_DNA.md's chromosomes (including Chromosome IV, the
+  Horde principle) reach his context at all, only GOVERNANCE.md's article titles do.</p>
+  <p><strong>Prompt:</strong> Fold a short, real summary of FABLE_DNA.md's chromosome
+  titles/one-liners into <code>command_text</code>'s <code>ctxLines</code> (same additive
+  pattern as tasks 27/31), so Kai El can actually answer genome-doctrine questions instead
+  of deflecting to generic governance language.</p>
+  <p><strong>Acceptance:</strong> Ask Kai El "what's the status of the Horde" (or any other
+  chromosome) and get a real, grounded answer instead of a deflection.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-34">
+  <h3>34. Surface each agent's real job in Kai El's own context</h3>
+  <p class="meta">Found 2026-08-04 from the same transcript: asked to explain the hive's
+  work, Kai El said "Thoth, Ma'at, and Solomon are active, but their current specific
+  tasks are not detailed" — even though task 27 gave every agent a real, documented job.
+  The jobs are real in the codebase; they just never reached his own ctxLines.</p>
+  <p><strong>Prompt:</strong> Add each active agent's real one-line job (Thoth: memory-vault
+  sync, Sekhmet: Arena judge, Ptah: architect-proposals, Horus: health/status watchtower,
+  etc. — task 27's own real mapping) to the <code>Active agents:</code> line in
+  <code>command_text</code>'s <code>ctxLines</code>.</p>
+  <p><strong>Acceptance:</strong> Ask Kai El what a specific agent (e.g. Thoth) actually
+  does and get the real job, not "not detailed."</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-35">
+  <h3>35. Verify (and if needed, fix) Kai El's proposal-status accuracy; rename "YOU" once founder-authed</h3>
+  <p class="meta">Found 2026-08-04. Two real, separate small items surfaced by the founder
+  from a live transcript.</p>
+  <p><strong>Prompt:</strong> (a) Kai El's own chat summarized several proposals ("Bind a
+  founder key," "Provision R2," "Provision Vectorize," etc.) as "all of which have been
+  approved" — the real per-item status IS already in his context
+  (<code>ctxLines</code> includes <code>title [status]</code> per proposal), so first
+  verify against live <code>/v11/proposals</code> whether this was accurate or an
+  over-generalization across a mixed pending/approved list — a real F-004 (Explainability)
+  concern either way, not just a style nitpick. Fix only if verification finds a real gap
+  (e.g. tighten the system prompt's own "never invent" instruction to explicitly cover
+  summarizing status across multiple items, not just single values). (b) The founder asked
+  for the chat's "YOU" (sovereign/founder) label to read "Founder" once
+  <code>FOUNDER_KEY</code> is bound, instead of the generic default — small, real UI
+  personalization, unrelated to the label-mapping question already resolved earlier
+  tonight (the code's sender→label mapping is confirmed correct; this is a wording change,
+  not a bug fix).</p>
+  <p><strong>Acceptance:</strong> A real live check confirms or refutes the status-accuracy
+  concern, with the finding logged either way; "Founder" label change verified in a real
+  build.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="false" id="task-12">
@@ -635,6 +831,7 @@ private reasoning.</li>
 2026-08-02 — Task 9b done: built .github/workflows/federation-pr-review.yml, real 6-hourly scheduled workflow, re-derives colony repo list from .queen/hive.yml (never hardcoded separately), posts one real evidence-cited comment (mergeable state + real gh pr checks output) per open PR, idempotent via marker comment, comment-only (never approves/merges/blocks, same never-merge discipline extended to federation repos). Gated behind new HIVE_FEDERATION_TOKEN secret (flip-the-switch, honest no-op logged if unbound) — SWITCHBOARD.md #8 / FLIP_THE_SWITCHES.md #8 added. Found and fixed a real bug before commit: first draft's heredoc broke YAML block-scalar parsing (column-1 lines under-indented relative to the run: | block) — caught via python3 yaml.safe_load, fixed by indenting heredoc body to the block's base indentation so YAML strips it back to zero-indent bash text; re-verified via yaml.safe_load + bash -n on every extracted step. PROTOCOL MISS (again) logged honestly: no separate in-progress-alone commit before this task's work either — same batching-drops-the-step pattern flagged in earlier firings' self-audits, still not actually fixed in practice.
 2026-08-02 — Task 9c done: built .github/workflows/federation-issue-triage.yml, real 3-hourly scheduled workflow, modeled directly on kai-el-bridge.yml's mirror-to-tracking-issue pattern (explicitly, per the task's own prompt) rather than a new mechanism. Real explainable keyword heuristics (documented in the workflow's own header, not claimed as more than that) for bug/enhancement/question labels + a narrow urgent-keyword flag; idempotent via hive-triaged label; mirrors every run's results into one "Federation Issue Triage Queue" tracking issue in THEHIVE. Never transfers/closes/assigns — label+mirror only. Reuses task 9b's HIVE_FEDERATION_TOKEN secret (one token, two workflows) rather than adding a new one. This time the in-progress-alone commit WAS done correctly before starting work (f568d05-style discipline restored after 9a/9b's misses). YAML + bash-per-step syntax verified (yaml.safe_load + bash -n on every extracted step) before commit, plus a standalone awk smoke-test on sample data to confirm the tracking-issue formatting actually renders right.
 2026-08-02 — Task 10 done: audited backend/core/hitl.py (top of AUDIT_LEDGER.md's not-yet-audited list), verdict BUG FOUND — ESCALATED, not CONFIRMED CORRECT. hive_mesh.dispatch() correctly holds non-Tier-1 events for founder review, but approving via /v11/hitl/resolve never re-fires the held dispatch — proven live via a standalone probe script (mock_send.called == False after approval), not just grep/read-through. Installed requirements-ci.txt fresh, re-ran the real suite (33/33 passed on test_hitl.py + test_hive_mesh.py) before concluding — green tests didn't catch this because none round-trip through the real caller path. Escalated rather than fixed mid-audit (safety-relevant, real design decision) — new task 26 added to the queue, AUDIT_LEDGER.md's not-yet-audited list updated to strike hitl.py through.
+2026-08-04 — Task 27 logged retroactively: PR #149 (chain of command via agents.reports_to, real jobs for Thoth/Sekhmet/Ptah/Horus, Queen's real approval power via queenReview()/switch 9, colonies-report-back) done directly in conversation, not this queue, per founder instruction to log it here. 7 matching colony PRs also opened. A founder-shared PDF was reviewed and discarded — a saved transcript from an unrelated jailbroken AI session, not hive canon. Tasks 28-32 added and bumped ahead of task 12 (checks-and-balances skill, mandatory lightweight per-firing audit, Command Center roadmap panel's real bug fix, Kai El's provider/rate-limit self-awareness, and closing the approved-proposal-to-real-work loop) — no existing pending task blocks any of them. Routine revival confirmed with the founder: once daily, self-binds to this conversation, fills the real session budget rather than stopping after one task, skip-and-continue on founder-only blockers, checks-and-balances review runs every firing but lightweight.
 
 </body>
 </html>

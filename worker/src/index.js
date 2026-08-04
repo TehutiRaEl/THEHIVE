@@ -159,6 +159,20 @@ async function rateLimitOk(DB, ip, env) {
   } catch { return true; }
 }
 
+// Read-only peek at the CURRENT count for one IP (2026-08-04, task 31) — never
+// increments, unlike rateLimitOk above. Exists so Kai El's own chat can honestly tell
+// the sovereign how close to the 30/min limit this request already is, using the exact
+// same counters rateLimitOk already gates on, without double-counting a request.
+async function rateLimitPeek(DB, ip, env) {
+  if (env?.RATE_LIMIT_KV) {
+    try { return parseInt(await env.RATE_LIMIT_KV.get(`rl:${ip}`), 10) || 0; } catch { return null; }
+  }
+  try {
+    const row = await DB.prepare('SELECT COUNT(*) AS n FROM rate_limits WHERE ip=? AND ts>=?').bind(ip, Date.now() - 60_000).first();
+    return (row?.n) ?? 0;
+  } catch { return null; }
+}
+
 // Token validation for write endpoints. Fails open when WORKER_ADMIN_KEY is unset (dev mode).
 async function tokenOk(DB, request, env) {
   if (!env.WORKER_ADMIN_KEY) return true; // dev mode — permissive
@@ -305,6 +319,11 @@ async function ensureTables(DB) {
     'ALTER TABLE agents ADD COLUMN reports_to TEXT',
     'ALTER TABLE hive_proposals ADD COLUMN alignment_score REAL',
     'ALTER TABLE hive_proposals ADD COLUMN decided_by TEXT',
+    // The real bridge (2026-08-04, task 32): an approved proposal used to just sit there.
+    // actioned_at marks the moment a real firing actually picked it up and did the work,
+    // so the daily Routine's "check for approved, unactioned proposals" rule never
+    // re-picks the same one twice.
+    'ALTER TABLE hive_proposals ADD COLUMN actioned_at TEXT',
   ]) {
     try { await DB.prepare(stmt).run(); } catch {}
   }
@@ -962,7 +981,7 @@ export default {
         try {
           const { limit, offset } = pageParams(url, 50, 200);
           const { results } = await DB.prepare(
-            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by FROM hive_proposals
+            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at FROM hive_proposals
              ORDER BY (status='pending') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
           return json({ proposals: results, founder_auth_bound: !!env.FOUNDER_KEY, queen_auto_approval_bound: !!env.QUEEN_AUTONOMOUS_APPROVAL, limit, offset });
         } catch { return json({ proposals: [], founder_auth_bound: !!env.FOUNDER_KEY }); }
@@ -1059,6 +1078,25 @@ export default {
           return json({ detail: `proposal ${id} not found or already decided` }, 404);
         }
         return json({ ok: true, id, decision, ...(execResult ? { execution: execResult } : {}) });
+      }
+      // The real bridge (2026-08-04, task 32): an approved proposal used to just sit
+      // there, nothing ever picking it up. A daily automated firing marks one actioned
+      // once it's genuinely done real work on it (opened a real PR), so the same
+      // approved proposal never gets picked up twice. Anti-spam only, same posture as
+      // /colony/report — this only records that work happened, it can't approve or
+      // execute anything itself.
+      const actionedMatch = p.match(/^\/proposals\/(\d+)\/actioned$/);
+      if (actionedMatch && method === 'POST') {
+        const ipAct = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!(await rateLimitOk(DB, ipAct, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        const id = Number(actionedMatch[1]);
+        const existing = await DB.prepare("SELECT status, actioned_at FROM hive_proposals WHERE id=?").bind(id).first();
+        if (!existing) return json({ detail: `proposal ${id} not found` }, 404);
+        if (existing.status !== 'approved') return json({ detail: `proposal ${id} is not approved (status: ${existing.status})` }, 400);
+        if (existing.actioned_at) return json({ detail: `proposal ${id} already actioned at ${existing.actioned_at}` }, 409);
+        await DB.prepare("UPDATE hive_proposals SET actioned_at=? WHERE id=? AND status='approved' AND actioned_at IS NULL")
+          .bind(new Date().toISOString(), id).run();
+        return json({ ok: true, id });
       }
       // Sub-Architect's first workflow (TEAM_CHARTERS.md, 2026-07-18): decompose a
       // founder-initiated venture brief into a structured CEO->departments->tasks
@@ -1236,18 +1274,25 @@ export default {
         // gather live context the way the Scribe would
         let ctxLines = [];
         try {
-          const [ag, gov, pulseRow, props, colonyReports] = await Promise.all([
+          const [ag, gov, pulseRow, props, colonyReports, rlCurrent] = await Promise.all([
             DB.prepare("SELECT name, elo, reports_to FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 5").all(),
             DB.prepare('SELECT action, article FROM governance_log ORDER BY id DESC LIMIT 3').all(),
             DB.prepare('SELECT detail FROM hive_pulse ORDER BY id DESC LIMIT 1').first(),
             DB.prepare("SELECT title, status FROM hive_proposals ORDER BY id DESC LIMIT 6").all(),
             DB.prepare('SELECT colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT 3').all(),
+            rateLimitPeek(DB, ipCmd, env),
           ]);
           if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a => `${a.name}(${a.elo})${a.reports_to ? ' reports to ' + a.reports_to : ' (Queen)'}`).join(', '));
           if (gov?.results?.length) ctxLines.push('Recent governance: ' + gov.results.map(g => `${g.action}/${g.article}`).join(', '));
           if (pulseRow?.detail) ctxLines.push('Last heartbeat: ' + pulseRow.detail);
           // Colonies → Queen feedback — closes the loop that was one-way until now.
           if (colonyReports?.results?.length) ctxLines.push('Recent colony reports: ' + colonyReports.results.map(c => `${c.colony} (${c.kind}): ${c.body}`).join(' | '));
+          // Self-awareness (2026-08-04, task 31) — Kai El previously had no idea which
+          // provider was answering him or how close to his own rate limit he was; both
+          // were already computed elsewhere and simply discarded before this.
+          const roster = providerRoster(env);
+          ctxLines.push('Your own providers: ' + roster.map(r => `${r.label}${r.bound ? ' (bound)' : ' (not bound)'}`).join(', ') + `; you reply through whichever is first-bound. Your own replies are capped at 400 tokens.`);
+          if (rlCurrent !== null) ctxLines.push(`Your own rate limit right now: ${rlCurrent}/30 requests this minute from this caller.`);
           // The actual answer to "what are you working on / what are your goals" —
           // without this, Kai El had nothing but agent scores and governance trivia
           // to draw on, so that question could never get a real answer no matter
@@ -1539,6 +1584,7 @@ export default {
             'GET /health', 'GET /agents', 'GET /grading/leaderboard', 'GET /wallet/leaderboard/soul',
             'GET /roadmap', 'POST /venture/plan', 'POST /legal/research', 'POST /automaton/infer', 'GET /jobs (Queues polling, opt-in async)', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
             'POST /colony/report (rate-limited)', 'GET /colony/reports',
+            'POST /proposals/{id}/actioned (rate-limited)',
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
             'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
             'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',
