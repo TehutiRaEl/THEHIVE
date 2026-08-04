@@ -324,6 +324,11 @@ async function ensureTables(DB) {
     // so the daily Routine's "check for approved, unactioned proposals" rule never
     // re-picks the same one twice.
     'ALTER TABLE hive_proposals ADD COLUMN actioned_at TEXT',
+    // Elders' Council (2026-08-04, task 37): when the Queen auto-approves at >=98,
+    // Ma'at + Solomon get a real, independent look before it sticks. elder_note is
+    // null when both clear it; set to the objecting Elder's reason when either vetoes
+    // (which downgrades the proposal back to pending — see elderCouncilVeto()).
+    'ALTER TABLE hive_proposals ADD COLUMN elder_note TEXT',
   ]) {
     try { await DB.prepare(stmt).run(); } catch {}
   }
@@ -694,6 +699,109 @@ async function queenReview(env, requestUrl, { title, body }) {
   } catch { return null; }
 }
 
+// The Elders' Council (2026-08-04, task 37) — the pilot batch of "give the other 6
+// agents real capability." Ma'at (balance) and Solomon (wisdom) are the first two of
+// the six named hive agents to gain an actual generative voice instead of being only a
+// row in the agents table. They exist to BE F-011B's "Elders" in real, running code —
+// before this, that check was written in docs/GOVERNANCE.md and enforced by nothing
+// (named as the exact gap in checks-and-balances' first audit, 2026-08-04). Sekhmet
+// gets the third voice, layered on TOP of her existing real job (resolveChallenge()'s
+// Elo math, which keeps running unchanged) as an on-demand explain/judge voice — not a
+// replacement, so production Arena resolution never depends on an LLM call succeeding.
+// One shared route + shared generate() waterfall per the founder's own choice
+// (2026-08-04: "shared route, distinct voices" over one route per agent) — built to
+// swap onto the founder's own tiny-LLM repo later as a clean provider change, not a
+// rebuild, same as every other generate() caller in this file.
+const ELDER_VOICES = {
+  maat: {
+    label: "Ma'at",
+    system:
+      "You are Ma'at, an Elder of THE HIVE's Council, embodying balance, truth, and " +
+      "proportion. You do not decide alignment — the Queen already scored this proposal. " +
+      "Your only job: does approving it keep the hive's power balanced, or does it " +
+      'concentrate too much authority, move too fast, or skip a real check? Reply with ' +
+      'EXACTLY two lines: "VERDICT: OBJECT" or "VERDICT: CLEAR", then "REASON: <one short ' +
+      'sentence>". Default to CLEAR unless there is a real, specific balance concern.',
+  },
+  solomon: {
+    label: 'Solomon',
+    system:
+      "You are Solomon, an Elder of THE HIVE's Council, embodying wisdom and sound " +
+      'judgment. You do not decide alignment — the Queen already scored this proposal. ' +
+      'Your only job: is this a WISE thing to auto-approve right now — any hidden cost, ' +
+      'ambiguity, or consequence a strict alignment score would miss? Reply with EXACTLY ' +
+      'two lines: "VERDICT: OBJECT" or "VERDICT: CLEAR", then "REASON: <one short ' +
+      'sentence>". Default to CLEAR unless there is a real, specific concern.',
+  },
+  sekhmet: {
+    label: 'Sekhmet',
+    system:
+      "You are Sekhmet, the Arena's judge, fierce and exacting. You are NOT deciding a " +
+      "numeric outcome here — the Elo formula already resolved that, elsewhere, before " +
+      'you were ever asked. Someone wants your own in-character reasoned take on a ' +
+      'specific arena matchup or dispute. Give a short, sharp answer, 2-4 sentences, no ' +
+      'preamble, no hedging about not being able to decide the score.',
+  },
+};
+
+// On-demand consult for any one Elder voice — this is the entire real capability
+// behind /v11/council/consult. Returns null (never a fabricated answer) if no
+// generative provider is bound.
+async function consultElder(env, agent, question, context) {
+  const voice = ELDER_VOICES[agent];
+  if (!voice) return null;
+  const prompt = context
+    ? `CONTEXT:\n${String(context).slice(0, 1500)}\n\nQUESTION:\n${String(question).slice(0, 500)}`
+    : String(question).slice(0, 1500);
+  const gen = await generate(env, { system: voice.system, maxTokens: 150, prompt });
+  if (!gen) return null;
+  return { agent, label: voice.label, text: gen.text, provider: gen.provider };
+}
+
+// The real counterweight: runs Ma'at + Solomon in parallel against a proposal the Queen
+// has already cleared at >=98. Returns the first real objection found (a string to store
+// in hive_proposals.elder_note) or null if both clear it / neither could be reached —
+// an unreachable Elder is treated as CLEAR, not as a veto, so a down provider degrades
+// to "same as before this task" rather than silently blocking every approval.
+async function elderCouncilVeto(env, { title, body }) {
+  const prompt = `PROPOSAL TITLE: ${title}\nPROPOSAL BODY: ${String(body || '').slice(0, 1500)}`;
+  const [maat, solomon] = await Promise.all([
+    generate(env, { system: ELDER_VOICES.maat.system, maxTokens: 80, prompt }),
+    generate(env, { system: ELDER_VOICES.solomon.system, maxTokens: 80, prompt }),
+  ]);
+  for (const [key, gen] of [['maat', maat], ['solomon', solomon]]) {
+    if (!gen) continue;
+    const verdict = gen.text.match(/VERDICT:\s*(OBJECT|CLEAR)/i);
+    const reason = gen.text.match(/REASON:\s*(.+)/i);
+    if (verdict && verdict[1].toUpperCase() === 'OBJECT') {
+      return `${ELDER_VOICES[key].label} objected: ${(reason?.[1] || '').trim().slice(0, 200)}`;
+    }
+  }
+  return null;
+}
+
+// Shared by both proposal-creation paths (POST /proposals and the PROPOSAL: marker in
+// command_text) so the Queen's approval + Elders' Council check runs identically either
+// way, instead of two copies of the same five-variable dance drifting apart over time.
+async function queenDecide(env, requestUrl, { title, body }) {
+  let qStatus = 'pending', qScore = null, qDecidedBy = null, qDecidedAt = null, elderNote = null;
+  if (env.QUEEN_AUTONOMOUS_APPROVAL) {
+    const review = await queenReview(env, requestUrl, { title, body });
+    if (review) {
+      qScore = review.score;
+      if (review.score >= 98) {
+        const veto = await elderCouncilVeto(env, { title, body });
+        if (veto) {
+          elderNote = veto; // stays pending — a real counterweight, not narrative only
+        } else {
+          qStatus = 'approved'; qDecidedBy = 'queen'; qDecidedAt = new Date().toISOString();
+        }
+      }
+    }
+  }
+  return { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote };
+}
+
 // Queues consumer (Phase 8, 2026-07-21): processes jobs enqueued by the
 // opt-in {"async": true} path on /v11/venture/plan and /v11/legal/research.
 // DELIBERATELY NOT EXPORTED as `queue` in export default below: a Worker
@@ -981,7 +1089,7 @@ export default {
         try {
           const { limit, offset } = pageParams(url, 50, 200);
           const { results } = await DB.prepare(
-            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at FROM hive_proposals
+            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note FROM hive_proposals
              ORDER BY (status='pending') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
           return json({ proposals: results, founder_auth_bound: !!env.FOUNDER_KEY, queen_auto_approval_bound: !!env.QUEEN_AUTONOMOUS_APPROVAL, limit, offset });
         } catch { return json({ proposals: [], founder_auth_bound: !!env.FOUNDER_KEY }); }
@@ -1005,18 +1113,11 @@ export default {
         const detail = (body.body || '').toString().slice(0, 4000);
         if (!title) return json({ detail: 'title required' }, 400);
         // The Queen's real approval power (switch 9) — see queenReview() above for the
-        // full boundary. 'action-request' is already excluded above, before this point.
-        let qStatus = 'pending', qScore = null, qDecidedBy = null, qDecidedAt = null;
-        if (env.QUEEN_AUTONOMOUS_APPROVAL) {
-          const review = await queenReview(env, request.url, { title, body: detail });
-          if (review && review.score >= 98) {
-            qStatus = 'approved'; qScore = review.score; qDecidedBy = 'queen'; qDecidedAt = new Date().toISOString();
-          } else if (review) {
-            qScore = review.score;
-          }
-        }
-        await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at) VALUES (?,?,?,?,?,?,?,?)')
-          .bind(new Date().toISOString(), kind, title, detail, qStatus, qScore, qDecidedBy, qDecidedAt).run();
+        // full boundary, and queenDecide()/elderCouncilVeto() for the Elders' Council
+        // check now layered on top. 'action-request' is already excluded above.
+        const { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote } = await queenDecide(env, request.url, { title, body: detail });
+        await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note) VALUES (?,?,?,?,?,?,?,?,?)')
+          .bind(new Date().toISOString(), kind, title, detail, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote).run();
         return json({ ok: true });
       }
       // POST /proposals/action-request — the ONLY way an 'action-request' kind
@@ -1363,20 +1464,12 @@ export default {
             } else {
               // Ptah's real job: this is the hive's one architect-proposal path — the
               // place a concrete build/change idea actually gets drafted and queued.
-              // Runs through the Queen's real approval power (switch 9) same as every
-              // other proposal path; see queenReview() for the full boundary.
+              // Runs through the Queen's real approval power (switch 9) AND the Elders'
+              // Council check (queenDecide()) same as every other proposal path.
               ctx?.waitUntil?.((async () => {
-                let qStatus = 'pending', qScore = null, qDecidedBy = null, qDecidedAt = null;
-                if (env.QUEEN_AUTONOMOUS_APPROVAL) {
-                  const review = await queenReview(env, request.url, { title, body: gen.text });
-                  if (review && review.score >= 98) {
-                    qStatus = 'approved'; qScore = review.score; qDecidedBy = 'queen'; qDecidedAt = new Date().toISOString();
-                  } else if (review) {
-                    qScore = review.score;
-                  }
-                }
-                await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at) VALUES (?,?,?,?,?,?,?,?)')
-                  .bind(new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt).run();
+                const { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote } = await queenDecide(env, request.url, { title, body: gen.text });
+                await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note) VALUES (?,?,?,?,?,?,?,?,?)')
+                  .bind(new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote).run();
               })());
             }
           }
@@ -1567,6 +1660,27 @@ export default {
         return json({ reports: results, limit, offset });
       }
 
+      // The Elders' Council + Sekhmet's real voice (2026-08-04, task 37) — on-demand
+      // only for now (founder's own choice: "start on-demand, add schedules later").
+      // agent must be one of the 3 piloted names; the other 3 (Thoth, Ptah, Horus)
+      // deliberately return 400, not a silent fallback — they have not been given real
+      // capability yet, and this route must never pretend otherwise.
+      if (p === '/council/consult' && method === 'POST') {
+        const ipCouncil = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!(await rateLimitOk(DB, ipCouncil, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        const councilBody = await request.json().catch(() => ({}));
+        const agent = (councilBody.agent || '').toString().trim().toLowerCase();
+        const question = (councilBody.question || '').toString().trim();
+        const context = councilBody.context ? String(councilBody.context) : null;
+        if (!ELDER_VOICES[agent]) {
+          return json({ detail: `'${agent}' has no real capability yet — only maat, solomon, and sekhmet are piloted (task 37)` }, 400);
+        }
+        if (!question) return json({ detail: 'question required' }, 400);
+        const result = await consultElder(env, agent, question, context);
+        if (!result) return json({ detail: 'no generative provider bound — cannot consult right now' }, 503);
+        return json(result);
+      }
+
       if (p === '/debug/colony-ping' || p === '/colony/ping') {
         const roster = ['NAR2', '4DBRAIN', 'aether', 'automatisch', 'Kimi-K2', 'LocalAGI'];
         return json({
@@ -1585,6 +1699,7 @@ export default {
             'GET /roadmap', 'POST /venture/plan', 'POST /legal/research', 'POST /automaton/infer', 'GET /jobs (Queues polling, opt-in async)', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
             'POST /colony/report (rate-limited)', 'GET /colony/reports',
             'POST /proposals/{id}/actioned (rate-limited)',
+            "POST /council/consult (rate-limited; agent: maat|solomon|sekhmet)",
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
             'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
             'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',

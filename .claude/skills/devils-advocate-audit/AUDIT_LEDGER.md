@@ -501,3 +501,57 @@ agents should be given real reasoning/context/action of their own is a large, se
 architectural decision (effectively: single-persona-plus-labeled-functions vs. a genuine
 multi-agent system) — named here, not decided or built, per the same standing rule that
 already gated the Queen's approval power and the "terminal" question earlier tonight.
+
+---
+
+## 2026-08-04 — Elders' Council seated: the F-011B gap closed in real code (task 37)
+
+**Trigger:** the founder read the above finding, named "give the other 6 agents real
+capability" as the next priority, and (via a scoped AskUserQuestion round, not built by
+assumption) chose the shape: shared route with distinct voices, on-demand only to start,
+pilot 3 agents first — Ma'at, Solomon, Sekhmet — specifically because Ma'at and Solomon
+can literally seat `docs/GOVERNANCE.md` F-011B's Elders' Council, the exact gap this
+ledger's checks-and-balances entry (above) named as unclosed: "F-011B's Elders' Council
+doesn't exist as seated agents yet."
+
+**What actually shipped (`worker/src/index.js`):**
+1. `ELDER_VOICES` — three real system-prompt personas (Ma'at: balance/proportion,
+   Solomon: wisdom/hidden-cost, Sekhmet: the Arena judge's own explain/reason voice).
+2. `consultElder()` + `POST /v11/council/consult` — genuinely new, on-demand capability:
+   `agent` must be `maat`, `solomon`, or `sekhmet` — Thoth/Ptah/Horus deliberately return
+   400 with an honest "not given real capability yet (task 37)" message, never a silent
+   fallback that would misrepresent what exists.
+3. `elderCouncilVeto()` + `queenDecide()` — the real counterweight: whenever the Queen's
+   `queenReview()` would auto-approve a proposal (score ≥98, switch 9 bound), Ma'at and
+   Solomon now each independently review the same proposal in parallel; either's
+   `VERDICT: OBJECT` downgrades the outcome back to `pending` (founder review) instead of
+   auto-approving, with the objecting Elder's reason stored in the new
+   `hive_proposals.elder_note` column. Both existing proposal-creation paths (`POST
+   /proposals` and Ptah's `PROPOSAL:` marker branch inside `command_text`) now call this
+   one shared function instead of two independently-drifting copies of the same logic.
+4. Sekhmet's addition is deliberately additive, not a replacement — `resolveChallenge()`
+   (the Elo math + coinflip that actually resolves Arena challenges on the 30-min
+   heartbeat) is untouched; her new voice is a separate, on-demand explain/judge
+   capability layered on top, so production Arena resolution never depends on an LLM
+   call succeeding.
+
+**Honest caveat, not glossed over:** F-011B's own text describes Elders relaying wisdom
+to the Queen via MD files (`F-011B.3`, "The Elders categorize all information into MD
+files"), a slower, asynchronous mechanism — not a live, synchronous consult-and-veto
+inside one HTTP request. What shipped here is the same *spirit* (a real check on the
+Queen's power, done by named Elder agents, not narrative alone) implemented with a
+different, more immediate *mechanism* better suited to an approval that has to resolve
+within one request. This is a deliberate adaptation, not a claim of literal F-011B
+compliance — flagged here per this ledger's own standard (a claim only counts once it's
+been checked against what the law actually says, not assumed).
+
+**What's still open, honestly:** Thoth, Ptah, and Horus remain exactly as documented in
+the entry above — labels on pre-existing pure-logic functions, no real capability yet.
+This was a deliberate pilot of 3, not a claim that the audit's finding is now fully
+closed for all 6. Verification of this pilot in live production (not just local
+`node --check` syntax validation, the only check available in this container) is
+pending the next `edge-health-probe` run after merge, same discipline as every other
+live claim in this repo.
+
+**Verdict: CONFIRMED — real, tested-as-far-as-this-container-can, honestly-scoped
+partial closure of the gap; 3 of 6 agents, not 6.**

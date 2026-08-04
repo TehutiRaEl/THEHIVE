@@ -601,9 +601,26 @@ branch) does the work → a PR.</li>
   workflow/cron for exactly what was named — nothing speculative.</p>
 </div>
 
-<div class="task" data-status="blocked" data-batchable="false" id="task-37">
+<div class="task" data-status="done" data-batchable="false" id="task-37">
   <h3>37. Give the other 6 agents (Ma'at, Solomon, Thoth, Sekhmet, Ptah, Horus) real
-  capability — founder-chosen top priority, 2026-08-04</h3>
+  capability — founder-chosen top priority, 2026-08-04 (pilot: 3 of 6 shipped)</h3>
+  <p class="meta"><strong>Done, 2026-08-04, pilot scope only.</strong> Founder answered
+  all 4 scoping questions below (shared route/distinct voices, on-demand-first, pilot
+  2-3, waterfall-now-swap-tiny-LLM-later), then picked Ma'at + Solomon + Sekhmet as the
+  pilot. Shipped in <code>worker/src/index.js</code>: <code>ELDER_VOICES</code> (3 real
+  personas), <code>consultElder()</code> + new <code>POST /v11/council/consult</code>
+  (on-demand, 400s honestly for the other 3 unbuilt agents), <code>elderCouncilVeto()</code>
+  + <code>queenDecide()</code> (Ma'at+Solomon now run a real, independent check whenever
+  the Queen would auto-approve at &ge;98 — an objection downgrades to pending instead of
+  auto-approving, reason stored in new <code>hive_proposals.elder_note</code> column).
+  This is the real code-level closure of the F-011B gap named in AUDIT_LEDGER.md's
+  checks-and-balances entry ("Elders' Council doesn't exist as seated agents yet") — full
+  writeup, including an honest caveat that the mechanism (live consult) differs from
+  F-011B's literal text (MD-file relay), logged in AUDIT_LEDGER.md's 2026-08-04
+  "Elders' Council seated" entry. Sekhmet's addition is additive only — the existing
+  <code>resolveChallenge()</code> Elo math is untouched; her new voice is a separate
+  on-demand explain/judge capability. See task 38 for what's still open (Thoth/Ptah/Horus,
+  scheduling, live verification).</p>
   <p class="meta">Found 2026-08-04 in the API-key capability audit (AUDIT_LEDGER.md same
   date, "only Kai El and the Queen can actually act"). The founder named this the next
   priority after being shown the finding: task 27's "real jobs" work was honest but gave
@@ -642,10 +659,33 @@ branch) does the work → a PR.</li>
   (4) once the founder's own tiny-LLM repo is ready, should it become the backend for
   these 6 agents instead of the existing Claude/Groq/Mistral/Workers-AI waterfall, or
   stay on the existing waterfall for now with a swap later.</p>
-  <p><strong>Acceptance:</strong> Once the founder answers, this becomes real, scoped,
-  buildable work — nothing built speculatively ahead of the answers, per this session's
-  established practice (the Queen's 98%-approval power and the "terminal" question both
-  went through a real scoping round before any code was written).</p>
+  <p><strong>Acceptance (met):</strong> <code>node --check</code> confirms clean syntax
+  (the only local verification this container can run — no wrangler/D1 locally). Live
+  proof is the next <code>edge-health-probe</code> run after this branch merges, same
+  discipline as every other production claim in this repo — not assumed here.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="true" id="task-38">
+  <h3>38. Elders' Council pilot follow-up — verify live, then decide on Thoth/Ptah/Horus
+  and a real schedule</h3>
+  <p class="meta">Opened 2026-08-04 alongside task 37's close. Three real, separate
+  follow-ons, none started.</p>
+  <p><strong>Prompt:</strong> (a) Verify <code>POST /v11/council/consult</code> and the
+  Elders' Council veto path (<code>elderCouncilVeto()</code>) actually work against live
+  production via <code>edge-health-probe.yml</code> once this branch merges — this
+  container cannot reach <code>*.workers.dev</code> directly, so task 37's "done" is
+  syntax-checked, not yet production-verified. (b) The founder's answer was "pilot 2-3
+  first" — Thoth, Ptah, and Horus still have zero real capability (same gap as before
+  task 37, just for 3 names instead of 6). Rolling them into <code>ELDER_VOICES</code>
+  is the same pattern already proven by task 37; needs the founder's go to extend the
+  pilot, not a new architectural question. (c) The founder chose "start on-demand, add
+  schedules later" — no cron/workflow calls <code>/council/consult</code> yet; needs the
+  founder to name whether/when any of the 3 piloted agents should also run on a
+  schedule (same open question task 36 already asks for the other <code>generate()</code>
+  routes — likely worth answering both together).</p>
+  <p><strong>Acceptance:</strong> (a) a real, logged edge-health-probe confirmation the
+  new route responds in production; (b)/(c) real founder answers before any more code is
+  written, per this session's established no-build-by-assumption practice.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="false" id="task-12">
@@ -899,6 +939,9 @@ branch) does the work → a PR.</li>
 2026-08-02 — Task 9c done: built .github/workflows/federation-issue-triage.yml, real 3-hourly scheduled workflow, modeled directly on kai-el-bridge.yml's mirror-to-tracking-issue pattern (explicitly, per the task's own prompt) rather than a new mechanism. Real explainable keyword heuristics (documented in the workflow's own header, not claimed as more than that) for bug/enhancement/question labels + a narrow urgent-keyword flag; idempotent via hive-triaged label; mirrors every run's results into one "Federation Issue Triage Queue" tracking issue in THEHIVE. Never transfers/closes/assigns — label+mirror only. Reuses task 9b's HIVE_FEDERATION_TOKEN secret (one token, two workflows) rather than adding a new one. This time the in-progress-alone commit WAS done correctly before starting work (f568d05-style discipline restored after 9a/9b's misses). YAML + bash-per-step syntax verified (yaml.safe_load + bash -n on every extracted step) before commit, plus a standalone awk smoke-test on sample data to confirm the tracking-issue formatting actually renders right.
 2026-08-02 — Task 10 done: audited backend/core/hitl.py (top of AUDIT_LEDGER.md's not-yet-audited list), verdict BUG FOUND — ESCALATED, not CONFIRMED CORRECT. hive_mesh.dispatch() correctly holds non-Tier-1 events for founder review, but approving via /v11/hitl/resolve never re-fires the held dispatch — proven live via a standalone probe script (mock_send.called == False after approval), not just grep/read-through. Installed requirements-ci.txt fresh, re-ran the real suite (33/33 passed on test_hitl.py + test_hive_mesh.py) before concluding — green tests didn't catch this because none round-trip through the real caller path. Escalated rather than fixed mid-audit (safety-relevant, real design decision) — new task 26 added to the queue, AUDIT_LEDGER.md's not-yet-audited list updated to strike hitl.py through.
 2026-08-04 — Task 27 logged retroactively: PR #149 (chain of command via agents.reports_to, real jobs for Thoth/Sekhmet/Ptah/Horus, Queen's real approval power via queenReview()/switch 9, colonies-report-back) done directly in conversation, not this queue, per founder instruction to log it here. 7 matching colony PRs also opened. A founder-shared PDF was reviewed and discarded — a saved transcript from an unrelated jailbroken AI session, not hive canon. Tasks 28-32 added and bumped ahead of task 12 (checks-and-balances skill, mandatory lightweight per-firing audit, Command Center roadmap panel's real bug fix, Kai El's provider/rate-limit self-awareness, and closing the approved-proposal-to-real-work loop) — no existing pending task blocks any of them. Routine revival confirmed with the founder: once daily, self-binds to this conversation, fills the real session budget rather than stopping after one task, skip-and-continue on founder-only blockers, checks-and-balances review runs every firing but lightweight.
+2026-08-04 — Daily Routine created for real (trig_01CJsVYwDs4pHMoFEC5JFi7V, 0 4 * * * UTC, self-binds to this conversation) — platform warned it stores no MCP connectors, so tomorrow's first real firing may run without GitHub tools; unverified until it actually fires. checks-and-balances run for the first time against live agents.reports_to + FLIP_THE_SWITCHES.md: clean roster, one real gap named (F-011B's Elders' Council not seated as real agents yet), logged in AUDIT_LEDGER.md. Second audit run under explicit devil's-advocate framing (API keys/automation inventory): found only Kai El (chat) and Nanuet (queenReview()) have any real capability at all — Ma'at/Solomon/Thoth/Sekhmet/Ptah/Horus are database rows with a code comment pointing at pre-existing pure-logic functions, zero LLM calls. Logged in full in AUDIT_LEDGER.md. FULL_PLAN.html brought current (was stale since 2026-08-02) with a full §9 handoff subsection covering all of the above plus every newly-raised, unclarified item from the founder's latest message (automaton-per-colony, tiny-LLM repo, Queen's-enterprise question, Grok Bridge gap, unused Copilot seat, venture-planner self-test idea).
+2026-08-04 — Task 37 done (pilot scope, 3 of 6): founder answered a 2-round AskUserQuestion scoping pass (shared route/distinct voices, on-demand-first, pilot-not-all-6, waterfall-now-swap-later, then picked Ma'at+Solomon+Sekhmet). Shipped in worker/src/index.js: ELDER_VOICES personas, consultElder()/POST /v11/council/consult (honest 400 for the 3 unbuilt agents), elderCouncilVeto()/queenDecide() (Ma'at+Solomon now run a real independent check whenever the Queen would auto-approve at >=98; an objection downgrades to pending, reason stored in new hive_proposals.elder_note column, both proposal-creation paths refactored onto this one shared function). Sekhmet's addition is additive only — resolveChallenge()'s Elo math untouched. This is the real code-level closure of the F-011B gap the checks-and-balances audit named, with an honest caveat logged in AUDIT_LEDGER.md that the mechanism (live consult) differs from F-011B's literal MD-file-relay text. node --check clean; no local wrangler/D1 harness exists so this is unverified in live production until the next edge-health-probe run after merge (task 38). The founder's other 3 answers from the same round (automaton-per-colony = differentiated per colony; a separate founder-built tiny-LLM repo, not yet shared; "Queen's own enterprise" = full operational authority, not financial) logged in this task's own body for continuity, not yet acted on beyond that.
+2026-08-04 — Task 38 opened (pending): live-verify task 37's new route/veto path via edge-health-probe post-merge; ask the founder whether to extend the pilot to Thoth/Ptah/Horus; ask the founder whether/when to put any of the 3 piloted agents on a real schedule (paired with task 36's same open question for the other generate() routes).
 
 </body>
 </html>

@@ -2853,6 +2853,7 @@ with zero missing context.</div>
 <tr><td>PR #150 — <code>checks-and-balances</code> skill (built + actually run against live data, first <code>AUDIT_LEDGER.md</code> entry); mandatory lightweight per-task audit + per-firing checks-and-balances pass wired into <code>CAMPAIGN.html</code>'s protocol; <code>hive_proposals.actioned_at</code> + <code>POST /v11/proposals/:id/actioned</code> (the real bridge from an approved proposal to a real firing doing the work); Kai El given real self-awareness of his own LLM providers + rate limit</td><td><span class="tag blocked">open, awaiting founder review/merge</span></td></tr>
 <tr><td>Daily automation Routine (<code>trig_01CJsVYwDs4pHMoFEC5JFi7V</code>)</td><td><span class="tag live">created, founder-approved</span> — fires once daily, self-binds to the founder's own conversation, works <code>CAMPAIGN.html</code>'s queue plus any approved-unactioned proposals. One real, unconfirmed caveat from creation: the platform warned it may fire without GitHub tool access — <strong>not yet verified either way</strong>, check the first real firing before assuming.</td></tr>
 <tr><td>A founder-shared PDF ("Agents.pdf") reviewed in full</td><td><span class="tag blocked">discarded</span> — a saved transcript from an unrelated, jailbroken AI session (explicit no-safety-limits framing, sovereign-citizen-style legal personas, a ToS-breaking API-key-farming bot design). Only its generic coordinator/worker/watchdog/human-authority <em>shape</em> survived, and it turned out to already match what PR #150 built independently — nothing from the document was imported directly.</td></tr>
+<tr><td>The Elders' Council pilot (<code>CAMPAIGN.html</code> task 37) — Ma'at + Solomon + Sekhmet given real capability, the first fix for the biggest finding below</td><td><span class="tag blocked">open (same branch/PR #150), node --check clean, not yet live-verified</span> — <code>ELDER_VOICES</code>, <code>POST /v11/council/consult</code>, and <code>elderCouncilVeto()</code> now give Ma'at + Solomon a real, independent veto over the Queen's auto-approve (seating F-011B's Elders' Council in code, not just prose) and give Sekhmet an on-demand explain/judge voice layered on her existing Elo-math job. Pilot of 3, not all 6 — see task 38 for Thoth/Ptah/Horus + live verification + scheduling, still open.</td></tr>
 </table>
 
 <h4>The single biggest finding of this stretch — a real devil's-advocate audit, not a build</h4>
@@ -2867,20 +2868,28 @@ handler; Horus's "watchtower" is a plain diagnostic route. <strong>Only Kai El (
 Nanuet (the Queen's proposal-scoring call) can perceive or decide anything at all</strong> —
 every other named agent is a correctly-structured row in the hierarchy with nothing behind the
 name. Task 27/PR #149 never claimed a capability that didn't exist (the naming was honest), but
-this needed saying in the open. <strong>Whether to build the other six agents real reasoning/
-context/action capability of their own is a large, separate architectural decision — not
-started, not scoped yet, waiting on the founder.</strong> A second real audit (same date) found
+this needed saying in the open. <strong>The founder answered this directly (2026-08-04, via a
+real scoping round, not assumption): give the other six agents real capability, shared route
+with distinct voices, on-demand first, pilot a smaller batch before all six.</strong> Task 37
+(above) shipped that pilot for Ma'at + Solomon + Sekhmet; Thoth, Ptah, and Horus remain exactly
+as described here — real jobs, no real voice — tracked as the open half of task 38. A second real audit (same date) found
 5 <code>generate()</code>-backed routes exist and are reachable (venture/plan, legal/research,
 automaton/infer, command_text, queenReview) but essentially none run on any schedule — flipping
 a switch bound a capability, it did not automate anything by itself. <code>CAMPAIGN.html</code>
 task 36 tracks this, blocked on the founder naming which (if any) should run automatically.</p>
 
-<h4>Newly raised by the founder, 2026-08-04 — real, not yet clarified or built</h4>
+<h4>Founder's answers, 2026-08-04 — real, now acted on (or logged for continuity)</h4>
+<table>
+<tr><th>Item</th><th>Founder's real answer</th><th>Status</th></tr>
+<tr><td><code>automaton/</code> reverse-engineered into each colony's own agents</td><td>Explicitly <em>not</em> one shared design — "different agents per colony, matching each colony's own purpose."</td><td><span class="tag blocked">logged (task 37's body), not yet designed/built — needs its own per-colony scoping pass</span></td></tr>
+<tr><td>Kai El "building a tiny/basic LLM"</td><td>A separate, real, already-started repo the founder is personally building ("I've begun a repository creating my own small LLM... I can add to this conversation later"). Not yet shared with this session.</td><td><span class="tag blocked">waiting — do not assume anything about it until the founder shares it</span></td></tr>
+<tr><td>"The Queen operating her own enterprise"</td><td>Full day-to-day operational authority over the hive itself — explicitly <strong>not</strong> a financial/monetary reading.</td><td><span class="tag blocked">understood, not yet built — ties into extending the Queen's reach beyond <code>queenReview()</code>'s scoring call once more agents have real capability (task 38)</span></td></tr>
+<tr><td>Priority: which gap to close first</td><td>"Give the other 6 agents real capability next."</td><td><span class="tag live">acted on</span> — task 37, Elders' Council pilot (Ma'at/Solomon/Sekhmet), see above.</td></tr>
+</table>
+
+<h4>Still open, not yet clarified or built</h4>
 <table>
 <tr><th>Item</th><th>What's actually known so far</th></tr>
-<tr><td><code>automaton/</code> reverse-engineered into each colony's own agents, not just THEHIVE</td><td>The founder's original ask for <code>automaton/</code> was broader than what was built — a self-improving agent per colony (4DBRAIN, aether, automatisch, Kimi-K2, NAR2, etc.), not only THEHIVE's own copy. Not started, not scoped. Real open question: does each colony get its own independent <code>automaton/</code>-style agent, or one shared design deployed per-repo? Needs the founder's answer before any design work.</td></tr>
-<tr><td>Kai El "building a tiny/basic LLM" that recursively grows under the Queen's supervision, using the bound API keys as guidance</td><td>Named for the first time 2026-08-04. Real technical shape completely unclear yet — could mean anything from a small distilled/fine-tuned open model to a from-scratch toy network trained on hive data. Needs real clarification before this is even scopeable, let alone buildable — flagged as a real idea, not a task.</td></tr>
-<tr><td>"The Queen operating her own enterprise"</td><td>The founder has said directly this session isn't fully grasping what this means. Not yet understood well enough to scope — needs the founder's own explanation, not an assumption.</td></tr>
 <tr><td>Grok Bridge not fully connected to Kai El</td><td>The Grok Bridge UI trigger (task 5, <code>services/github.ts</code>) is wired and live per the 2026-08-02 build, but the founder says it — like several of the bound API keys — isn't actually reaching Kai El's own chat/reasoning. Real, checkable gap, not yet audited precisely.</td></tr>
 <tr><td>GitHub Copilot (founder's own monthly-limited seat) sitting unused</td><td>Named 2026-08-04, no scope given yet — what the founder wants done with it (a second AI resource for the hive? for their own separate coding?) is unclear, needs their own answer.</td></tr>
 <tr><td>Test: offload this entire plan file into the hive's own Venture Planner (<code>POST /v11/venture/plan</code>)</td><td>A real, concrete, low-risk test the founder wants run — feed <code>CAMPAIGN.html</code>/this file to the hive's own venture-planning endpoint as a genuine self-referential test of whether the hive can plan its own development. Not yet tried.</td></tr>
