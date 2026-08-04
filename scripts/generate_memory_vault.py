@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+Thoth's real job (2026-08-03 chain-of-command work): keeper of the written record —
+this script (plus the memory-librarian subagent that runs it) is the actual thing that
+keeps the memory vault synchronized and accurate.
+
 Generate Obsidian-compatible memory vault for THEHIVE.
 Parses Python AST, extracts modules/classes/functions, emits [[wiki-links]] Markdown files.
 Also writes memory/_graph.json for D3.js force graph in the Command Center UI.
