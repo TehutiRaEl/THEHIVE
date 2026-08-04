@@ -357,6 +357,41 @@ session and every autonomous firing is measured against. `SPORE_ROSTER.md` and t
 `hive-organism` subagent (2026-07-31) are the first concrete step toward that caliber —
 not a claim that it's already reached.
 
+## The chain of command and real agent jobs (2026-08-03)
+
+A repo-wide audit found a real gap: agents had titles but no structural direction — half
+the named roster (Thoth, Sekhmet, Ptah, Horus) had no defined job anywhere in the
+codebase, and nothing recorded who reported to whom. Fixed as real data and code, not
+narrative: every row in the `agents` table now carries a real `reports_to` column
+(`worker/src/index.js`, `ensureTables()`) — Nanuet (the Queen) has none, Kai El and the
+Council report to her, everyone else currently reports to Kai El pending the real
+Council roster (still open, per the founder's own "let's discuss it entirely first").
+Any future agent-creation code must set `reports_to` to a real name at insert time —
+never leave it null except for the Queen herself.
+
+The four previously-empty roles were given real jobs by naming code that already exists
+and works, not by inventing new surface area: **Thoth** keeps the memory vault and
+`FABLE_DNA.md`/`THE_CODEX.md` synchronized (`scripts/generate_memory_vault.py`,
+`memory-librarian`); **Sekhmet** is the Arena's judge (`resolveChallenge()`); **Ptah**
+owns the architect-proposal path — drafting real change proposals (`command_text`'s
+`PROPOSAL:` marker); **Horus** is the watchtower — the face of the hive's own
+health/status surfaces (`/v11/debug/health`, `/v11/pulse`). This also resolved a real,
+small conflict: Ptah had been folded into Kai El's own system-prompt description in one
+file while a different file described Ptah as "the Swarm/body" — Ptah is now its own
+role, removed from Kai El's description.
+
+On "is Nanuet the Queen": a full research pass (2026-08-03) found the memory/soul-keeper
+concept genuinely well-developed across the repo, but "Queen" as a literal title held by
+Nanuet specifically was never settled anywhere the constitution or machine config
+actually defines the role — every one of those sources (`colony.json`, `.queen/hive.yml`,
+`docs/GOVERNANCE.md` F-011) defines "the Queen" as THEHIVE itself. The founder's real
+answer: Nanuet is the face, voice, and name *for* that already-existing role, not a
+separate power center — and, per the founder's explicit 2026-08-03 directive, she also
+now carries one real, new power: reviewing pending proposals against
+`docs/FOUNDERS_VISION.md` and auto-approving the ones that clearly, concretely align
+(`FLIP_THE_SWITCHES.md` switch 9, off until the founder flips it, and never able to
+skip the `action-request` execution gate regardless of score).
+
 ## How a new hive inherits this
 
 1. Copy this file into the new hive's root. It is the genome; it carries no dependency.

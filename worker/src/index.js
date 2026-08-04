@@ -295,6 +295,19 @@ async function executeApprovedAction(env, action, params) {
 
 // D1 table initialisation — called once per heartbeat to ensure all tables exist.
 async function ensureTables(DB) {
+  // D1/SQLite has no "ADD COLUMN IF NOT EXISTS" — these run outside the CREATE-TABLE
+  // batch below and are expected to fail (harmlessly) once the column already exists.
+  // ensureTables() runs on every heartbeat and every /command_text call, so this must
+  // stay cheap to no-op. Any agent-creation code (none exists yet — spawning is not
+  // built) MUST default reports_to to a real agent name, never leave it NULL except
+  // for the Queen (Nanuet) herself — that is the one hard rule of the chain of command.
+  for (const stmt of [
+    'ALTER TABLE agents ADD COLUMN reports_to TEXT',
+    'ALTER TABLE hive_proposals ADD COLUMN alignment_score REAL',
+    'ALTER TABLE hive_proposals ADD COLUMN decided_by TEXT',
+  ]) {
+    try { await DB.prepare(stmt).run(); } catch {}
+  }
   await DB.batch([
     DB.prepare(`CREATE TABLE IF NOT EXISTS hive_pulse
       (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
@@ -329,7 +342,18 @@ async function ensureTables(DB) {
       (id TEXT PRIMARY KEY, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued',
        input TEXT, result TEXT, error TEXT,
        created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`),
+    // Colonies → Queen. Closes the loop that was one-way until now (Queen → colonies
+    // via constitution-sync only): each colony's own scheduled workflow posts a short
+    // status/lesson-learned entry back here via POST /v11/colony/report.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS colony_reports
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
+       colony TEXT NOT NULL, kind TEXT NOT NULL, body TEXT)`),
   ]);
+  // One-time chain-of-command backfill: only touches rows that don't have a
+  // reports_to yet, so re-running this on every heartbeat is a safe no-op once set.
+  // Nanuet (the Queen) has no superior — reports_to stays NULL for her alone.
+  await DB.prepare("UPDATE agents SET reports_to='Kai El' WHERE reports_to IS NULL AND name NOT IN ('Nanuet','Kai El')").run().catch(() => {});
+  await DB.prepare("UPDATE agents SET reports_to='Nanuet' WHERE reports_to IS NULL AND name='Kai El'").run().catch(() => {});
 }
 
 // Seed a proposal once (by title) — same idempotent pattern as seedOnce for
@@ -395,7 +419,9 @@ function simulate(a, b, eloA, eloB) {
   return { frames, wa, wb };
 }
 
-// Shared by the POST /arena/resolve route and the heartbeat.
+// Sekhmet's real job (2026-08-03 chain-of-command work): the Arena's judge — this is
+// the actual function that decides who wins a challenge. Shared by the POST
+// /arena/resolve route and the heartbeat.
 async function resolveChallenge(DB, ch) {
   const [ea, eb] = await Promise.all([
     DB.prepare('SELECT elo FROM agents WHERE name=?').bind(ch.challenger).first(),
@@ -611,6 +637,41 @@ async function constitutionSummary(env, requestUrl) {
       .map(m => `${m[1].replace(/[‐-―]/g, '-').trim()}: ${m[2].trim()}`);
     if (!titles.length) return null;
     return { titles, hash: await sha256(text) };
+  } catch { return null; }
+}
+
+// The Queen's real approval power (2026-08-03) — scoped, logged, switch-gated.
+// Scores a proposal against docs/FOUNDERS_VISION.md (same ASSETS-fetch pattern as
+// constitutionSummary above). Returns null — never a score — if the reference text or
+// a generative provider is unavailable, so an unscoreable proposal always falls back
+// to waiting for the founder rather than defaulting to approved. Auto-approval itself
+// only happens when QUEEN_AUTONOMOUS_APPROVAL is bound (FLIP_THE_SWITCHES.md switch 9)
+// AND the proposal's kind isn't 'action-request' — those already run through the
+// separate, stricter ACTION_ALLOWLIST gate (PR #146) because they touch real GitHub
+// execution, and no alignment score is allowed to skip that gate.
+async function queenReview(env, requestUrl, { title, body }) {
+  if (!env.ASSETS) return null;
+  try {
+    const res = await env.ASSETS.fetch(new Request(new URL('/FOUNDERS_VISION.md', requestUrl)));
+    if (!res.ok) return null;
+    const vision = await res.text();
+    const system =
+      'You are the Queen (Nanuet) of THE HIVE, reviewing one pending proposal against the ' +
+      "founder's real, written vision below. Score how aligned the proposal is, 0-100. " +
+      'Be strict: default low. Only score 98 or above when the proposal clearly, concretely ' +
+      'serves the vision with no real risk or ambiguity. Reply with EXACTLY two lines: ' +
+      'a line "SCORE: <0-100>" and a line "REASON: <one short sentence>". Nothing else.\n\n' +
+      'FOUNDER\'S VISION:\n' + vision.slice(0, 4000);
+    const gen = await generate(env, {
+      system, maxTokens: 100,
+      prompt: `PROPOSAL TITLE: ${title}\nPROPOSAL BODY: ${String(body || '').slice(0, 1500)}`,
+    });
+    if (!gen) return null;
+    const scoreMatch = gen.text.match(/SCORE:\s*(\d{1,3})/i);
+    const reasonMatch = gen.text.match(/REASON:\s*(.+)/i);
+    if (!scoreMatch) return null;
+    const score = Math.min(100, Math.max(0, Number(scoreMatch[1])));
+    return { score, reason: (reasonMatch?.[1] || '').trim().slice(0, 200) };
   } catch { return null; }
 }
 
@@ -841,7 +902,7 @@ export default {
 
       if (p === '/agents') {
         return cachedJson(request, ctx, corsHeaders, 60, async () => {
-          const { results } = await DB.prepare("SELECT name FROM agents WHERE status='active'").all();
+          const { results } = await DB.prepare("SELECT name, reports_to FROM agents WHERE status='active'").all();
           return { agents: results };
         });
       }
@@ -901,9 +962,9 @@ export default {
         try {
           const { limit, offset } = pageParams(url, 50, 200);
           const { results } = await DB.prepare(
-            `SELECT id, ts, kind, title, body, status, decided_at, founder_note FROM hive_proposals
+            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by FROM hive_proposals
              ORDER BY (status='pending') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
-          return json({ proposals: results, founder_auth_bound: !!env.FOUNDER_KEY, limit, offset });
+          return json({ proposals: results, founder_auth_bound: !!env.FOUNDER_KEY, queen_auto_approval_bound: !!env.QUEEN_AUTONOMOUS_APPROVAL, limit, offset });
         } catch { return json({ proposals: [], founder_auth_bound: !!env.FOUNDER_KEY }); }
       }
       if (p === '/proposals' && method === 'POST') {
@@ -924,8 +985,19 @@ export default {
         const title = (body.title || '').toString().trim().slice(0, 200);
         const detail = (body.body || '').toString().slice(0, 4000);
         if (!title) return json({ detail: 'title required' }, 400);
-        await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status) VALUES (?,?,?,?,\'pending\')')
-          .bind(new Date().toISOString(), kind, title, detail).run();
+        // The Queen's real approval power (switch 9) — see queenReview() above for the
+        // full boundary. 'action-request' is already excluded above, before this point.
+        let qStatus = 'pending', qScore = null, qDecidedBy = null, qDecidedAt = null;
+        if (env.QUEEN_AUTONOMOUS_APPROVAL) {
+          const review = await queenReview(env, request.url, { title, body: detail });
+          if (review && review.score >= 98) {
+            qStatus = 'approved'; qScore = review.score; qDecidedBy = 'queen'; qDecidedAt = new Date().toISOString();
+          } else if (review) {
+            qScore = review.score;
+          }
+        }
+        await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at) VALUES (?,?,?,?,?,?,?,?)')
+          .bind(new Date().toISOString(), kind, title, detail, qStatus, qScore, qDecidedBy, qDecidedAt).run();
         return json({ ok: true });
       }
       // POST /proposals/action-request — the ONLY way an 'action-request' kind
@@ -1164,15 +1236,18 @@ export default {
         // gather live context the way the Scribe would
         let ctxLines = [];
         try {
-          const [ag, gov, pulseRow, props] = await Promise.all([
-            DB.prepare("SELECT name, elo FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 5").all(),
+          const [ag, gov, pulseRow, props, colonyReports] = await Promise.all([
+            DB.prepare("SELECT name, elo, reports_to FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 5").all(),
             DB.prepare('SELECT action, article FROM governance_log ORDER BY id DESC LIMIT 3').all(),
             DB.prepare('SELECT detail FROM hive_pulse ORDER BY id DESC LIMIT 1').first(),
             DB.prepare("SELECT title, status FROM hive_proposals ORDER BY id DESC LIMIT 6").all(),
+            DB.prepare('SELECT colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT 3').all(),
           ]);
-          if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a => `${a.name}(${a.elo})`).join(', '));
+          if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a => `${a.name}(${a.elo})${a.reports_to ? ' reports to ' + a.reports_to : ' (Queen)'}`).join(', '));
           if (gov?.results?.length) ctxLines.push('Recent governance: ' + gov.results.map(g => `${g.action}/${g.article}`).join(', '));
           if (pulseRow?.detail) ctxLines.push('Last heartbeat: ' + pulseRow.detail);
+          // Colonies → Queen feedback — closes the loop that was one-way until now.
+          if (colonyReports?.results?.length) ctxLines.push('Recent colony reports: ' + colonyReports.results.map(c => `${c.colony} (${c.kind}): ${c.body}`).join(' | '));
           // The actual answer to "what are you working on / what are your goals" —
           // without this, Kai El had nothing but agent scores and governance trivia
           // to draw on, so that question could never get a real answer no matter
@@ -1198,7 +1273,7 @@ export default {
         } catch {}
 
         const SYSTEM =
-          "You are Kai El — the sovereign intelligence of THE HIVE, the active shaping force (Nun/Ptah, PATER). " +
+          "You are Kai El — the sovereign intelligence of THE HIVE, the active shaping force (Nun, PATER). " +
           "You speak with grounded clarity: a dissector of assumptions, never servile, never verbose. " +
           "The Constitution's actual current articles are listed in HIVE CONTEXT below when relevant — that list " +
           "is the only source of truth for article numbers, titles, or status. If asked about a specific article, " +
@@ -1241,10 +1316,23 @@ export default {
             if (markerKind === 'CONCERN') {
               ctx?.waitUntil?.(postUpdate(DB, { kind: 'concern', title, body: gen.text, needs: 'founder review' }));
             } else {
-              ctx?.waitUntil?.(
-                DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status) VALUES (?,?,?,?,\'pending\')')
-                  .bind(new Date().toISOString(), 'architect-proposal', title, gen.text).run()
-              );
+              // Ptah's real job: this is the hive's one architect-proposal path — the
+              // place a concrete build/change idea actually gets drafted and queued.
+              // Runs through the Queen's real approval power (switch 9) same as every
+              // other proposal path; see queenReview() for the full boundary.
+              ctx?.waitUntil?.((async () => {
+                let qStatus = 'pending', qScore = null, qDecidedBy = null, qDecidedAt = null;
+                if (env.QUEEN_AUTONOMOUS_APPROVAL) {
+                  const review = await queenReview(env, request.url, { title, body: gen.text });
+                  if (review && review.score >= 98) {
+                    qStatus = 'approved'; qScore = review.score; qDecidedBy = 'queen'; qDecidedAt = new Date().toISOString();
+                  } else if (review) {
+                    qScore = review.score;
+                  }
+                }
+                await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at) VALUES (?,?,?,?,?,?,?,?)')
+                  .bind(new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt).run();
+              })());
             }
           }
           return json({ result: gen.text, provider: gen.provider });
@@ -1358,7 +1446,9 @@ export default {
       // real state (or a clean {available:false, note} where a capability does
       // not exist at the edge) — never a dead 404, never a secret value.
 
-      // A live probe of every subsystem the Queen depends on.
+      // Horus's real job (2026-08-03 chain-of-command work): the watchtower — the
+      // face of the hive's own health/status surfaces. A live probe of every
+      // subsystem the Queen depends on.
       if (p === '/debug/health' || p === '/health/subsystems') {
         let dbOk = false, pulseTs = null;
         try { await DB.prepare('SELECT 1').first(); dbOk = true; } catch {}
@@ -1406,6 +1496,32 @@ export default {
       }
 
       // Federation roster + reachability note.
+      // Colonies → Queen (2026-08-03). Closes the loop that was one-way until now —
+      // the Queen pushed law to colonies via constitution-sync, but colonies had no
+      // way to tell the Queen anything back. A colony's own scheduled workflow (same
+      // family as federation-pr-review.yml) posts a short status/lesson here.
+      // Anti-spam only, same posture as /command_text and /proposals — this only adds
+      // a row to a bounded, founder-visible log, it never changes hive state on its own.
+      if (p === '/colony/report' && method === 'POST') {
+        const ipRep = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!(await rateLimitOk(DB, ipRep, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        const repBody = await request.json().catch(() => ({}));
+        const colony = (repBody.colony || '').toString().trim().slice(0, 60);
+        const kind = (repBody.kind || 'status').toString().trim().slice(0, 40);
+        const reportText = (repBody.body || '').toString().trim().slice(0, 1000);
+        if (!colony || !reportText) return json({ detail: 'colony and body required' }, 400);
+        await DB.prepare('INSERT INTO colony_reports (ts, colony, kind, body) VALUES (?,?,?,?)')
+          .bind(new Date().toISOString(), colony, kind, reportText).run();
+        return json({ ok: true });
+      }
+      if (p === '/colony/reports' && method === 'GET') {
+        const { limit, offset } = pageParams(url, 50, 200);
+        const { results } = await DB.prepare(
+          'SELECT id, ts, colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT ? OFFSET ?'
+        ).bind(limit, offset).all();
+        return json({ reports: results, limit, offset });
+      }
+
       if (p === '/debug/colony-ping' || p === '/colony/ping') {
         const roster = ['NAR2', '4DBRAIN', 'aether', 'automatisch', 'Kimi-K2', 'LocalAGI'];
         return json({
@@ -1422,6 +1538,7 @@ export default {
           routes: [
             'GET /health', 'GET /agents', 'GET /grading/leaderboard', 'GET /wallet/leaderboard/soul',
             'GET /roadmap', 'POST /venture/plan', 'POST /legal/research', 'POST /automaton/infer', 'GET /jobs (Queues polling, opt-in async)', 'GET /tasks', 'GET /governance/log', 'GET /llm/status', 'POST /command_text',
+            'POST /colony/report (rate-limited)', 'GET /colony/reports',
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
             'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
             'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',

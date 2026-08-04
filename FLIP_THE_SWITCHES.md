@@ -114,6 +114,30 @@ mirrors results into one "Federation Issue Triage Queue" tracking issue in THEHI
 shape as `kai-el-bridge.yml`'s concerns/proposals queue. Never transfers, closes, or
 assigns an issue.
 
+## 9 · The Queen's real approval power — proposals ≥98% aligned with your vision auto-approve
+
+The founder asked for this explicitly (2026-08-03): the Queen (Nanuet) can review a
+pending proposal against a real, written reference of your vision
+(`docs/FOUNDERS_VISION.md` — a first draft, meant to be edited by you directly) and
+auto-approve it herself when the alignment score is 98 or higher, so most decisions
+don't have to wait on you. Ships real and complete, same as every other switch here —
+**off by default** until you flip it, so nothing changes until you decide to turn it on.
+
+One built-in boundary that's true regardless of the switch: a proposal already flagged
+`action-request` kind (the ones that can reach real GitHub execution — switch 7) never
+auto-approves, no score high enough to skip that — those already run through the
+separate `ACTION_ALLOWLIST` gate because they touch something real outside the hive.
+Everything else — new features, fixes, agent-role changes, architecture proposals — is
+in scope for the Queen's own judgment once this is flipped on.
+
+```bash
+npx wrangler secret put QUEEN_AUTONOMOUS_APPROVAL   # any non-empty value turns it on
+```
+**Proof it worked:** `GET /v11/proposals` → `queen_auto_approval_bound: true`; a new
+proposal that clearly, concretely serves `docs/FOUNDERS_VISION.md` comes back already
+`status: "approved"`, `decided_by: "queen"`, with a real `alignment_score` — visible in
+the exact same Proposals panel you already use, nothing hidden.
+
 ## Already flipped / no switch needed
 - D1 database, Workers AI, assets, the 30-min heartbeat — live now.
 - The UI (graph web, neon theme, Updates, Legal Learning, Files panel shell) — ships with
