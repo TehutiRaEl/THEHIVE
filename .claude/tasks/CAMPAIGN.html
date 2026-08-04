@@ -24,8 +24,12 @@
 this file IS the workflow plan, playbook, and running log, spanning as many sessions
 as it takes. Built 2026-08-01 after the Routine incident (see
 <code>.claude/HIVE_PULSE.md</code> and <code>AUDIT_LEDGER.md</code>'s 2026-08-01 entries
-for what went wrong before). No Routine is wired to this file yet — the founder holds
-that step until this blueprint itself is reviewed.</p>
+for what went wrong before). <strong>Routine wired 2026-08-04</strong> (trig_01CJsVYwDs4pHMoFEC5JFi7V,
+daily, self-binds to the founder's own session) — founder-approved after review, real
+cron, never a self-rescheduling chain. First real firing not yet observed as of this
+edit; verify honestly when it happens rather than assume it worked. One open caveat from
+creation: the platform warned this trigger may fire without GitHub tool access — if the
+first firing can't open a PR, that's why; confirm for real, don't guess.</p>
 <p class="meta">This file stays small on purpose — it's what every firing reads in full.
 The complete, unabridged, everything-planned reference (Command Center UI plan, every
 domain, founder's own visionary-scope documents, all searchable by tab) lives separately
@@ -579,6 +583,22 @@ branch) does the work → a PR.</li>
   <p><strong>Acceptance:</strong> A real live check confirms or refutes the status-accuracy
   concern, with the finding logged either way; "Founder" label change verified in a real
   build.</p>
+</div>
+
+<div class="task" data-status="blocked" data-batchable="true" id="task-36">
+  <h3>36. Schedule real LLM work (venture/plan, legal/research, automaton/infer) — founder must name which, and when</h3>
+  <p class="meta">Found 2026-08-04 in the API-key capability audit (AUDIT_LEDGER.md same
+  date). Blocked on a real founder decision, not a technical blocker.</p>
+  <p><strong>Finding:</strong> all three routes are fully wired to the bound Claude/Groq/
+  Mistral waterfall and reachable today, but nothing — no cron, no workflow — ever calls
+  any of them. This is a missing trigger, not a missing capability; wiring one is small,
+  real work. Not started because each has real cost/consequence attached (LLM spend per
+  call; a scheduled proposal submission would enter the Queen's real auto-approve
+  pipeline once switch 9 is flipped) — the founder should name which of these (if any)
+  should run on a schedule, and how often, before this becomes a task instead of a
+  question.</p>
+  <p><strong>Acceptance:</strong> Once the founder answers, unblock and scope a real
+  workflow/cron for exactly what was named — nothing speculative.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="false" id="task-12">

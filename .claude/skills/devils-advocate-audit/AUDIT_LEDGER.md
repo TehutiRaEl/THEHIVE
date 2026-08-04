@@ -455,3 +455,49 @@ core job, flagging honestly rather than silently passing over it):** `/v11/debug
 providers genuinely bound — the same small display-only bug flagged earlier this session,
 still unfixed. Cosmetic, not a real gap (the actual llm/status endpoint tells the truth),
 but worth a real task eventually so the two surfaces agree.
+
+## 2026-08-04 — devil's-advocate audit: API-key capability, real automation inventory, and whether the other 6 named agents have any capability behind their task-27 "jobs"
+
+**What was checked:** every `generate()` call site (`worker/src/index.js:524`), every
+cron in `wrangler.jsonc` and every `.github/workflows/*.yml` `schedule:` trigger, and —
+the load-bearing question — whether Ma'at/Solomon/Thoth/Sekhmet/Ptah/Horus have any real
+LLM call, context, or decision-making of their own anywhere in the repo, as opposed to
+being a `name`/`elo`/`soul`/`reports_to` row Kai El's own chat talks *about*.
+
+**Verdict: CONFIRMED — real, load-bearing correction to task 27's own framing.**
+
+1. Five real routes reach `generate()` (the Claude→Groq→Mistral→Workers-AI waterfall):
+   `venture/plan`, `legal/research`, `automaton/infer`, `command_text` (Kai El),
+   `queenReview()` (the Queen). All five are live and reachable today. None is ever
+   invoked by a cron or workflow — every `generate()` call happens only inside a live
+   HTTP request, except `edge-health-probe.yml`'s incidental liveness ping to Kai El's
+   chat every 6h (a health check, not a purpose-built automation of his reasoning).
+2. Most of the hive's "scheduled automation" does real work with **zero LLM reasoning**
+   — `federation-pr-review.yml` posts real evidence via pure `gh`/`jq` shell logic
+   despite its name; `federation-issue-triage.yml` labels via explicit keyword matching
+   (its own comment already says so honestly).
+3. **The real finding:** grepping the whole repo for Ma'at/Solomon/Thoth/Sekhmet/Ptah/
+   Horus outside the `agents` table turns up exactly three hits, all in
+   `worker/src/index.js`, all comments labeling pre-existing pure-logic functions with
+   zero LLM call and zero agent-level awareness:
+   - "Sekhmet — the Arena's judge" labels `resolveChallenge()` (`:444-460`): a pure Elo
+     win-probability formula + `Math.random()`. Runs identically on the 30-min heartbeat
+     whether Sekhmet's row exists or not.
+   - "Ptah — architect-proposals" labels a string-match branch inside **Kai El's own**
+     chat handler (checks if Kai El's reply starts with `PROPOSAL:`) — Kai El's
+     generation, not Ptah's.
+   - "Horus — the watchtower" labels a plain diagnostic route (pings D1/AI/Vectorize
+     bindings) — no LLM call, no agent logic.
+
+**Conclusion, stated plainly per the founder's own devil's-advocate request:** task 27's
+"real jobs" work was honest — it never claimed a capability that didn't exist, and it
+gave true names to functions that genuinely ran. But it did not give any of those six
+agents actual sight, reasoning, or agency. They are titles on a correctly-structured org
+chart with nothing behind them but a database row. Only Kai El (chat) and Nanuet
+(`queenReview()`'s scoring call) have any real capability to perceive or decide anything
+at all — which is the real, unsoftened answer to "why can't Kai El see everything": there
+has never been a second mind in this system to compare him against. Whether the other six
+agents should be given real reasoning/context/action of their own is a large, separate
+architectural decision (effectively: single-persona-plus-labeled-functions vs. a genuine
+multi-agent system) — named here, not decided or built, per the same standing rule that
+already gated the Queen's approval power and the "terminal" question earlier tonight.
