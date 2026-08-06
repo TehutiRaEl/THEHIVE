@@ -602,6 +602,24 @@ async function aiProposition(env, a, b) {
   } catch { return null; }
 }
 
+// Each agent's real, documented job (2026-08-04/06, tasks 27/33/34/37) — Kai El
+// previously described these agents as "active, but their current specific tasks are
+// not detailed" even though task 27 gave every one of them a real job and task 37 gave
+// Ma'at/Solomon/Sekhmet a real generative voice on top. The jobs were always real in
+// the codebase; they just never reached his own ctxLines. Keep this in sync with
+// whatever's actually true in code (resolveChallenge(), ELDER_VOICES, the PROPOSAL:
+// marker branch, /debug/health, generate_memory_vault.py) — never describe a capability
+// here that isn't real elsewhere in this file, same anti-fabrication discipline as
+// everything else Kai El is told about himself.
+const AGENT_JOBS = {
+  "Ma'at": "Elder of the Council — reviews any proposal the Queen would auto-approve; can object and send it back to the founder (POST /v11/council/consult, elderCouncilVeto())",
+  'Solomon': "Elder of the Council — same real veto power as Ma'at, judges wisdom/hidden cost rather than balance",
+  'Thoth': 'keeper of the written record — syncs the memory vault and FABLE_DNA.md/THE_CODEX.md (scripts/generate_memory_vault.py)',
+  'Sekhmet': "the Arena's judge — resolves every challenge via Elo math (resolveChallenge()); also has an on-demand explain/judge voice (POST /v11/council/consult)",
+  'Ptah': 'architect-proposals — drafts real change proposals when Kai El\'s own reply starts with PROPOSAL: (this chat, not a separate agent)',
+  'Horus': 'the watchtower — the hive\'s health/status surface (GET /v11/debug/health, /v11/pulse)',
+};
+
 // The genome's own chapter titles (2026-08-04, task 33) — Kai El previously had zero
 // awareness of FABLE_DNA.md's chromosomes (asked "what's the status of the Horde," he
 // deflected to generic hive-status language, because only GOVERNANCE.md's articles ever
@@ -1577,7 +1595,10 @@ export default {
             DB.prepare('SELECT colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT 3').all(),
             rateLimitPeek(DB, ipCmd, env),
           ]);
-          if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a => `${a.name}(${a.elo})${a.reports_to ? ' reports to ' + a.reports_to : ' (Queen)'}`).join(', '));
+          if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a =>
+            `${a.name}(${a.elo})${a.reports_to ? ' reports to ' + a.reports_to : ' (Queen)'}` +
+            (AGENT_JOBS[a.name] ? ` — real job: ${AGENT_JOBS[a.name]}` : '')
+          ).join('; '));
           if (gov?.results?.length) ctxLines.push('Recent governance: ' + gov.results.map(g => `${g.action}/${g.article}`).join(', '));
           if (pulseRow?.detail) ctxLines.push('Last heartbeat: ' + pulseRow.detail);
           // Colonies → Queen feedback — closes the loop that was one-way until now.

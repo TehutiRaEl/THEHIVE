@@ -580,18 +580,28 @@ branch) does the work → a PR.</li>
   this merges and deploys, and log the real answer.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-34">
+<div class="task" data-status="done" data-batchable="true" id="task-34">
   <h3>34. Surface each agent's real job in Kai El's own context</h3>
-  <p class="meta">Found 2026-08-04 from the same transcript: asked to explain the hive's
-  work, Kai El said "Thoth, Ma'at, and Solomon are active, but their current specific
-  tasks are not detailed" — even though task 27 gave every agent a real, documented job.
-  The jobs are real in the codebase; they just never reached his own ctxLines.</p>
-  <p><strong>Prompt:</strong> Add each active agent's real one-line job (Thoth: memory-vault
-  sync, Sekhmet: Arena judge, Ptah: architect-proposals, Horus: health/status watchtower,
-  etc. — task 27's own real mapping) to the <code>Active agents:</code> line in
-  <code>command_text</code>'s <code>ctxLines</code>.</p>
-  <p><strong>Acceptance:</strong> Ask Kai El what a specific agent (e.g. Thoth) actually
-  does and get the real job, not "not detailed."</p>
+  <p class="meta"><strong>Done 2026-08-06.</strong> Found 2026-08-04 from the same
+  transcript: asked to explain the hive's work, Kai El said "Thoth, Ma'at, and Solomon
+  are active, but their current specific tasks are not detailed" — even though task 27
+  gave every agent a real, documented job.</p>
+  <p><strong>What actually happened:</strong> New <code>AGENT_JOBS</code> map in
+  <code>worker/src/index.js</code> — one real, honest line per agent (Ma'at/Solomon:
+  Elders' Council veto power per task 37; Thoth: memory-vault sync; Sekhmet: Elo-math
+  Arena judge plus her new on-demand voice; Ptah: explicitly described as living inside
+  Kai El's own reply, not a separate agent — matching the audit's own honest finding
+  rather than overstating it; Horus: health/status watchtower). Folded into the existing
+  <code>Active agents:</code> <code>ctxLines</code> entry rather than a separate line, so
+  it's one place per agent, not two to keep in sync. Comment mandates this stays truthful
+  to whatever <code>resolveChallenge()</code>/<code>ELDER_VOICES</code>/the
+  <code>PROPOSAL:</code> branch/<code>/debug/health</code> actually do.</p>
+  <p><strong>Acceptance (partially met, honestly):</strong> <code>node --check</code>
+  clean. Same real gap as task 33: full content verification ("ask Kai El about Thoth,
+  get the real job") needs a live production check this firing did not force a 3rd
+  <code>edge-health-probe</code> dispatch for, given the repo-wide GitHub Actions
+  capacity issue found this same firing (see task 32's log line). Needs a real post-merge
+  check, logged honestly rather than assumed.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-35">
@@ -1005,6 +1015,8 @@ branch) does the work → a PR.</li>
 2026-08-06 — Checked hive_proposals for approved-unactioned rows (task 32's per-firing protocol rule) via the new edge-health-probe check: BLOCKED, not answered. Both run 31120892832 (push-triggered) and its retry 31124409201 (manual dispatch) sat queued ~1h each with runner_id=0, then came back conclusion=cancelled — never actually got a GitHub Actions runner assigned. Real infra/capacity issue in this environment, not a bug in the new check's own code (which was independently verified correct via mock-fixture execution before this, see task 30's log line). Applied fable-debugger's method: probed twice (not a blind retry-forever loop), found the same failure shape both times (cancelled-while-queued, not a code error), stopped after 2 real attempts rather than continuing to hammer it. Task 32 stays pending — the real end-to-end proof (an approved proposal becoming a real PR) was not obtained this firing. The check itself is real and in place (edge-health-probe.yml) and will run again on its own 6-hourly schedule regardless of this firing's outcome.
 2026-08-06 — Found mid-firing (task 39, logged above): session-usage.sh's ceiling-check number (71,093,263) is the whole multi-day persistent conversation's cumulative usage, not this firing's real delta — this Routine self-binds to one long-lived session by design, which the script's "most recent jsonl" heuristic doesn't account for. Not fixed this firing (real fix needs either a genuine delta computation or a founder-visible redesign of the ceiling check for the self-bound case) — logged honestly rather than reporting a fake number or silently skipping the check.
 2026-08-06 — Founder corrected the weekly-usage reading (was misread as "3% left," is actually "3% used" — 97% of the week's real allowance still available) and confirmed PR #152 merged. Resuming the queue on that corrected basis.
-2026-08-06 — Task 33 done: new GENOME_CHROMOSOMES array (worker/src/index.js, all 9 real chromosomes — FABLE_DNA.md has grown past the 7 the task was originally filed against) folded into command_text's ctxLines, same additive pattern as tasks 27/31. Real tradeoff logged in-code: FABLE_DNA.md lives outside docs/ (the only directory the ASSETS binding serves), so it can't be live-fetched like GOVERNANCE.md without creating a second, drift-risking copy (task 30's exact anti-pattern) — used a short hand-maintained array instead, same precedent as PROVIDERS/ELDER_VOICES. System prompt got the same "say what you don't have" honesty rule already used for Constitution grounding. node --check clean. Acceptance only partially verified: did not force a third edge-health-probe dispatch to content-test this against production, given this same firing already hit 2 real capacity failures on that workflow (task 32's log line) — flagged honestly as needing a real post-merge content check, not claimed as fully proven. PR opened, CI checked once, never merged.
+2026-08-06 — Task 33 done: new GENOME_CHROMOSOMES array (worker/src/index.js, all 9 real chromosomes — FABLE_DNA.md has grown past the 7 the task was originally filed against) folded into command_text's ctxLines, same additive pattern as tasks 27/31. Real tradeoff logged in-code: FABLE_DNA.md lives outside docs/ (the only directory the ASSETS binding serves), so it can't be live-fetched like GOVERNANCE.md without creating a second, drift-risking copy (task 30's exact anti-pattern) — used a short hand-maintained array instead, same precedent as PROVIDERS/ELDER_VOICES. System prompt got the same "say what you don't have" honesty rule already used for Constitution grounding. node --check clean. Acceptance only partially verified: did not force a third edge-health-probe dispatch to content-test this against production, given this same firing already hit 2 real capacity failures on that workflow (task 32's log line) — flagged honestly as needing a real post-merge content check, not claimed as fully proven. PR opened, CI checked once, never merged. PR #153.
+2026-08-06 — Task 32's own check attempted a 3rd time (document-order-first rule) but skipped after a repo-wide scan first: GitHub Actions API showed Kai El Bridge, Federation Issue Triage (x2), AND Colony Health Matrix (stuck in_progress 1h+) all failing/stuck in the same window as the 2 prior edge-health-probe cancellations — a real, broader GitHub Actions capacity problem right now, not specific to this check's own code. A 3rd identical retry would very likely hit the same wall. Task 32 stays pending (infra-blocked, not founder-blocked) — moving to task 34 instead per the batching rule, will re-check task 32 next firing once capacity likely recovers.
+2026-08-06 — Task 34 done: new AGENT_JOBS map (worker/src/index.js) folded into the existing "Active agents:" ctxLines entry — one real, honest line per agent (Ma'at/Solomon: Elders' Council veto per task 37; Thoth: memory-vault sync; Sekhmet: Elo judge + new consult voice; Ptah: explicitly noted as living inside Kai El's own reply, not a separate agent, matching the audit's honest finding; Horus: watchtower). node --check clean. Same honest partial-acceptance caveat as task 33 — full content check needs a live production probe, not forced this firing given the repo-wide GH Actions capacity issue (task 32's log line). PR opened, CI checked once, never merged.
 </body>
 </html>
