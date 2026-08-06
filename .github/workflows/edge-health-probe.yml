@@ -44,6 +44,7 @@ jobs:
           probe "/v11/arena/challenges" "JSON — watch for auto-spawned challenges"
           probe /v11/memory/status "JSON {vectorize_bound,ai_bound} — memory layer wiring"
           probe /v11/updates "JSON {updates:[...]} — hive→founder update channel"
+          probe /v11/proposals "JSON {proposals:[...]} — checks-and-balances/proposal-bridge protocol needs this visible every firing"
           probe /v11/llm/status "JSON {active_provider,providers,roster} — which LLM provider keys are actually bound"
           echo "── UI Debugger diagnostic suite (was 9× 404) ──"
           probe /v11/debug/health "JSON subsystems — d1/ai/vectorize/heartbeat"
@@ -68,6 +69,27 @@ jobs:
             exit 1
           fi
           echo "✅ Production edge is fully live: assets + /v11 API"
+
+      - name: Check for approved, unactioned proposals (CAMPAIGN.html task 32 protocol)
+        run: |
+          # Standing per-firing protocol rule (task 32, 2026-08-04): every firing must
+          # check hive_proposals for status='approved' AND actioned_at IS NULL — a
+          # founder-approved or Queen-auto-approved proposal nobody has picked up yet.
+          # The main probe step's /v11/proposals check only echoes 400 chars (enough to
+          # confirm the route is alive, not enough to see every row), so this is a
+          # dedicated, filtered pass — the real signal a firing needs, every time.
+          curl -sS -m 20 "https://thehive.sovereignhive.workers.dev/v11/proposals?limit=200" -o /tmp/proposals.json
+          python3 - <<'PYEOF'
+          import json
+          d = json.load(open("/tmp/proposals.json"))
+          rows = [p for p in d.get("proposals", []) if p.get("status") == "approved" and not p.get("actioned_at")]
+          if not rows:
+              print("No approved-unactioned proposals -- nothing for this firing to pick up.")
+          else:
+              print(str(len(rows)) + " approved, unactioned proposal(s):")
+              for p in rows:
+                  print("  #" + str(p["id"]) + " [" + str(p["kind"]) + "] " + str(p["title"]))
+          PYEOF
 
       - name: Verify /app serves the restored 13-tab Command Center bundle
         run: |

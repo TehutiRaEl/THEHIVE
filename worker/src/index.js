@@ -372,12 +372,113 @@ async function ensureTables(DB) {
     DB.prepare(`CREATE TABLE IF NOT EXISTS colony_reports
       (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
        colony TEXT NOT NULL, kind TEXT NOT NULL, body TEXT)`),
+    // The Development Roadmap's real, mutable data (2026-08-04, task 30). Until now
+    // the Command Center's roadmap panel read a hand-maintained TypeScript literal
+    // (frontend/src/data/roadmapData.ts) that could only change via a code deploy —
+    // which is exactly why it sat stale, telling the founder to provision four things
+    // they had already provisioned. Only the genuinely-mutable sections live here;
+    // the four provisioning items are not stored at all, they are derived live from
+    // real binding presence (see roadmapFounderActions()), and completed history stays
+    // static in the frontend because it is an append-only historical record.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS roadmap_items
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, section TEXT NOT NULL, title TEXT NOT NULL,
+       status TEXT NOT NULL, status_label TEXT, body TEXT,
+       sort_order INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL)`),
   ]);
   // One-time chain-of-command backfill: only touches rows that don't have a
   // reports_to yet, so re-running this on every heartbeat is a safe no-op once set.
   // Nanuet (the Queen) has no superior — reports_to stays NULL for her alone.
   await DB.prepare("UPDATE agents SET reports_to='Kai El' WHERE reports_to IS NULL AND name NOT IN ('Nanuet','Kai El')").run().catch(() => {});
   await DB.prepare("UPDATE agents SET reports_to='Nanuet' WHERE reports_to IS NULL AND name='Kai El'").run().catch(() => {});
+}
+
+// ── The Development Roadmap's real data source (2026-08-04, task 30) ─────
+// The founder's own report was "the development roadmap doesn't auto-update itself."
+// The real cause was not a missing schedule: RoadmapPanel.tsx read a hand-maintained
+// TypeScript literal with no fetch at all, so it could only ever change via a code
+// deploy. It had drifted into telling the founder to go provision FOUNDER_KEY,
+// Vectorize, R2, and Queues — all four of which were already bound (PR #147/#148).
+//
+// These four are the part that must never be hand-maintained again, because the
+// Worker can simply LOOK: each one is a real binding or secret whose presence is
+// already checked elsewhere in this file (see /debug/env). Derived fresh on every
+// request — it cannot go stale, by construction.
+function roadmapFounderActions(env) {
+  const items = [
+    {
+      key: 'FOUNDER_KEY', bound: !!env.FOUNDER_KEY,
+      title: 'Set FOUNDER_KEY so Proposals approve/reject actually works',
+      todo: 'The code fails closed on purpose — no key bound, no approvals move. Run `npx wrangler secret put FOUNDER_KEY` with a password only you know, wait ~10 min for redeploy, then paste that same value into this panel.',
+      done: 'Bound. Proposal approve/reject is live, and the Queen’s own auto-approval (switch 9) still cannot skip it for action-requests.',
+    },
+    {
+      key: 'VECTORIZE', bound: !!env.VECTORIZE,
+      title: 'Create the Vectorize index (long-term memory)',
+      todo: 'Run `npx wrangler vectorize create hive-memory --dimensions=768 --metric=cosine`, then tell Claude — the binding uncomment + redeploy is a one-line follow-up.',
+      done: 'Bound. Semantic recall is live via /v11/memory/search and /v11/memory/remember.',
+    },
+    {
+      key: 'FILES', bound: !!env.FILES,
+      title: 'Create the R2 bucket (file uploads)',
+      todo: 'Run `npx wrangler r2 bucket create hive-files`, then tell Claude to uncomment the binding.',
+      done: 'Bound. The R2 file surface is live.',
+    },
+    {
+      key: 'LLM_QUEUE', bound: !!env.LLM_QUEUE,
+      title: 'Create the Queues consumer (async LLM jobs)',
+      todo: 'No MCP tool exists to create a Cloudflare Queue, so this is founder-only regardless. Run `npx wrangler queues create hive-llm-jobs`, then tell Claude — the producer/consumer code is already written and activation-ready.',
+      done: 'Bound. The opt-in {"async": true} path on /v11/venture/plan and /v11/legal/research can run through it.',
+    },
+  ];
+  return items.map((it, i) => ({
+    title: it.title,
+    status: it.bound ? 'done' : 'blocked',
+    statusLabel: it.bound ? 'done' : 'needs you',
+    body: it.bound ? it.done : it.todo,
+    sort_order: i,
+    derived_from: `live binding presence: ${it.key}`,
+  }));
+}
+
+// The mutable sections seed once, then are editable for real via
+// POST /v11/roadmap/development (founder-gated) — no code deploy needed ever again.
+// Idempotent by section+title, same discipline as seedOnce/seedProposalOnce above.
+const ROADMAP_SEED = [
+  ['decisions', 'System A (FastAPI backend/) — retire or actually deploy it?', 'decision', 'your call',
+   'Real, tested code (51%+ coverage, 350+ passing tests) sitting unprovisioned — the Oracle Cloud deploy target is gated on an unset ORACLE_HOST secret. System B (this Worker) is the one verified live. Leave A retired as reference, or provision Oracle and stand it up for real.'],
+  ['decisions', 'Which frontend is canonical?', 'decision', 'your call',
+   'This React Command Center (what’s actually deployed) vs. a separate "gamified UI" set merged via feature/gamified-ui-components. Both are real; only one should be "the" one going forward.'],
+  ['decisions', 'Two dead duplicate backend files — delete or keep?', 'decision', 'your call',
+   'backend/constitution.py and backend/llm_router.py have zero importers anywhere (confirmed via grep) — the real, live versions are backend/core/*. Deleting production files is outside the autonomous arc’s authority, so this is parked for your word.'],
+  ['decisions', 'n8n integration — pursue or drop?', 'decision', 'your call',
+   'Proposed 2026-07-05 (colony health events → n8n automations). Zero implementation exists anywhere — confirmed absent, not just unfinished.'],
+  ['decisions', 'Real money — forming a business entity', 'decision', 'real-world, no rush',
+   'LLC formation, business bank account, Stripe — none of this can or should be automated. By the hive’s own rules this always stays yours, with a real accountant or lawyer.'],
+  ['in_progress', 'Give the other 6 agents real capability', 'active', '3 of 6 piloted',
+   'Ma’at + Solomon now seat F-011B’s Elders’ Council for real (they can veto the Queen’s auto-approval); Sekhmet gained an on-demand judge voice. Thoth, Ptah, and Horus still have real jobs but no real voice — tracked as CAMPAIGN.html task 38.'],
+  ['in_progress', 'Backend test-coverage sweep', 'active', '51% → climbing',
+   'Started at 46%, CI floor locked at 45% so it can only grow. One real production bug found so far: WalletManager.credit() was raising sqlite3.ProgrammingError on every SOUL grant/tip/payout — fixed.'],
+  ['backlog', 'Dynamic COLONY_BASE_URLS', 'backlog', 'confirmed pending',
+   'Still a hardcoded frontend/src/utils/constants.ts map — every colony URL change is a manual edit. /v11/hive/status already returns all colony URLs with health; wiring it up is a small, real task.'],
+  ['backlog', 'Worldbuilding Guild UI', 'backlog', 'confirmed pending',
+   'Backend stub exists (backend/guilds/worldbuilding_guild.py, disabled), zero frontend surface — world creation form, token supply, zone editor never built.'],
+  ['backlog', 'Agent genome viewer + arena cross-breed UI', 'backlog', 'confirmed pending',
+   'Real reproduction logic exists in backend/core/genome.py — no frontend ever surfaced it. DNA visualization, trait breakdown, 2-agent cross-breed selector all still on paper.'],
+  ['backlog', 'HDC/VSA layer — dedicated UI + docs', 'backlog', 'confirmed pending',
+   'backend/core/hdc.py is real and 100% test-covered — hyperdimensional computing for agent-to-agent comms — but never surfaced or explained anywhere in the UI.'],
+  ['backlog', 'Skill-set cross-referencing', 'backlog', 'confirmed pending',
+   'Two skill sets exist side by side with zero cross-references. skill-census would show the gap directly but hasn’t been re-run since first noticed.'],
+];
+
+async function seedRoadmapOnce(DB) {
+  try {
+    const row = await DB.prepare('SELECT COUNT(*) AS n FROM roadmap_items').first();
+    if (row && Number(row.n) > 0) return; // already seeded — never re-seed over real edits
+    const now = new Date().toISOString();
+    await DB.batch(ROADMAP_SEED.map(([section, title, status, statusLabel, body], i) =>
+      DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
+        .bind(section, title, status, statusLabel, body, i, now)));
+  } catch { /* D1 not ready — heartbeat still proceeds */ }
 }
 
 // Seed a proposal once (by title) — same idempotent pattern as seedOnce for
@@ -1044,6 +1145,77 @@ export default {
       // Evolutionary roadmap (F-008D/F-009E): every agent's real progress
       // toward its next stage, plus a Hoard-level aggregate. See
       // computeRoadmap() above for the honesty disclosure on thresholds.
+      // The Command Center's Development Roadmap (2026-08-04, task 30). Deliberately a
+      // DIFFERENT concept from GET /roadmap below, which is the constitutional
+      // agent-growth-stage rollup (F-008D/F-009E: Germination→Mycelium→…). Same word,
+      // two genuinely different things — hence the distinct path rather than
+      // overloading one route with two unrelated meanings.
+      if (p === '/roadmap/development' && method === 'GET') {
+        await seedRoadmapOnce(DB);
+        let stored = [];
+        try {
+          const r = await DB.prepare(
+            'SELECT section, title, status, status_label AS statusLabel, body, sort_order FROM roadmap_items ORDER BY section, sort_order, id').all();
+          stored = r.results || [];
+        } catch { /* table not ready — live-derived half below still answers */ }
+        const bySection = (s) => stored.filter((x) => x.section === s)
+          .map(({ title, status, statusLabel, body }) => ({ title, status, statusLabel, body }));
+        const founderActions = roadmapFounderActions(env);
+        const decisions = bySection('decisions');
+        const backlog = bySection('backlog');
+        return json({
+          founderActions,
+          decisionsPending: decisions,
+          inProgress: bySection('in_progress'),
+          backlog,
+          snapshot: {
+            founderActionsOutstanding: founderActions.filter((c) => c.status !== 'done').length,
+            decisions: decisions.length,
+            backlogItems: backlog.length,
+          },
+          generated_at: new Date().toISOString(),
+          note: 'founderActions are derived live from real binding presence and cannot go stale; the other sections are stored in D1 and editable via POST /v11/roadmap/development (founder key required). Completed phases are an append-only historical record and stay in the frontend.',
+        });
+      }
+      // Founder-gated edit — the whole point of task 30: updating the roadmap must no
+      // longer require a code deploy. Same auth gate as /proposals/{id}/decide, because
+      // this is what the founder sees as the hive's own plan; letting anonymous callers
+      // rewrite it would be exactly the kind of fabrication surface this work exists to
+      // remove. Upsert by (section, title); pass status:'delete' to remove a row.
+      if (p === '/roadmap/development' && method === 'POST') {
+        if (!founderAuthOk(request, env)) {
+          return json({
+            detail: env.FOUNDER_KEY
+              ? 'invalid or missing founder key'
+              : 'no FOUNDER_KEY bound yet — see FLIP_THE_SWITCHES.md',
+          }, 401);
+        }
+        const rb = await request.json().catch(() => ({}));
+        const section = (rb.section || '').toString().trim();
+        const title = (rb.title || '').toString().trim().slice(0, 200);
+        if (!['decisions', 'in_progress', 'backlog'].includes(section)) {
+          return json({ detail: "section must be one of: decisions, in_progress, backlog (founderActions are derived live and cannot be edited; completed phases are an append-only historical record)" }, 400);
+        }
+        if (!title) return json({ detail: 'title required' }, 400);
+        if (rb.status === 'delete') {
+          const del = await DB.prepare('DELETE FROM roadmap_items WHERE section=? AND title=?').bind(section, title).run();
+          return json({ ok: true, deleted: del.meta?.changes || 0 });
+        }
+        const status = (rb.status || 'backlog').toString().slice(0, 20);
+        const statusLabel = (rb.statusLabel || '').toString().slice(0, 40);
+        const body = (rb.body || '').toString().slice(0, 2000);
+        const sortOrder = Number.isFinite(+rb.sortOrder) ? +rb.sortOrder : 0;
+        const now = new Date().toISOString();
+        const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, title).first();
+        if (existing) {
+          await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
+            .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
+          return json({ ok: true, updated: true });
+        }
+        await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
+          .bind(section, title, status, statusLabel, body, sortOrder, now).run();
+        return json({ ok: true, created: true });
+      }
       if (p === '/roadmap') {
         return cachedJson(request, ctx, corsHeaders, 60, async () => {
           const { results } = await DB.prepare(

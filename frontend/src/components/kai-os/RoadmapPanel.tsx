@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import {
-  founderActions, decisionsPending, inProgress, completedPhases, backlog, federation, snapshot, supersedes,
-} from '../../data/roadmapData';
-import type { RoadmapCard, Status } from '../../data/roadmapData';
+import { completedPhases, federation, supersedes } from '../../data/roadmapData';
+import { useHiveData } from '../../hooks/useHiveData';
+import type { RoadmapCard } from '../../hooks/useHiveData';
 
-const STATUS_STYLE: Record<Status, string> = {
+const STATUS_STYLE: Record<string, string> = {
   done: 'border-emerald-400/40 text-emerald-300 bg-emerald-400/10',
   active: 'border-cyan-glow/40 text-cyan-glow bg-cyan-glow/10',
   blocked: 'border-red-400/40 text-red-300 bg-red-400/10',
@@ -12,9 +11,9 @@ const STATUS_STYLE: Record<Status, string> = {
   backlog: 'border-white/15 text-slate-400 bg-white/5',
 };
 
-function StatusPill({ status, label }: { status: Status; label: string }) {
+function StatusPill({ status, label }: { status: string; label: string }) {
   return (
-    <span className={`shrink-0 text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${STATUS_STYLE[status]}`}>
+    <span className={`shrink-0 text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${STATUS_STYLE[status] ?? STATUS_STYLE.backlog}`}>
       {label}
     </span>
   );
@@ -52,47 +51,58 @@ function SectionHead({ title, sub }: { title: string; sub: string }) {
 
 export default function RoadmapPanel() {
   const [openPhase, setOpenPhase] = useState<number | null>(0);
+  const hive = useHiveData();
+  const dev = hive.developmentRoadmap;
+  const phasesDone = completedPhases.length;
+  const arcsActive = dev?.inProgress.length ?? 0;
+  const backlogItems = dev?.snapshot.backlogItems ?? 0;
+  const decisions = dev?.snapshot.decisions ?? 0;
 
   return (
     <div className="max-w-2xl space-y-8">
       <p className="text-slate-400 text-sm leading-relaxed">
-        One live tracker replacing four scattered session artifacts (2026-07-04 → 07-18).
-        Every item below was verified against the actual repository, not carried forward
-        from an old status — same content as the{' '}
-        <a
-          href="https://claude.ai/code/artifact/5855fd37-1dbc-4f53-9ab0-415b1b61baee"
-          target="_blank" rel="noopener noreferrer"
-          className="text-cyan-glow hover:underline"
-        >
-          published tracker
-        </a>, kept in sync from <code className="text-cyan-glow">src/data/roadmapData.ts</code>.
+        Founder actions, decisions, in-progress work, and backlog below are live —
+        pulled from <code className="text-cyan-glow">GET /v11/roadmap/development</code>{' '}
+        every 30s, never a hand-maintained file that can drift out of date.
+        {' '}
+        <span style={{ color: hive.online ? '#00e888' : '#ff6b6b' }}>
+          {hive.online ? '● live' : hive.loading ? '○ connecting…' : '○ offline (showing last known / none)'}
+        </span>
+        {' '}Completed history and the federation table below remain a static,
+        append-only record of what already shipped.
       </p>
 
       <div className="grid grid-cols-4 gap-2">
-        <StatTile value={snapshot.phasesDone} label="Phases shipped" color="text-emerald-300" />
-        <StatTile value={snapshot.arcsActive} label="Arc in progress" color="text-cyan-glow" />
-        <StatTile value={snapshot.backlogItems} label="Backlog items" color="text-slate-300" />
-        <StatTile value={snapshot.decisions} label="Founder decisions" color="text-violet-bright" />
+        <StatTile value={phasesDone} label="Phases shipped" color="text-emerald-300" />
+        <StatTile value={arcsActive} label="Arcs in progress" color="text-cyan-glow" />
+        <StatTile value={backlogItems} label="Backlog items" color="text-slate-300" />
+        <StatTile value={decisions} label="Founder decisions" color="text-violet-bright" />
       </div>
 
       <section>
-        <SectionHead title="Founder actions" sub="only you can do these" />
+        <SectionHead title="Founder actions" sub="only you can do these — derived live from real binding presence" />
         <div className="space-y-2">
-          {founderActions.map((c) => <Card key={c.title} card={c} />)}
+          {dev?.founderActions.length
+            ? dev.founderActions.map((c) => <Card key={c.title} card={c} />)
+            : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'unavailable — edge unreachable'}</p>}
         </div>
       </section>
 
       <section>
         <SectionHead title="Decisions pending" sub="your call, not a task" />
         <div className="space-y-2">
-          {decisionsPending.map((c) => <Card key={c.title} card={c} />)}
+          {dev?.decisionsPending.length
+            ? dev.decisionsPending.map((c) => <Card key={c.title} card={c} />)
+            : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'none open right now'}</p>}
         </div>
       </section>
 
       <section>
         <SectionHead title="In progress" sub="running now, unattended" />
         <div className="space-y-2">
-          {inProgress.map((c) => <Card key={c.title} card={c} />)}
+          {dev?.inProgress.length
+            ? dev.inProgress.map((c) => <Card key={c.title} card={c} />)
+            : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'nothing in progress right now'}</p>}
         </div>
       </section>
 
@@ -134,7 +144,9 @@ export default function RoadmapPanel() {
       <section>
         <SectionHead title="Backlog" sub="confirmed not built, not just unfinished" />
         <div className="space-y-2">
-          {backlog.map((c) => <Card key={c.title} card={c} />)}
+          {dev?.backlog.length
+            ? dev.backlog.map((c) => <Card key={c.title} card={c} />)
+            : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'backlog empty'}</p>}
         </div>
       </section>
 

@@ -69,32 +69,38 @@ const DREAM: React.FC = () => {
 
         <section className="roadmap-section">
           <h2>Development Roadmap</h2>
-          <div className="timeline">
-            <div className="timeline-item">
-              <div className="timeline-marker">✅</div>
-              <div className="timeline-content">
-                <h3>Phase 1-3: Foundation</h3>
-                <p>Entry points, pages, components, documentation</p>
-                <p><em>Completed: 2026-07-09</em></p>
-              </div>
+          {/* Was a hand-written timeline frozen at 2026-07-09 that disagreed with the
+              real roadmap panel (task 30, 2026-08-04) — now the same live source
+              (GET /v11/roadmap/development) instead of a second copy that can drift. */}
+          {hive.developmentRoadmap ? (
+            <div className="timeline">
+              {hive.developmentRoadmap.inProgress.length === 0 ? (
+                <div className="timeline-item">
+                  <div className="timeline-marker">·</div>
+                  <div className="timeline-content"><p>Nothing in progress right now.</p></div>
+                </div>
+              ) : hive.developmentRoadmap.inProgress.map((item) => (
+                <div className="timeline-item" key={item.title}>
+                  <div className="timeline-marker">🔄</div>
+                  <div className="timeline-content">
+                    <h3>{item.title}</h3>
+                    <p>{item.body}</p>
+                    <p><em>{item.statusLabel}</em></p>
+                  </div>
+                </div>
+              ))}
+              {hive.developmentRoadmap.snapshot.founderActionsOutstanding > 0 && (
+                <div className="timeline-item">
+                  <div className="timeline-marker">⏳</div>
+                  <div className="timeline-content">
+                    <p>{hive.developmentRoadmap.snapshot.founderActionsOutstanding} founder action(s) outstanding — see the full Roadmap panel for detail.</p>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="timeline-item">
-              <div className="timeline-marker">🔄</div>
-              <div className="timeline-content">
-                <h3>Phase 4: Command Center</h3>
-                <p>Tab navigation, colony components, 4D math</p>
-                <p><em>In Progress</em></p>
-              </div>
-            </div>
-            <div className="timeline-item">
-              <div className="timeline-marker">⏳</div>
-              <div className="timeline-content">
-                <h3>Phase 5: Federation</h3>
-                <p>Constitution visualizer, memory graph, mission timeline</p>
-                <p><em>Planned</em></p>
-              </div>
-            </div>
-          </div>
+          ) : (
+            <p style={{ opacity: 0.6 }}>{hive.loading ? 'loading…' : 'roadmap unavailable — edge unreachable'}</p>
+          )}
         </section>
 
         <section className="goals-section">
