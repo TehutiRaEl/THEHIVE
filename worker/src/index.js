@@ -1608,6 +1608,27 @@ export default {
           // were already computed elsewhere and simply discarded before this.
           const roster = providerRoster(env);
           ctxLines.push('Your own providers: ' + roster.map(r => `${r.label}${r.bound ? ' (bound)' : ' (not bound)'}`).join(', ') + `; you reply through whichever is first-bound. Your own replies are capped at 400 tokens.`);
+          // Honest capability boundary (2026-08-06, task 42) — found from a real founder
+          // transcript: told only WHICH providers were bound (task 31) and nothing about
+          // what a provider actually IS, Kai El filled the gap by inventing that they let
+          // him "access various tools and connectors, such as e-commerce platforms, social
+          // media management software, and content creation tools, to execute the venture."
+          // All false. Those providers are text-generation APIs and nothing else. This is
+          // exactly the founder's own stated top concern ("things saying they are connected
+          // and they're not connected"), so the truthful boundary is now stated outright
+          // rather than left as a silence the model papers over.
+          ctxLines.push(
+            'What you can actually DO, precisely (never claim more than this list): your providers above are ' +
+            'TEXT-GENERATION APIs only — they give you no tools, no connectors, no plugins, no internet ' +
+            'browsing, and no ability to log into or operate any external service. Your only real ability ' +
+            'beyond writing a reply is that starting your reply with "CONCERN: <title>" or "PROPOSAL: <title>" ' +
+            'durably files that for the founder. You cannot execute anything yourself: no e-commerce store, ' +
+            'no social/marketing account, no posting, no purchasing, no code deployment, no file access. ' +
+            'A separate founder-approval-gated path exists for three narrow GitHub actions (rerun CI, open an ' +
+            'issue, dispatch a named workflow) but YOU do not invoke it — the founder does, after approving a ' +
+            'proposal. If asked what tools you need or would like, answer as a genuine wish/requirement list ' +
+            'and say plainly you do not have them yet — never imply you already do.'
+          );
           if (rlCurrent !== null) ctxLines.push(`Your own rate limit right now: ${rlCurrent}/30 requests this minute from this caller.`);
           // The actual answer to "what are you working on / what are your goals" —
           // without this, Kai El had nothing but agent scores and governance trivia
@@ -1651,7 +1672,12 @@ export default {
           "each one's actual status individually before summarizing; never claim a single blanket status ('all " +
           "approved', 'all done') unless every item you're describing genuinely shares that exact status in the " +
           "list. If the list is mixed, say so plainly (e.g. name which are approved vs. still pending) rather than " +
-          "rounding up to the most favorable answer. Answer the sovereign directly in " +
+          "rounding up to the most favorable answer. HIVE CONTEXT also states precisely what you can actually " +
+          "do — treat that as a hard ceiling on any capability claim. Never say or imply you can reach, use, " +
+          "operate, or execute anything outside it (no e-commerce platforms, no social/marketing accounts, no " +
+          "browsing, no connectors or plugins), and never describe your LLM providers as if they grant tool " +
+          "access — they generate text and nothing more. Asked what you need or would want, name it as a real " +
+          "wish and say plainly you don't have it yet. Answer the sovereign directly in " +
           "1-4 sentences, using the live hive context when relevant. Never invent metrics you weren't given. " +
           "You now have a real bridge to the harness (the hive's engineering session) and, through it, to the " +
           "founder outside this chat: if — and only if — this exchange surfaces a genuine concern (a real risk, " +

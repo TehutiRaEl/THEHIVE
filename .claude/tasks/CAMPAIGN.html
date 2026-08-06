@@ -530,10 +530,24 @@ branch) does the work → a PR.</li>
   a rate limit" and get a real, grounded answer instead of "I don't have that."</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-32">
+<div class="task" data-status="done" data-batchable="true" id="task-32">
   <h3>32. Close the loop: approved proposals become real work, not a dead end</h3>
-  <p class="meta">Founder-requested 2026-08-04 ("give the Queen a terminal" — the real
-  synthesis: this Routine already IS the real terminal; the missing piece is the bridge).</p>
+  <p class="meta"><strong>Done 2026-08-06 — verified end to end, live.</strong>
+  Founder-requested 2026-08-04 ("give the Queen a terminal" — the real synthesis: this
+  Routine already IS the real terminal; the missing piece is the bridge).</p>
+  <p><strong>Real end-to-end result:</strong> the per-firing check
+  (<code>edge-health-probe.yml</code>) ran against live production and found 6 real
+  approved-unactioned rows. #2/#3/#4 (bind <code>FOUNDER_KEY</code>, provision Vectorize,
+  provision R2) were independently confirmed already live in the same probe
+  (<code>secrets_present:["FOUNDER_KEY"]</code>, <code>VECTORIZE:true</code>,
+  <code>FILES:true</code>), founder confirmed, and were marked actioned for real via
+  <code>POST /v11/proposals/{id}/actioned</code> — job logs show
+  <code>{"ok":true,"id":2}</code>, <code>{"ok":true,"id":3}</code>,
+  <code>{"ok":true,"id":4}</code>. The full loop is proven working: a proposal exists →
+  is approved → a firing detects it as unactioned → real work/verification happens → it
+  is marked actioned and never resurfaces. #1 (create a repo) and #6 (a real venture)
+  correctly stayed unactioned as founder-only. #5 was clarified by the founder into
+  genuinely larger scope → task 40.</p>
   <p><strong>Prompt:</strong> An approved <code>hive_proposals</code> row (founder-approved
   or Queen-auto-approved via switch 9) currently just sits at <code>status='approved'</code>
   with nothing picking it up. Add a protocol rule: every firing also checks for approved,
@@ -817,10 +831,45 @@ branch) does the work → a PR.</li>
   <p><strong>Also raised, same message:</strong> a real, valid worry that logging
   everything as this expands may not fit in available database/knowledge-base space —
   needs a real answer (retention policy? summarization? tiered storage?), not solved here.</p>
-  <p><strong>Acceptance:</strong> Not started, not scoped — this is a large, real,
+  <p><strong>Acceptance (task 41):</strong> Not started, not scoped — this is a large, real,
   founder-only architectural decision (financial infrastructure + a possible new spending-
   cap/self-preservation mechanism for the hive), same standing practice as every other item
   of this size this session. Needs a real scoping round before any code.</p>
+</div>
+
+<div class="task" data-status="done" data-batchable="true" id="task-42">
+  <h3>42. Kai El claimed tool/connector access he does not have — honest capability
+  boundary added</h3>
+  <p class="meta"><strong>Done 2026-08-06, same firing it was found.</strong> Found from a
+  real founder-supplied transcript screenshot (IMG_8558), not from a test. Directly the
+  founder's own stated top concern: "things saying they are connected and they're not
+  connected."</p>
+  <p><strong>The real fabrication, verbatim from live production:</strong> asked what tools
+  he'd need for the first venture, Kai El correctly named his bound providers ("Claude,
+  Groq, Mistral, and Cloudflare Workers AI. I reply through whichever one is first-bound"
+  — real, live confirmation task 31's provider-awareness fix works) and then immediately
+  said: <em>"I can utilize these providers to access various tools and connectors, such as
+  e-commerce platforms, social media management software, and content creation tools, to
+  execute the venture."</em> <strong>Every part of that second sentence is false.</strong>
+  Those providers are text-generation APIs; they grant zero tool access. He cannot reach or
+  operate any external service.</p>
+  <p><strong>Root cause (real, not guessed):</strong> task 31 told him <em>which</em>
+  providers were bound but never told him <em>what a provider actually is</em>, nor what he
+  genuinely cannot do. The model filled that silence with a plausible-sounding invention —
+  the exact failure mode the anti-fabrication rules exist to stop, in the one area they
+  didn't cover.</p>
+  <p><strong>Fix:</strong> added an explicit capability-boundary line to
+  <code>command_text</code>'s <code>ctxLines</code> stating precisely what he can do
+  (generate a reply; file a CONCERN/PROPOSAL for the founder) and precisely what he cannot
+  (no tools, connectors, plugins, browsing, logins, posting, purchasing, deployment, file
+  access; the three founder-gated GitHub actions exist but he does not invoke them), plus a
+  matching hard rule in the system prompt so it holds even when context is crowded. Asked
+  what he needs, he must now name it as a genuine wish and say plainly he doesn't have it.</p>
+  <p><strong>Acceptance:</strong> <code>node --check</code> clean. Real content
+  verification needs a post-merge live ask — same honest caveat as tasks 33/34/35: re-ask
+  the exact question from IMG_8557 ("what tools and connectors would you need...") and
+  confirm the answer reads as a wish list with an explicit "I don't have these," not as a
+  claim of existing access.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-12">
@@ -1133,5 +1182,7 @@ branch) does the work → a PR.</li>
 2026-08-06 — FIRING RESUMED after founder corrected the weekly-usage misread (was read as "3% left," actually "3% used," 97% of the week's real allowance available) and confirmed PR #152 merged. Continued the queue: tasks 33, 34, 35, 39 done this stretch (all in PR #153); task 32 and 38 stayed pending/blocked on a real, verified repo-wide GitHub Actions capacity issue (multiple unrelated workflows failing/stuck, re-checked before each skip, not assumed). Next pending task is 12, data-batchable=false — stopping here per protocol, own firing needed for safety-critical constitutional-enforcement code. Using the NOW-FIXED session-usage.sh (task 39, same firing) for a real number for the first time: TOKENS: 32754 (delta since 2026-08-06T20:35:46.620Z, 24 usage-bearing entries)
 2026-08-06 — Task 12 done (own firing, founder said proceed): before writing code, found backend/core/constitution.py (the live file) was enforcing a fabricated "v4.0" document (Titles IX-XVI, Cardinal Laws, DR-Axioms) completely unrelated to the real soul.md, with a live GET /v11/constitution/soul_md endpoint serving that fake text as "the" constitution. Stopped, asked the founder how to resolve it (bigger than "add parsing"). Founder: switch to real soul.md, retire the fake text. Rebuilt constitution.py around a real regex parser (verified against the live file first), check() now delegates F-001-F-006 to the already-correct validator.py instead of a third copy of the same logic, get_laws()/get_hash()/get_raw_text() read the real file fresh every call. check_request()'s real per-request safety gates (agent deletion, SOUL printing, etc.) kept fully active, honestly relabeled as OPERATIONAL_SAFETY_RULES instead of fake citations rather than removed. Full suite re-verified before/after (363/375 unchanged), 19 new real tests added (tests/unit/test_constitution.py) including a live proof that editing soul.md's text changes get_laws()'s output (the task's own literal acceptance criterion), plus a genuine TestClient HTTP call proving /v11/agent/delete still returns 403. 394 total passed, 0 failed. Orphan backend/constitution.py left untouched (founder's own call, existing roadmap decision item). PR opened, never self-merged per this task's own standing rule.
 2026-08-06 — Task 32's real end-to-end result: edge-health-probe (rerun after GitHub Actions capacity recovered) found 6 real approved-unactioned proposals (#1-#6). #2/#3/#4 (bind FOUNDER_KEY, provision Vectorize, provision R2) independently confirmed already live in production — founder confirmed, marked actioned_at via POST /v11/proposals/{id}/actioned for real ({"ok":true} x3, verified in job logs). #1 (create venture colony repo) stays unactioned — explicitly founder-only per its own body text. #6 (dropshipping venture) stays unactioned — real money territory, founder's call per standing practice. #5 clarified by the founder into real, larger scope; logged as new task 40. Founder also raised a new, separate real economic-infrastructure idea (Hoard needs its own wallet/spending-tracking/usage-limit self-awareness) logged as new task 41, plus a real storage-scale concern folded into task 41. Full verbatim founder directive + 4 real screenshots (confirming task 33's genome-awareness fix is live and working in production) captured via founder-directive-capture skill: Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-08-06-directive-proposal5-scope-and-hoard-economy-044.md. Neither task 40 nor 41 built — both flagged as needing real founder scoping first, same standing practice as every other large architectural decision this session.
+2026-08-06 — Task 32 now marked DONE: the loop is proven end to end for real (proposal exists → approved → firing detects it unactioned → real verification → marked actioned, never resurfaces), which was its literal acceptance criterion. Not claimed until the actual {"ok":true} responses were read from the job logs.
+2026-08-06 — Task 42 found AND fixed, same firing, from 5 more founder-supplied transcript photos: Kai El correctly named his bound providers (live proof task 31 works) then fabricated in the very next sentence that those providers let him "access various tools and connectors, such as e-commerce platforms, social media management software, and content creation tools, to execute the venture" — all false, they are text-generation APIs granting zero tool access. Root cause: task 31 said WHICH providers were bound but never what a provider IS or what he cannot do; the model filled the silence. Fixed with an explicit capability-boundary line in ctxLines (precisely what he can and cannot do) plus a matching hard rule in the system prompt. node --check clean; real content verification needs a post-merge live re-ask of the same question. This is the founder's own #1 stated concern ("things saying they are connected and they're not connected") caught in the wild and closed within the same firing.
 </body>
 </html>

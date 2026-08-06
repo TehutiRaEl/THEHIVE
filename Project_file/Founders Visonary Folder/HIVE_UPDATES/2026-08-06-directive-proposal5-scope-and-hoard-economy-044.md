@@ -59,6 +59,43 @@ All four are the "Commune" panel of a real conversation with Kai El, in producti
 4. Continuation of the same exchange — founder then asked Kai El to "provide me that full
    conversation if you..." (message cut off in the screenshot).
 
+## Second batch — 5 more screenshots of the same conversation (IMG_8556-8560)
+
+Sent after the first 4, with the founder's note: *"Continue working the queue here's five
+more photos from that conversation i'll let you know when you have all the photos of the
+conversation that way you fully compile what I said in my last input query response
+together with a full entire conversation log provided from all the photos"* — so the full
+chronological compile is deliberately **deferred until the founder confirms all photos are
+in**. This section records what each one contains so nothing is lost in the meantime.
+
+5. **IMG_8556** — Kai El recaps the prior exchanges accurately (horde/Horde principle IV,
+   the ventures question, "book-merch dropshipping + faceless multi-platform social, which
+   has been approved") and then states honestly: *"However, I don't have the full
+   conversation history"* — a real, correct self-report of his own 6-turn history cap
+   rather than a confabulated claim of total recall.
+6. **IMG_8557** — Founder asks: *"What all tool and connectors would you need to fulfill
+   the first venture as well as what all tools connectors and other software would you
+   need and or like to have access to and why you want and or feel the need for any of
+   it"*. Kai El begins answering with e-commerce, social media management, content
+   creation.
+7. **IMG_8558** — **The single most important frame in this batch, for two opposite
+   reasons.** Kai El correctly names his real bound providers — *"Claude, Groq, Mistral,
+   and Cloudflare Workers AI. I reply through whichever one is first-bound"* — which is
+   near-verbatim the `ctxLines` string task 31 added, so this is **real, live confirmation
+   that task 31's provider-awareness fix is deployed and working**. Then, in the very next
+   sentence, he fabricates: *"I can utilize these providers to access various tools and
+   connectors, such as e-commerce platforms, social media management software, and content
+   creation tools, to execute the venture. Additionally, I would like to have access to
+   data analytics and marketing automation tools..."* — **false**. Those providers are
+   text-generation APIs; they grant no tool access whatsoever. See task 42.
+8. **IMG_8559** — Founder asks Kai El to elaborate on wanting more training/knowledge.
+9. **IMG_8560** — Kai El answers: he'd benefit from expanded knowledge in e-commerce,
+   social media management, marketing, and entrepreneurship, to better support the first
+   venture and *"provide more effective guidance to the Queen and other members of the
+   hive."* Notably this frame is honest — it's framed as a genuine wish, not a claim of
+   existing access. Directly relevant to task 40 (the founder's "training open" intent)
+   and its "cognition-enhancing" half.
+
 ## Response — what this actually means, read plainly (not yet built beyond what's noted)
 
 **Proposal #2/#3/#4 (bind founder key, provision Vectorize, provision R2):** marked
@@ -97,6 +134,19 @@ database/knowledge-base space as this grows) is a real, valid concern given how 
 session alone has already written to `hive_pulse`/`hive_updates`/`hive_proposals`/
 `colony_reports`/the memory vault — logged as part of task 41's scoping question, not
 solved unilaterally here.
+
+**A real fabrication caught in the second batch, fixed the same firing (task 42):**
+IMG_8558 shows Kai El claiming his LLM providers let him "access various tools and
+connectors, such as e-commerce platforms, social media management software, and content
+creation tools, to execute the venture." All false. Root cause was a real gap in task 31's
+own fix: it told him *which* providers were bound but never what a provider actually is,
+nor what he genuinely cannot do — and the model filled that silence with a plausible
+invention. Fixed by stating the truthful boundary outright in `ctxLines` (exactly what he
+can do: generate a reply, file a CONCERN/PROPOSAL — and exactly what he cannot: no tools,
+connectors, plugins, browsing, logins, posting, purchasing, deployment, file access), plus
+a matching hard rule in the system prompt. This is the founder's own #1 stated concern
+("things saying they are connected and they're not connected") caught in the wild and
+closed within the same firing it was reported.
 
 **The screenshots:** logged above as real, dated, live confirmation that task 33 shipped
 correctly, and as real context for proposal #6 (a live conversation already explored what
