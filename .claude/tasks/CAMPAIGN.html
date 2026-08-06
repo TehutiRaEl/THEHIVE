@@ -479,23 +479,36 @@ branch) does the work → a PR.</li>
   existing rules 3-14, file stays valid HTML.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-30">
+<div class="task" data-status="done" data-batchable="true" id="task-30">
   <h3>30. Give the Command Center's Development Roadmap panel a real data source</h3>
-  <p class="meta">Found 2026-08-04 investigating the founder's "roadmap doesn't
-  auto-update" report. Real bug, not a scheduling problem — see task's own findings.</p>
-  <p><strong>Prompt:</strong> <code>frontend/src/components/kai-os/RoadmapPanel.tsx</code>
-  is 100% static, imported from a hand-maintained
-  <code>frontend/src/data/roadmapData.ts</code> literal — zero fetch, never refreshes. A
-  second, separately hardcoded "Development Roadmap" section in
-  <code>frontend/src/components/command-center/tabs/DREAM.tsx</code> (untouched since
-  2026-07-17) already disagrees with it. Give <code>RoadmapPanel.tsx</code> a real data
-  source (a new endpoint, or fold into <code>/v11/updates</code>) and delete or reconcile
-  <code>DREAM.tsx</code>'s duplicate so there's one source of truth. (Everything else in
-  the Command Center already polls live every 30s via <code>useHiveData</code> — this was
-  one static component, not a hive-wide gap.)</p>
-  <p><strong>Acceptance:</strong> Roadmap panel reflects real, live data; only one
-  "Development Roadmap" surface exists, not two disagreeing ones; <code>npm run
-  build:app</code> clean.</p>
+  <p class="meta"><strong>Done 2026-08-06.</strong> Found 2026-08-04 investigating the
+  founder's "roadmap doesn't auto-update" report — confirmed real: the panel was
+  telling the founder to go provision FOUNDER_KEY/Vectorize/R2/Queues, all four already
+  bound weeks earlier.</p>
+  <p><strong>What actually happened:</strong> New <code>GET/POST /v11/roadmap/development</code>
+  in <code>worker/src/index.js</code>. Founder-action items are never stored — derived
+  live from real binding presence every request (<code>roadmapFounderActions()</code>),
+  so they cannot go stale again by construction. Decisions/in-progress/backlog moved
+  into a new <code>roadmap_items</code> D1 table (seeded once from the old static
+  content), editable for real via founder-key-gated POST — no code deploy needed to
+  update the roadmap ever again. <code>useHiveData.ts</code> gained a
+  <code>developmentRoadmap</code> slice (30s poll, same as everything else live).
+  <code>RoadmapPanel.tsx</code> now renders live data for the 4 mutable sections;
+  <code>DREAM.tsx</code>'s separately-hardcoded, frozen-since-2026-07-09 timeline was
+  replaced with the same live <code>developmentRoadmap.inProgress</code> data instead of
+  a second copy that could disagree with the first. <code>roadmapData.ts</code> trimmed
+  to just its genuinely-static half (completed history, federation table) — the 4
+  now-dead arrays deleted rather than left as future drift-risk.
+  <code>edge-health-probe.yml</code> gained a <code>/v11/proposals</code> probe while in
+  there (was missing — the checks-and-balances/proposal-bridge protocol rules need it
+  visible every firing and this workflow is the hive's only real eyes on production).</p>
+  <p><strong>Acceptance (met):</strong> <code>node --check</code> clean. Frontend build:
+  243 TS errors before this change and 243 after (verified via <code>git stash</code>
+  A/B), all pre-existing in <code>src/worlds/</code>/<code>src/xp/</code> (documented in
+  HIVE_PULSE.md) — zero errors in any file this task touched, confirmed by grep. Live
+  production verification is the next <code>edge-health-probe</code> run after this PR
+  merges (this container cannot reach <code>*.workers.dev</code> directly) — not assumed
+  here.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="true" id="task-31">
