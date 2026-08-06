@@ -422,6 +422,21 @@ mechanism, logged as such in AUDIT_LEDGER.md rather than claimed as literal comp
 And this container cannot reach production directly, so "shipped" here means syntax-clean
 and reviewed, not yet live-verified — that happens via `edge-health-probe` after merge.
 
+## Kai El learns his own genome (2026-08-06)
+
+Real gap found from a live transcript (2026-08-04): asked "what's the status of the
+Horde," Kai El deflected to generic hive-status language — none of this file's
+chromosomes ever reached his context, only `docs/GOVERNANCE.md`'s article titles did.
+Fixed via `GENOME_CHROMOSOMES` in `worker/src/index.js`, folded into `command_text`'s
+`ctxLines` (CAMPAIGN.html task 33). One real, logged design tradeoff worth knowing if
+this file's chromosome list ever changes: this file lives at the repo root, outside
+`docs/` (the only directory the Worker's `ASSETS` binding serves), so it cannot be
+live-fetched the way `docs/GOVERNANCE.md` is — `GENOME_CHROMOSOMES` is a short,
+hand-maintained mirror instead, updated by hand alongside this file rather than
+duplicating it into `docs/` (which would risk exactly the kind of silent drift
+task 30 fixed for the Development Roadmap panel). **If you add, remove, or retitle a
+chromosome here, update `GENOME_CHROMOSOMES` in the same commit.**
+
 ## How a new hive inherits this
 
 1. Copy this file into the new hive's root. It is the genome; it carries no dependency.

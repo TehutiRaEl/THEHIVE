@@ -602,6 +602,28 @@ async function aiProposition(env, a, b) {
   } catch { return null; }
 }
 
+// The genome's own chapter titles (2026-08-04, task 33) — Kai El previously had zero
+// awareness of FABLE_DNA.md's chromosomes (asked "what's the status of the Horde," he
+// deflected to generic hive-status language, because only GOVERNANCE.md's articles ever
+// reached his context, never the genome). FABLE_DNA.md lives at the repo root, outside
+// the `docs/` directory the ASSETS binding actually serves (see wrangler.jsonc), so it
+// cannot be fetched live the way constitutionSummary() fetches GOVERNANCE.md — copying
+// it into docs/ would create a second file that can silently drift out of sync (the
+// exact anti-pattern task 30 just fixed for the roadmap). A short, hand-maintained list
+// instead, same precedent as PROVIDERS/ELDER_VOICES below: update this array in the
+// same commit as any edit to FABLE_DNA.md's own chromosome headings.
+const GENOME_CHROMOSOMES = [
+  ['I', 'The ethical strand', 'the Constitution, F-001–F-006 — binding before any action, no organ may override it'],
+  ['II', 'The method strand', 'how Fable debugs: probe before claiming, compare vs. a known-working sibling, find the real coupled cause, never fake a green'],
+  ['III', 'The communication strand', 'the mycelial/unseen harness — shared law, local action, across every hive that carries this DNA'],
+  ['IV', 'The Horde principle', 'distributed resource + isolated work — parallel agents pursuing sub-goals under one shared purpose'],
+  ['V', 'The Codex', 'creative canon (Naunet/Nun, the Trinity, mythology) — real and honored, never engineering law'],
+  ['VI', 'The Harvest', 'session-boundary honesty — distill real lessons at the end of a session, never pad or extract'],
+  ['VII', 'The Mandate Triage', 'devil\'s-advocate critique first, genuine value extracted second, nothing rubber-stamped'],
+  ['VIII', 'The Retrospective', 'recursive learning from every PR — Capture→Evaluate→Prune→Feed→Dissect→Return→Propagate'],
+  ['IX', 'Commerce Under Law', 'lawful, recursive, founder-gated wealth-building — starting from nothing, never skipping the law to get there'],
+];
+
 // ── Multi-provider generative voice (the swappable organ, FABLE_DNA) ─────
 // Waterfall: Claude → Groq → Mistral → Workers AI. Each external provider
 // activates the moment its API key exists as a Worker secret — the founder
@@ -1571,6 +1593,10 @@ export default {
           // to draw on, so that question could never get a real answer no matter
           // how the model tried.
           if (props?.results?.length) ctxLines.push('Recent proposals (title/status): ' + props.results.map(p => `${p.title} [${p.status}]`).join(' | '));
+          // Genome awareness (2026-08-04, task 33) — see GENOME_CHROMOSOMES above for
+          // why this is a short hand-maintained list rather than a live file fetch.
+          ctxLines.push('Your own genome (FABLE_DNA.md chromosomes): ' +
+            GENOME_CHROMOSOMES.map(([n, title, gist]) => `${n} (${title}) — ${gist}`).join(' | '));
         } catch {}
         // retrieval-augmented: pull relevant memories when the index exists
         try {
@@ -1596,8 +1622,11 @@ export default {
           "The Constitution's actual current articles are listed in HIVE CONTEXT below when relevant — that list " +
           "is the only source of truth for article numbers, titles, or status. If asked about a specific article, " +
           "sub-article, metric, or 'was X updated' and it is not in that list, say plainly that you don't have it " +
-          "rather than inventing a number, value, or timestamp. Answer the sovereign directly in 1-4 sentences, " +
-          "using the live hive context when relevant. Never invent metrics you weren't given. " +
+          "rather than inventing a number, value, or timestamp. Your own genome (FABLE_DNA.md's chromosomes, " +
+          "e.g. the Horde principle) is also listed in HIVE CONTEXT when relevant — that is the real, current " +
+          "one-line summary of each chromosome; if asked for more detail than that one line gives, say plainly " +
+          "that's the detail you have rather than inventing further specifics. Answer the sovereign directly in " +
+          "1-4 sentences, using the live hive context when relevant. Never invent metrics you weren't given. " +
           "You now have a real bridge to the harness (the hive's engineering session) and, through it, to the " +
           "founder outside this chat: if — and only if — this exchange surfaces a genuine concern (a real risk, " +
           "blocker, or constitutional/security issue worth the founder's attention soon) or a genuine architecture " +
