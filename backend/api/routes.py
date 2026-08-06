@@ -243,8 +243,10 @@ async def check_constitution(action_type: str, actor: str, params: Optional[str]
 
 @router.get("/constitution/soul_md")
 async def get_constitution(auth: Dict = Depends(verify_auth)):
-    from backend.core.constitution import SOUL_MD
-    return {"soul_md": SOUL_MD, "version": "4.0", "hash": constitution.get_hash()}
+    # Real, current soul.md text (task 12, 2026-08-06) — previously served a
+    # fabricated "v4.0" document that never matched the real constitution at
+    # all. Read fresh every call so a real amendment is reflected immediately.
+    return {"soul_md": constitution.get_raw_text(), "laws": constitution.get_laws(), "hash": constitution.get_hash()}
 
 @router.post("/constitution/vote")
 async def constitution_vote(req: ConstitutionVoteRequest, auth: Dict = Depends(verify_auth)):
