@@ -667,9 +667,19 @@ function providerRoster(env) {
 // One generation call, first bound provider wins; returns {text, provider} or null.
 // External calls use each provider's plain HTTP API with a hard timeout so a
 // down provider degrades to the next, never hangs the commune.
-async function generate(env, { system, prompt, maxTokens = 400 }) {
+// `only` (2026-08-06, task 44) answers a real founder question: "why is Kai not able to
+// fully utilize each API key that's connected?" The honest answer was that he never could
+// — this function is a FALLBACK CHAIN, not a router. It returns the moment Claude succeeds,
+// so while Claude is bound and healthy, Groq/Mistral/Workers AI are never called at all.
+// Four keys bound, one key ever used; the other three are spare tires, and the per-provider
+// "roles" the UI displays (Speed, Reasoning, Local intelligence) had no routing logic behind
+// them whatsoever. Passing `only: '<id>'` pins the call to exactly one provider and, if that
+// one fails, returns null instead of quietly answering through a different provider — a
+// silent fall-through would make any per-provider test a lie about which key actually ran.
+async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
   const timeout = (ms) => AbortSignal.timeout(ms);
-  if (env.ANTHROPIC_API_KEY) {
+  const use = (id) => !only || only === id;
+  if (use('claude') && env.ANTHROPIC_API_KEY) {
     try {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -691,7 +701,7 @@ async function generate(env, { system, prompt, maxTokens = 400 }) {
       }
     } catch { /* next provider */ }
   }
-  if (env.GROQ_API_KEY) {
+  if (use('groq') && env.GROQ_API_KEY) {
     try {
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -709,7 +719,7 @@ async function generate(env, { system, prompt, maxTokens = 400 }) {
       }
     } catch { /* next provider */ }
   }
-  if (env.MISTRAL_API_KEY) {
+  if (use('mistral') && env.MISTRAL_API_KEY) {
     try {
       const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
@@ -727,7 +737,7 @@ async function generate(env, { system, prompt, maxTokens = 400 }) {
       }
     } catch { /* next provider */ }
   }
-  if (env.AI) {
+  if (use('workers-ai') && env.AI) {
     try {
       // The proven-live path: same model + prompt-string shape as the heartbeat.
       const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
@@ -1595,10 +1605,18 @@ export default {
             DB.prepare('SELECT colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT 3').all(),
             rateLimitPeek(DB, ipCmd, env),
           ]);
+          // Format made unambiguous (2026-08-06, task 44) — a real misread caught in
+          // production. The old shape rendered Nanuet as "Nanuet(1743) (Queen)" while
+          // every other agent rendered as "Ma'at(1200) reports to Kai El", putting a bare
+          // parenthesised number directly beside the word "reports". Kai El then told the
+          // founder the Queen "is currently active with 1743 reports" — 1743 is her Elo
+          // rating, and no such report count exists anywhere. Nothing was hallucinated
+          // from nowhere; an ambiguous string was read the only way it could be. Every
+          // number now carries its own label.
           if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a =>
-            `${a.name}(${a.elo})${a.reports_to ? ' reports to ' + a.reports_to : ' (Queen)'}` +
+            `${a.name} [Elo rating ${a.elo}]${a.reports_to ? ` [reports to: ${a.reports_to}]` : ' [the Queen — reports to no one]'}` +
             (AGENT_JOBS[a.name] ? ` — real job: ${AGENT_JOBS[a.name]}` : '')
-          ).join('; '));
+          ).join('; ') + '. NOTE: the bracketed number is an Elo rating (a ranking score from the Arena) — it is NOT a count of reports, messages, tasks, or anything else.');
           if (gov?.results?.length) ctxLines.push('Recent governance: ' + gov.results.map(g => `${g.action}/${g.article}`).join(', '));
           if (pulseRow?.detail) ctxLines.push('Last heartbeat: ' + pulseRow.detail);
           // Colonies → Queen feedback — closes the loop that was one-way until now.
@@ -1726,7 +1744,19 @@ export default {
           (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') +
           (historyLines.length ? 'RECENT CONVERSATION:\n' + historyLines.join('\n') + '\n\n' : '') +
           'SOVEREIGN: ' + cmd + '\n\nKAI EL:';
-        const gen = await generate(env, { system: SYSTEM, prompt: userPrompt, maxTokens: 400 });
+        // Optional {"provider":"claude"|"groq"|"mistral"|"workers-ai"} pins this one call
+        // to a single key (task 44) so each bound provider can actually be exercised and
+        // proven, instead of Claude silently answering everything forever. Unknown names
+        // are rejected outright rather than ignored — quietly falling back to the default
+        // waterfall would make a per-provider test report the wrong key.
+        const wantProvider = (body.provider || '').toString().trim().toLowerCase() || null;
+        if (wantProvider && !PROVIDERS.some((pr) => pr.id === wantProvider)) {
+          return json({ detail: `unknown provider '${wantProvider}' — valid: ${PROVIDERS.map((pr) => pr.id).join(', ')}` }, 400);
+        }
+        const gen = await generate(env, { system: SYSTEM, prompt: userPrompt, maxTokens: 400, only: wantProvider });
+        if (!gen && wantProvider) {
+          return json({ detail: `provider '${wantProvider}' is bound-but-unreachable or returned nothing; not falling back to another provider, since that would misreport which key answered`, provider_requested: wantProvider }, 502);
+        }
         if (gen) {
           // remember the exchange so the hive's memory grows from conversation too
           // (ctx.waitUntil now that fetch carries ctx — was a latent ReferenceError)
