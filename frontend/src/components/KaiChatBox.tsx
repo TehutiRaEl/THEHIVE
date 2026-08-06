@@ -5,6 +5,7 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import { API_BASE_URL } from '../utils/constants';
+import { useHiveData } from '../hooks/useHiveData';
 
 interface ChatMessage {
   id: string;
@@ -22,6 +23,12 @@ const KaiChatBox = () => {
   // pill until clicked, and collapses back down on close.
   const [minimized, setMinimized] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // "Founder" once FOUNDER_KEY is bound, "YOU" until then (task 35, 2026-08-04 request).
+  // debugEnv.secrets_present.includes('FOUNDER_KEY') is only correct as of the same
+  // firing that added FOUNDER_KEY to worker/src/index.js's expectedSecrets list — see
+  // that commit for the bug this was silently hitting beforehand.
+  const { debugEnv } = useHiveData();
+  const founderBound = !!debugEnv?.secrets_present.includes('FOUNDER_KEY');
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -114,7 +121,7 @@ const KaiChatBox = () => {
               background: message.sender === 'user' ? 'rgba(0,50,100,.6)' : message.sender === 'kai' ? 'rgba(0,30,50,.7)' : 'rgba(50,0,0,.6)',
             }}>{message.content}</div>
             <div style={{ fontSize: 9, color: '#334', marginTop: 2 }}>
-              {message.sender === 'user' ? 'YOU' : message.sender === 'kai' ? 'KAI EL' : 'ERROR'}
+              {message.sender === 'user' ? (founderBound ? 'FOUNDER' : 'YOU') : message.sender === 'kai' ? 'KAI EL' : 'ERROR'}
             </div>
           </div>
         ))}

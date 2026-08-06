@@ -604,27 +604,35 @@ branch) does the work → a PR.</li>
   check, logged honestly rather than assumed.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-35">
+<div class="task" data-status="done" data-batchable="true" id="task-35">
   <h3>35. Verify (and if needed, fix) Kai El's proposal-status accuracy; rename "YOU" once founder-authed</h3>
-  <p class="meta">Found 2026-08-04. Two real, separate small items surfaced by the founder
-  from a live transcript.</p>
-  <p><strong>Prompt:</strong> (a) Kai El's own chat summarized several proposals ("Bind a
-  founder key," "Provision R2," "Provision Vectorize," etc.) as "all of which have been
-  approved" — the real per-item status IS already in his context
-  (<code>ctxLines</code> includes <code>title [status]</code> per proposal), so first
-  verify against live <code>/v11/proposals</code> whether this was accurate or an
-  over-generalization across a mixed pending/approved list — a real F-004 (Explainability)
-  concern either way, not just a style nitpick. Fix only if verification finds a real gap
-  (e.g. tighten the system prompt's own "never invent" instruction to explicitly cover
-  summarizing status across multiple items, not just single values). (b) The founder asked
-  for the chat's "YOU" (sovereign/founder) label to read "Founder" once
-  <code>FOUNDER_KEY</code> is bound, instead of the generic default — small, real UI
-  personalization, unrelated to the label-mapping question already resolved earlier
-  tonight (the code's sender→label mapping is confirmed correct; this is a wording change,
-  not a bug fix).</p>
-  <p><strong>Acceptance:</strong> A real live check confirms or refutes the status-accuracy
-  concern, with the finding logged either way; "Founder" label change verified in a real
-  build.</p>
+  <p class="meta"><strong>Done 2026-08-06.</strong> Found 2026-08-04, two real separate
+  items from a live transcript.</p>
+  <p><strong>What actually happened — (a) status accuracy:</strong> Verified by direct
+  code read (system prompt text, <code>worker/src/index.js</code>) rather than a live
+  probe — confirmed a real gap: the only "never invent" instructions covered metrics/
+  article numbers, nothing addressed summarizing status ACROSS multiple proposals
+  accurately. Fixed: added an explicit instruction — check each item's real status
+  individually, never round a mixed pending/approved list up to one blanket "all
+  approved," name which are which if mixed.</p>
+  <p><strong>(b) "Founder" label — plus a real bug found investigating it:</strong>
+  <code>frontend/src/utils/readiness.ts:48</code> has always checked
+  <code>debugEnv.secrets_present.includes('FOUNDER_KEY')</code> for the Queen's Progress
+  meter, but <code>worker/src/index.js</code>'s <code>/debug/env</code> route's
+  <code>expectedSecrets</code> array never included <code>'FOUNDER_KEY'</code> — that
+  check was permanently false, permanently undercounting the meter by one hive-wide
+  switch whenever <code>FOUNDER_KEY</code> was actually bound. Fixed at the source
+  (added to <code>expectedSecrets</code>, presence-only per F-001, same as the other
+  two). <code>KaiChatBox.tsx</code> and <code>KaiCommune.tsx</code> (both real, separate
+  copies of the same chat UI) now use that corrected signal via
+  <code>useHiveData().debugEnv</code> to show "FOUNDER" once bound, "YOU" until then.</p>
+  <p><strong>Acceptance:</strong> <code>node --check</code> clean; frontend build
+  243/243 TS errors unchanged (pre-existing, none in touched files, confirmed by grep).
+  The readiness-meter bug fix is a real, static, provable fix (the array literally never
+  contained the string being checked for) — no live probe needed to confirm that part.
+  The prompt-instruction fix and "FOUNDER" label both still want a real post-merge
+  content check, same honest caveat as tasks 33/34 (repo-wide GitHub Actions capacity
+  issue this firing, see task 32's log line).</p>
 </div>
 
 <div class="task" data-status="blocked" data-batchable="true" id="task-36">
@@ -1017,6 +1025,7 @@ branch) does the work → a PR.</li>
 2026-08-06 — Founder corrected the weekly-usage reading (was misread as "3% left," is actually "3% used" — 97% of the week's real allowance still available) and confirmed PR #152 merged. Resuming the queue on that corrected basis.
 2026-08-06 — Task 33 done: new GENOME_CHROMOSOMES array (worker/src/index.js, all 9 real chromosomes — FABLE_DNA.md has grown past the 7 the task was originally filed against) folded into command_text's ctxLines, same additive pattern as tasks 27/31. Real tradeoff logged in-code: FABLE_DNA.md lives outside docs/ (the only directory the ASSETS binding serves), so it can't be live-fetched like GOVERNANCE.md without creating a second, drift-risking copy (task 30's exact anti-pattern) — used a short hand-maintained array instead, same precedent as PROVIDERS/ELDER_VOICES. System prompt got the same "say what you don't have" honesty rule already used for Constitution grounding. node --check clean. Acceptance only partially verified: did not force a third edge-health-probe dispatch to content-test this against production, given this same firing already hit 2 real capacity failures on that workflow (task 32's log line) — flagged honestly as needing a real post-merge content check, not claimed as fully proven. PR opened, CI checked once, never merged. PR #153.
 2026-08-06 — Task 32's own check attempted a 3rd time (document-order-first rule) but skipped after a repo-wide scan first: GitHub Actions API showed Kai El Bridge, Federation Issue Triage (x2), AND Colony Health Matrix (stuck in_progress 1h+) all failing/stuck in the same window as the 2 prior edge-health-probe cancellations — a real, broader GitHub Actions capacity problem right now, not specific to this check's own code. A 3rd identical retry would very likely hit the same wall. Task 32 stays pending (infra-blocked, not founder-blocked) — moving to task 34 instead per the batching rule, will re-check task 32 next firing once capacity likely recovers.
-2026-08-06 — Task 34 done: new AGENT_JOBS map (worker/src/index.js) folded into the existing "Active agents:" ctxLines entry — one real, honest line per agent (Ma'at/Solomon: Elders' Council veto per task 37; Thoth: memory-vault sync; Sekhmet: Elo judge + new consult voice; Ptah: explicitly noted as living inside Kai El's own reply, not a separate agent, matching the audit's honest finding; Horus: watchtower). node --check clean. Same honest partial-acceptance caveat as task 33 — full content check needs a live production probe, not forced this firing given the repo-wide GH Actions capacity issue (task 32's log line). PR opened, CI checked once, never merged.
+2026-08-06 — Task 34 done: new AGENT_JOBS map (worker/src/index.js) folded into the existing "Active agents:" ctxLines entry — one real, honest line per agent (Ma'at/Solomon: Elders' Council veto per task 37; Thoth: memory-vault sync; Sekhmet: Elo judge + new consult voice; Ptah: explicitly noted as living inside Kai El's own reply, not a separate agent, matching the audit's honest finding; Horus: watchtower). node --check clean. Same honest partial-acceptance caveat as task 33 — full content check needs a live production probe, not forced this firing given the repo-wide GH Actions capacity issue (task 32's log line). Folded into PR #153 (renamed to cover both tasks) rather than a new PR — coherent group.
+2026-08-06 — Task 35 done: (a) status-accuracy gap confirmed by direct code read (not a live probe) — system prompt had no instruction against rounding a mixed proposal-status list up to one blanket answer; added one. (b) Real bug found investigating the "Founder" label: readiness.ts:48 checked debugEnv.secrets_present.includes('FOUNDER_KEY') but /debug/env's expectedSecrets array never included it — permanently false, permanently undercounting the Queen's Progress meter. Fixed at the source (added FOUNDER_KEY to expectedSecrets, presence-only per F-001). KaiChatBox.tsx + KaiCommune.tsx (2 real separate chat UIs) now show "FOUNDER"/"YOU" off that corrected signal via useHiveData(). node --check clean, frontend build 243/243 unchanged, none in touched files. PR opened.
 </body>
 </html>

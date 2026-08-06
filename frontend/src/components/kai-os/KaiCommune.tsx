@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { API_BASE_URL } from '../../utils/constants';
+import { useHiveData } from '../../hooks/useHiveData';
 
 interface ChatMessage {
   id: string;
@@ -21,6 +22,10 @@ export default function KaiCommune({ onSpeakingChange }: KaiCommuneProps) {
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // "Founder" once FOUNDER_KEY is bound, "YOU" until then (task 35, 2026-08-04 request)
+  // — same signal and same caveat as KaiChatBox.tsx's own copy of this check.
+  const { debugEnv } = useHiveData();
+  const founderBound = !!debugEnv?.secrets_present.includes('FOUNDER_KEY');
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -79,7 +84,7 @@ export default function KaiCommune({ onSpeakingChange }: KaiCommuneProps) {
               {m.content}
             </div>
             <div className="text-[9px] text-slate-600 mt-0.5">
-              {m.sender === 'user' ? 'YOU' : m.sender === 'kai' ? 'KAI EL' : 'ERROR'}
+              {m.sender === 'user' ? (founderBound ? 'FOUNDER' : 'YOU') : m.sender === 'kai' ? 'KAI EL' : 'ERROR'}
             </div>
           </div>
         ))}

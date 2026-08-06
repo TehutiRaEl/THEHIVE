@@ -1646,7 +1646,12 @@ export default {
           "rather than inventing a number, value, or timestamp. Your own genome (FABLE_DNA.md's chromosomes, " +
           "e.g. the Horde principle) is also listed in HIVE CONTEXT when relevant — that is the real, current " +
           "one-line summary of each chromosome; if asked for more detail than that one line gives, say plainly " +
-          "that's the detail you have rather than inventing further specifics. Answer the sovereign directly in " +
+          "that's the detail you have rather than inventing further specifics. Recent proposals are listed in HIVE " +
+          "CONTEXT with each one's own real status — when asked about MULTIPLE proposals or items together, check " +
+          "each one's actual status individually before summarizing; never claim a single blanket status ('all " +
+          "approved', 'all done') unless every item you're describing genuinely shares that exact status in the " +
+          "list. If the list is mixed, say so plainly (e.g. name which are approved vs. still pending) rather than " +
+          "rounding up to the most favorable answer. Answer the sovereign directly in " +
           "1-4 sentences, using the live hive context when relevant. Never invent metrics you weren't given. " +
           "You now have a real bridge to the harness (the hive's engineering session) and, through it, to the " +
           "founder outside this chat: if — and only if — this exchange surfaces a genuine concern (a real risk, " +
@@ -1829,7 +1834,13 @@ export default {
         const known = ['DB', 'AI', 'VECTORIZE', 'ASSETS', 'FILES', 'RATE_LIMIT_KV', 'LLM_QUEUE'];
         const bindings = {}; for (const k of known) bindings[k] = !!env[k];
         // report which expected secrets are set, by presence only
-        const expectedSecrets = ['GROK_BRIDGE_KEY', 'CLOUDFLARE_API_TOKEN'];
+        // FOUNDER_KEY added 2026-08-06 (task 35 investigation) — frontend/src/utils/
+        // readiness.ts:48 has always checked secrets_present.includes('FOUNDER_KEY') for
+        // the "Queen's Progress" meter, but this array never included it, so that check
+        // was permanently false and the meter permanently undercounted by one hive-wide
+        // switch whenever FOUNDER_KEY was actually bound. Presence-only, same as the
+        // other two (F-001: names/booleans, never values).
+        const expectedSecrets = ['GROK_BRIDGE_KEY', 'CLOUDFLARE_API_TOKEN', 'FOUNDER_KEY'];
         const secrets_present = expectedSecrets.filter((k) => typeof env[k] === 'string' && env[k].length > 0);
         return json({ bindings, secrets_present, note: 'names and presence only — values are never exposed (F-001 data sovereignty)' });
       }
