@@ -916,6 +916,80 @@ branch) does the work → a PR.</li>
   yet." Live content re-ask still owed post-merge, same honest caveat as tasks 33/34/35/42.</p>
 </div>
 
+<div class="task" data-status="blocked" data-batchable="false" id="task-45">
+  <h3>45. CLAUDE'S API KEY IS BOUND BUT FAILING 100% OF THE TIME — every request silently
+  falls through to Mistral, and every surface reports "Claude" anyway</h3>
+  <p class="meta"><strong>Found 2026-08-06 by a real live test</strong> (edge-health-probe
+  run 31132557948, 9 real requests to production). This is the true answer to the founder's
+  question "why is Kai not able to fully utilize each API key that's connected." Blocked on
+  the founder, because the fix requires a real credential/plan decision only they can make.</p>
+  <p><strong>The measured evidence, not inference — 9 real production requests:</strong>
+  8 answered <code>"provider":"mistral"</code>, 1 answered <code>"provider":"groq"</code>,
+  and <strong>0 answered "claude"</strong>. <code>generate()</code> tries providers in the
+  fixed order Claude → Groq → Mistral → Workers AI and returns the instant one succeeds. For
+  Mistral to answer at all, <em>both</em> Claude and Groq must have failed on that call. For
+  Claude to answer zero times out of nine, it must be failing on every single request.</p>
+  <p><strong>Why nobody noticed:</strong> every provider block in <code>generate()</code> is
+  wrapped in <code>try { ... } catch { /* next provider */ }</code>, and a non-<code>r.ok</code>
+  response also just falls through. <strong>A completely dead provider is indistinguishable
+  from a healthy one</strong> — there is no log, no counter, no alert. It degrades silently
+  by design, which is the right behavior for uptime and the wrong behavior for truth.</p>
+  <p><strong>Three real surfaces are reporting this wrongly right now:</strong> (a)
+  <code>GET /v11/llm/status</code> returns <code>active_provider: 'claude'</code> — but it
+  computes that from the first <em>bound</em> provider, never from which one actually
+  answers; (b) the Command Center models panel shows "Claude — ONLINE — Reasoning" on the
+  founder's screen (visible in IMG_8565) on the same basis; (c) Kai El himself told the
+  founder "the first-bound provider is Claude" (IMG_8565) — a correct reading of his own
+  context and a false statement about reality. All three say Claude. Reality is Mistral.</p>
+  <p><strong>Most likely cause, flagged honestly as unconfirmed from here:</strong> the
+  request uses <code>model: 'claude-sonnet-5'</code> (<code>worker/src/index.js:692</code>).
+  If that model ID is not valid for the bound key, the API returns a non-200 and the code
+  falls straight through. Other real candidates: an expired/revoked key, or exhausted
+  credits. This container cannot reach the Anthropic API to tell which — that check needs
+  the founder's own key.</p>
+  <p><strong>Acceptance:</strong> (1) founder confirms whether the Anthropic key is valid
+  and which model ID it's entitled to; (2) fix the model ID or the key; (3) build real
+  provider health visibility so a silently-dead provider can never masquerade as the
+  active one again — at minimum, <code>llm/status</code> must report the provider that
+  actually answered last, not merely the first one bound. (3) is buildable without (1)
+  and is the part that prevents a repeat.</p>
+</div>
+
+<div class="task" data-status="blocked" data-batchable="false" id="task-46">
+  <h3>46. Unmerged branch code appears to be reaching production, and /debug/git hardcodes
+  "main" so it cannot show otherwise</h3>
+  <p class="meta">Found 2026-08-06 while interpreting task 45's test results. Flagged as a
+  real governance/safety question for the founder, not touched.</p>
+  <p><strong>The observation:</strong> the same live test returned Kai El answers containing
+  the near-verbatim wording of tasks 42 and 43's <code>ctxLines</code> fixes ("reached only
+  through a founder-operated GitHub workflow (grok-bridge.yml)", "Claude is bound as
+  Reasoning, Groq as Speed, and Mistral as Local intelligence", and a correct
+  work-done/work-not-started split on proposals) — <strong>while PR #155 carrying those
+  commits was still open and unmerged</strong>, with <code>origin/main</code> sitting at
+  <code>ce9a78e</code>. Task 44's provider-pinning, pushed only minutes before the test, was
+  <em>not</em> live, which is consistent with a deploy that tracks pushes with a build delay
+  rather than tracking <code>main</code> merges.</p>
+  <p><strong>Why this matters:</strong> this session operates under an absolute
+  founder-tightened "automation never merges, ever — every change waits for founder review"
+  rule. That rule assumes unmerged work is <em>not</em> live. If Cloudflare Workers Builds
+  is deploying feature branches to the production <code>*.workers.dev</code> hostname, then
+  pushing a branch is already a production deploy and the review gate is weaker in practice
+  than it reads on paper. Not a claim that anything harmful shipped — everything on this
+  branch was tested — but the founder should know the real shape of the gate.</p>
+  <p><strong>A compounding honesty bug found alongside it:</strong>
+  <code>GET /v11/debug/git</code> returns <code>branch: 'main'</code> and
+  <code>deployed_via: 'Cloudflare Workers Builds from main'</code> as
+  <strong>hardcoded string literals</strong> (<code>worker/src/index.js:1939-1940</code>) —
+  not detected from anything. So the one endpoint whose entire job is reporting deploy
+  identity will insist it is running <code>main</code> no matter what is actually deployed,
+  which is exactly how this went unnoticed.</p>
+  <p><strong>Acceptance:</strong> founder confirms the real Cloudflare Workers Builds branch
+  configuration; then either restrict production deploys to <code>main</code>, or accept
+  branch deploys knowingly and update the never-merge rule's wording to match reality. The
+  hardcoded <code>/debug/git</code> values should be replaced with real build metadata (or
+  honestly reported as unknown) regardless of which way that decision goes.</p>
+</div>
+
 <div class="task" data-status="done" data-batchable="false" id="task-12">
   <h3>12. Port backend/constitution.py's dynamic soul.md parsing into the live file</h3>
   <p class="meta"><strong>Done 2026-08-06, own firing, extra scrutiny applied as
@@ -1229,5 +1303,8 @@ branch) does the work → a PR.</li>
 2026-08-06 — Task 32 now marked DONE: the loop is proven end to end for real (proposal exists → approved → firing detects it unactioned → real verification → marked actioned, never resurfaces), which was its literal acceptance criterion. Not claimed until the actual {"ok":true} responses were read from the job logs.
 2026-08-06 — Task 42 found AND fixed, same firing, from 5 more founder-supplied transcript photos: Kai El correctly named his bound providers (live proof task 31 works) then fabricated in the very next sentence that those providers let him "access various tools and connectors, such as e-commerce platforms, social media management software, and content creation tools, to execute the venture" — all false, they are text-generation APIs granting zero tool access. Root cause: task 31 said WHICH providers were bound but never what a provider IS or what he cannot do; the model filled the silence. Fixed with an explicit capability-boundary line in ctxLines (precisely what he can and cannot do) plus a matching hard rule in the system prompt. node --check clean; real content verification needs a post-merge live re-ask of the same question. This is the founder's own #1 stated concern ("things saying they are connected and they're not connected") caught in the wild and closed within the same firing.
 2026-08-06 — Task 43 done, same firing, from 5 more founder transcript photos (IMG_8561-8565). Three more real context gaps, each verified against the code first and each turning out to be information the hive already had but never sent: (a) Grok is not Groq — asked twice about Grok, Kai El silently answered about Groq, once claiming "Using Groq to research the venture, I found..."; Grok is a real separate system here (grok-bridge.yml/GROK_BRIDGE_KEY) he has zero access to, now stated outright. (b) providerRoster() has carried a real role per provider all along (Claude=Reasoning, Groq=Speed, Mistral=Local intelligence) and the UI displays them on screen, but ctxLines only ever sent label+bound — so Kai El truthfully said the roles "are not explicitly defined in the HIVE CONTEXT" while the founder was looking at them; now sent. (c) the proposals query selected only title+status, so "all approved" was accurate yet left a false impression while three approvals had untouched work — actioned_at now included and each approved item labelled work DONE <ts> or approved but work NOT started yet (a true-but-misleading answer is an F-004 problem too). (d) task 42's boundary extended to rule out narrating research he cannot perform. node --check clean; both new context lines rendered with real sample data and inspected, not assumed.
+2026-08-06 — Task 44 done + THE ANSWER to the founder's question "why is Kai not able to fully utilize each API key that's connected", measured live not inferred. (1) IMG_8553 arrived (the missing 15th photo) and contained a real bug of MY making: Kai El told the founder the Queen has "1743 reports" — 1743 is Nanuet's Elo, and my ctxLines rendered "Nanuet(1743) (Queen)" beside other agents reading "Ma'at(1200) reports to Kai El", so a bare parenthesised number sat right next to the word "reports". Not a hallucination; an ambiguous string read the only way it could be. Every number now carries an explicit label. (2) generate() is a FALLBACK CHAIN, not a router — it returns the instant one provider succeeds, so the per-provider "roles" the UI shows (Speed/Reasoning/Local intelligence) have zero routing logic behind them and were always decorative. Added an `only` parameter + {"provider":"..."} on /command_text that pins one key and returns an honest 502 rather than silently answering through a different provider (a silent fall-through would make any per-provider test a lie). (3) Ran 9 real production requests: 8 answered provider=mistral, 1 answered provider=groq, 0 answered claude — logged as task 45, the real finding. (4) Kai El passed a genuine end-to-end self-executable task: asked to name the hive's biggest gap and file it, he produced a correct CONCERN: marker with real substance, writing to hive_updates for real.
+2026-08-06 — Task 45 opened (BLOCKED, founder-only): Claude's API key is bound but failing 100% of the time. Measured, not inferred — 9 real requests, 0 answered by Claude, and since generate() tries Claude first and returns on success, zero Claude answers means it failed every call. Nobody noticed because every provider block is try/catch with silent fall-through, so a dead provider is indistinguishable from a healthy one — no log, no counter, no alert. Three real surfaces report this wrongly right now: /v11/llm/status says active_provider:'claude' (computed from first BOUND, never from who actually answered), the Command Center panel shows "Claude ONLINE Reasoning" on the founder's screen, and Kai El told the founder "the first-bound provider is Claude". All three say Claude; reality is Mistral. Most likely cause flagged honestly as unconfirmed from this container: model:'claude-sonnet-5' (index.js:692) may not be valid for the bound key, or the key is expired/out of credits — needs the founder's own key to tell which.
+2026-08-06 — Task 46 opened (BLOCKED, founder-only): unmerged branch code appears to reach production. The same live test returned near-verbatim tasks 42/43 ctxLines wording while PR #155 was still open and origin/main sat at ce9a78e; task 44 pushed minutes earlier was NOT live, consistent with a push-triggered build rather than a main-merge-triggered one. Matters because this session's absolute never-merge rule assumes unmerged work is not live — if branches deploy to the production hostname, pushing IS deploying and the review gate is weaker in practice than on paper. Compounding honesty bug found alongside: /debug/git returns branch:'main' and deployed_via:'...from main' as HARDCODED string literals (index.js:1939-1940), so the one endpoint whose job is reporting deploy identity always claims main regardless of what is deployed — exactly how this went unnoticed.
 </body>
 </html>
