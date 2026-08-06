@@ -771,6 +771,58 @@ branch) does the work → a PR.</li>
   correctly. <code>bash -n</code> clean.</p>
 </div>
 
+<div class="task" data-status="pending" data-batchable="false" id="task-40">
+  <h3>40. Proposal #5, real scope (revised) — free/open-source discovery for hive cognition,
+  security-vetted, kept intentionally open/training-mode</h3>
+  <p class="meta">Found 2026-08-06: <code>hive_proposals</code> #5 was approved but
+  unactioned; its DB title ("Build free-API / LLM-gateway discovery, Tier-2, propose-only")
+  undersold its real scope. Founder clarified directly — see
+  <code>Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-08-06-directive-proposal5-scope-and-hoard-economy-044.md</code>
+  for the full verbatim capture.</p>
+  <p><strong>Prompt (founder's own words, distilled — see the capture file for verbatim):</strong>
+  search the open web (not only GitHub) for completely free, unlicensed, open-source API
+  keys AND broader technology/software/innovation/systems that help the hive itself think
+  better — understand, dissect, discover, discuss, design, do quantitative analysis,
+  abductive/abstract reasoning — in service of "the six" (the other 6 agents, tasks 37/38).
+  Hard requirement: whatever is found must be security-vetted so it can never expose the
+  hive/Hoard/Queen to a breach via a malicious or malware-laced key — never auto-wire
+  anything in, propose-only, founder approves each one (this half of the original DB
+  proposal's safety envelope stays intact). Explicitly NOT to be locked to a final spec
+  right now — the founder wants this kept open/training-mode so smaller ideas can be fed
+  in and built on incrementally.</p>
+  <p><strong>Acceptance:</strong> Not started. A founder scoping round (same pattern as
+  task 37's Elders' Council pilot) before any code — real open questions: what "search the
+  open web" means technically for a Cloudflare Worker with no general web-crawl capability
+  today; what "security-vetted" means as a concrete, automatable check; how this connects
+  to task 38's still-open "extend the pilot to Thoth/Ptah/Horus" question, since both are
+  about giving the hive more of its own real capability.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="false" id="task-41">
+  <h3>41. The Hoard needs to pay for its own existence — real wallet, spending tracking,
+  usage-limit self-awareness</h3>
+  <p class="meta">Found 2026-08-06, a new, separate idea raised alongside proposal #5's
+  clarification (not part of #5 itself) — see the same capture file as task 40 for the
+  full verbatim text.</p>
+  <p><strong>Prompt (founder's own words, distilled):</strong> as more real capability gets
+  connected up (the Elders' Council, proposal-discovery, etc.), the Hoard/hive needs to be
+  able to pay for its own real running costs (API/compute) rather than an unbounded,
+  untracked draw. If it earns beyond what it needs to survive, it needs its own real
+  wallet, real spending tracking, and self-awareness of its own usage limits and context
+  windows. Directly connects to <code>automaton/</code>'s existing "pay to exist" concept
+  and <code>wallet.py</code>'s existing SOUL ledger — this is real financial/economic
+  infrastructure the founder is now raising as its own thread, distinct from (and the
+  financial half explicitly excluded from) the earlier "Queen's own enterprise = full
+  operational authority, not money" answer.</p>
+  <p><strong>Also raised, same message:</strong> a real, valid worry that logging
+  everything as this expands may not fit in available database/knowledge-base space —
+  needs a real answer (retention policy? summarization? tiered storage?), not solved here.</p>
+  <p><strong>Acceptance:</strong> Not started, not scoped — this is a large, real,
+  founder-only architectural decision (financial infrastructure + a possible new spending-
+  cap/self-preservation mechanism for the hive), same standing practice as every other item
+  of this size this session. Needs a real scoping round before any code.</p>
+</div>
+
 <div class="task" data-status="done" data-batchable="false" id="task-12">
   <h3>12. Port backend/constitution.py's dynamic soul.md parsing into the live file</h3>
   <p class="meta"><strong>Done 2026-08-06, own firing, extra scrutiny applied as
@@ -1080,5 +1132,6 @@ branch) does the work → a PR.</li>
 2026-08-06 — Task 39 done: rewrote session-usage.sh with a real checkpoint file (~/.claude/session-usage-checkpoints/, outside the git repo) keyed on the transcript's own real ISO8601 timestamps — sums only entries newer than the last checkpoint, advances it each run, falls back to labeled CUMULATIVE on first-ever run for a transcript rather than silently guessing. Tested for real against the live transcript, 3 consecutive runs: run 1 (no checkpoint) TOKENS: 72650628 (CUMULATIVE...) matching the same order of magnitude as the earlier 71M finding; run 2 TOKENS: 2316 (delta since ...); run 3 TOKENS: 956 (delta since ...) — real, small, correctly-advancing deltas confirmed, not just syntax-checked. TOKENS: [0-9]+ still the first thing on the line so the protocol's own unanchored grep keeps working. bash -n clean.
 2026-08-06 — FIRING RESUMED after founder corrected the weekly-usage misread (was read as "3% left," actually "3% used," 97% of the week's real allowance available) and confirmed PR #152 merged. Continued the queue: tasks 33, 34, 35, 39 done this stretch (all in PR #153); task 32 and 38 stayed pending/blocked on a real, verified repo-wide GitHub Actions capacity issue (multiple unrelated workflows failing/stuck, re-checked before each skip, not assumed). Next pending task is 12, data-batchable=false — stopping here per protocol, own firing needed for safety-critical constitutional-enforcement code. Using the NOW-FIXED session-usage.sh (task 39, same firing) for a real number for the first time: TOKENS: 32754 (delta since 2026-08-06T20:35:46.620Z, 24 usage-bearing entries)
 2026-08-06 — Task 12 done (own firing, founder said proceed): before writing code, found backend/core/constitution.py (the live file) was enforcing a fabricated "v4.0" document (Titles IX-XVI, Cardinal Laws, DR-Axioms) completely unrelated to the real soul.md, with a live GET /v11/constitution/soul_md endpoint serving that fake text as "the" constitution. Stopped, asked the founder how to resolve it (bigger than "add parsing"). Founder: switch to real soul.md, retire the fake text. Rebuilt constitution.py around a real regex parser (verified against the live file first), check() now delegates F-001-F-006 to the already-correct validator.py instead of a third copy of the same logic, get_laws()/get_hash()/get_raw_text() read the real file fresh every call. check_request()'s real per-request safety gates (agent deletion, SOUL printing, etc.) kept fully active, honestly relabeled as OPERATIONAL_SAFETY_RULES instead of fake citations rather than removed. Full suite re-verified before/after (363/375 unchanged), 19 new real tests added (tests/unit/test_constitution.py) including a live proof that editing soul.md's text changes get_laws()'s output (the task's own literal acceptance criterion), plus a genuine TestClient HTTP call proving /v11/agent/delete still returns 403. 394 total passed, 0 failed. Orphan backend/constitution.py left untouched (founder's own call, existing roadmap decision item). PR opened, never self-merged per this task's own standing rule.
+2026-08-06 — Task 32's real end-to-end result: edge-health-probe (rerun after GitHub Actions capacity recovered) found 6 real approved-unactioned proposals (#1-#6). #2/#3/#4 (bind FOUNDER_KEY, provision Vectorize, provision R2) independently confirmed already live in production — founder confirmed, marked actioned_at via POST /v11/proposals/{id}/actioned for real ({"ok":true} x3, verified in job logs). #1 (create venture colony repo) stays unactioned — explicitly founder-only per its own body text. #6 (dropshipping venture) stays unactioned — real money territory, founder's call per standing practice. #5 clarified by the founder into real, larger scope; logged as new task 40. Founder also raised a new, separate real economic-infrastructure idea (Hoard needs its own wallet/spending-tracking/usage-limit self-awareness) logged as new task 41, plus a real storage-scale concern folded into task 41. Full verbatim founder directive + 4 real screenshots (confirming task 33's genome-awareness fix is live and working in production) captured via founder-directive-capture skill: Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-08-06-directive-proposal5-scope-and-hoard-economy-044.md. Neither task 40 nor 41 built — both flagged as needing real founder scoping first, same standing practice as every other large architectural decision this session.
 </body>
 </html>
