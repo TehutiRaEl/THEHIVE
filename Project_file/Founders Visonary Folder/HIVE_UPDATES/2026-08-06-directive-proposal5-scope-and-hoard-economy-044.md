@@ -96,6 +96,32 @@ in**. This section records what each one contains so nothing is lost in the mean
    existing access. Directly relevant to task 40 (the founder's "training open" intent)
    and its "cognition-enhancing" half.
 
+## Third batch — 5 more screenshots (IMG_8561-8565), same conversation
+
+Sent with "Here's 5 more." Compile still deferred pending the founder's all-in confirmation.
+
+10. **IMG_8561** — Founder asks the status of approvals/proposals. Kai El: *"all mentioned
+    proposals are approved... There are no pending proposals listed."* Independently
+    verified **accurate** (all 6 live rows really were `status='approved'`) — but
+    incomplete in a way that matters: he had no `actioned_at` in context, so he could not
+    know three of those approvals still had untouched work. See task 43(c).
+11. **IMG_8562 / IMG_8563** — Founder: *"Use **Grok** to research the venture..."* Kai El:
+    *"Using **Groq** to research the venture, I found that..."* then lists Shopify,
+    WooCommerce, Hootsuite, Buffer, Adobe Creative Cloud, Canva, Oberlo, Printful, Stripe,
+    PayPal, USPS, UPS. **Two real problems in one answer**: he silently swapped Grok for
+    Groq (unrelated systems), and he narrated a research action he cannot perform — the
+    tool names came from training data, not from looking anything up. See task 43(a)/(d).
+12. **IMG_8564** — Founder asks the current roles for Grok, Claude, and Mistral. Kai El
+    again substitutes Groq, and says the roles "are not explicitly defined in the HIVE
+    CONTEXT" — true of his context, wrong about the hive: those roles exist in
+    `providerRoster()` and were on the founder's own screen at that moment. See task 43(b).
+13. **IMG_8565** — The Command Center itself, confirming the above: the models panel reads
+    "Claude ONLINE / Reasoning", "Groq ONLINE / Speed", "Mistral ONLINE" — the exact roles
+    Kai El said he didn't have. Also shows the Hive Terminal honestly self-labelled
+    *"read-only activity feed — not a shell"* (correct, and consistent with the earlier
+    decision not to give it real shell access), and Kai El correctly reasoning that Claude
+    is the first-bound provider from the 400-token cap in his own context.
+
 ## Response — what this actually means, read plainly (not yet built beyond what's noted)
 
 **Proposal #2/#3/#4 (bind founder key, provision Vectorize, provision R2):** marked

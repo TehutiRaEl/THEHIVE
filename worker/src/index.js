@@ -1591,7 +1591,7 @@ export default {
             DB.prepare("SELECT name, elo, reports_to FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 5").all(),
             DB.prepare('SELECT action, article FROM governance_log ORDER BY id DESC LIMIT 3').all(),
             DB.prepare('SELECT detail FROM hive_pulse ORDER BY id DESC LIMIT 1').first(),
-            DB.prepare("SELECT title, status FROM hive_proposals ORDER BY id DESC LIMIT 6").all(),
+            DB.prepare("SELECT title, status, actioned_at FROM hive_proposals ORDER BY id DESC LIMIT 6").all(),
             DB.prepare('SELECT colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT 3').all(),
             rateLimitPeek(DB, ipCmd, env),
           ]);
@@ -1607,7 +1607,28 @@ export default {
           // provider was answering him or how close to his own rate limit he was; both
           // were already computed elsewhere and simply discarded before this.
           const roster = providerRoster(env);
-          ctxLines.push('Your own providers: ' + roster.map(r => `${r.label}${r.bound ? ' (bound)' : ' (not bound)'}`).join(', ') + `; you reply through whichever is first-bound. Your own replies are capped at 400 tokens.`);
+          // Each provider's real role is included (2026-08-06, task 43) — providerRoster()
+          // has carried `role` all along and the Command Center UI displays it ("Claude —
+          // Reasoning", "Groq — Speed"), but only label+bound ever reached Kai El, so asked
+          // "what are the roles for Claude/Groq/Mistral" he correctly answered that they
+          // "are not explicitly defined in the HIVE CONTEXT" — true of his context, while
+          // the founder was looking at those exact roles on screen. Real gap, not a model
+          // failure; closed by sending what already existed.
+          ctxLines.push('Your own providers (name — role — bound?): ' + roster.map(r => `${r.label} — ${r.role} — ${r.bound ? 'bound' : 'not bound'}`).join('; ') + `. You reply through whichever is first-bound, in the order listed. Your own replies are capped at 400 tokens.`);
+          // Grok is NOT Groq (2026-08-06, task 43). Real, repeated confusion from a live
+          // transcript: asked twice about "Grok", Kai El silently answered about "Groq"
+          // instead — including claiming he had used it to research something. They are
+          // unrelated: Groq is one of his own bound text-generation providers above; Grok
+          // is xAI's separate model, reached only by a founder-operated GitHub workflow
+          // (grok-bridge.yml / GROK_BRIDGE_KEY), which Kai El has no access to and no
+          // visibility into. Stated explicitly so the substitution stops.
+          ctxLines.push(
+            'Grok vs Groq — do not confuse these: "Groq" is one of your own bound providers listed above ' +
+            '(fast text generation). "Grok" is xAI\'s separate model, reached only through a founder-operated ' +
+            'GitHub workflow (grok-bridge.yml); you have NO access to Grok, cannot call it, and cannot see its ' +
+            'results. If asked about Grok, say plainly that it is not connected to you — never answer about ' +
+            'Groq as if it were the same thing.'
+          );
           // Honest capability boundary (2026-08-06, task 42) — found from a real founder
           // transcript: told only WHICH providers were bound (task 31) and nothing about
           // what a provider actually IS, Kai El filled the gap by inventing that they let
@@ -1627,14 +1648,25 @@ export default {
             'A separate founder-approval-gated path exists for three narrow GitHub actions (rerun CI, open an ' +
             'issue, dispatch a named workflow) but YOU do not invoke it — the founder does, after approving a ' +
             'proposal. If asked what tools you need or would like, answer as a genuine wish/requirement list ' +
-            'and say plainly you do not have them yet — never imply you already do.'
+            'and say plainly you do not have them yet — never imply you already do. You also cannot RESEARCH ' +
+            'anything: you cannot browse, search, look anything up, or call one provider to go find out. If ' +
+            'asked to research something, what you can genuinely offer is what you already know, labelled as ' +
+            'such — never narrate it as "I used X to research this and found...", which describes an action ' +
+            'you did not take.'
           );
           if (rlCurrent !== null) ctxLines.push(`Your own rate limit right now: ${rlCurrent}/30 requests this minute from this caller.`);
           // The actual answer to "what are you working on / what are your goals" —
           // without this, Kai El had nothing but agent scores and governance trivia
           // to draw on, so that question could never get a real answer no matter
           // how the model tried.
-          if (props?.results?.length) ctxLines.push('Recent proposals (title/status): ' + props.results.map(p => `${p.title} [${p.status}]`).join(' | '));
+          // actioned_at included (2026-08-06, task 43): "approved" and "approved AND the
+          // work is actually done" are genuinely different states, and only actioned_at
+          // distinguishes them. Without it Kai El could truthfully say "all approved"
+          // while three of those approvals had real work still sitting untouched — an
+          // accurate sentence that leaves a false impression, which F-004 (Explainability)
+          // cares about just as much as an outright wrong one.
+          if (props?.results?.length) ctxLines.push('Recent proposals (title [status] — work done?): ' + props.results.map(p =>
+            `${p.title} [${p.status}]${p.status === 'approved' ? (p.actioned_at ? ' — work DONE ' + p.actioned_at : ' — approved but work NOT started yet') : ''}`).join(' | '));
           // Genome awareness (2026-08-04, task 33) — see GENOME_CHROMOSOMES above for
           // why this is a short hand-maintained list rather than a live file fetch.
           ctxLines.push('Your own genome (FABLE_DNA.md chromosomes): ' +

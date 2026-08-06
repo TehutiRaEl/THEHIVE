@@ -872,6 +872,50 @@ branch) does the work → a PR.</li>
   claim of existing access.</p>
 </div>
 
+<div class="task" data-status="done" data-batchable="true" id="task-43">
+  <h3>43. Three more real context gaps found in the same founder transcript (Grok/Groq,
+  provider roles, approved-vs-done)</h3>
+  <p class="meta"><strong>Done 2026-08-06, same firing.</strong> Found from 5 further
+  founder-supplied screenshots (IMG_8561-8565) of the same live production conversation.
+  All three verified against the real code before fixing — none was a model failure; each
+  was real information the code already had and simply never sent.</p>
+  <p><strong>(a) Grok is not Groq.</strong> Asked twice about "Grok" (IMG_8562, IMG_8564),
+  Kai El silently answered about "Groq" instead — once even claiming <em>"Using Groq to
+  research the venture, I found that..."</em>. These are unrelated: Groq is one of his own
+  bound text-generation providers; Grok is xAI's separate model reached only through a
+  founder-operated GitHub workflow (<code>grok-bridge.yml</code>/<code>GROK_BRIDGE_KEY</code>,
+  both real and present in this repo) that Kai El has no access to and no visibility into.
+  Fixed by stating the distinction and the no-access fact outright in <code>ctxLines</code>.</p>
+  <p><strong>(b) Provider roles existed but never reached him.</strong> Asked "what are the
+  current roles for Grok, Claude, and Mistral" (IMG_8564), Kai El answered that the roles
+  "are not explicitly defined in the HIVE CONTEXT" — <em>true of his context, and wrong
+  about the hive</em>: <code>providerRoster()</code> has carried a real <code>role</code>
+  per provider all along (Claude=Reasoning, Groq=Speed, Mistral=Local intelligence,
+  Workers AI=Deployment + runtime inference) and the Command Center UI displays them on
+  screen (visible in IMG_8565), but the <code>ctxLines</code> string built from that roster
+  only ever included <code>label</code> and <code>bound</code>. The founder was reading
+  those exact roles on their own screen while Kai El said he didn't have them. Fixed by
+  sending the role that already existed.</p>
+  <p><strong>(c) "Approved" could not be told apart from "approved and actually done."</strong>
+  Asked for proposal status (IMG_8561), Kai El said all were approved with none pending —
+  <em>technically true</em> (independently confirmed: all 6 live rows were
+  <code>status='approved'</code>), but the <code>ctxLines</code> query selected only
+  <code>title, status</code>, so he had no way to know that three of those approvals had
+  real work still untouched. An accurate sentence that leaves a false impression is an
+  F-004 (Explainability) problem too. Fixed: the query now also selects
+  <code>actioned_at</code> and each approved item is labelled "work DONE &lt;timestamp&gt;"
+  or "approved but work NOT started yet."</p>
+  <p><strong>(d) Extends task 42's boundary:</strong> the capability line now also states
+  he cannot research, browse, search, or call a provider to go find something out — so
+  "I used X to research this and found..." (a described action he never took) is ruled out
+  explicitly, not just implied.</p>
+  <p><strong>Acceptance:</strong> <code>node --check</code> clean. Both new context lines
+  were rendered with real sample data and inspected, not assumed — the providers line
+  correctly reads "Claude — Reasoning — bound; Groq — Speed — bound; ..." and the proposals
+  line correctly distinguishes "work DONE &lt;ts&gt;" from "approved but work NOT started
+  yet." Live content re-ask still owed post-merge, same honest caveat as tasks 33/34/35/42.</p>
+</div>
+
 <div class="task" data-status="done" data-batchable="false" id="task-12">
   <h3>12. Port backend/constitution.py's dynamic soul.md parsing into the live file</h3>
   <p class="meta"><strong>Done 2026-08-06, own firing, extra scrutiny applied as
@@ -1184,5 +1228,6 @@ branch) does the work → a PR.</li>
 2026-08-06 — Task 32's real end-to-end result: edge-health-probe (rerun after GitHub Actions capacity recovered) found 6 real approved-unactioned proposals (#1-#6). #2/#3/#4 (bind FOUNDER_KEY, provision Vectorize, provision R2) independently confirmed already live in production — founder confirmed, marked actioned_at via POST /v11/proposals/{id}/actioned for real ({"ok":true} x3, verified in job logs). #1 (create venture colony repo) stays unactioned — explicitly founder-only per its own body text. #6 (dropshipping venture) stays unactioned — real money territory, founder's call per standing practice. #5 clarified by the founder into real, larger scope; logged as new task 40. Founder also raised a new, separate real economic-infrastructure idea (Hoard needs its own wallet/spending-tracking/usage-limit self-awareness) logged as new task 41, plus a real storage-scale concern folded into task 41. Full verbatim founder directive + 4 real screenshots (confirming task 33's genome-awareness fix is live and working in production) captured via founder-directive-capture skill: Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-08-06-directive-proposal5-scope-and-hoard-economy-044.md. Neither task 40 nor 41 built — both flagged as needing real founder scoping first, same standing practice as every other large architectural decision this session.
 2026-08-06 — Task 32 now marked DONE: the loop is proven end to end for real (proposal exists → approved → firing detects it unactioned → real verification → marked actioned, never resurfaces), which was its literal acceptance criterion. Not claimed until the actual {"ok":true} responses were read from the job logs.
 2026-08-06 — Task 42 found AND fixed, same firing, from 5 more founder-supplied transcript photos: Kai El correctly named his bound providers (live proof task 31 works) then fabricated in the very next sentence that those providers let him "access various tools and connectors, such as e-commerce platforms, social media management software, and content creation tools, to execute the venture" — all false, they are text-generation APIs granting zero tool access. Root cause: task 31 said WHICH providers were bound but never what a provider IS or what he cannot do; the model filled the silence. Fixed with an explicit capability-boundary line in ctxLines (precisely what he can and cannot do) plus a matching hard rule in the system prompt. node --check clean; real content verification needs a post-merge live re-ask of the same question. This is the founder's own #1 stated concern ("things saying they are connected and they're not connected") caught in the wild and closed within the same firing.
+2026-08-06 — Task 43 done, same firing, from 5 more founder transcript photos (IMG_8561-8565). Three more real context gaps, each verified against the code first and each turning out to be information the hive already had but never sent: (a) Grok is not Groq — asked twice about Grok, Kai El silently answered about Groq, once claiming "Using Groq to research the venture, I found..."; Grok is a real separate system here (grok-bridge.yml/GROK_BRIDGE_KEY) he has zero access to, now stated outright. (b) providerRoster() has carried a real role per provider all along (Claude=Reasoning, Groq=Speed, Mistral=Local intelligence) and the UI displays them on screen, but ctxLines only ever sent label+bound — so Kai El truthfully said the roles "are not explicitly defined in the HIVE CONTEXT" while the founder was looking at them; now sent. (c) the proposals query selected only title+status, so "all approved" was accurate yet left a false impression while three approvals had untouched work — actioned_at now included and each approved item labelled work DONE <ts> or approved but work NOT started yet (a true-but-misleading answer is an F-004 problem too). (d) task 42's boundary extended to rule out narrating research he cannot perform. node --check clean; both new context lines rendered with real sample data and inspected, not assumed.
 </body>
 </html>
