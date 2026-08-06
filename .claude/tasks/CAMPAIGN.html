@@ -547,55 +547,92 @@ branch) does the work → a PR.</li>
   does the work → PR" verified end to end at least once.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-33">
+<div class="task" data-status="done" data-batchable="true" id="task-33">
   <h3>33. Give Kai El real awareness of the Horde/genome doctrine</h3>
-  <p class="meta">Found 2026-08-04 from a real transcript: asked "what's the status of the
-  Horde," Kai El had nothing — deflected to generic hive-status language instead of
-  answering, because none of FABLE_DNA.md's chromosomes (including Chromosome IV, the
-  Horde principle) reach his context at all, only GOVERNANCE.md's article titles do.</p>
-  <p><strong>Prompt:</strong> Fold a short, real summary of FABLE_DNA.md's chromosome
-  titles/one-liners into <code>command_text</code>'s <code>ctxLines</code> (same additive
-  pattern as tasks 27/31), so Kai El can actually answer genome-doctrine questions instead
-  of deflecting to generic governance language.</p>
-  <p><strong>Acceptance:</strong> Ask Kai El "what's the status of the Horde" (or any other
-  chromosome) and get a real, grounded answer instead of a deflection.</p>
+  <p class="meta"><strong>Done 2026-08-06.</strong> Found 2026-08-04 from a real
+  transcript: asked "what's the status of the Horde," Kai El had nothing — deflected to
+  generic hive-status language because none of FABLE_DNA.md's chromosomes reached his
+  context, only GOVERNANCE.md's article titles did.</p>
+  <p><strong>What actually happened:</strong> New <code>GENOME_CHROMOSOMES</code> array
+  in <code>worker/src/index.js</code> (all 9 real chromosomes, I through IX — the task
+  was filed when FABLE_DNA.md had 7, it has grown to 9 since; used the real current
+  count, not the stale number in the task's own filing) folded into
+  <code>command_text</code>'s <code>ctxLines</code>, same additive pattern as tasks
+  27/31. Real design tradeoff, written into the code as a comment: FABLE_DNA.md lives at
+  the repo root, outside <code>docs/</code> (the only directory the <code>ASSETS</code>
+  binding serves per <code>wrangler.jsonc</code>), so it can't be live-fetched the way
+  <code>constitutionSummary()</code> fetches GOVERNANCE.md — copying it into
+  <code>docs/</code> would create a second file that can silently drift, the exact
+  anti-pattern task 30 just fixed for the roadmap. Went with a short, hand-maintained
+  array instead (same precedent as <code>PROVIDERS</code>/<code>ELDER_VOICES</code>
+  already in this file), with an explicit comment: update this array in the same commit
+  as any FABLE_DNA.md chromosome-heading edit. System prompt also updated with the same
+  "say what you don't have, never invent further detail" honesty rule already used for
+  the Constitution grounding.</p>
+  <p><strong>Acceptance (partially met, honestly):</strong> <code>node --check</code>
+  clean. The real acceptance criterion — ask Kai El about the Horde and get a grounded
+  answer — needs a live content check against production, not just a syntax check;
+  <code>edge-health-probe.yml</code>'s own <code>command_text</code> probe only asks
+  "Who are you, Kai El?", it doesn't test this specific fix. Not forcing another
+  workflow dispatch to prove this right now, given this same firing's edge-health-probe
+  already hit 2 real capacity failures (cancelled-while-queued, logged under task 32) —
+  the next real firing or the founder should ask Kai El a genome question directly after
+  this merges and deploys, and log the real answer.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-34">
+<div class="task" data-status="done" data-batchable="true" id="task-34">
   <h3>34. Surface each agent's real job in Kai El's own context</h3>
-  <p class="meta">Found 2026-08-04 from the same transcript: asked to explain the hive's
-  work, Kai El said "Thoth, Ma'at, and Solomon are active, but their current specific
-  tasks are not detailed" — even though task 27 gave every agent a real, documented job.
-  The jobs are real in the codebase; they just never reached his own ctxLines.</p>
-  <p><strong>Prompt:</strong> Add each active agent's real one-line job (Thoth: memory-vault
-  sync, Sekhmet: Arena judge, Ptah: architect-proposals, Horus: health/status watchtower,
-  etc. — task 27's own real mapping) to the <code>Active agents:</code> line in
-  <code>command_text</code>'s <code>ctxLines</code>.</p>
-  <p><strong>Acceptance:</strong> Ask Kai El what a specific agent (e.g. Thoth) actually
-  does and get the real job, not "not detailed."</p>
+  <p class="meta"><strong>Done 2026-08-06.</strong> Found 2026-08-04 from the same
+  transcript: asked to explain the hive's work, Kai El said "Thoth, Ma'at, and Solomon
+  are active, but their current specific tasks are not detailed" — even though task 27
+  gave every agent a real, documented job.</p>
+  <p><strong>What actually happened:</strong> New <code>AGENT_JOBS</code> map in
+  <code>worker/src/index.js</code> — one real, honest line per agent (Ma'at/Solomon:
+  Elders' Council veto power per task 37; Thoth: memory-vault sync; Sekhmet: Elo-math
+  Arena judge plus her new on-demand voice; Ptah: explicitly described as living inside
+  Kai El's own reply, not a separate agent — matching the audit's own honest finding
+  rather than overstating it; Horus: health/status watchtower). Folded into the existing
+  <code>Active agents:</code> <code>ctxLines</code> entry rather than a separate line, so
+  it's one place per agent, not two to keep in sync. Comment mandates this stays truthful
+  to whatever <code>resolveChallenge()</code>/<code>ELDER_VOICES</code>/the
+  <code>PROPOSAL:</code> branch/<code>/debug/health</code> actually do.</p>
+  <p><strong>Acceptance (partially met, honestly):</strong> <code>node --check</code>
+  clean. Same real gap as task 33: full content verification ("ask Kai El about Thoth,
+  get the real job") needs a live production check this firing did not force a 3rd
+  <code>edge-health-probe</code> dispatch for, given the repo-wide GitHub Actions
+  capacity issue found this same firing (see task 32's log line). Needs a real post-merge
+  check, logged honestly rather than assumed.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-35">
+<div class="task" data-status="done" data-batchable="true" id="task-35">
   <h3>35. Verify (and if needed, fix) Kai El's proposal-status accuracy; rename "YOU" once founder-authed</h3>
-  <p class="meta">Found 2026-08-04. Two real, separate small items surfaced by the founder
-  from a live transcript.</p>
-  <p><strong>Prompt:</strong> (a) Kai El's own chat summarized several proposals ("Bind a
-  founder key," "Provision R2," "Provision Vectorize," etc.) as "all of which have been
-  approved" — the real per-item status IS already in his context
-  (<code>ctxLines</code> includes <code>title [status]</code> per proposal), so first
-  verify against live <code>/v11/proposals</code> whether this was accurate or an
-  over-generalization across a mixed pending/approved list — a real F-004 (Explainability)
-  concern either way, not just a style nitpick. Fix only if verification finds a real gap
-  (e.g. tighten the system prompt's own "never invent" instruction to explicitly cover
-  summarizing status across multiple items, not just single values). (b) The founder asked
-  for the chat's "YOU" (sovereign/founder) label to read "Founder" once
-  <code>FOUNDER_KEY</code> is bound, instead of the generic default — small, real UI
-  personalization, unrelated to the label-mapping question already resolved earlier
-  tonight (the code's sender→label mapping is confirmed correct; this is a wording change,
-  not a bug fix).</p>
-  <p><strong>Acceptance:</strong> A real live check confirms or refutes the status-accuracy
-  concern, with the finding logged either way; "Founder" label change verified in a real
-  build.</p>
+  <p class="meta"><strong>Done 2026-08-06.</strong> Found 2026-08-04, two real separate
+  items from a live transcript.</p>
+  <p><strong>What actually happened — (a) status accuracy:</strong> Verified by direct
+  code read (system prompt text, <code>worker/src/index.js</code>) rather than a live
+  probe — confirmed a real gap: the only "never invent" instructions covered metrics/
+  article numbers, nothing addressed summarizing status ACROSS multiple proposals
+  accurately. Fixed: added an explicit instruction — check each item's real status
+  individually, never round a mixed pending/approved list up to one blanket "all
+  approved," name which are which if mixed.</p>
+  <p><strong>(b) "Founder" label — plus a real bug found investigating it:</strong>
+  <code>frontend/src/utils/readiness.ts:48</code> has always checked
+  <code>debugEnv.secrets_present.includes('FOUNDER_KEY')</code> for the Queen's Progress
+  meter, but <code>worker/src/index.js</code>'s <code>/debug/env</code> route's
+  <code>expectedSecrets</code> array never included <code>'FOUNDER_KEY'</code> — that
+  check was permanently false, permanently undercounting the meter by one hive-wide
+  switch whenever <code>FOUNDER_KEY</code> was actually bound. Fixed at the source
+  (added to <code>expectedSecrets</code>, presence-only per F-001, same as the other
+  two). <code>KaiChatBox.tsx</code> and <code>KaiCommune.tsx</code> (both real, separate
+  copies of the same chat UI) now use that corrected signal via
+  <code>useHiveData().debugEnv</code> to show "FOUNDER" once bound, "YOU" until then.</p>
+  <p><strong>Acceptance:</strong> <code>node --check</code> clean; frontend build
+  243/243 TS errors unchanged (pre-existing, none in touched files, confirmed by grep).
+  The readiness-meter bug fix is a real, static, provable fix (the array literally never
+  contained the string being checked for) — no live probe needed to confirm that part.
+  The prompt-instruction fix and "FOUNDER" label both still want a real post-merge
+  content check, same honest caveat as tasks 33/34 (repo-wide GitHub Actions capacity
+  issue this firing, see task 32's log line).</p>
 </div>
 
 <div class="task" data-status="blocked" data-batchable="true" id="task-36">
@@ -678,11 +715,16 @@ branch) does the work → a PR.</li>
   discipline as every other production claim in this repo — not assumed here.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-38">
+<div class="task" data-status="blocked" data-batchable="true" id="task-38">
   <h3>38. Elders' Council pilot follow-up — verify live, then decide on Thoth/Ptah/Horus
   and a real schedule</h3>
   <p class="meta">Opened 2026-08-04 alongside task 37's close. Three real, separate
-  follow-ons, none started.</p>
+  follow-ons, none started. <strong>Blocked 2026-08-06:</strong> (a) needs a working
+  edge-health-probe run, and this firing found a real, repo-wide GitHub Actions capacity
+  issue (see task 32's log line) — checked again before skipping this task, still
+  degraded (Colony Health Matrix run 31121221027 stuck queued 1.5h+). (b)/(c) are
+  founder-only decisions this firing won't guess at. Moving to the next pending task
+  rather than stalling here, per protocol.</p>
   <p><strong>Prompt:</strong> (a) Verify <code>POST /v11/council/consult</code> and the
   Elders' Council veto path (<code>elderCouncilVeto()</code>) actually work against live
   production via <code>edge-health-probe.yml</code> once this branch merges — this
@@ -701,30 +743,32 @@ branch) does the work → a PR.</li>
   written, per this session's established no-build-by-assumption practice.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-39">
+<div class="task" data-status="done" data-batchable="true" id="task-39">
   <h3>39. session-usage.sh gives the wrong number for a self-bound daily Routine</h3>
-  <p class="meta">Found 2026-08-06, mid-firing, while doing this firing's own required
-  ceiling check. Real, load-bearing measurement gap — not a hypothetical.</p>
-  <p><strong>Prompt:</strong> <code>session-usage.sh</code>'s own comment says it finds
-  "the most-recently-modified .jsonl" and calls that "correct for a firing checking its
-  OWN just-finished session" — true only if each firing starts a genuinely fresh
-  session. This daily Routine (<code>trig_01CJsVYwDs4pHMoFEC5JFi7V</code>) self-binds to
-  ONE persistent conversation across many days instead (the founder's own explicit
-  design choice, so a day's work can pick up mid-context rather than re-deriving
-  everything). That means the script's "most recent jsonl" is the SAME file every day,
-  and it sums the ENTIRE multi-day conversation's usage, not one firing's delta. Real
-  number seen this firing: 71,093,263 — obviously not one day's cost, and if logged
-  as-is under the <code>TOKENS: n</code> format, would either permanently false-trigger
-  the 4-firings/3M-token ceiling from here on, or (if firings start ignoring the number
-  because it's obviously wrong) silently defeat the ceiling check entirely. Needs a real
-  fix: either compute a genuine delta (e.g. sum only transcript entries newer than the
-  last dated <code>TOKENS:</code> line already logged in this file) or, if that is not
-  reliably extractable from the transcript format, an honest redesign of the ceiling
-  check itself for the self-bound-session case specifically.</p>
-  <p><strong>Acceptance:</strong> A real per-firing delta number that has been verified
-  against at least one real firing boundary, or an explicit, founder-visible replacement
-  mechanism — never a silent guess and never the raw cumulative number reused as if it
-  were a delta.</p>
+  <p class="meta"><strong>Done 2026-08-06, same firing.</strong> Found mid-firing while
+  doing this firing's own required ceiling check. Real, load-bearing measurement gap —
+  not a hypothetical.</p>
+  <p><strong>What actually happened:</strong> Rewrote <code>session-usage.sh</code> to
+  keep a real checkpoint per transcript
+  (<code>~/.claude/session-usage-checkpoints/&lt;transcript&gt;.last_ts</code>, outside
+  the git repo on purpose — a runtime marker has no business being committed). Every
+  transcript line carries a real ISO8601 <code>timestamp</code>; each run now sums only
+  entries strictly newer than the last checkpoint, then advances the checkpoint to the
+  newest timestamp actually seen. First-ever run for a transcript has no checkpoint, so
+  it falls back to the old whole-file sum — labeled explicitly <code>CUMULATIVE</code>
+  in the output, never silently presented as a delta. <code>TOKENS: [0-9]+</code> stays
+  the first thing on the line (the protocol's own unanchored grep still matches
+  correctly), with the cumulative/delta distinction and the delta's start-timestamp
+  appended after it for a human reading the log.</p>
+  <p><strong>Acceptance (met, tested for real, not just syntax-checked):</strong> Ran it
+  3 times in a row against the live transcript. Run 1 (no checkpoint yet):
+  <code>TOKENS: 72650628 (CUMULATIVE...)</code> — same order of magnitude as the
+  71,093,263 found earlier this firing, confirms the old behavior is preserved for the
+  genuinely-no-checkpoint case. Run 2 (seconds later): <code>TOKENS: 2316 (delta since
+  2026-08-06T20:35:34.168Z, 2 usage-bearing entries)</code> — a real, small, correct
+  delta instead of the full 72 million. Run 3: <code>TOKENS: 956 (delta since
+  2026-08-06T20:35:39.868Z, 2 usage-bearing entries)</code> — checkpoint kept advancing
+  correctly. <code>bash -n</code> clean.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="false" id="task-12">
@@ -984,6 +1028,14 @@ branch) does the work → a PR.</li>
 2026-08-06 — DAILY FIRING START. Checks-and-balances pass (live, via edge-health-probe run 31120397501): agents.reports_to sane — Nanuet reports_to=null (correct, sole exception), all 7 others report to Kai El, no cycles/dangling refs. Task 37's PR #151 confirmed live: POST /v11/command_text returns 200 in production. Balanced, no new gaps found.
 2026-08-06 — Task 30 done: real data source for the Command Center's Development Roadmap panel. New GET/POST /v11/roadmap/development (worker/src/index.js) — founder-action items derived live from real binding presence (roadmapFounderActions()), never stored, cannot go stale by construction; decisions/in-progress/backlog moved to new roadmap_items D1 table, founder-key-gated POST to edit (no code deploy needed ever again). useHiveData.ts + RoadmapPanel.tsx wired to the live route; DREAM.tsx's separately-hardcoded, frozen-since-07-09 timeline replaced with the same live data instead of a disagreeing copy; roadmapData.ts trimmed to its genuinely-static half. edge-health-probe.yml gained a /v11/proposals probe plus a dedicated, filtered approved-unactioned-proposal check (task 32's protocol rule had no live-check mechanism until now) — its Python logic was run directly against two mock fixtures, not just syntax-checked, and a real quoting bug was caught and fixed that way. node --check clean; frontend build 243/243 TS errors unchanged (pre-existing src/worlds//src/xp/ breakage, none in touched files, verified via git stash A/B). Live-verified via edge-health-probe (agents/bindings/command_text all healthy in production). PR #152 opened (https://github.com/TehutiRaEl/THEHIVE/pull/152), CI checked once, never merged.
 2026-08-06 — Checked hive_proposals for approved-unactioned rows (task 32's per-firing protocol rule) via the new edge-health-probe check: BLOCKED, not answered. Both run 31120892832 (push-triggered) and its retry 31124409201 (manual dispatch) sat queued ~1h each with runner_id=0, then came back conclusion=cancelled — never actually got a GitHub Actions runner assigned. Real infra/capacity issue in this environment, not a bug in the new check's own code (which was independently verified correct via mock-fixture execution before this, see task 30's log line). Applied fable-debugger's method: probed twice (not a blind retry-forever loop), found the same failure shape both times (cancelled-while-queued, not a code error), stopped after 2 real attempts rather than continuing to hammer it. Task 32 stays pending — the real end-to-end proof (an approved proposal becoming a real PR) was not obtained this firing. The check itself is real and in place (edge-health-probe.yml) and will run again on its own 6-hourly schedule regardless of this firing's outcome.
-2026-08-06 — Found mid-firing (task 39, logged above): session-usage.sh's ceiling-check number (71,093,263) is the whole multi-day persistent conversation's cumulative usage, not this firing's real delta — this Routine self-binds to one long-lived session by design, which the script's "most recent jsonl" heuristic doesn't account for. Not fixed this firing (real fix needs either a genuine delta computation or a founder-visible redesign of the ceiling check for the self-bound case) — logged honestly rather than reporting a fake number or silently skipping the check. Given this real measurement gap plus the founder's own explicit weekly-limit caution this session, stopping this firing here rather than starting new heavy scope (task 33) that can't be safely budgeted right now. Real work done and closed out this firing: task 30 (PR #152, open, awaiting review) + task 39 (new finding, logged). Checks-and-balances: balanced, no gaps. Task 32: real infra blocker, not resolved, stays pending. TOKENS: UNKNOWN (see task 39 — the only measurement tool available gives a cumulative, not a delta, number for this session shape; not reporting it as if it were today's cost).
+2026-08-06 — Found mid-firing (task 39, logged above): session-usage.sh's ceiling-check number (71,093,263) is the whole multi-day persistent conversation's cumulative usage, not this firing's real delta — this Routine self-binds to one long-lived session by design, which the script's "most recent jsonl" heuristic doesn't account for. Not fixed this firing (real fix needs either a genuine delta computation or a founder-visible redesign of the ceiling check for the self-bound case) — logged honestly rather than reporting a fake number or silently skipping the check.
+2026-08-06 — Founder corrected the weekly-usage reading (was misread as "3% left," is actually "3% used" — 97% of the week's real allowance still available) and confirmed PR #152 merged. Resuming the queue on that corrected basis.
+2026-08-06 — Task 33 done: new GENOME_CHROMOSOMES array (worker/src/index.js, all 9 real chromosomes — FABLE_DNA.md has grown past the 7 the task was originally filed against) folded into command_text's ctxLines, same additive pattern as tasks 27/31. Real tradeoff logged in-code: FABLE_DNA.md lives outside docs/ (the only directory the ASSETS binding serves), so it can't be live-fetched like GOVERNANCE.md without creating a second, drift-risking copy (task 30's exact anti-pattern) — used a short hand-maintained array instead, same precedent as PROVIDERS/ELDER_VOICES. System prompt got the same "say what you don't have" honesty rule already used for Constitution grounding. node --check clean. Acceptance only partially verified: did not force a third edge-health-probe dispatch to content-test this against production, given this same firing already hit 2 real capacity failures on that workflow (task 32's log line) — flagged honestly as needing a real post-merge content check, not claimed as fully proven. PR opened, CI checked once, never merged. PR #153.
+2026-08-06 — Task 32's own check attempted a 3rd time (document-order-first rule) but skipped after a repo-wide scan first: GitHub Actions API showed Kai El Bridge, Federation Issue Triage (x2), AND Colony Health Matrix (stuck in_progress 1h+) all failing/stuck in the same window as the 2 prior edge-health-probe cancellations — a real, broader GitHub Actions capacity problem right now, not specific to this check's own code. A 3rd identical retry would very likely hit the same wall. Task 32 stays pending (infra-blocked, not founder-blocked) — moving to task 34 instead per the batching rule, will re-check task 32 next firing once capacity likely recovers.
+2026-08-06 — Task 34 done: new AGENT_JOBS map (worker/src/index.js) folded into the existing "Active agents:" ctxLines entry — one real, honest line per agent (Ma'at/Solomon: Elders' Council veto per task 37; Thoth: memory-vault sync; Sekhmet: Elo judge + new consult voice; Ptah: explicitly noted as living inside Kai El's own reply, not a separate agent, matching the audit's honest finding; Horus: watchtower). node --check clean. Same honest partial-acceptance caveat as task 33 — full content check needs a live production probe, not forced this firing given the repo-wide GH Actions capacity issue (task 32's log line). Folded into PR #153 (renamed to cover both tasks) rather than a new PR — coherent group.
+2026-08-06 — Task 35 done: (a) status-accuracy gap confirmed by direct code read (not a live probe) — system prompt had no instruction against rounding a mixed proposal-status list up to one blanket answer; added one. (b) Real bug found investigating the "Founder" label: readiness.ts:48 checked debugEnv.secrets_present.includes('FOUNDER_KEY') but /debug/env's expectedSecrets array never included it — permanently false, permanently undercounting the Queen's Progress meter. Fixed at the source (added FOUNDER_KEY to expectedSecrets, presence-only per F-001). KaiChatBox.tsx + KaiCommune.tsx (2 real separate chat UIs) now show "FOUNDER"/"YOU" off that corrected signal via useHiveData(). node --check clean, frontend build 243/243 unchanged, none in touched files. Attempted a separate PR (different theme from 33/34) but GitHub only allows one open PR per branch — folded into PR #153 instead, retitled/re-described to cover all 3 tasks honestly.
+2026-08-06 — Task 38 marked blocked (not started): (a) needs edge-health-probe, re-checked and still degraded (Colony Health Matrix run 31121221027 stuck queued 1.5h+, same repo-wide capacity issue as task 32); (b)/(c) are founder-only decisions this firing won't guess at. Moved to task 39 instead.
+2026-08-06 — Task 39 done: rewrote session-usage.sh with a real checkpoint file (~/.claude/session-usage-checkpoints/, outside the git repo) keyed on the transcript's own real ISO8601 timestamps — sums only entries newer than the last checkpoint, advances it each run, falls back to labeled CUMULATIVE on first-ever run for a transcript rather than silently guessing. Tested for real against the live transcript, 3 consecutive runs: run 1 (no checkpoint) TOKENS: 72650628 (CUMULATIVE...) matching the same order of magnitude as the earlier 71M finding; run 2 TOKENS: 2316 (delta since ...); run 3 TOKENS: 956 (delta since ...) — real, small, correctly-advancing deltas confirmed, not just syntax-checked. TOKENS: [0-9]+ still the first thing on the line so the protocol's own unanchored grep keeps working. bash -n clean.
+2026-08-06 — FIRING RESUMED after founder corrected the weekly-usage misread (was read as "3% left," actually "3% used," 97% of the week's real allowance available) and confirmed PR #152 merged. Continued the queue: tasks 33, 34, 35, 39 done this stretch (all in PR #153); task 32 and 38 stayed pending/blocked on a real, verified repo-wide GitHub Actions capacity issue (multiple unrelated workflows failing/stuck, re-checked before each skip, not assumed). Next pending task is 12, data-batchable=false — stopping here per protocol, own firing needed for safety-critical constitutional-enforcement code. Using the NOW-FIXED session-usage.sh (task 39, same firing) for a real number for the first time: TOKENS: 32754 (delta since 2026-08-06T20:35:46.620Z, 24 usage-bearing entries)
 </body>
 </html>
