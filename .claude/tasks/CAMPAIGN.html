@@ -701,6 +701,32 @@ branch) does the work → a PR.</li>
   written, per this session's established no-build-by-assumption practice.</p>
 </div>
 
+<div class="task" data-status="pending" data-batchable="true" id="task-39">
+  <h3>39. session-usage.sh gives the wrong number for a self-bound daily Routine</h3>
+  <p class="meta">Found 2026-08-06, mid-firing, while doing this firing's own required
+  ceiling check. Real, load-bearing measurement gap — not a hypothetical.</p>
+  <p><strong>Prompt:</strong> <code>session-usage.sh</code>'s own comment says it finds
+  "the most-recently-modified .jsonl" and calls that "correct for a firing checking its
+  OWN just-finished session" — true only if each firing starts a genuinely fresh
+  session. This daily Routine (<code>trig_01CJsVYwDs4pHMoFEC5JFi7V</code>) self-binds to
+  ONE persistent conversation across many days instead (the founder's own explicit
+  design choice, so a day's work can pick up mid-context rather than re-deriving
+  everything). That means the script's "most recent jsonl" is the SAME file every day,
+  and it sums the ENTIRE multi-day conversation's usage, not one firing's delta. Real
+  number seen this firing: 71,093,263 — obviously not one day's cost, and if logged
+  as-is under the <code>TOKENS: n</code> format, would either permanently false-trigger
+  the 4-firings/3M-token ceiling from here on, or (if firings start ignoring the number
+  because it's obviously wrong) silently defeat the ceiling check entirely. Needs a real
+  fix: either compute a genuine delta (e.g. sum only transcript entries newer than the
+  last dated <code>TOKENS:</code> line already logged in this file) or, if that is not
+  reliably extractable from the transcript format, an honest redesign of the ceiling
+  check itself for the self-bound-session case specifically.</p>
+  <p><strong>Acceptance:</strong> A real per-firing delta number that has been verified
+  against at least one real firing boundary, or an explicit, founder-visible replacement
+  mechanism — never a silent guess and never the raw cumulative number reused as if it
+  were a delta.</p>
+</div>
+
 <div class="task" data-status="pending" data-batchable="false" id="task-12">
   <h3>12. Port backend/constitution.py's dynamic soul.md parsing into the live file</h3>
   <p class="meta">Approved 2026-08-01 (Q6, after explanation). Est. cost: large — this is
