@@ -1175,6 +1175,20 @@ branch) does the work → a PR.</li>
   <em>labels</em> for commits/workflows (which is what <code>docs/ROLES.md</code>'s 111
   already genuinely are, and are already in live use); (3) how this sequences against tasks
   38 (finish the 6) and 41 (pay-to-exist), since both bear directly on it.</p>
+  <p><strong>(3) answered 2026-08-07 — still blocked on (1) and (2).</strong> The founder
+  uploaded an external architecture document (<code>AI.docx</code>) proposing 100 agents &times;
+  10 colonies &times; 100 trees = 100,000 concurrent agents, and was asked directly whether that
+  and this task's 222 were the same question. Their answer: <strong>"Drop the 100k, focus on
+  the 8"</strong> — perfect the existing 8-agent colony first. That document argues the same
+  side in its own words: <em>"If these 8 agents cannot work together without error, a larger
+  system will fail immediately."</em> So the sequencing question has a real answer: nothing
+  builds toward a large roster until the current agents genuinely work. The other two
+  questions — the real intended headcount vs. SPORE_ROSTER's counted 189, and real LLM-backed
+  agents vs. role <em>labels</em> — are untouched by that decision, so this task stays
+  <em>blocked</em> rather than moving to pending. Full triage:
+  <code>Project_file/Founders Visonary Folder/VISION/2026-08-07-vision-agentic-harness-triage-006.md</code>;
+  decisions captured verbatim in
+  <code>.../HIVE_UPDATES/2026-08-07-directive-agentic-harness-decisions-045.md</code>.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-52">
@@ -1268,6 +1282,49 @@ branch) does the work → a PR.</li>
   <code>edge-health-probe</code>, confirm the Orchestrator's <code>agent-work</code>
   updates appear in <code>GET /v11/updates</code> on its turn, and report its real
   per-turn token cost the same way task 48 reported the work cycle's first-day cost.</p>
+</div>
+
+<div class="task" data-status="blocked" data-batchable="false" id="task-53">
+  <h3>53. The Oracle Always Free box was designed for, wired up, and never provisioned — one
+  decision unblocks three separate stalled things</h3>
+  <p class="meta"><strong>Found 2026-08-07</strong> while answering the founder's question of
+  where a Python/Docker agentic harness could run. The founder's answer was "nowhere yet —
+  need to figure that out." Checking the repo rather than taking that at face value found the
+  host already chosen and wired months ago. Blocked on the founder: provisioning real
+  infrastructure and accepting its cost is founder-only by definition.</p>
+  <p><strong>What already exists:</strong> <code>.github/workflows/deploy.yml</code> (lines
+  24-58) targets an <em>"Oracle Always Free box"</em> — it SSHes in, runs
+  <code>docker-compose down &amp;&amp; docker-compose up -d --build</code>, then health-checks
+  <code>http://localhost:8080/v11/health</code>. It is inert only because three secrets are
+  unset: <code>ORACLE_HOST</code>, <code>ORACLE_USER</code>, <code>ORACLE_SSH_KEY</code>. The
+  workflow's own comment records why it skips rather than fails: <em>"this workflow accumulated
+  165 straight failures that way."</em> So this is not a missing plan — it is a finished plan
+  with the power switch off.</p>
+  <p><strong>Why this is one question and not three.</strong> These have been tracked as
+  separate open items and are actually the same blocker:</p>
+  <ul>
+    <li><strong>System A (<code>backend/</code>, FastAPI)</strong> — real code, 350+ passing
+    tests, 51% coverage, sitting unprovisioned. <code>ROADMAP_SEED</code> lists "retire or
+    actually deploy it?" as an open founder decision. Same <code>ORACLE_HOST</code> gate.</li>
+    <li><strong><code>docs/biosystem.html</code>'s "Demo Mode — start JASPER backend to enable
+    LLM"</strong> (lines 7921, 16593) — the founder asked about this directly. It is not a bug:
+    it is that page's honest fallback label when no JASPER/System-A backend is reachable. It
+    says "Demo Mode" because there is nowhere for JASPER to be running.</li>
+    <li><strong>Any Python/MCP harness</strong> from the 2026-08-07 architecture document —
+    needs a long-running process, a real filesystem, and Docker. A Cloudflare Worker
+    structurally cannot provide any of the three.</li>
+  </ul>
+  <p><strong>Deliberately not decided here.</strong> There are real reasons to say no: standing
+  up a box means real maintenance, a second deployment surface to keep secure, and it may be
+  the wrong move if System A should be retired instead of revived — which is itself an open
+  founder decision already on the roadmap. Provisioning infrastructure and accepting its
+  ongoing cost is exactly the class of thing the founder holds.</p>
+  <p><strong>Acceptance:</strong> founder either (a) provisions the box and sets the three
+  secrets, at which point <code>deploy.yml</code> starts working with no code change and System
+  A + JASPER's Demo Mode resolve on their own; or (b) decides against it, in which case System
+  A should be honestly marked retired, <code>deploy.yml</code> removed rather than left
+  permanently skipping, and <code>biosystem.html</code>'s Demo Mode label reworded to say the
+  backend is not coming rather than implying the founder should go start it.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-12">
