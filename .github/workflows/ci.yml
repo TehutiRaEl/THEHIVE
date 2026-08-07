@@ -64,3 +64,10 @@ jobs:
 
       - name: Run Worker tests
         run: npm test --prefix worker
+
+      # The machine half of .claude/skills/wired-or-not/SKILL.md. The skill is the
+      # reasoning; THIS is what survives a session running out of context, because it runs
+      # whether or not anyone read the skill. A task claiming verified-live must carry a
+      # reference a person can check without trusting the claimer.
+      - name: Claims must carry evidence (wired-or-not)
+        run: python3 scripts/check-claims.py

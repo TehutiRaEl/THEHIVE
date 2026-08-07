@@ -969,6 +969,25 @@ branch) does the work → a PR.</li>
   the same row's <code>checked_at</code> rather than accumulating. (1) and (2) — the
   actual key/model fix — remain founder-only, unchanged; this task stays <em>blocked</em>
   on those, not closed.</p>
+  <p><strong>ROOT CAUSE NOW PROVEN — edge-health-probe run 31216723801.</strong> The
+  visibility fix worked on its first real production run and returned Anthropic's own
+  verbatim answer through <code>GET /v11/llm/status</code>:</p>
+  <pre class="log">"claude": { "bound": true, "health": { "ok": false,
+    "error": "HTTP 401: {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",
+               \"message\":\"API key is invalid.\"}}" } }</pre>
+  <p><strong>It is the key, not the model ID.</strong> This task's original hypothesis
+  guessed <code>model: 'claude-sonnet-5'</code> might be unavailable to the bound key, and
+  flagged that guess as unconfirmed. The guess was <em>wrong</em>, and it is worth recording
+  that plainly: a <code>401 authentication_error</code> with "API key is invalid" is
+  Anthropic rejecting the credential before it ever looks at the model. Had this been fixed
+  on the hypothesis instead of on evidence, the wrong thing would have been changed.</p>
+  <p>The same run confirms the rest of the fix behaving correctly in production:
+  <code>"active_provider":"groq"</code> with <code>"active_provider_basis":"last real
+  answer"</code> — the surface that reported "Claude" for days now names the provider that
+  genuinely answered. <strong>Still blocked on the founder</strong>, and now with a precise
+  ask: the bound <code>ANTHROPIC_API_KEY</code> is rejected as invalid, so it needs
+  replacing with a valid key (<code>npx wrangler secret put ANTHROPIC_API_KEY</code>). No
+  code change will fix a credential.</p>
 </div>
 
 <div class="task" data-status="blocked" data-batchable="false" id="task-46">
@@ -1004,6 +1023,34 @@ branch) does the work → a PR.</li>
   branch deploys knowingly and update the never-merge rule's wording to match reality. The
   hardcoded <code>/debug/git</code> values should be replaced with real build metadata (or
   honestly reported as unknown) regardless of which way that decision goes.</p>
+  <p><strong>NO LONGER A SUSPICION — PROVEN 2026-08-07, edge-health-probe runs 31216723801
+  and 31216919290.</strong> This task was opened on circumstantial evidence (Kai El echoing
+  wording from an unmerged branch). It is now proven directly, by two strings that exist in
+  <strong>zero</strong> occurrences on <code>origin/main</code> and yet are being served by
+  production right now:</p>
+  <ul>
+    <li><code>GET /v11/llm/status</code> returns <code>"active_provider_basis":"last real
+    answer"</code> — a field introduced in unmerged commit <code>f04633d</code>.</li>
+    <li><code>GET /v11/agents</code> returns <code>{"name":"Orchestrator","reports_to":"Kai
+    El"}</code> — a row seeded only by unmerged commit <code>a8c045b</code>.</li>
+    <li>The work-cycle log shows the routing suffix from unmerged task 52 appearing between
+    18:31 and 19:31 — a timestamped record of branch code reaching production.</li>
+  </ul>
+  <p>Verified by checking <code>git show origin/main:worker/src/index.js</code> for both
+  strings: zero matches each, while both are live. <strong>Pushing a branch in this repo is
+  a production deploy.</strong> The session rule "automation never merges, every change
+  waits for founder review" assumes unmerged work is not live; that assumption is false, and
+  has been for some time.</p>
+  <p><strong>The compounding honesty bug is also now proven, not just inferred:</strong> in
+  the very same run, <code>GET /v11/debug/git</code> returned
+  <code>"branch":"main"</code> and <code>"deployed_via":"Cloudflare Workers Builds from
+  main"</code> — while demonstrably serving branch code. The one endpoint whose entire job is
+  reporting deploy identity was, at that moment, stating a falsehood.</p>
+  <p><strong>Still blocked on the founder</strong>, unchanged: only they can look at the
+  Cloudflare Workers Builds branch configuration and decide whether to restrict production to
+  <code>main</code> or to accept branch deploys knowingly. Nothing here changes that — it
+  removes the uncertainty about <em>whether</em> it is happening, not the decision about what
+  to do.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-48">
@@ -1058,6 +1105,35 @@ branch) does the work → a PR.</li>
   never be recorded; moved before it.</p>
   <p><strong>Resolves task 36 and task 38(c)</strong> — both asked the founder to name
   which LLM work should run on a schedule and at what cadence. This is that answer, built.</p>
+  <p><strong>VERIFIED-LIVE 2026-08-07 — edge-health-probe run 31216919290.</strong> This is
+  the first task in this file to earn that word under the new <code>wired-or-not</code>
+  vocabulary, and it was earned with evidence rather than assertion. Until this run, the
+  entire agent stack (tasks 37 → 38 → 48 → 52) was syntax-checked and had <em>never once</em>
+  been confirmed against production. The probe now reads <code>/v11/updates</code> and
+  asserts three things that must all hold. Real output:</p>
+  <pre class="log">agent-work rows: 17
+newest: 2026-08-07T20:31:01.221Z (0.2h ago)
+distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thoth
+  20:31 Ma'at — balance      [via groq · 1078 tokens (1011 in / 67 out)]
+  19:31 Kai El — synthesis   [via groq · 1068 tokens (910 in / 158 out)]
+  18:31 Ma'at — balance      [via groq ·  884 tokens (807 in / 77 out)]
+  17:31 Kai El — synthesis   [via groq ·  918 tokens (782 in / 136 out)]
+  16:31 Ptah — architecture  [via groq ·  889 tokens (812 in / 77 out)]
+  15:30 Sekhmet — arena      [via groq ·  826 tokens (762 in / 64 out)]
+  14:30 Thoth — drift        [via groq ·  849 tokens (780 in / 69 out)]
+  13:30 Horus — health       [via groq ·  869 tokens (760 in / 109 out)]</pre>
+  <p><strong>What that proves, precisely:</strong> the cron fires on the real schedule
+  (timestamps are exactly hourly, :30/:31, across 8+ hours), it rotates (7 distinct agents,
+  not one stuck agent), and it writes to the real D1 (rows are queryable through the live
+  API). The measured cost is ~900 tokens per turn, ~24 turns/day — close to the ~2k/turn
+  estimate this task made, and <strong>under</strong> it, so the founder's "start slow, ramp
+  on real numbers" condition now has real numbers.</p>
+  <p><strong>An unplanned second finding in the same output.</strong> The two most recent
+  rows carry <code>wanted reasoning, fell back (that provider is not answering)</code> and
+  the rows at 18:31 and earlier do not. That suffix only exists in task 52's routing code,
+  which is <em>unmerged</em>. So the log shows the exact moment unmerged branch code went
+  live in production — hard evidence for task 46, and independent confirmation that the
+  routing correctly detects the dead Claude key and reroutes instead of failing.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="true" id="task-49">
