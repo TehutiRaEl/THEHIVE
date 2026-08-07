@@ -91,6 +91,62 @@ jobs:
                   print("  #" + str(p["id"]) + " [" + str(p["kind"]) + "] " + str(p["title"]))
           PYEOF
 
+      - name: Are the agents ACTUALLY running? (work-cycle proof, task 3 of the reality audit)
+        run: |
+          # 2026-08-07. Until now this workflow probed 18 endpoints and could not answer
+          # the one question that mattered: does the cron really fire runWorkCycle()
+          # against the real D1, or does the agent layer only compile? Every "done" in the
+          # agent stack (tasks 37/38/48/52) was syntax-checked and never confirmed live,
+          # so four layers were built on an unverified foundation. This step exists so
+          # that question is never unanswerable again.
+          #
+          # Three separate things must all be true. Any one of them failing means the
+          # agents are NOT meaningfully running, and this step says so rather than
+          # settling for "the endpoint returned 200".
+          curl -sS -m 20 "https://thehive.sovereignhive.workers.dev/v11/updates?limit=200" -o /tmp/updates.json
+          python3 - <<'PYEOF'
+          import json, datetime, sys
+
+          d = json.load(open("/tmp/updates.json"))
+          work = [u for u in d.get("updates", []) if u.get("kind") == "agent-work"]
+
+          if not work:
+              print("::error::NO agent-work rows in /v11/updates — the work cycle is NOT running in production.")
+              sys.exit(1)
+
+          def ts(u):
+              return datetime.datetime.fromisoformat(u["ts"].replace("Z", "+00:00"))
+
+          work.sort(key=ts, reverse=True)
+          newest = ts(work[0])
+          age_h = (datetime.datetime.now(datetime.timezone.utc) - newest).total_seconds() / 3600
+          agents = sorted({(u.get("title") or "").split("—")[0].strip() for u in work})
+
+          print(f"agent-work rows: {len(work)}")
+          print(f"newest: {work[0]['ts']} ({age_h:.1f}h ago)")
+          print(f"distinct agents seen: {len(agents)} -> {', '.join(agents)}")
+          for u in work[:8]:
+              print(f"  {u['ts']}  {u.get('title')}  [{u.get('needs')}]")
+
+          fail = False
+          # 1. Recent. The cycle is hourly-gated, so anything older than ~3h means it stopped.
+          if age_h > 3:
+              print(f"::error::newest agent-work row is {age_h:.1f}h old — the cron appears to have STOPPED.")
+              fail = True
+          # 2. Rotating. One agent firing forever is a stuck round-robin, not a working roster.
+          if len(agents) < 2:
+              print(f"::error::only {len(agents)} distinct agent(s) in the log — the round-robin is NOT rotating.")
+              fail = True
+          # 3. Repeating. A single row proves one manual trigger, not a live schedule.
+          if len(work) < 2:
+              print("::error::only one agent-work row — cannot prove the cron fires repeatedly.")
+              fail = True
+
+          if fail:
+              sys.exit(1)
+          print("PROVEN: the work cycle fires the real cron against the real D1 — recent, repeating, and rotating.")
+          PYEOF
+
       - name: Verify /app serves the restored 13-tab Command Center bundle
         run: |
           # The App.tsx merge-order regression (2026-07-14, fixed in PR #87) made this
