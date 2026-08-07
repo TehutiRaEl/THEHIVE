@@ -4,20 +4,22 @@ Constitution Module — Sovereign Hive v11.0
 
 ## Classes
 
-- `ConstitutionChecker` — Enforces soul.md as code. Rejects violations, not just logs them.
+- `ConstitutionChecker` — Enforces soul.md (F-001-F-006) as code, parsed live from the real file —
 
 ## Functions
 
-- `check()` — Check if an action violates the constitution.
-- `log()` — Log constitution checks to database.
-- `get_hash()` — Get current constitution hash.
-- `get_laws()` — Get parsed laws from the constitution.
+- `parse_soul_md()` — Parse the real soul.md into structured data. Returns {} if the file is
+- `get_raw_text()` — The real, current soul.md text, read fresh every call — so an
+- `check()` — Check an action against F-001-F-006 (via validator) plus the
+- `log()` — Logging is validator.validate()'s own responsibility now (it logs
+- `get_hash()` — Get current constitution hash — of the real soul.md file.
+- `get_laws()` — Get the real, currently-parsed laws from soul.md — not a hard-coded
 - `is_constitutional()` — Quick check if action is constitutional (no logging).
-- `get_blocked_actions()` — Get list of permanently blocked actions.
-- `get_required_resonance()` — Get the minimum resonance required for task assignment.
-- `get_doubling_threshold()` — Get the doubling threshold from the constitution.
-- `get_amendment_requirements()` — Get the requirements for constitutional amendments.
+- `get_blocked_actions()` — Get list of permanently blocked (operational-policy) actions.
+- `get_required_resonance()` — Minimum resonance required for task assignment — real value from
+- `get_doubling_threshold()` — Same real value as get_required_resonance() — soul.md's mutable
+- `get_amendment_requirements()` — Get the real amendment requirements — soul.md's Fixed Laws section
 
 ## Links
 
-[[core.config]] · [[core.db]]
+[[core.config]] · [[core.validator]]
