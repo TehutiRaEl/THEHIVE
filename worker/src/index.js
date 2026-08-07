@@ -391,6 +391,15 @@ async function ensureTables(DB) {
       (id INTEGER PRIMARY KEY AUTOINCREMENT, section TEXT NOT NULL, title TEXT NOT NULL,
        status TEXT NOT NULL, status_label TEXT, body TEXT,
        sort_order INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL)`),
+    // Task 45: a dead provider was indistinguishable from a healthy one — every
+    // generate() call swallowed failures silently, and every founder-facing surface
+    // (llm/status, the Command Center, Kai El's own words) reported the first BOUND
+    // provider, never the one that actually answered. One row per provider, upserted
+    // in place (never appended) — deliberately bounded to exactly 4 rows forever,
+    // regardless of call volume, since the founder named live D1 space as a real
+    // constraint and this fix does not need a growing log to work.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS provider_health
+      (provider TEXT PRIMARY KEY, ok INTEGER NOT NULL, error TEXT, checked_at TEXT NOT NULL)`),
   ]);
   // One-time chain-of-command backfill: only touches rows that don't have a
   // reports_to yet, so re-running this on every heartbeat is a safe no-op once set.
@@ -510,6 +519,20 @@ async function postUpdate(DB, { kind, title, body = '', needs = '' }) {
       'DELETE FROM hive_updates WHERE id NOT IN (SELECT id FROM hive_updates ORDER BY id DESC LIMIT 100)'
     ).run();
   } catch { /* D1 not ready — heartbeat still proceeds */ }
+}
+
+// Task 45's fix: every generate() call now reports the real outcome for whichever
+// provider it just tried, upserted (never appended) so this table never grows past
+// one row per provider. This is what makes a dead provider visible instead of a
+// silent try/catch fallthrough — llm/status and hiveSnapshot() both read it below.
+async function recordProviderHealth(DB, provider, ok, error) {
+  if (!DB) return;
+  try {
+    await DB.prepare(
+      'INSERT INTO provider_health (provider, ok, error, checked_at) VALUES (?,?,?,?) ' +
+      'ON CONFLICT(provider) DO UPDATE SET ok=excluded.ok, error=excluded.error, checked_at=excluded.checked_at'
+    ).bind(provider, ok ? 1 : 0, error ? String(error).slice(0, 300) : null, new Date().toISOString()).run();
+  } catch { /* D1 not ready — generate() still returns normally */ }
 }
 
 // Post an update only if one with this exact title doesn't already exist —
@@ -725,13 +748,14 @@ const AGENT_WORK = [
 // One compact, real snapshot of hive state, shared by every agent's turn. Deliberately
 // bounded — this becomes prompt text on a paid call, so it stays small on purpose.
 async function hiveSnapshot(env, DB) {
-  const [agents, props, updates, pulse, reports, digest] = await Promise.all([
+  const [agents, props, updates, pulse, reports, digest, providerHealth] = await Promise.all([
     DB.prepare("SELECT name, elo, reports_to FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 8").all().catch(() => null),
     DB.prepare('SELECT id, kind, title, status, actioned_at FROM hive_proposals ORDER BY id DESC LIMIT 8').all().catch(() => null),
     DB.prepare("SELECT kind, title, body FROM hive_updates WHERE kind='agent-work' ORDER BY id DESC LIMIT 5").all().catch(() => null),
     DB.prepare('SELECT ts, action, detail FROM hive_pulse ORDER BY id DESC LIMIT 3').all().catch(() => null),
     DB.prepare('SELECT colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT 3').all().catch(() => null),
     DB.prepare('SELECT body FROM task_digest ORDER BY id DESC LIMIT 1').first().catch(() => null),
+    DB.prepare('SELECT provider, ok, error, checked_at FROM provider_health').all().catch(() => null),
   ]);
   const lines = [];
   if (agents?.results?.length) lines.push('AGENTS: ' + agents.results.map(a => `${a.name} [Elo ${a.elo}]`).join(', '));
@@ -745,6 +769,14 @@ async function hiveSnapshot(env, DB) {
   lines.push('HEALTH: bindings — DB ' + (!!DB) + ', AI ' + (!!env.AI) + ', VECTORIZE ' + (!!env.VECTORIZE) +
     ', R2/FILES ' + (!!env.FILES) + ', QUEUE ' + (!!env.LLM_QUEUE) +
     '; providers bound — ' + roster.filter(r => r.bound).map(r => r.label).join(', '));
+  // Task 45: this is the line that makes a dead provider visible to Kai El himself,
+  // not just to a human reading /llm/status. A provider Kai El can't see failing is
+  // a real blind spot — he could keep telling the founder "Claude is active" from a
+  // stale first-bound assumption with no way to know otherwise.
+  if (providerHealth?.results?.length) {
+    lines.push('PROVIDER HEALTH (last real outcome per provider, not just bound-vs-not): ' +
+      providerHealth.results.map(h => `${h.provider}: ${h.ok ? 'answering' : `FAILING (${h.error || 'unknown error'})`} as of ${h.checked_at}`).join(' | '));
+  }
   return lines.join('\n');
 }
 
@@ -860,6 +892,7 @@ function providerRoster(env) {
 async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
   const timeout = (ms) => AbortSignal.timeout(ms);
   const use = (id) => !only || only === id;
+  const DB = env.DB;
   if (use('claude') && env.ANTHROPIC_API_KEY) {
     try {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -880,9 +913,24 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
         const text = (d?.content || []).map((c) => c.text || '').join('').trim();
         // Real token usage passed through (task 48) so autonomous work can report
         // measured cost, not an estimate. Anthropic returns input/output separately.
-        if (text) return { text, provider: 'claude', usage: d?.usage ? { in: d.usage.input_tokens ?? null, out: d.usage.output_tokens ?? null } : null };
+        if (text) {
+          await recordProviderHealth(DB, 'claude', true, null);
+          return { text, provider: 'claude', usage: d?.usage ? { in: d.usage.input_tokens ?? null, out: d.usage.output_tokens ?? null } : null };
+        }
+        // Task 45: a 200 with no usable text is still a real failure — record it
+        // instead of silently dropping to the next provider.
+        await recordProviderHealth(DB, 'claude', false, 'HTTP 200 but no usable text in response');
+      } else {
+        // Task 45's actual bug: this branch used to be entirely unreachable in
+        // practice — a non-ok response just fell through with nothing recorded
+        // anywhere. Now the real status/body is captured so the founder can see
+        // *why* Claude is dead, not just that it is.
+        const body = await r.text().catch(() => '');
+        await recordProviderHealth(DB, 'claude', false, `HTTP ${r.status}: ${body.slice(0, 200)}`);
       }
-    } catch { /* next provider */ }
+    } catch (e) {
+      await recordProviderHealth(DB, 'claude', false, String(e?.message || e));
+    }
   }
   if (use('groq') && env.GROQ_API_KEY) {
     try {
@@ -898,9 +946,18 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
       if (r.ok) {
         const d = await r.json();
         const text = (d?.choices?.[0]?.message?.content || '').trim();
-        if (text) return { text, provider: 'groq', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+        if (text) {
+          await recordProviderHealth(DB, 'groq', true, null);
+          return { text, provider: 'groq', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+        }
+        await recordProviderHealth(DB, 'groq', false, 'HTTP 200 but no usable text in response');
+      } else {
+        const body = await r.text().catch(() => '');
+        await recordProviderHealth(DB, 'groq', false, `HTTP ${r.status}: ${body.slice(0, 200)}`);
       }
-    } catch { /* next provider */ }
+    } catch (e) {
+      await recordProviderHealth(DB, 'groq', false, String(e?.message || e));
+    }
   }
   if (use('mistral') && env.MISTRAL_API_KEY) {
     try {
@@ -916,9 +973,18 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
       if (r.ok) {
         const d = await r.json();
         const text = (d?.choices?.[0]?.message?.content || '').trim();
-        if (text) return { text, provider: 'mistral', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+        if (text) {
+          await recordProviderHealth(DB, 'mistral', true, null);
+          return { text, provider: 'mistral', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+        }
+        await recordProviderHealth(DB, 'mistral', false, 'HTTP 200 but no usable text in response');
+      } else {
+        const body = await r.text().catch(() => '');
+        await recordProviderHealth(DB, 'mistral', false, `HTTP ${r.status}: ${body.slice(0, 200)}`);
       }
-    } catch { /* next provider */ }
+    } catch (e) {
+      await recordProviderHealth(DB, 'mistral', false, String(e?.message || e));
+    }
   }
   if (use('workers-ai') && env.AI) {
     try {
@@ -930,8 +996,14 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
       const text = String((r?.response ?? r?.result ?? '')).trim();
       // Workers AI does not return token counts — report null honestly rather than
       // inventing an estimate that would then get logged as if it were measured.
-      if (text) return { text, provider: 'workers-ai', usage: null };
-    } catch { /* fall through */ }
+      if (text) {
+        await recordProviderHealth(DB, 'workers-ai', true, null);
+        return { text, provider: 'workers-ai', usage: null };
+      }
+      await recordProviderHealth(DB, 'workers-ai', false, 'empty response');
+    } catch (e) {
+      await recordProviderHealth(DB, 'workers-ai', false, String(e?.message || e));
+    }
   }
   return null;
 }
@@ -1748,11 +1820,35 @@ export default {
         // directly undermine the one thing this route exists to answer.
         return cachedJson(request, ctx, corsHeaders, 20, async () => {
           const roster = providerRoster(env);
-          const active = roster.find((r) => r.bound);
+          // Task 45: this used to report the first BOUND provider, which is why it
+          // said "claude" for days while Claude answered zero real requests. Now it
+          // merges in provider_health (upserted by every generate() call, task 45's
+          // fix) and reports whichever bound provider most recently actually
+          // answered — falling back to "first bound, health unknown" only when no
+          // provider has ever recorded a real health check yet.
+          let health = [];
+          try {
+            const { results } = await DB.prepare(
+              'SELECT provider, ok, error, checked_at FROM provider_health'
+            ).all();
+            health = results || [];
+          } catch { /* table not ready — health stays empty, roster still honest */ }
+          const healthById = Object.fromEntries(health.map((h) => [h.provider, h]));
+          const merged = roster.map((r) => ({
+            ...r,
+            health: healthById[r.id]
+              ? { ok: !!healthById[r.id].ok, error: healthById[r.id].error, checked_at: healthById[r.id].checked_at }
+              : { ok: null, error: null, checked_at: null }, // never actually tried yet
+          }));
+          const lastHealthy = merged
+            .filter((r) => r.bound && r.health.ok === true)
+            .sort((a, b) => (b.health.checked_at || '').localeCompare(a.health.checked_at || ''))[0];
+          const firstBound = merged.find((r) => r.bound);
           return {
-            active_provider: active ? active.id : 'simulation',
+            active_provider: lastHealthy ? lastHealthy.id : (firstBound ? firstBound.id : 'simulation'),
+            active_provider_basis: lastHealthy ? 'last real answer' : (firstBound ? 'first bound, no recorded health yet' : 'none bound'),
             providers: roster.filter((r) => r.bound).map((r) => r.id),
-            roster, // full honest list: each provider, bound or not, and how to bind it
+            roster: merged, // full honest list: each provider, bound or not, and its real last-known health
           };
         });
       }
@@ -1837,7 +1933,27 @@ export default {
           // "are not explicitly defined in the HIVE CONTEXT" — true of his context, while
           // the founder was looking at those exact roles on screen. Real gap, not a model
           // failure; closed by sending what already existed.
-          ctxLines.push('Your own providers (name — role — bound?): ' + roster.map(r => `${r.label} — ${r.role} — ${r.bound ? 'bound' : 'not bound'}`).join('; ') + `. You reply through whichever is first-bound, in the order listed. Your own replies are capped at 400 tokens.`);
+          // Task 45: this line used to end in "You reply through whichever is first-bound,
+          // in the order listed" — a correct reading of the fallback-chain code that was
+          // also a false statement in production, because Claude (first in the order) was
+          // dead on every real call and Mistral was actually answering. Kai El repeated
+          // this to the founder as fact (task 45's finding). Now it names the real, last
+          // recorded outcome per provider instead of assuming code order equals reality.
+          let providerHealthById = {};
+          try {
+            const { results } = await DB.prepare('SELECT provider, ok, error, checked_at FROM provider_health').all();
+            providerHealthById = Object.fromEntries((results || []).map((h) => [h.provider, h]));
+          } catch { /* table not ready */ }
+          ctxLines.push('Your own providers (name — role — bound? — REAL last outcome, not assumed): ' +
+            roster.map((r) => {
+              const h = providerHealthById[r.id];
+              const health = !r.bound ? 'not bound'
+                : !h ? 'bound, never yet recorded a real call'
+                  : h.ok ? `answering (as of ${h.checked_at})`
+                    : `FAILING (${h.error || 'unknown error'}, as of ${h.checked_at})`;
+              return `${r.label} — ${r.role} — ${health}`;
+            }).join('; ') +
+            '. You are answered by whichever bound provider actually succeeds, tried in order Claude→Groq→Mistral→Workers AI — but the order does NOT tell you which one is really answering right now. Trust the REAL outcome above, never assume first-in-order means active. Your own replies are capped at 400 tokens.');
           // Grok is NOT Groq (2026-08-06, task 43). Real, repeated confusion from a live
           // transcript: asked twice about "Grok", Kai El silently answered about "Groq"
           // instead — including claiming he had used it to research something. They are
