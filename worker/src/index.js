@@ -667,9 +667,19 @@ function providerRoster(env) {
 // One generation call, first bound provider wins; returns {text, provider} or null.
 // External calls use each provider's plain HTTP API with a hard timeout so a
 // down provider degrades to the next, never hangs the commune.
-async function generate(env, { system, prompt, maxTokens = 400 }) {
+// `only` (2026-08-06, task 44) answers a real founder question: "why is Kai not able to
+// fully utilize each API key that's connected?" The honest answer was that he never could
+// — this function is a FALLBACK CHAIN, not a router. It returns the moment Claude succeeds,
+// so while Claude is bound and healthy, Groq/Mistral/Workers AI are never called at all.
+// Four keys bound, one key ever used; the other three are spare tires, and the per-provider
+// "roles" the UI displays (Speed, Reasoning, Local intelligence) had no routing logic behind
+// them whatsoever. Passing `only: '<id>'` pins the call to exactly one provider and, if that
+// one fails, returns null instead of quietly answering through a different provider — a
+// silent fall-through would make any per-provider test a lie about which key actually ran.
+async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
   const timeout = (ms) => AbortSignal.timeout(ms);
-  if (env.ANTHROPIC_API_KEY) {
+  const use = (id) => !only || only === id;
+  if (use('claude') && env.ANTHROPIC_API_KEY) {
     try {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -691,7 +701,7 @@ async function generate(env, { system, prompt, maxTokens = 400 }) {
       }
     } catch { /* next provider */ }
   }
-  if (env.GROQ_API_KEY) {
+  if (use('groq') && env.GROQ_API_KEY) {
     try {
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -709,7 +719,7 @@ async function generate(env, { system, prompt, maxTokens = 400 }) {
       }
     } catch { /* next provider */ }
   }
-  if (env.MISTRAL_API_KEY) {
+  if (use('mistral') && env.MISTRAL_API_KEY) {
     try {
       const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
@@ -727,7 +737,7 @@ async function generate(env, { system, prompt, maxTokens = 400 }) {
       }
     } catch { /* next provider */ }
   }
-  if (env.AI) {
+  if (use('workers-ai') && env.AI) {
     try {
       // The proven-live path: same model + prompt-string shape as the heartbeat.
       const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
@@ -1591,14 +1601,22 @@ export default {
             DB.prepare("SELECT name, elo, reports_to FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 5").all(),
             DB.prepare('SELECT action, article FROM governance_log ORDER BY id DESC LIMIT 3').all(),
             DB.prepare('SELECT detail FROM hive_pulse ORDER BY id DESC LIMIT 1').first(),
-            DB.prepare("SELECT title, status FROM hive_proposals ORDER BY id DESC LIMIT 6").all(),
+            DB.prepare("SELECT title, status, actioned_at FROM hive_proposals ORDER BY id DESC LIMIT 6").all(),
             DB.prepare('SELECT colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT 3').all(),
             rateLimitPeek(DB, ipCmd, env),
           ]);
+          // Format made unambiguous (2026-08-06, task 44) — a real misread caught in
+          // production. The old shape rendered Nanuet as "Nanuet(1743) (Queen)" while
+          // every other agent rendered as "Ma'at(1200) reports to Kai El", putting a bare
+          // parenthesised number directly beside the word "reports". Kai El then told the
+          // founder the Queen "is currently active with 1743 reports" — 1743 is her Elo
+          // rating, and no such report count exists anywhere. Nothing was hallucinated
+          // from nowhere; an ambiguous string was read the only way it could be. Every
+          // number now carries its own label.
           if (ag?.results?.length) ctxLines.push('Active agents: ' + ag.results.map(a =>
-            `${a.name}(${a.elo})${a.reports_to ? ' reports to ' + a.reports_to : ' (Queen)'}` +
+            `${a.name} [Elo rating ${a.elo}]${a.reports_to ? ` [reports to: ${a.reports_to}]` : ' [the Queen — reports to no one]'}` +
             (AGENT_JOBS[a.name] ? ` — real job: ${AGENT_JOBS[a.name]}` : '')
-          ).join('; '));
+          ).join('; ') + '. NOTE: the bracketed number is an Elo rating (a ranking score from the Arena) — it is NOT a count of reports, messages, tasks, or anything else.');
           if (gov?.results?.length) ctxLines.push('Recent governance: ' + gov.results.map(g => `${g.action}/${g.article}`).join(', '));
           if (pulseRow?.detail) ctxLines.push('Last heartbeat: ' + pulseRow.detail);
           // Colonies → Queen feedback — closes the loop that was one-way until now.
@@ -1607,13 +1625,66 @@ export default {
           // provider was answering him or how close to his own rate limit he was; both
           // were already computed elsewhere and simply discarded before this.
           const roster = providerRoster(env);
-          ctxLines.push('Your own providers: ' + roster.map(r => `${r.label}${r.bound ? ' (bound)' : ' (not bound)'}`).join(', ') + `; you reply through whichever is first-bound. Your own replies are capped at 400 tokens.`);
+          // Each provider's real role is included (2026-08-06, task 43) — providerRoster()
+          // has carried `role` all along and the Command Center UI displays it ("Claude —
+          // Reasoning", "Groq — Speed"), but only label+bound ever reached Kai El, so asked
+          // "what are the roles for Claude/Groq/Mistral" he correctly answered that they
+          // "are not explicitly defined in the HIVE CONTEXT" — true of his context, while
+          // the founder was looking at those exact roles on screen. Real gap, not a model
+          // failure; closed by sending what already existed.
+          ctxLines.push('Your own providers (name — role — bound?): ' + roster.map(r => `${r.label} — ${r.role} — ${r.bound ? 'bound' : 'not bound'}`).join('; ') + `. You reply through whichever is first-bound, in the order listed. Your own replies are capped at 400 tokens.`);
+          // Grok is NOT Groq (2026-08-06, task 43). Real, repeated confusion from a live
+          // transcript: asked twice about "Grok", Kai El silently answered about "Groq"
+          // instead — including claiming he had used it to research something. They are
+          // unrelated: Groq is one of his own bound text-generation providers above; Grok
+          // is xAI's separate model, reached only by a founder-operated GitHub workflow
+          // (grok-bridge.yml / GROK_BRIDGE_KEY), which Kai El has no access to and no
+          // visibility into. Stated explicitly so the substitution stops.
+          ctxLines.push(
+            'Grok vs Groq — do not confuse these: "Groq" is one of your own bound providers listed above ' +
+            '(fast text generation). "Grok" is xAI\'s separate model, reached only through a founder-operated ' +
+            'GitHub workflow (grok-bridge.yml); you have NO access to Grok, cannot call it, and cannot see its ' +
+            'results. If asked about Grok, say plainly that it is not connected to you — never answer about ' +
+            'Groq as if it were the same thing.'
+          );
+          // Honest capability boundary (2026-08-06, task 42) — found from a real founder
+          // transcript: told only WHICH providers were bound (task 31) and nothing about
+          // what a provider actually IS, Kai El filled the gap by inventing that they let
+          // him "access various tools and connectors, such as e-commerce platforms, social
+          // media management software, and content creation tools, to execute the venture."
+          // All false. Those providers are text-generation APIs and nothing else. This is
+          // exactly the founder's own stated top concern ("things saying they are connected
+          // and they're not connected"), so the truthful boundary is now stated outright
+          // rather than left as a silence the model papers over.
+          ctxLines.push(
+            'What you can actually DO, precisely (never claim more than this list): your providers above are ' +
+            'TEXT-GENERATION APIs only — they give you no tools, no connectors, no plugins, no internet ' +
+            'browsing, and no ability to log into or operate any external service. Your only real ability ' +
+            'beyond writing a reply is that starting your reply with "CONCERN: <title>" or "PROPOSAL: <title>" ' +
+            'durably files that for the founder. You cannot execute anything yourself: no e-commerce store, ' +
+            'no social/marketing account, no posting, no purchasing, no code deployment, no file access. ' +
+            'A separate founder-approval-gated path exists for three narrow GitHub actions (rerun CI, open an ' +
+            'issue, dispatch a named workflow) but YOU do not invoke it — the founder does, after approving a ' +
+            'proposal. If asked what tools you need or would like, answer as a genuine wish/requirement list ' +
+            'and say plainly you do not have them yet — never imply you already do. You also cannot RESEARCH ' +
+            'anything: you cannot browse, search, look anything up, or call one provider to go find out. If ' +
+            'asked to research something, what you can genuinely offer is what you already know, labelled as ' +
+            'such — never narrate it as "I used X to research this and found...", which describes an action ' +
+            'you did not take.'
+          );
           if (rlCurrent !== null) ctxLines.push(`Your own rate limit right now: ${rlCurrent}/30 requests this minute from this caller.`);
           // The actual answer to "what are you working on / what are your goals" —
           // without this, Kai El had nothing but agent scores and governance trivia
           // to draw on, so that question could never get a real answer no matter
           // how the model tried.
-          if (props?.results?.length) ctxLines.push('Recent proposals (title/status): ' + props.results.map(p => `${p.title} [${p.status}]`).join(' | '));
+          // actioned_at included (2026-08-06, task 43): "approved" and "approved AND the
+          // work is actually done" are genuinely different states, and only actioned_at
+          // distinguishes them. Without it Kai El could truthfully say "all approved"
+          // while three of those approvals had real work still sitting untouched — an
+          // accurate sentence that leaves a false impression, which F-004 (Explainability)
+          // cares about just as much as an outright wrong one.
+          if (props?.results?.length) ctxLines.push('Recent proposals (title [status] — work done?): ' + props.results.map(p =>
+            `${p.title} [${p.status}]${p.status === 'approved' ? (p.actioned_at ? ' — work DONE ' + p.actioned_at : ' — approved but work NOT started yet') : ''}`).join(' | '));
           // Genome awareness (2026-08-04, task 33) — see GENOME_CHROMOSOMES above for
           // why this is a short hand-maintained list rather than a live file fetch.
           ctxLines.push('Your own genome (FABLE_DNA.md chromosomes): ' +
@@ -1651,7 +1722,12 @@ export default {
           "each one's actual status individually before summarizing; never claim a single blanket status ('all " +
           "approved', 'all done') unless every item you're describing genuinely shares that exact status in the " +
           "list. If the list is mixed, say so plainly (e.g. name which are approved vs. still pending) rather than " +
-          "rounding up to the most favorable answer. Answer the sovereign directly in " +
+          "rounding up to the most favorable answer. HIVE CONTEXT also states precisely what you can actually " +
+          "do — treat that as a hard ceiling on any capability claim. Never say or imply you can reach, use, " +
+          "operate, or execute anything outside it (no e-commerce platforms, no social/marketing accounts, no " +
+          "browsing, no connectors or plugins), and never describe your LLM providers as if they grant tool " +
+          "access — they generate text and nothing more. Asked what you need or would want, name it as a real " +
+          "wish and say plainly you don't have it yet. Answer the sovereign directly in " +
           "1-4 sentences, using the live hive context when relevant. Never invent metrics you weren't given. " +
           "You now have a real bridge to the harness (the hive's engineering session) and, through it, to the " +
           "founder outside this chat: if — and only if — this exchange surfaces a genuine concern (a real risk, " +
@@ -1668,7 +1744,19 @@ export default {
           (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') +
           (historyLines.length ? 'RECENT CONVERSATION:\n' + historyLines.join('\n') + '\n\n' : '') +
           'SOVEREIGN: ' + cmd + '\n\nKAI EL:';
-        const gen = await generate(env, { system: SYSTEM, prompt: userPrompt, maxTokens: 400 });
+        // Optional {"provider":"claude"|"groq"|"mistral"|"workers-ai"} pins this one call
+        // to a single key (task 44) so each bound provider can actually be exercised and
+        // proven, instead of Claude silently answering everything forever. Unknown names
+        // are rejected outright rather than ignored — quietly falling back to the default
+        // waterfall would make a per-provider test report the wrong key.
+        const wantProvider = (body.provider || '').toString().trim().toLowerCase() || null;
+        if (wantProvider && !PROVIDERS.some((pr) => pr.id === wantProvider)) {
+          return json({ detail: `unknown provider '${wantProvider}' — valid: ${PROVIDERS.map((pr) => pr.id).join(', ')}` }, 400);
+        }
+        const gen = await generate(env, { system: SYSTEM, prompt: userPrompt, maxTokens: 400, only: wantProvider });
+        if (!gen && wantProvider) {
+          return json({ detail: `provider '${wantProvider}' is bound-but-unreachable or returned nothing; not falling back to another provider, since that would misreport which key answered`, provider_requested: wantProvider }, 502);
+        }
         if (gen) {
           // remember the exchange so the hive's memory grows from conversation too
           // (ctx.waitUntil now that fetch carries ctx — was a latent ReferenceError)

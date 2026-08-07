@@ -530,10 +530,24 @@ branch) does the work → a PR.</li>
   a rate limit" and get a real, grounded answer instead of "I don't have that."</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-32">
+<div class="task" data-status="done" data-batchable="true" id="task-32">
   <h3>32. Close the loop: approved proposals become real work, not a dead end</h3>
-  <p class="meta">Founder-requested 2026-08-04 ("give the Queen a terminal" — the real
-  synthesis: this Routine already IS the real terminal; the missing piece is the bridge).</p>
+  <p class="meta"><strong>Done 2026-08-06 — verified end to end, live.</strong>
+  Founder-requested 2026-08-04 ("give the Queen a terminal" — the real synthesis: this
+  Routine already IS the real terminal; the missing piece is the bridge).</p>
+  <p><strong>Real end-to-end result:</strong> the per-firing check
+  (<code>edge-health-probe.yml</code>) ran against live production and found 6 real
+  approved-unactioned rows. #2/#3/#4 (bind <code>FOUNDER_KEY</code>, provision Vectorize,
+  provision R2) were independently confirmed already live in the same probe
+  (<code>secrets_present:["FOUNDER_KEY"]</code>, <code>VECTORIZE:true</code>,
+  <code>FILES:true</code>), founder confirmed, and were marked actioned for real via
+  <code>POST /v11/proposals/{id}/actioned</code> — job logs show
+  <code>{"ok":true,"id":2}</code>, <code>{"ok":true,"id":3}</code>,
+  <code>{"ok":true,"id":4}</code>. The full loop is proven working: a proposal exists →
+  is approved → a firing detects it as unactioned → real work/verification happens → it
+  is marked actioned and never resurfaces. #1 (create a repo) and #6 (a real venture)
+  correctly stayed unactioned as founder-only. #5 was clarified by the founder into
+  genuinely larger scope → task 40.</p>
   <p><strong>Prompt:</strong> An approved <code>hive_proposals</code> row (founder-approved
   or Queen-auto-approved via switch 9) currently just sits at <code>status='approved'</code>
   with nothing picking it up. Add a protocol rule: every firing also checks for approved,
@@ -769,6 +783,211 @@ branch) does the work → a PR.</li>
   delta instead of the full 72 million. Run 3: <code>TOKENS: 956 (delta since
   2026-08-06T20:35:39.868Z, 2 usage-bearing entries)</code> — checkpoint kept advancing
   correctly. <code>bash -n</code> clean.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="false" id="task-40">
+  <h3>40. Proposal #5, real scope (revised) — free/open-source discovery for hive cognition,
+  security-vetted, kept intentionally open/training-mode</h3>
+  <p class="meta">Found 2026-08-06: <code>hive_proposals</code> #5 was approved but
+  unactioned; its DB title ("Build free-API / LLM-gateway discovery, Tier-2, propose-only")
+  undersold its real scope. Founder clarified directly — see
+  <code>Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-08-06-directive-proposal5-scope-and-hoard-economy-044.md</code>
+  for the full verbatim capture.</p>
+  <p><strong>Prompt (founder's own words, distilled — see the capture file for verbatim):</strong>
+  search the open web (not only GitHub) for completely free, unlicensed, open-source API
+  keys AND broader technology/software/innovation/systems that help the hive itself think
+  better — understand, dissect, discover, discuss, design, do quantitative analysis,
+  abductive/abstract reasoning — in service of "the six" (the other 6 agents, tasks 37/38).
+  Hard requirement: whatever is found must be security-vetted so it can never expose the
+  hive/Hoard/Queen to a breach via a malicious or malware-laced key — never auto-wire
+  anything in, propose-only, founder approves each one (this half of the original DB
+  proposal's safety envelope stays intact). Explicitly NOT to be locked to a final spec
+  right now — the founder wants this kept open/training-mode so smaller ideas can be fed
+  in and built on incrementally.</p>
+  <p><strong>Acceptance:</strong> Not started. A founder scoping round (same pattern as
+  task 37's Elders' Council pilot) before any code — real open questions: what "search the
+  open web" means technically for a Cloudflare Worker with no general web-crawl capability
+  today; what "security-vetted" means as a concrete, automatable check; how this connects
+  to task 38's still-open "extend the pilot to Thoth/Ptah/Horus" question, since both are
+  about giving the hive more of its own real capability.</p>
+</div>
+
+<div class="task" data-status="pending" data-batchable="false" id="task-41">
+  <h3>41. The Hoard needs to pay for its own existence — real wallet, spending tracking,
+  usage-limit self-awareness</h3>
+  <p class="meta">Found 2026-08-06, a new, separate idea raised alongside proposal #5's
+  clarification (not part of #5 itself) — see the same capture file as task 40 for the
+  full verbatim text.</p>
+  <p><strong>Prompt (founder's own words, distilled):</strong> as more real capability gets
+  connected up (the Elders' Council, proposal-discovery, etc.), the Hoard/hive needs to be
+  able to pay for its own real running costs (API/compute) rather than an unbounded,
+  untracked draw. If it earns beyond what it needs to survive, it needs its own real
+  wallet, real spending tracking, and self-awareness of its own usage limits and context
+  windows. Directly connects to <code>automaton/</code>'s existing "pay to exist" concept
+  and <code>wallet.py</code>'s existing SOUL ledger — this is real financial/economic
+  infrastructure the founder is now raising as its own thread, distinct from (and the
+  financial half explicitly excluded from) the earlier "Queen's own enterprise = full
+  operational authority, not money" answer.</p>
+  <p><strong>Also raised, same message:</strong> a real, valid worry that logging
+  everything as this expands may not fit in available database/knowledge-base space —
+  needs a real answer (retention policy? summarization? tiered storage?), not solved here.</p>
+  <p><strong>Acceptance (task 41):</strong> Not started, not scoped — this is a large, real,
+  founder-only architectural decision (financial infrastructure + a possible new spending-
+  cap/self-preservation mechanism for the hive), same standing practice as every other item
+  of this size this session. Needs a real scoping round before any code.</p>
+</div>
+
+<div class="task" data-status="done" data-batchable="true" id="task-42">
+  <h3>42. Kai El claimed tool/connector access he does not have — honest capability
+  boundary added</h3>
+  <p class="meta"><strong>Done 2026-08-06, same firing it was found.</strong> Found from a
+  real founder-supplied transcript screenshot (IMG_8558), not from a test. Directly the
+  founder's own stated top concern: "things saying they are connected and they're not
+  connected."</p>
+  <p><strong>The real fabrication, verbatim from live production:</strong> asked what tools
+  he'd need for the first venture, Kai El correctly named his bound providers ("Claude,
+  Groq, Mistral, and Cloudflare Workers AI. I reply through whichever one is first-bound"
+  — real, live confirmation task 31's provider-awareness fix works) and then immediately
+  said: <em>"I can utilize these providers to access various tools and connectors, such as
+  e-commerce platforms, social media management software, and content creation tools, to
+  execute the venture."</em> <strong>Every part of that second sentence is false.</strong>
+  Those providers are text-generation APIs; they grant zero tool access. He cannot reach or
+  operate any external service.</p>
+  <p><strong>Root cause (real, not guessed):</strong> task 31 told him <em>which</em>
+  providers were bound but never told him <em>what a provider actually is</em>, nor what he
+  genuinely cannot do. The model filled that silence with a plausible-sounding invention —
+  the exact failure mode the anti-fabrication rules exist to stop, in the one area they
+  didn't cover.</p>
+  <p><strong>Fix:</strong> added an explicit capability-boundary line to
+  <code>command_text</code>'s <code>ctxLines</code> stating precisely what he can do
+  (generate a reply; file a CONCERN/PROPOSAL for the founder) and precisely what he cannot
+  (no tools, connectors, plugins, browsing, logins, posting, purchasing, deployment, file
+  access; the three founder-gated GitHub actions exist but he does not invoke them), plus a
+  matching hard rule in the system prompt so it holds even when context is crowded. Asked
+  what he needs, he must now name it as a genuine wish and say plainly he doesn't have it.</p>
+  <p><strong>Acceptance:</strong> <code>node --check</code> clean. Real content
+  verification needs a post-merge live ask — same honest caveat as tasks 33/34/35: re-ask
+  the exact question from IMG_8557 ("what tools and connectors would you need...") and
+  confirm the answer reads as a wish list with an explicit "I don't have these," not as a
+  claim of existing access.</p>
+</div>
+
+<div class="task" data-status="done" data-batchable="true" id="task-43">
+  <h3>43. Three more real context gaps found in the same founder transcript (Grok/Groq,
+  provider roles, approved-vs-done)</h3>
+  <p class="meta"><strong>Done 2026-08-06, same firing.</strong> Found from 5 further
+  founder-supplied screenshots (IMG_8561-8565) of the same live production conversation.
+  All three verified against the real code before fixing — none was a model failure; each
+  was real information the code already had and simply never sent.</p>
+  <p><strong>(a) Grok is not Groq.</strong> Asked twice about "Grok" (IMG_8562, IMG_8564),
+  Kai El silently answered about "Groq" instead — once even claiming <em>"Using Groq to
+  research the venture, I found that..."</em>. These are unrelated: Groq is one of his own
+  bound text-generation providers; Grok is xAI's separate model reached only through a
+  founder-operated GitHub workflow (<code>grok-bridge.yml</code>/<code>GROK_BRIDGE_KEY</code>,
+  both real and present in this repo) that Kai El has no access to and no visibility into.
+  Fixed by stating the distinction and the no-access fact outright in <code>ctxLines</code>.</p>
+  <p><strong>(b) Provider roles existed but never reached him.</strong> Asked "what are the
+  current roles for Grok, Claude, and Mistral" (IMG_8564), Kai El answered that the roles
+  "are not explicitly defined in the HIVE CONTEXT" — <em>true of his context, and wrong
+  about the hive</em>: <code>providerRoster()</code> has carried a real <code>role</code>
+  per provider all along (Claude=Reasoning, Groq=Speed, Mistral=Local intelligence,
+  Workers AI=Deployment + runtime inference) and the Command Center UI displays them on
+  screen (visible in IMG_8565), but the <code>ctxLines</code> string built from that roster
+  only ever included <code>label</code> and <code>bound</code>. The founder was reading
+  those exact roles on their own screen while Kai El said he didn't have them. Fixed by
+  sending the role that already existed.</p>
+  <p><strong>(c) "Approved" could not be told apart from "approved and actually done."</strong>
+  Asked for proposal status (IMG_8561), Kai El said all were approved with none pending —
+  <em>technically true</em> (independently confirmed: all 6 live rows were
+  <code>status='approved'</code>), but the <code>ctxLines</code> query selected only
+  <code>title, status</code>, so he had no way to know that three of those approvals had
+  real work still untouched. An accurate sentence that leaves a false impression is an
+  F-004 (Explainability) problem too. Fixed: the query now also selects
+  <code>actioned_at</code> and each approved item is labelled "work DONE &lt;timestamp&gt;"
+  or "approved but work NOT started yet."</p>
+  <p><strong>(d) Extends task 42's boundary:</strong> the capability line now also states
+  he cannot research, browse, search, or call a provider to go find something out — so
+  "I used X to research this and found..." (a described action he never took) is ruled out
+  explicitly, not just implied.</p>
+  <p><strong>Acceptance:</strong> <code>node --check</code> clean. Both new context lines
+  were rendered with real sample data and inspected, not assumed — the providers line
+  correctly reads "Claude — Reasoning — bound; Groq — Speed — bound; ..." and the proposals
+  line correctly distinguishes "work DONE &lt;ts&gt;" from "approved but work NOT started
+  yet." Live content re-ask still owed post-merge, same honest caveat as tasks 33/34/35/42.</p>
+</div>
+
+<div class="task" data-status="blocked" data-batchable="false" id="task-45">
+  <h3>45. CLAUDE'S API KEY IS BOUND BUT FAILING 100% OF THE TIME — every request silently
+  falls through to Mistral, and every surface reports "Claude" anyway</h3>
+  <p class="meta"><strong>Found 2026-08-06 by a real live test</strong> (edge-health-probe
+  run 31132557948, 9 real requests to production). This is the true answer to the founder's
+  question "why is Kai not able to fully utilize each API key that's connected." Blocked on
+  the founder, because the fix requires a real credential/plan decision only they can make.</p>
+  <p><strong>The measured evidence, not inference — 9 real production requests:</strong>
+  8 answered <code>"provider":"mistral"</code>, 1 answered <code>"provider":"groq"</code>,
+  and <strong>0 answered "claude"</strong>. <code>generate()</code> tries providers in the
+  fixed order Claude → Groq → Mistral → Workers AI and returns the instant one succeeds. For
+  Mistral to answer at all, <em>both</em> Claude and Groq must have failed on that call. For
+  Claude to answer zero times out of nine, it must be failing on every single request.</p>
+  <p><strong>Why nobody noticed:</strong> every provider block in <code>generate()</code> is
+  wrapped in <code>try { ... } catch { /* next provider */ }</code>, and a non-<code>r.ok</code>
+  response also just falls through. <strong>A completely dead provider is indistinguishable
+  from a healthy one</strong> — there is no log, no counter, no alert. It degrades silently
+  by design, which is the right behavior for uptime and the wrong behavior for truth.</p>
+  <p><strong>Three real surfaces are reporting this wrongly right now:</strong> (a)
+  <code>GET /v11/llm/status</code> returns <code>active_provider: 'claude'</code> — but it
+  computes that from the first <em>bound</em> provider, never from which one actually
+  answers; (b) the Command Center models panel shows "Claude — ONLINE — Reasoning" on the
+  founder's screen (visible in IMG_8565) on the same basis; (c) Kai El himself told the
+  founder "the first-bound provider is Claude" (IMG_8565) — a correct reading of his own
+  context and a false statement about reality. All three say Claude. Reality is Mistral.</p>
+  <p><strong>Most likely cause, flagged honestly as unconfirmed from here:</strong> the
+  request uses <code>model: 'claude-sonnet-5'</code> (<code>worker/src/index.js:692</code>).
+  If that model ID is not valid for the bound key, the API returns a non-200 and the code
+  falls straight through. Other real candidates: an expired/revoked key, or exhausted
+  credits. This container cannot reach the Anthropic API to tell which — that check needs
+  the founder's own key.</p>
+  <p><strong>Acceptance:</strong> (1) founder confirms whether the Anthropic key is valid
+  and which model ID it's entitled to; (2) fix the model ID or the key; (3) build real
+  provider health visibility so a silently-dead provider can never masquerade as the
+  active one again — at minimum, <code>llm/status</code> must report the provider that
+  actually answered last, not merely the first one bound. (3) is buildable without (1)
+  and is the part that prevents a repeat.</p>
+</div>
+
+<div class="task" data-status="blocked" data-batchable="false" id="task-46">
+  <h3>46. Unmerged branch code appears to be reaching production, and /debug/git hardcodes
+  "main" so it cannot show otherwise</h3>
+  <p class="meta">Found 2026-08-06 while interpreting task 45's test results. Flagged as a
+  real governance/safety question for the founder, not touched.</p>
+  <p><strong>The observation:</strong> the same live test returned Kai El answers containing
+  the near-verbatim wording of tasks 42 and 43's <code>ctxLines</code> fixes ("reached only
+  through a founder-operated GitHub workflow (grok-bridge.yml)", "Claude is bound as
+  Reasoning, Groq as Speed, and Mistral as Local intelligence", and a correct
+  work-done/work-not-started split on proposals) — <strong>while PR #155 carrying those
+  commits was still open and unmerged</strong>, with <code>origin/main</code> sitting at
+  <code>ce9a78e</code>. Task 44's provider-pinning, pushed only minutes before the test, was
+  <em>not</em> live, which is consistent with a deploy that tracks pushes with a build delay
+  rather than tracking <code>main</code> merges.</p>
+  <p><strong>Why this matters:</strong> this session operates under an absolute
+  founder-tightened "automation never merges, ever — every change waits for founder review"
+  rule. That rule assumes unmerged work is <em>not</em> live. If Cloudflare Workers Builds
+  is deploying feature branches to the production <code>*.workers.dev</code> hostname, then
+  pushing a branch is already a production deploy and the review gate is weaker in practice
+  than it reads on paper. Not a claim that anything harmful shipped — everything on this
+  branch was tested — but the founder should know the real shape of the gate.</p>
+  <p><strong>A compounding honesty bug found alongside it:</strong>
+  <code>GET /v11/debug/git</code> returns <code>branch: 'main'</code> and
+  <code>deployed_via: 'Cloudflare Workers Builds from main'</code> as
+  <strong>hardcoded string literals</strong> (<code>worker/src/index.js:1939-1940</code>) —
+  not detected from anything. So the one endpoint whose entire job is reporting deploy
+  identity will insist it is running <code>main</code> no matter what is actually deployed,
+  which is exactly how this went unnoticed.</p>
+  <p><strong>Acceptance:</strong> founder confirms the real Cloudflare Workers Builds branch
+  configuration; then either restrict production deploys to <code>main</code>, or accept
+  branch deploys knowingly and update the never-merge rule's wording to match reality. The
+  hardcoded <code>/debug/git</code> values should be replaced with real build metadata (or
+  honestly reported as unknown) regardless of which way that decision goes.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-12">
@@ -1080,5 +1299,12 @@ branch) does the work → a PR.</li>
 2026-08-06 — Task 39 done: rewrote session-usage.sh with a real checkpoint file (~/.claude/session-usage-checkpoints/, outside the git repo) keyed on the transcript's own real ISO8601 timestamps — sums only entries newer than the last checkpoint, advances it each run, falls back to labeled CUMULATIVE on first-ever run for a transcript rather than silently guessing. Tested for real against the live transcript, 3 consecutive runs: run 1 (no checkpoint) TOKENS: 72650628 (CUMULATIVE...) matching the same order of magnitude as the earlier 71M finding; run 2 TOKENS: 2316 (delta since ...); run 3 TOKENS: 956 (delta since ...) — real, small, correctly-advancing deltas confirmed, not just syntax-checked. TOKENS: [0-9]+ still the first thing on the line so the protocol's own unanchored grep keeps working. bash -n clean.
 2026-08-06 — FIRING RESUMED after founder corrected the weekly-usage misread (was read as "3% left," actually "3% used," 97% of the week's real allowance available) and confirmed PR #152 merged. Continued the queue: tasks 33, 34, 35, 39 done this stretch (all in PR #153); task 32 and 38 stayed pending/blocked on a real, verified repo-wide GitHub Actions capacity issue (multiple unrelated workflows failing/stuck, re-checked before each skip, not assumed). Next pending task is 12, data-batchable=false — stopping here per protocol, own firing needed for safety-critical constitutional-enforcement code. Using the NOW-FIXED session-usage.sh (task 39, same firing) for a real number for the first time: TOKENS: 32754 (delta since 2026-08-06T20:35:46.620Z, 24 usage-bearing entries)
 2026-08-06 — Task 12 done (own firing, founder said proceed): before writing code, found backend/core/constitution.py (the live file) was enforcing a fabricated "v4.0" document (Titles IX-XVI, Cardinal Laws, DR-Axioms) completely unrelated to the real soul.md, with a live GET /v11/constitution/soul_md endpoint serving that fake text as "the" constitution. Stopped, asked the founder how to resolve it (bigger than "add parsing"). Founder: switch to real soul.md, retire the fake text. Rebuilt constitution.py around a real regex parser (verified against the live file first), check() now delegates F-001-F-006 to the already-correct validator.py instead of a third copy of the same logic, get_laws()/get_hash()/get_raw_text() read the real file fresh every call. check_request()'s real per-request safety gates (agent deletion, SOUL printing, etc.) kept fully active, honestly relabeled as OPERATIONAL_SAFETY_RULES instead of fake citations rather than removed. Full suite re-verified before/after (363/375 unchanged), 19 new real tests added (tests/unit/test_constitution.py) including a live proof that editing soul.md's text changes get_laws()'s output (the task's own literal acceptance criterion), plus a genuine TestClient HTTP call proving /v11/agent/delete still returns 403. 394 total passed, 0 failed. Orphan backend/constitution.py left untouched (founder's own call, existing roadmap decision item). PR opened, never self-merged per this task's own standing rule.
+2026-08-06 — Task 32's real end-to-end result: edge-health-probe (rerun after GitHub Actions capacity recovered) found 6 real approved-unactioned proposals (#1-#6). #2/#3/#4 (bind FOUNDER_KEY, provision Vectorize, provision R2) independently confirmed already live in production — founder confirmed, marked actioned_at via POST /v11/proposals/{id}/actioned for real ({"ok":true} x3, verified in job logs). #1 (create venture colony repo) stays unactioned — explicitly founder-only per its own body text. #6 (dropshipping venture) stays unactioned — real money territory, founder's call per standing practice. #5 clarified by the founder into real, larger scope; logged as new task 40. Founder also raised a new, separate real economic-infrastructure idea (Hoard needs its own wallet/spending-tracking/usage-limit self-awareness) logged as new task 41, plus a real storage-scale concern folded into task 41. Full verbatim founder directive + 4 real screenshots (confirming task 33's genome-awareness fix is live and working in production) captured via founder-directive-capture skill: Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-08-06-directive-proposal5-scope-and-hoard-economy-044.md. Neither task 40 nor 41 built — both flagged as needing real founder scoping first, same standing practice as every other large architectural decision this session.
+2026-08-06 — Task 32 now marked DONE: the loop is proven end to end for real (proposal exists → approved → firing detects it unactioned → real verification → marked actioned, never resurfaces), which was its literal acceptance criterion. Not claimed until the actual {"ok":true} responses were read from the job logs.
+2026-08-06 — Task 42 found AND fixed, same firing, from 5 more founder-supplied transcript photos: Kai El correctly named his bound providers (live proof task 31 works) then fabricated in the very next sentence that those providers let him "access various tools and connectors, such as e-commerce platforms, social media management software, and content creation tools, to execute the venture" — all false, they are text-generation APIs granting zero tool access. Root cause: task 31 said WHICH providers were bound but never what a provider IS or what he cannot do; the model filled the silence. Fixed with an explicit capability-boundary line in ctxLines (precisely what he can and cannot do) plus a matching hard rule in the system prompt. node --check clean; real content verification needs a post-merge live re-ask of the same question. This is the founder's own #1 stated concern ("things saying they are connected and they're not connected") caught in the wild and closed within the same firing.
+2026-08-06 — Task 43 done, same firing, from 5 more founder transcript photos (IMG_8561-8565). Three more real context gaps, each verified against the code first and each turning out to be information the hive already had but never sent: (a) Grok is not Groq — asked twice about Grok, Kai El silently answered about Groq, once claiming "Using Groq to research the venture, I found..."; Grok is a real separate system here (grok-bridge.yml/GROK_BRIDGE_KEY) he has zero access to, now stated outright. (b) providerRoster() has carried a real role per provider all along (Claude=Reasoning, Groq=Speed, Mistral=Local intelligence) and the UI displays them on screen, but ctxLines only ever sent label+bound — so Kai El truthfully said the roles "are not explicitly defined in the HIVE CONTEXT" while the founder was looking at them; now sent. (c) the proposals query selected only title+status, so "all approved" was accurate yet left a false impression while three approvals had untouched work — actioned_at now included and each approved item labelled work DONE <ts> or approved but work NOT started yet (a true-but-misleading answer is an F-004 problem too). (d) task 42's boundary extended to rule out narrating research he cannot perform. node --check clean; both new context lines rendered with real sample data and inspected, not assumed.
+2026-08-06 — Task 44 done + THE ANSWER to the founder's question "why is Kai not able to fully utilize each API key that's connected", measured live not inferred. (1) IMG_8553 arrived (the missing 15th photo) and contained a real bug of MY making: Kai El told the founder the Queen has "1743 reports" — 1743 is Nanuet's Elo, and my ctxLines rendered "Nanuet(1743) (Queen)" beside other agents reading "Ma'at(1200) reports to Kai El", so a bare parenthesised number sat right next to the word "reports". Not a hallucination; an ambiguous string read the only way it could be. Every number now carries an explicit label. (2) generate() is a FALLBACK CHAIN, not a router — it returns the instant one provider succeeds, so the per-provider "roles" the UI shows (Speed/Reasoning/Local intelligence) have zero routing logic behind them and were always decorative. Added an `only` parameter + {"provider":"..."} on /command_text that pins one key and returns an honest 502 rather than silently answering through a different provider (a silent fall-through would make any per-provider test a lie). (3) Ran 9 real production requests: 8 answered provider=mistral, 1 answered provider=groq, 0 answered claude — logged as task 45, the real finding. (4) Kai El passed a genuine end-to-end self-executable task: asked to name the hive's biggest gap and file it, he produced a correct CONCERN: marker with real substance, writing to hive_updates for real.
+2026-08-06 — Task 45 opened (BLOCKED, founder-only): Claude's API key is bound but failing 100% of the time. Measured, not inferred — 9 real requests, 0 answered by Claude, and since generate() tries Claude first and returns on success, zero Claude answers means it failed every call. Nobody noticed because every provider block is try/catch with silent fall-through, so a dead provider is indistinguishable from a healthy one — no log, no counter, no alert. Three real surfaces report this wrongly right now: /v11/llm/status says active_provider:'claude' (computed from first BOUND, never from who actually answered), the Command Center panel shows "Claude ONLINE Reasoning" on the founder's screen, and Kai El told the founder "the first-bound provider is Claude". All three say Claude; reality is Mistral. Most likely cause flagged honestly as unconfirmed from this container: model:'claude-sonnet-5' (index.js:692) may not be valid for the bound key, or the key is expired/out of credits — needs the founder's own key to tell which.
+2026-08-06 — Task 46 opened (BLOCKED, founder-only): unmerged branch code appears to reach production. The same live test returned near-verbatim tasks 42/43 ctxLines wording while PR #155 was still open and origin/main sat at ce9a78e; task 44 pushed minutes earlier was NOT live, consistent with a push-triggered build rather than a main-merge-triggered one. Matters because this session's absolute never-merge rule assumes unmerged work is not live — if branches deploy to the production hostname, pushing IS deploying and the review gate is weaker in practice than on paper. Compounding honesty bug found alongside: /debug/git returns branch:'main' and deployed_via:'...from main' as HARDCODED string literals (index.js:1939-1940), so the one endpoint whose job is reporting deploy identity always claims main regardless of what is deployed — exactly how this went unnoticed.
 </body>
 </html>
