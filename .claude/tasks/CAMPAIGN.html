@@ -1441,7 +1441,7 @@ branch) does the work → a PR.</li>
   happen, not just code that compiles.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-15">
+<div class="task" data-status="in-progress" data-batchable="true" id="task-15">
   <h3>15. Worker test infrastructure (zero automated tests found)</h3>
   <p class="meta">Found 2026-08-02 during task 3's scoping pass. Real gap, build-worthy —
   routed here per the protocol's Findings rule. Est. cost: large.</p>
@@ -1455,6 +1455,46 @@ branch) does the work → a PR.</li>
   <p><strong>Acceptance:</strong> A real test command that actually runs and actually
   asserts against real route logic, wired into CI if a worker CI workflow exists (check
   first, don't assume one doesn't).</p>
+  <p><strong>Harness stood up 2026-08-07 — genuinely partial, NOT done.</strong> Moved to
+  in-progress rather than done, because the route coverage this task actually asked for
+  does not exist yet (see what is still missing, below).</p>
+  <p><strong>Why this got picked up now:</strong> the founder called a full stop and asked
+  for an honest audit of whether the work was in the right order. It was not. This task has
+  sat pending since 2026-08-02 while tasks 40-53 were built on top of an untested Worker —
+  and worse, the session that built the provider-routing layer (task 52) wrote 38 real
+  assertions against it and left them in a container scratch directory that dies with the
+  session. Tests that cannot be re-run are barely better than no tests, and the next
+  session would have had no way to know they had ever existed. The founder's instruction
+  was direct: rescue them into <code>worker/test/</code>.</p>
+  <p><strong>What shipped:</strong> <code>worker/package.json</code> (zero dependencies,
+  <code>node --test</code>, matching <code>automaton/</code>'s existing precedent exactly
+  rather than inventing a second pattern) and two suites —
+  <code>worker/test/provider-routing.test.js</code> and
+  <code>worker/test/generate.test.js</code>, <strong>35 tests, all green via
+  <code>npm test --prefix worker</code></strong>. The rescued assertions were rewritten
+  rather than copied: the scratch versions regex-extracted functions out of
+  <code>index.js</code> and rebuilt them with <code>new Function()</code>, which is fragile
+  and tests a reconstruction rather than the real thing. A small named-export block was
+  added at the bottom of <code>index.js</code> (inert in production — the Worker runtime
+  only ever reads <code>export default</code>) so the tests import the actual functions.</p>
+  <p><strong>Wired into CI, per this task's own acceptance:</strong> checked rather than
+  assumed — <code>.github/workflows/ci.yml</code> already ran on every push and pull
+  request but had no Worker job at all. Added one (<code>Test (Worker, Node 22)</code>:
+  <code>node --check</code> then <code>npm test --prefix worker</code>), kept as a separate
+  job from the Python suite so a Worker regression reads as a Worker failure instead of
+  being buried in a pytest log. Verified the exact command CI will run passes locally.</p>
+  <p><strong>Proven to actually catch regressions, not just pass:</strong> a test suite
+  that cannot fail is worth nothing, so the logic was deliberately broken twice and the
+  source restored byte-identically afterwards (verified with <code>diff</code>). Removing
+  the rule that real health outranks a job's provider preference failed 5 tests; changing a
+  failing provider from deprioritised to skipped-entirely failed 7. Restored: 35/35.</p>
+  <p><strong>Still missing — the reason this stays in-progress:</strong> this task asked
+  for coverage of <code>/venture/plan</code>, <code>/legal/research</code>, and the
+  rate-limit + token gating. None of those are covered. What exists covers the provider
+  layer (<code>providerOrder()</code> and <code>generate()</code>) because that is what the
+  rescued tests were about. The <code>fetch</code> handler itself is still entirely
+  untested, and testing it needs stubs for D1, ASSETS, and Vectorize that do not exist
+  yet.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-16">

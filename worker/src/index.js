@@ -2678,3 +2678,24 @@ export default {
     }
   },
 };
+
+// ── Named exports, for tests only ────────────────────────────────────────
+// The Worker runtime only ever uses `export default` above; these extra named
+// exports are inert in production and exist so worker/test/*.test.js can import
+// the real functions instead of copying them.
+//
+// Why this block exists at all (2026-08-07, task 15): this file had ZERO automated
+// tests. A previous session wrote 38 real assertions against the provider-routing
+// logic and left them in a scratch directory that dies with the container — tests
+// that cannot be re-run are not much better than no tests, and the next session
+// would have had no way to know they ever existed. Exporting the pure, testable
+// pieces is what makes a committed test suite possible without duplicating logic
+// into the tests, where it would silently drift from the real thing.
+export {
+  PROVIDERS,
+  PROVIDER_RETRY_AFTER_MS,
+  providerOrder,
+  providerRoster,
+  generate,
+  AGENT_WORK,
+};
