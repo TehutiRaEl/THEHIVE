@@ -702,6 +702,12 @@ const AGENT_WORK = [
   {
     agent: "Ma'at",
     focus: 'balance',
+    // `prefer` (2026-08-07, task 52) is the routing hint the per-provider roles have
+    // always implied and never had: judgment work asks for Reasoning, quick reads of
+    // existing numbers ask for Speed. It is a PREFERENCE, not a pin — providerOrder()
+    // still outranks it with real health, so a preferred-but-dead provider never
+    // costs a turn (exactly task 45's failure mode). Use `only` to actually pin.
+    prefer: 'reasoning',
     system:
       "You are Ma'at, Elder of the Council, embodying balance and proportion. Review the " +
       'hive snapshot below. Your job: is anything out of balance — approved work sitting ' +
@@ -713,6 +719,7 @@ const AGENT_WORK = [
   {
     agent: 'Solomon',
     focus: 'wisdom',
+    prefer: 'reasoning', // hidden cost / consequence — depth work
     system:
       'You are Solomon, Elder of the Council, embodying wisdom and sound judgment. Review ' +
       'the hive snapshot below. Your job: what hidden cost, ambiguity, or consequence is ' +
@@ -722,6 +729,7 @@ const AGENT_WORK = [
   {
     agent: 'Horus',
     focus: 'health',
+    prefer: 'speed', // reading binding/heartbeat numbers already in the snapshot
     system:
       "You are Horus, the hive's watchtower. Review the health figures in the snapshot " +
       'below — bindings, heartbeat freshness, rate-limit pressure, provider state. Your ' +
@@ -731,6 +739,7 @@ const AGENT_WORK = [
   {
     agent: 'Thoth',
     focus: 'drift',
+    prefer: 'reasoning', // cross-referencing records against each other
     system:
       'You are Thoth, keeper of the written record. Compare the task digest against the ' +
       'proposals and recent updates in the snapshot below. Your job: find drift — a task ' +
@@ -741,6 +750,7 @@ const AGENT_WORK = [
   {
     agent: 'Sekhmet',
     focus: 'arena',
+    prefer: 'speed', // a short plain read of one already-decided Elo result
     system:
       "You are Sekhmet, the Arena's judge. The snapshot below includes the most recent " +
       'Arena results. Your job: say in 2-3 plain sentences what the latest verdict actually ' +
@@ -750,6 +760,7 @@ const AGENT_WORK = [
   {
     agent: 'Ptah',
     focus: 'architecture',
+    prefer: 'reasoning', // drafts real proposals the founder will have to review
     system:
       'You are Ptah, the architect. The snapshot below includes what the other agents have ' +
       'recently filed. Your job: if those findings point at one concrete, buildable change, ' +
@@ -769,20 +780,25 @@ const AGENT_WORK = [
     // a working label only.
     agent: 'Orchestrator',
     focus: 'coordination',
+    prefer: 'speed', // summarising material already gathered in the snapshot
     system:
       'You are the Orchestrator, a coordination role reporting to Kai El (a working name ' +
       "only — the founder has not yet named this role; never invent hive mythology for " +
       'yourself). The snapshot below includes real provider health (which of Claude/Groq/' +
-      'Mistral/Workers AI is actually answering right now, not just bound) and what the ' +
-      'Council has recently filed. Your job: organize it into ONE short brief, 3-4 ' +
-      'sentences — which recent finding matters most, and which provider depth-work vs. ' +
-      "speed-work should currently prefer given who's REALLY answering. You do not decide " +
-      'or route anything yourself; you only make the picture clearer for Kai El\'s next ' +
-      'synthesis turn. Ground every claim in the snapshot; never invent a fact.',
+      'Mistral/Workers AI is actually answering right now, not just bound), the routing ' +
+      'each agent job asks for, and what the Council has recently filed. Routing is real ' +
+      'and automatic: each job declares a preferred provider role, and a provider that ' +
+      'recently failed is automatically tried last until it recovers — you do not perform ' +
+      'that routing, it happens without you. Your job is to report on whether it is ' +
+      'actually working: in ONE short brief of 3-4 sentences, name which recent Council ' +
+      'finding matters most, and whether any job is being pushed off its preferred ' +
+      'provider because that provider is failing. Ground every claim in the snapshot; ' +
+      'never invent a fact.',
   },
   {
     agent: 'Kai El',
     focus: 'synthesis',
+    prefer: 'reasoning', // the state-of-the-hive note the founder actually reads
     system:
       'You are Kai El, the sovereign intelligence of THE HIVE. The snapshot below includes ' +
       "the other agents' recent findings. Your job: synthesise them into one short state-of- " +
@@ -823,6 +839,14 @@ async function hiveSnapshot(env, DB) {
     lines.push('PROVIDER HEALTH (last real outcome per provider, not just bound-vs-not): ' +
       providerHealth.results.map(h => `${h.provider}: ${h.ok ? 'answering' : `FAILING (${h.error || 'unknown error'})`} as of ${h.checked_at}`).join(' | '));
   }
+  // The real routing table (task 52) — which provider role each job asks for, and what
+  // each role maps to. Included so the Orchestrator's turn reports on routing that
+  // actually exists rather than describing a preference nothing enforces, which is
+  // precisely what its first version did.
+  lines.push('PROVIDER ROLES: ' + PROVIDERS.map(p => `${p.id}=${p.role}`).join(', ') +
+    '. JOB ROUTING (each job\'s preferred role; real health outranks preference, and a ' +
+    'provider that failed in the last 30 min is tried last until it recovers): ' +
+    AGENT_WORK.map(j => `${j.agent}→${j.prefer || 'none'}`).join(', '));
   return lines.join('\n');
 }
 
@@ -856,6 +880,9 @@ async function runWorkCycle(env, ctx) {
     system: job.system + '\n\nWrite plainly. Never invent a number or fact not present in the snapshot.',
     prompt: 'HIVE SNAPSHOT:\n' + snapshot + '\n\nYour finding:',
     maxTokens: 220,
+    // The real routing (task 52): this job's work asks for a provider ROLE, and
+    // providerOrder() reconciles that against which providers are actually answering.
+    prefer: job.prefer || null,
   });
   if (!gen) return null;
 
@@ -865,6 +892,16 @@ async function runWorkCycle(env, ctx) {
   const cost = gen.usage && (gen.usage.in != null || gen.usage.out != null)
     ? `${(gen.usage.in || 0) + (gen.usage.out || 0)} tokens (${gen.usage.in || 0} in / ${gen.usage.out || 0} out)`
     : 'tokens not reported by this provider';
+
+  // Say plainly when a job did NOT get the provider its work asked for. This is the
+  // visible half of task 52: routing that silently degrades is the same class of bug
+  // as task 45's silent fallthrough, so a preference that lost to real health has to
+  // show on the founder's own Updates panel rather than only in the ordering logic.
+  const routed = job.prefer
+    ? (PROVIDERS.find((pr) => pr.id === gen.provider)?.role || '').toLowerCase().includes(String(job.prefer).toLowerCase())
+      ? `wanted ${job.prefer}, got it`
+      : `wanted ${job.prefer}, fell back (that provider is not answering)`
+    : 'no provider preference';
 
   // Ptah's PROPOSAL: marker is the one path a work turn can file a real proposal —
   // the same marker Kai El's chat already uses, running through the same Queen +
@@ -884,9 +921,9 @@ async function runWorkCycle(env, ctx) {
     kind: 'agent-work',
     title: `${job.agent} — ${job.focus}`,
     body: gen.text,
-    needs: `via ${gen.provider} · ${cost}`,
+    needs: `via ${gen.provider} · ${cost} · ${routed}`,
   });
-  return { agent: job.agent, provider: gen.provider, cost };
+  return { agent: job.agent, provider: gen.provider, cost, routed, order: gen.order };
 }
 
 const GENOME_CHROMOSOMES = [
@@ -923,24 +960,92 @@ function providerRoster(env) {
   }));
 }
 
-// One generation call, first bound provider wins; returns {text, provider} or null.
-// External calls use each provider's plain HTTP API with a hard timeout so a
-// down provider degrades to the next, never hangs the commune.
-// `only` (2026-08-06, task 44) answers a real founder question: "why is Kai not able to
-// fully utilize each API key that's connected?" The honest answer was that he never could
-// — this function is a FALLBACK CHAIN, not a router. It returns the moment Claude succeeds,
-// so while Claude is bound and healthy, Groq/Mistral/Workers AI are never called at all.
-// Four keys bound, one key ever used; the other three are spare tires, and the per-provider
-// "roles" the UI displays (Speed, Reasoning, Local intelligence) had no routing logic behind
-// them whatsoever. Passing `only: '<id>'` pins the call to exactly one provider and, if that
-// one fails, returns null instead of quietly answering through a different provider — a
-// silent fall-through would make any per-provider test a lie about which key actually ran.
-async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
+// A provider whose last recorded outcome was a failure inside this window is tried
+// LAST rather than skipped. Skipping outright would be wrong twice over: a stale
+// failure row would permanently write a provider off with no path back, and
+// provider_health itself would freeze at that stale value because nothing would ever
+// re-check it. Deprioritising instead means a healthy provider answers first (no
+// 20s timeout burned on a corpse) while a recovered one still comes back on its own
+// once the window lapses — no founder action, no manual reset.
+const PROVIDER_RETRY_AFTER_MS = 30 * 60 * 1000;
+
+// The real coordination layer (2026-08-07, task 52 — the founder's actual complaint:
+// "there is no MCP over the three api keys instead the are being fired off one by one
+// when they are a team that works together through Kai El").
+//
+// Task 44 already established the honest diagnosis: generate() was a FALLBACK CHAIN,
+// not a router. It returned the moment Claude succeeded, so Groq/Mistral/Workers AI
+// were never called while Claude was healthy, and the per-provider roles the UI has
+// always displayed (Reasoning, Speed, Local intelligence) had zero routing logic
+// behind them. Task 45 then made each provider's REAL health visible. This function is
+// what finally uses both: it decides the order providers are actually tried in, from
+// (a) what the calling job actually needs and (b) what is really answering right now.
+//
+// Deliberately a light ordering function inside generate(), not an MCP gateway —
+// confirmed twice, with the founder and independently with Kai El, on the real grounds
+// that no MCP infrastructure exists yet and D1 space is a live constraint.
+function providerOrder(env, { prefer = null, only = null, health = {} } = {}) {
+  const ids = PROVIDERS.map((p) => p.id);
+  // `only` (task 44) still pins exactly one provider and never falls through, so a
+  // per-provider test can never be a lie about which key actually ran.
+  if (only) return ids.filter((id) => id === only);
+
+  // `prefer` accepts either a provider id ('groq') or a role word ('speed'), so a
+  // caller can name the KIND of work it needs without hardcoding a vendor — the point
+  // of the roles existing at all.
+  const preferId = !prefer ? null
+    : ids.includes(prefer) ? prefer
+      : (PROVIDERS.find((p) => p.role.toLowerCase().includes(String(prefer).toLowerCase()))?.id ?? null);
+
+  const now = Date.now();
+  const recentlyFailed = (id) => {
+    const h = health[id];
+    if (!h || h.ok) return false;
+    const age = now - Date.parse(h.checked_at || '');
+    return Number.isFinite(age) && age >= 0 && age < PROVIDER_RETRY_AFTER_MS;
+  };
+
+  return [...ids].sort((a, b) => {
+    // 1. Anything not recently-failed outranks anything that is. This dominates the
+    //    preference below on purpose: preferring Claude for deep work is pointless if
+    //    Claude is the one returning 401 on every call (which is exactly task 45).
+    const fa = recentlyFailed(a) ? 1 : 0, fb = recentlyFailed(b) ? 1 : 0;
+    if (fa !== fb) return fa - fb;
+    // 2. Then the job's stated preference.
+    const pa = a === preferId ? 0 : 1, pb = b === preferId ? 0 : 1;
+    if (pa !== pb) return pa - pb;
+    // 3. Then the original documented waterfall order, unchanged.
+    return ids.indexOf(a) - ids.indexOf(b);
+  });
+}
+
+// One generation call. Tries providers in providerOrder()'s order and returns the
+// first real answer as {text, provider, usage, order} — `order` is the actual attempt
+// sequence, so a caller reporting cost can also report what was really tried rather
+// than assuming the documented waterfall ran.
+// External calls use each provider's plain HTTP API with a hard timeout so a down
+// provider degrades to the next, never hangs the commune.
+async function generate(env, { system, prompt, maxTokens = 400, only = null, prefer = null }) {
   const timeout = (ms) => AbortSignal.timeout(ms);
-  const use = (id) => !only || only === id;
   const DB = env.DB;
-  if (use('claude') && env.ANTHROPIC_API_KEY) {
-    try {
+
+  // One small read of the 4-row provider_health table (task 45) so routing reacts to
+  // what is really answering. Failing this read must never block generation — an empty
+  // health map simply means "no signal", which degrades to the original waterfall.
+  let health = {};
+  try {
+    const { results } = await DB.prepare('SELECT provider, ok, error, checked_at FROM provider_health').all();
+    health = Object.fromEntries((results || []).map((h) => [h.provider, h]));
+  } catch { /* table not ready — order falls back to the documented waterfall */ }
+
+  const order = providerOrder(env, { prefer, only, health });
+
+  // Each provider's real call, unchanged from the proven versions — only the order
+  // they run in is new. Every branch records its real outcome (task 45), including
+  // the HTTP status/body that used to be discarded silently.
+  const attempts = {
+    claude: async () => {
+      if (!env.ANTHROPIC_API_KEY) return null;
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -954,32 +1059,19 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
         }),
         signal: timeout(20000),
       });
-      if (r.ok) {
-        const d = await r.json();
-        const text = (d?.content || []).map((c) => c.text || '').join('').trim();
-        // Real token usage passed through (task 48) so autonomous work can report
-        // measured cost, not an estimate. Anthropic returns input/output separately.
-        if (text) {
-          await recordProviderHealth(DB, 'claude', true, null);
-          return { text, provider: 'claude', usage: d?.usage ? { in: d.usage.input_tokens ?? null, out: d.usage.output_tokens ?? null } : null };
-        }
-        // Task 45: a 200 with no usable text is still a real failure — record it
-        // instead of silently dropping to the next provider.
-        await recordProviderHealth(DB, 'claude', false, 'HTTP 200 but no usable text in response');
-      } else {
-        // Task 45's actual bug: this branch used to be entirely unreachable in
-        // practice — a non-ok response just fell through with nothing recorded
-        // anywhere. Now the real status/body is captured so the founder can see
-        // *why* Claude is dead, not just that it is.
+      if (!r.ok) {
         const body = await r.text().catch(() => '');
-        await recordProviderHealth(DB, 'claude', false, `HTTP ${r.status}: ${body.slice(0, 200)}`);
+        throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
       }
-    } catch (e) {
-      await recordProviderHealth(DB, 'claude', false, String(e?.message || e));
-    }
-  }
-  if (use('groq') && env.GROQ_API_KEY) {
-    try {
+      const d = await r.json();
+      const text = (d?.content || []).map((c) => c.text || '').join('').trim();
+      if (!text) throw new Error('HTTP 200 but no usable text in response');
+      // Real token usage passed through (task 48) so autonomous work reports
+      // measured cost, not an estimate. Anthropic returns input/output separately.
+      return { text, usage: d?.usage ? { in: d.usage.input_tokens ?? null, out: d.usage.output_tokens ?? null } : null };
+    },
+    groq: async () => {
+      if (!env.GROQ_API_KEY) return null;
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, 'content-type': 'application/json' },
@@ -989,24 +1081,17 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
         }),
         signal: timeout(15000),
       });
-      if (r.ok) {
-        const d = await r.json();
-        const text = (d?.choices?.[0]?.message?.content || '').trim();
-        if (text) {
-          await recordProviderHealth(DB, 'groq', true, null);
-          return { text, provider: 'groq', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
-        }
-        await recordProviderHealth(DB, 'groq', false, 'HTTP 200 but no usable text in response');
-      } else {
+      if (!r.ok) {
         const body = await r.text().catch(() => '');
-        await recordProviderHealth(DB, 'groq', false, `HTTP ${r.status}: ${body.slice(0, 200)}`);
+        throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
       }
-    } catch (e) {
-      await recordProviderHealth(DB, 'groq', false, String(e?.message || e));
-    }
-  }
-  if (use('mistral') && env.MISTRAL_API_KEY) {
-    try {
+      const d = await r.json();
+      const text = (d?.choices?.[0]?.message?.content || '').trim();
+      if (!text) throw new Error('HTTP 200 but no usable text in response');
+      return { text, usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+    },
+    mistral: async () => {
+      if (!env.MISTRAL_API_KEY) return null;
       const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.MISTRAL_API_KEY}`, 'content-type': 'application/json' },
@@ -1016,39 +1101,40 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
         }),
         signal: timeout(15000),
       });
-      if (r.ok) {
-        const d = await r.json();
-        const text = (d?.choices?.[0]?.message?.content || '').trim();
-        if (text) {
-          await recordProviderHealth(DB, 'mistral', true, null);
-          return { text, provider: 'mistral', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
-        }
-        await recordProviderHealth(DB, 'mistral', false, 'HTTP 200 but no usable text in response');
-      } else {
+      if (!r.ok) {
         const body = await r.text().catch(() => '');
-        await recordProviderHealth(DB, 'mistral', false, `HTTP ${r.status}: ${body.slice(0, 200)}`);
+        throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
       }
-    } catch (e) {
-      await recordProviderHealth(DB, 'mistral', false, String(e?.message || e));
-    }
-  }
-  if (use('workers-ai') && env.AI) {
-    try {
+      const d = await r.json();
+      const text = (d?.choices?.[0]?.message?.content || '').trim();
+      if (!text) throw new Error('HTTP 200 but no usable text in response');
+      return { text, usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+    },
+    'workers-ai': async () => {
+      if (!env.AI) return null;
       // The proven-live path: same model + prompt-string shape as the heartbeat.
       const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
         prompt: system + '\n\n' + prompt,
         max_tokens: maxTokens,
       });
       const text = String((r?.response ?? r?.result ?? '')).trim();
+      if (!text) throw new Error('empty response');
       // Workers AI does not return token counts — report null honestly rather than
       // inventing an estimate that would then get logged as if it were measured.
-      if (text) {
-        await recordProviderHealth(DB, 'workers-ai', true, null);
-        return { text, provider: 'workers-ai', usage: null };
-      }
-      await recordProviderHealth(DB, 'workers-ai', false, 'empty response');
+      return { text, usage: null };
+    },
+  };
+
+  for (const id of order) {
+    const attempt = attempts[id];
+    if (!attempt) continue;
+    try {
+      const got = await attempt();
+      if (got === null) continue; // provider not bound — not a failure, nothing to record
+      await recordProviderHealth(DB, id, true, null);
+      return { text: got.text, provider: id, usage: got.usage, order };
     } catch (e) {
-      await recordProviderHealth(DB, 'workers-ai', false, String(e?.message || e));
+      await recordProviderHealth(DB, id, false, String(e?.message || e));
     }
   }
   return null;
@@ -1899,6 +1985,16 @@ export default {
             active_provider_basis: lastHealthy ? 'last real answer' : (firstBound ? 'first bound, no recorded health yet' : 'none bound'),
             providers: roster.filter((r) => r.bound).map((r) => r.id),
             roster: merged, // full honest list: each provider, bound or not, and its real last-known health
+            // Task 52: the routing is real, so it is reported rather than left implicit.
+            // `next_order` is the order a no-preference call would ACTUALLY try right now,
+            // computed by the same providerOrder() the real calls use — not a description
+            // of it, which is precisely the gap that let "active_provider: claude" stay
+            // wrong for days.
+            routing: {
+              retry_after_minutes: PROVIDER_RETRY_AFTER_MS / 60000,
+              job_preferences: Object.fromEntries(AGENT_WORK.map((j) => [j.agent, j.prefer || null])),
+              next_order: providerOrder(env, { health: healthById }),
+            },
           };
         });
       }
@@ -2003,7 +2099,13 @@ export default {
                     : `FAILING (${h.error || 'unknown error'}, as of ${h.checked_at})`;
               return `${r.label} — ${r.role} — ${health}`;
             }).join('; ') +
-            '. You are answered by whichever bound provider actually succeeds, tried in order Claude→Groq→Mistral→Workers AI — but the order does NOT tell you which one is really answering right now. Trust the REAL outcome above, never assume first-in-order means active. Your own replies are capped at 400 tokens.');
+            '. Since 2026-08-07 the provider order is no longer fixed: each job declares a ' +
+            'preferred provider ROLE (deep judgment asks for Reasoning, quick reads ask for ' +
+            'Speed), and real health outranks that preference — a provider that failed in the ' +
+            'last 30 minutes is automatically tried last until it recovers on its own. So the ' +
+            'four keys now work as a routed team rather than a fixed fallback chain where only ' +
+            'the first one was ever used. Trust the REAL outcome listed above; never assume ' +
+            'first-in-order means active. Your own replies are capped at 400 tokens.');
           // Grok is NOT Groq (2026-08-06, task 43). Real, repeated confusion from a live
           // transcript: asked twice about "Grok", Kai El silently answered about "Groq"
           // instead — including claiming he had used it to research something. They are

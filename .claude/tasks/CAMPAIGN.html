@@ -1214,12 +1214,60 @@ branch) does the work → a PR.</li>
   <code>THE_CODEX.md</code> or <code>SPORE_ROSTER.md</code> fits and inventing hive
   mythology mid-implementation would cross <code>FABLE_DNA.md</code> Chromosome V's own
   Codex boundary.</p>
-  <p><strong>Acceptance:</strong> <code>node --check</code> clean. Rotation fairness and
-  the idempotent agent-seed both verified against real logic runs, not by inspection.
-  Live confirmation owed post-merge: dispatch <code>edge-health-probe</code>, confirm the
-  Orchestrator's <code>agent-work</code> updates appear in <code>GET /v11/updates</code>
-  on its turn, and report its real per-turn token cost the same way task 48 reported the
-  work cycle's first-day cost.</p>
+  <p><strong>Correction, same day, caught by the founder:</strong> the first version of
+  this task shipped the Orchestrator <em>agent</em> and I reported Part 2 as complete. It
+  was not. The agent wrote prose <em>about</em> which provider should be preferred, with
+  no mechanism to make that happen — <code>generate()</code> still had no
+  <code>prefer</code> parameter and no routing whatsoever. The founder's actual complaint
+  ("there is no MCP over the three api keys instead the are being fired off one by one
+  when they are a team that works together through Kai El") was therefore still entirely
+  unfixed. Verified by reading the real function, not my own summary of it. Same failure
+  shape as task 50: some layers done, the one that mattered missing, reported as done.</p>
+  <p><strong>What the real coordination layer actually is (shipped 2026-08-07):</strong>
+  <code>generate()</code> was restructured from a hardcoded four-branch if-chain into an
+  ordered loop over a new <code>providerOrder()</code>, which decides the real attempt
+  order from two inputs: (a) the calling job's preferred provider <em>role</em> — the
+  roles the UI has displayed since forever with zero logic behind them — and (b) real
+  <code>provider_health</code> from task 45. Every <code>AGENT_WORK</code> job now
+  declares a <code>prefer</code>: judgment work (Ma'at, Solomon, Thoth, Ptah, Kai El)
+  asks for Reasoning; quick reads of already-gathered numbers (Horus, Sekhmet,
+  Orchestrator) ask for Speed.</p>
+  <p><strong>Two design decisions worth stating, because both are load-bearing:</strong>
+  (1) <strong>real health outranks preference</strong> — a job that wants Reasoning still
+  skips Claude while Claude is failing, since preferring a dead provider is exactly task
+  45's failure mode wearing a different hat; (2) a failing provider is
+  <strong>deprioritised, never skipped</strong>, and returns to normal priority after 30
+  minutes. Skipping outright would be wrong twice: a stale row would write a provider off
+  permanently with no path back, and <code>provider_health</code> would freeze at that
+  stale value because nothing would re-check it. Deprioritising means a healthy provider
+  answers first (no 20s timeout burned on a corpse) while a recovered one comes back on
+  its own — no founder action, no manual reset.</p>
+  <p><strong>Made visible, not just implemented:</strong> each work-cycle update's
+  <code>needs</code> line now says whether the job got its preferred provider or fell
+  back and why ("wanted reasoning, fell back (that provider is not answering)"), because
+  routing that silently degrades is the same bug class as task 45's silent fallthrough.
+  <code>GET /v11/llm/status</code> gained a <code>routing</code> block reporting the
+  retry window, every job's preference, and <code>next_order</code> — the order a call
+  would <em>actually</em> take right now, computed by the same
+  <code>providerOrder()</code> the real calls use rather than a hand-written description
+  of it. Kai El's <code>ctxLines</code> no longer claims a fixed Claude→Groq→Mistral
+  order, which became false the moment routing became real.</p>
+  <p><strong>Acceptance (met):</strong> <code>node --check</code> clean; the module
+  actually imports (checked, because <code>PROVIDERS</code> is declared below
+  <code>hiveSnapshot()</code> and a temporal-dead-zone error would only appear at load).
+  <strong>38 assertions across two suites, all green, run against the real source text
+  extracted from <code>index.js</code> rather than a copy</strong> — 17 on
+  <code>providerOrder()</code> (the live task-45 scenario, the 30-minute recovery
+  boundary at both 29 and 31 minutes, all-providers-down, clock skew, malformed
+  timestamps, and <code>only</code> still bypassing everything per task 44), and 21
+  driving the restructured <code>generate()</code> end to end with mocked
+  fetch/AI/D1 — proving a dead provider is genuinely not called, that
+  <code>prefer: 'speed'</code> really reaches Groq instead of Claude, that an unbound
+  provider leaves no false failure row, and that everything-down still returns null
+  rather than a fabricated answer. Live confirmation still owed post-merge: dispatch
+  <code>edge-health-probe</code>, confirm the Orchestrator's <code>agent-work</code>
+  updates appear in <code>GET /v11/updates</code> on its turn, and report its real
+  per-turn token cost the same way task 48 reported the work cycle's first-day cost.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-12">
