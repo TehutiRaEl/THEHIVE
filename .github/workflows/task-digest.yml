@@ -1,0 +1,77 @@
+name: Task Digest → Hive
+
+# Feeds the hive's autonomous agents the real CAMPAIGN.html task queue (task 48).
+#
+# Why a workflow rather than the Worker reading the file directly: the Worker's ASSETS
+# binding only serves docs/ (wrangler.jsonc), and .claude/tasks/CAMPAIGN.html is not in
+# docs/. Copying it there would create a second copy that silently drifts — the exact bug
+# task 30 fixed for the roadmap panel. So the repo file stays the single source of truth
+# and this job pushes a compact, derived digest the agents can reason over.
+#
+# Same shape as colony-report.yml → /v11/colony/report, which is already proven in
+# production.
+
+on:
+  workflow_dispatch: {}
+  # Every 4 hours, so an agent's hourly turn is never reasoning over a very stale queue.
+  schedule:
+    - cron: '5 */4 * * *'
+  # Push-trigger on the queue itself: when the task file really changes, refresh promptly
+  # rather than waiting for the next scheduled tick.
+  push:
+    paths:
+      - .claude/tasks/CAMPAIGN.html
+      - .github/workflows/task-digest.yml
+
+jobs:
+  digest:
+    name: Extract CAMPAIGN.html task queue and post it to the hive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the digest
+        run: |
+          python3 - <<'PYEOF' > /tmp/digest.txt
+          import re
+          html = open('.claude/tasks/CAMPAIGN.html', encoding='utf-8').read()
+          rows = []
+          for m in re.finditer(
+                  r'<div class="task" data-status="([a-z-]+)"[^>]*id="task-([0-9a-z]+)"[^>]*>\s*<h3>(.*?)</h3>',
+                  html, re.S):
+              status, tid, title = m.groups()
+              title = ' '.join(re.sub(r'<[^>]+>', '', title).split())
+              rows.append((tid, status, title[:110]))
+          # Open work first — that is what an agent needs to reason about. Done tasks are
+          # counted but not listed; the full history lives in the repo file itself.
+          order = {'pending': 0, 'in-progress': 1, 'blocked': 2, 'done': 3}
+          rows.sort(key=lambda r: (order.get(r[1], 9), r[0]))
+          keep = [r for r in rows if r[1] != 'done'][:28]
+          counts = {}
+          for _, s, _ in rows:
+              counts[s] = counts.get(s, 0) + 1
+          summary = ', '.join(f'{v} {k}' for k, v in sorted(counts.items()))
+          items = ' | '.join(f'#{t} [{s}] {ti}' for t, s, ti in keep)
+          print(f'TASK QUEUE ({summary}). Open items: {items}')
+          PYEOF
+          echo "── digest built ($(wc -c < /tmp/digest.txt) chars)"
+          head -c 400 /tmp/digest.txt; echo
+
+      - name: Post it to the hive
+        env:
+          FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
+        run: |
+          if [ -z "$FOUNDER_KEY" ]; then
+            echo "::warning::FOUNDER_KEY secret not set — the digest endpoint is founder-key gated (it feeds autonomous agents, so an anonymous caller must not be able to hand them a fabricated task list). Skipping the post; the digest above was still built correctly."
+            exit 0
+          fi
+          code=$(python3 -c "
+          import json,sys
+          print(json.dumps({'body': open('/tmp/digest.txt').read().strip()}))
+          " | curl -sS -m 25 -o /tmp/resp.json -w '%{http_code}' \
+              -X POST "https://thehive.sovereignhive.workers.dev/v11/hive/task-digest" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $FOUNDER_KEY" \
+              --data-binary @-)
+          echo "status=$code"; cat /tmp/resp.json; echo
+          [ "$code" = "200" ] || { echo "::error::digest post failed ($code)"; exit 1; }

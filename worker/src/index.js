@@ -380,6 +380,13 @@ async function ensureTables(DB) {
     // the four provisioning items are not stored at all, they are derived live from
     // real binding presence (see roadmapFounderActions()), and completed history stays
     // static in the frontend because it is an append-only historical record.
+    // The CAMPAIGN.html task queue, pushed in by a GitHub Actions workflow (task 48).
+    // The Worker cannot read .claude/tasks/CAMPAIGN.html — the ASSETS binding only serves
+    // docs/ — and copying the file into docs/ would recreate exactly the drift bug task 30
+    // just fixed. So the repo file stays the single source of truth and a workflow posts a
+    // compact digest here for the agents to reason over.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS task_digest
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL, body TEXT NOT NULL)`),
     DB.prepare(`CREATE TABLE IF NOT EXISTS roadmap_items
       (id INTEGER PRIMARY KEY AUTOINCREMENT, section TEXT NOT NULL, title TEXT NOT NULL,
        status TEXT NOT NULL, status_label TEXT, body TEXT,
@@ -630,6 +637,180 @@ const AGENT_JOBS = {
 // exact anti-pattern task 30 just fixed for the roadmap). A short, hand-maintained list
 // instead, same precedent as PROVIDERS/ELDER_VOICES below: update this array in the
 // same commit as any edit to FABLE_DNA.md's own chromosome headings.
+// ── The work cycle: the hive actually working, on its own ────────────────
+// Founder's diagnosis, 2026-08-06, verified true before writing any of this: the hive
+// looked autonomous but was not. The 30-minute heartbeat only ever resolved an Arena
+// challenge (Elo + Math.random()), saved a replay, and spawned a fresh fight over a
+// free-floating philosophical proposition. It never read hive_proposals, never read any
+// task queue, never continued anything. Flipping switches bound capabilities; nothing
+// ever asked the agents to do work, so none was done.
+//
+// Each entry below is a real job over real hive state. The agent gets a compact snapshot
+// and returns a short finding, which is posted to hive_updates so the work is visible
+// (the founder's second problem: background work that leaves no trace).
+//
+// Hard boundary, unchanged: these turns write ONLY to hive_updates and hive_proposals,
+// both add-only and founder-reviewed. No agent can approve, merge, execute, or spend.
+const AGENT_WORK = [
+  {
+    agent: "Ma'at",
+    focus: 'balance',
+    system:
+      "You are Ma'at, Elder of the Council, embodying balance and proportion. Review the " +
+      'hive snapshot below. Your job: is anything out of balance — approved work sitting ' +
+      'untouched too long, authority concentrating, one part racing ahead of another? ' +
+      'Reply in 2-3 sentences naming the single most out-of-balance thing you can actually ' +
+      'see in the data. If everything looks balanced, say so plainly — that is a real ' +
+      'finding, not a failure.',
+  },
+  {
+    agent: 'Solomon',
+    focus: 'wisdom',
+    system:
+      'You are Solomon, Elder of the Council, embodying wisdom and sound judgment. Review ' +
+      'the hive snapshot below. Your job: what hidden cost, ambiguity, or consequence is ' +
+      'nobody accounting for? Reply in 2-3 sentences naming one specific thing. If nothing ' +
+      'genuinely concerns you, say so plainly rather than inventing a worry.',
+  },
+  {
+    agent: 'Horus',
+    focus: 'health',
+    system:
+      "You are Horus, the hive's watchtower. Review the health figures in the snapshot " +
+      'below — bindings, heartbeat freshness, rate-limit pressure, provider state. Your ' +
+      'job: report anything genuinely wrong or degrading, in 2-3 sentences. Only describe ' +
+      'what the numbers actually show. If all is healthy, say so plainly.',
+  },
+  {
+    agent: 'Thoth',
+    focus: 'drift',
+    system:
+      'You are Thoth, keeper of the written record. Compare the task digest against the ' +
+      'proposals and recent updates in the snapshot below. Your job: find drift — a task ' +
+      'marked pending whose work already appears done, a proposal with no matching task, a ' +
+      'record that contradicts another. Reply in 2-3 sentences naming one concrete drift, ' +
+      'or say plainly that the records agree.',
+  },
+  {
+    agent: 'Sekhmet',
+    focus: 'arena',
+    system:
+      "You are Sekhmet, the Arena's judge. The snapshot below includes the most recent " +
+      'Arena results. Your job: say in 2-3 plain sentences what the latest verdict actually ' +
+      'means for the hive, if anything. Be honest when a result is simply an Elo outcome ' +
+      'with no deeper meaning — do not manufacture significance.',
+  },
+  {
+    agent: 'Ptah',
+    focus: 'architecture',
+    system:
+      'You are Ptah, the architect. The snapshot below includes what the other agents have ' +
+      'recently filed. Your job: if those findings point at one concrete, buildable change, ' +
+      "propose it — start your reply with exactly 'PROPOSAL: <short title>', then a blank " +
+      'line, then 2-3 sentences of substance. If nothing yet warrants a proposal, reply ' +
+      'with 2 sentences saying what you are watching and why it is not ready. Do not force ' +
+      'a proposal; a forced one wastes the founder\'s review.',
+  },
+  {
+    agent: 'Kai El',
+    focus: 'synthesis',
+    system:
+      'You are Kai El, the sovereign intelligence of THE HIVE. The snapshot below includes ' +
+      "the other agents' recent findings. Your job: synthesise them into one short state-of- " +
+      'the-hive note, 3-4 sentences, naming what most needs the founder\'s attention. ' +
+      'Ground every claim in the snapshot; never invent a metric you were not given.',
+  },
+];
+
+// One compact, real snapshot of hive state, shared by every agent's turn. Deliberately
+// bounded — this becomes prompt text on a paid call, so it stays small on purpose.
+async function hiveSnapshot(env, DB) {
+  const [agents, props, updates, pulse, reports, digest] = await Promise.all([
+    DB.prepare("SELECT name, elo, reports_to FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 8").all().catch(() => null),
+    DB.prepare('SELECT id, kind, title, status, actioned_at FROM hive_proposals ORDER BY id DESC LIMIT 8').all().catch(() => null),
+    DB.prepare("SELECT kind, title, body FROM hive_updates WHERE kind='agent-work' ORDER BY id DESC LIMIT 5").all().catch(() => null),
+    DB.prepare('SELECT ts, action, detail FROM hive_pulse ORDER BY id DESC LIMIT 3').all().catch(() => null),
+    DB.prepare('SELECT colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT 3').all().catch(() => null),
+    DB.prepare('SELECT body FROM task_digest ORDER BY id DESC LIMIT 1').first().catch(() => null),
+  ]);
+  const lines = [];
+  if (agents?.results?.length) lines.push('AGENTS: ' + agents.results.map(a => `${a.name} [Elo ${a.elo}]`).join(', '));
+  if (props?.results?.length) lines.push('PROPOSALS: ' + props.results.map(p =>
+    `#${p.id} ${p.title} [${p.status}${p.status === 'approved' ? (p.actioned_at ? ', work done' : ', work NOT started') : ''}]`).join(' | '));
+  if (digest?.body) lines.push('TASK QUEUE (from CAMPAIGN.html): ' + String(digest.body).slice(0, 1200));
+  if (pulse?.results?.length) lines.push('RECENT HEARTBEATS: ' + pulse.results.map(x => `${x.ts} ${x.detail || x.action}`).join(' | ').slice(0, 500));
+  if (reports?.results?.length) lines.push('COLONY REPORTS: ' + reports.results.map(c => `${c.colony} (${c.kind}): ${c.body}`).join(' | ').slice(0, 400));
+  if (updates?.results?.length) lines.push('WHAT AGENTS RECENTLY FILED: ' + updates.results.map(u => `${u.title}: ${String(u.body || '').slice(0, 160)}`).join(' | '));
+  const roster = providerRoster(env);
+  lines.push('HEALTH: bindings — DB ' + (!!DB) + ', AI ' + (!!env.AI) + ', VECTORIZE ' + (!!env.VECTORIZE) +
+    ', R2/FILES ' + (!!env.FILES) + ', QUEUE ' + (!!env.LLM_QUEUE) +
+    '; providers bound — ' + roster.filter(r => r.bound).map(r => r.label).join(', '));
+  return lines.join('\n');
+}
+
+// Round-robin: one agent per tick, so the roster cycles instead of every agent firing
+// at once. Which agent is next is derived from how many work-cycle updates already
+// exist, so it survives restarts without needing its own state column.
+async function runWorkCycle(env, ctx) {
+  const DB = env.DB;
+  if (!DB) return null;
+  // Kill switch. Documented in FLIP_THE_SWITCHES.md, but the cycle is ON by default:
+  // a switch the founder has to find and flip is exactly what produced "I flipped the
+  // switches and nothing happened."
+  if (String(env.HIVE_WORK_CYCLE || '').toLowerCase() === 'off') return null;
+
+  // Hourly gate. The cron itself stays every 30 minutes for the Arena (free, pure math);
+  // only this paid half is throttled, by checking when the last agent-work update landed.
+  try {
+    const last = await DB.prepare("SELECT ts FROM hive_updates WHERE kind='agent-work' ORDER BY id DESC LIMIT 1").first();
+    if (last?.ts && (Date.now() - Date.parse(last.ts)) < 55 * 60 * 1000) return null;
+  } catch { /* table not ready — fall through and let the first turn run */ }
+
+  let turn = 0;
+  try {
+    const c = await DB.prepare("SELECT COUNT(*) AS n FROM hive_updates WHERE kind='agent-work'").first();
+    turn = Number(c?.n || 0);
+  } catch {}
+  const job = AGENT_WORK[turn % AGENT_WORK.length];
+
+  const snapshot = await hiveSnapshot(env, DB);
+  const gen = await generate(env, {
+    system: job.system + '\n\nWrite plainly. Never invent a number or fact not present in the snapshot.',
+    prompt: 'HIVE SNAPSHOT:\n' + snapshot + '\n\nYour finding:',
+    maxTokens: 220,
+  });
+  if (!gen) return null;
+
+  // Measured cost, not an estimate — the founder's explicit condition for starting slow
+  // and ramping later on real numbers. Workers AI returns no usage; that reads as
+  // "not reported" rather than a fabricated zero.
+  const cost = gen.usage && (gen.usage.in != null || gen.usage.out != null)
+    ? `${(gen.usage.in || 0) + (gen.usage.out || 0)} tokens (${gen.usage.in || 0} in / ${gen.usage.out || 0} out)`
+    : 'tokens not reported by this provider';
+
+  // Ptah's PROPOSAL: marker is the one path a work turn can file a real proposal —
+  // the same marker Kai El's chat already uses, running through the same Queen +
+  // Elders' Council gate. It still cannot approve itself.
+  const firstLine = (gen.text.split('\n')[0] || '');
+  const marker = firstLine.match(/^\s*PROPOSAL:\s*(.+)/i);
+  if (marker) {
+    const title = marker[1].trim().slice(0, 200);
+    ctx?.waitUntil?.((async () => {
+      const { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote } = await queenDecide(env, 'https://thehive.sovereignhive.workers.dev/', { title, body: gen.text });
+      await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note) VALUES (?,?,?,?,?,?,?,?,?)')
+        .bind(new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote).run();
+    })());
+  }
+
+  await postUpdate(DB, {
+    kind: 'agent-work',
+    title: `${job.agent} — ${job.focus}`,
+    body: gen.text,
+    needs: `via ${gen.provider} · ${cost}`,
+  });
+  return { agent: job.agent, provider: gen.provider, cost };
+}
+
 const GENOME_CHROMOSOMES = [
   ['I', 'The ethical strand', 'the Constitution, F-001–F-006 — binding before any action, no organ may override it'],
   ['II', 'The method strand', 'how Fable debugs: probe before claiming, compare vs. a known-working sibling, find the real coupled cause, never fake a green'],
@@ -697,7 +878,9 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
       if (r.ok) {
         const d = await r.json();
         const text = (d?.content || []).map((c) => c.text || '').join('').trim();
-        if (text) return { text, provider: 'claude' };
+        // Real token usage passed through (task 48) so autonomous work can report
+        // measured cost, not an estimate. Anthropic returns input/output separately.
+        if (text) return { text, provider: 'claude', usage: d?.usage ? { in: d.usage.input_tokens ?? null, out: d.usage.output_tokens ?? null } : null };
       }
     } catch { /* next provider */ }
   }
@@ -715,7 +898,7 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
       if (r.ok) {
         const d = await r.json();
         const text = (d?.choices?.[0]?.message?.content || '').trim();
-        if (text) return { text, provider: 'groq' };
+        if (text) return { text, provider: 'groq', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
       }
     } catch { /* next provider */ }
   }
@@ -733,7 +916,7 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
       if (r.ok) {
         const d = await r.json();
         const text = (d?.choices?.[0]?.message?.content || '').trim();
-        if (text) return { text, provider: 'mistral' };
+        if (text) return { text, provider: 'mistral', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
       }
     } catch { /* next provider */ }
   }
@@ -745,7 +928,9 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
         max_tokens: maxTokens,
       });
       const text = String((r?.response ?? r?.result ?? '')).trim();
-      if (text) return { text, provider: 'workers-ai' };
+      // Workers AI does not return token counts — report null honestly rather than
+      // inventing an estimate that would then get logged as if it were measured.
+      if (text) return { text, provider: 'workers-ai', usage: null };
     } catch { /* fall through */ }
   }
   return null;
@@ -1124,6 +1309,16 @@ export default {
     } catch (e) {
       acted.push('error: ' + String(e));
     }
+    // The work cycle — the hive doing real work on real state, not just Arena theater.
+    // Runs after the Arena half (so a failure here can never stop the heartbeat) but
+    // BEFORE the pulse row is written, so its result actually lands in that row instead
+    // of being computed too late to be recorded. Its own hourly gate lives inside
+    // runWorkCycle(); the cron stays 30-min for the free Arena half.
+    try {
+      const work = await runWorkCycle(env, ctx);
+      if (work) acted.push(`work: ${work.agent} (${work.provider}, ${work.cost})`);
+    } catch (e) { acted.push('work cycle error: ' + String(e)); }
+
     const ts = new Date().toISOString();
     try {
       await DB.prepare('INSERT INTO hive_pulse (ts, action, detail) VALUES (?,?,?)')
@@ -1400,6 +1595,12 @@ export default {
         if (!result.meta?.changes) {
           return json({ detail: `proposal ${id} not found or already decided` }, 404);
         }
+        // Visible in Updates (task 49) — a decision is the single most consequential
+        // event in this system and previously left no trace in the founder-facing feed.
+        ctx?.waitUntil?.(postUpdate(DB, {
+          kind: 'proposal-decided', title: `Proposal #${id} ${decision}`,
+          body: note || `The founder ${decision} this proposal.`,
+        }));
         return json({ ok: true, id, decision, ...(execResult ? { execution: execResult } : {}) });
       }
       // The real bridge (2026-08-04, task 32): an approved proposal used to just sit
@@ -1419,6 +1620,10 @@ export default {
         if (existing.actioned_at) return json({ detail: `proposal ${id} already actioned at ${existing.actioned_at}` }, 409);
         await DB.prepare("UPDATE hive_proposals SET actioned_at=? WHERE id=? AND status='approved' AND actioned_at IS NULL")
           .bind(new Date().toISOString(), id).run();
+        ctx?.waitUntil?.(postUpdate(DB, {
+          kind: 'proposal-actioned', title: `Proposal #${id} picked up — work started`,
+          body: 'An approved proposal was marked as genuinely actioned, so no later firing re-does it.',
+        }));
         return json({ ok: true, id });
       }
       // Sub-Architect's first workflow (TEAM_CHARTERS.md, 2026-07-18): decompose a
@@ -1971,7 +2176,32 @@ export default {
         if (!colony || !reportText) return json({ detail: 'colony and body required' }, 400);
         await DB.prepare('INSERT INTO colony_reports (ts, colony, kind, body) VALUES (?,?,?,?)')
           .bind(new Date().toISOString(), colony, kind, reportText).run();
+        // Visible in Updates (task 49). A colony reporting in is real background work;
+        // before this it landed in its own table and left no trace the founder would see.
+        ctx?.waitUntil?.(postUpdate(DB, {
+          kind: 'colony-report', title: `${colony} reported in (${kind})`, body: reportText,
+        }));
         return json({ ok: true });
+      }
+      // The CAMPAIGN.html task queue, pushed in by .github/workflows/task-digest.yml
+      // (task 48). Founder-key gated: this is what the autonomous agents reason over, so
+      // an anonymous caller must not be able to feed them a fabricated task list.
+      if (p === '/hive/task-digest' && method === 'POST') {
+        if (!founderAuthOk(request, env)) {
+          return json({ detail: env.FOUNDER_KEY ? 'invalid or missing founder key' : 'no FOUNDER_KEY bound yet' }, 401);
+        }
+        const dBody = await request.json().catch(() => ({}));
+        const digest = (dBody.body || '').toString().trim().slice(0, 4000);
+        if (!digest) return json({ detail: 'body required' }, 400);
+        await DB.prepare('INSERT INTO task_digest (ts, body) VALUES (?,?)')
+          .bind(new Date().toISOString(), digest).run();
+        // Keep only the newest few — agents read the latest, history lives in git.
+        await DB.prepare('DELETE FROM task_digest WHERE id NOT IN (SELECT id FROM task_digest ORDER BY id DESC LIMIT 5)').run().catch(() => {});
+        return json({ ok: true, chars: digest.length });
+      }
+      if (p === '/hive/task-digest' && method === 'GET') {
+        const row = await DB.prepare('SELECT ts, body FROM task_digest ORDER BY id DESC LIMIT 1').first().catch(() => null);
+        return json(row || { ts: null, body: null, note: 'no digest posted yet' });
       }
       if (p === '/colony/reports' && method === 'GET') {
         const { limit, offset } = pageParams(url, 50, 200);
