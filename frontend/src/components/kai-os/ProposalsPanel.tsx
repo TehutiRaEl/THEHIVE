@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../utils/constants';
+import { Button } from '../common';
 
 interface Proposal {
   id: number;
@@ -119,20 +120,28 @@ export default function ProposalsPanel() {
             </div>
             {p.body && <p className="text-xs text-slate-400 leading-relaxed">{p.body}</p>}
             <div className="flex items-center gap-2 pt-1">
-              <button
+              {/* First real consumer of components/common (task 13, 2026-08-06). The
+                  shared Button also gives these two a real in-flight spinner via
+                  isLoading, which the hand-written versions never had — previously a
+                  click just dimmed the button with no sign anything was happening. */}
+              <Button
+                variant="success"
+                size="xs"
                 onClick={() => decide(p.id, 'approved')}
-                disabled={busy === p.id || !key}
-                className="px-2.5 py-1 rounded border border-emerald-400/40 text-emerald-300 text-xs hover:bg-emerald-400/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={!key}
+                isLoading={busy === p.id}
               >
                 ✓ Approve
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
+                size="xs"
                 onClick={() => decide(p.id, 'rejected')}
-                disabled={busy === p.id || !key}
-                className="px-2.5 py-1 rounded border border-red-400/40 text-red-300 text-xs hover:bg-red-400/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={!key}
+                isLoading={busy === p.id}
               >
                 ✕ Reject
-              </button>
+              </Button>
             </div>
           </div>
         ))}

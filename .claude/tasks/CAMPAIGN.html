@@ -785,7 +785,7 @@ branch) does the work → a PR.</li>
   correctly. <code>bash -n</code> clean.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="false" id="task-40">
+<div class="task" data-status="blocked" data-batchable="false" id="task-40">
   <h3>40. Proposal #5, real scope (revised) — free/open-source discovery for hive cognition,
   security-vetted, kept intentionally open/training-mode</h3>
   <p class="meta">Found 2026-08-06: <code>hive_proposals</code> #5 was approved but
@@ -812,7 +812,7 @@ branch) does the work → a PR.</li>
   about giving the hive more of its own real capability.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="false" id="task-41">
+<div class="task" data-status="blocked" data-batchable="false" id="task-41">
   <h3>41. The Hoard needs to pay for its own existence — real wallet, spending tracking,
   usage-limit self-awareness</h3>
   <p class="meta">Found 2026-08-06, a new, separate idea raised alongside proposal #5's
@@ -990,6 +990,41 @@ branch) does the work → a PR.</li>
   honestly reported as unknown) regardless of which way that decision goes.</p>
 </div>
 
+<div class="task" data-status="blocked" data-batchable="false" id="task-47">
+  <h3>47. The ~200+ agent roster was catalogued but never queued as real work — founder
+  asked directly, 2026-08-06</h3>
+  <p class="meta"><strong>Opened because the founder asked point-blank whether the "over
+  222" agents were still in the queue or had been left out. Checked rather than recalled;
+  the honest answer was NO — left out.</strong> Blocked on the founder, because building
+  200+ agents is a decision of a completely different size than anything shipped so far.</p>
+  <p><strong>What actually exists today:</strong> <code>SPORE_ROSTER.md</code> — a real,
+  careful catalog of <strong>189 named roles</strong> from two sources kept deliberately
+  separate: 78 distinct role-types from <code>CANVAS.md</code> (a speculative, never-adopted
+  101-headcount game-studio plan) and 111 from <code>docs/ROLES.md</code> (the real, live
+  <code>[ROLE: &lt;Title&gt;]</code> commit-tag convention this session itself uses on every
+  commit). That file explicitly corrects an earlier "202" estimate to 189 "rather than left
+  as a round-number placeholder." The founder has since said 222; the exact intended number
+  is itself an open question.</p>
+  <p><strong>What does NOT exist:</strong> any task, plan, schema, or line of code to
+  actually create, seat, or wire those roles as agents. <code>SPORE_ROSTER.md</code> is a
+  list of names and descriptions. The live <code>agents</code> D1 table holds
+  <strong>8</strong> rows (Nanuet, Kai El, Ma'at, Solomon, Thoth, Sekhmet, Ptah, Horus).
+  Nothing bridges 189 catalogued names to 8 real rows, and no queue item ever proposed to.</p>
+  <p><strong>Why this is genuinely blocked, not just unstarted:</strong> the audit that drove
+  tasks 37/38 established that even the 8 existing agents mostly had no real capability —
+  and only 3 of 6 have been given a real voice so far, deliberately, as a pilot the founder
+  scoped. Creating 189+ more agents before finishing a 6-agent pilot would multiply the exact
+  "name on an org chart with nothing behind it" problem the founder called out as
+  fabrication. It also collides directly with task 41 (the Hoard paying for its own
+  existence): every agent with a real voice costs real tokens per call.</p>
+  <p><strong>Acceptance:</strong> founder answers three things before any build — (1) the
+  real intended number and where 222 comes from vs. SPORE_ROSTER's counted 189; (2) whether
+  these are meant to be real LLM-backed agents like the Elders' Council pilot, or role
+  <em>labels</em> for commits/workflows (which is what <code>docs/ROLES.md</code>'s 111
+  already genuinely are, and are already in live use); (3) how this sequences against tasks
+  38 (finish the 6) and 41 (pay-to-exist), since both bear directly on it.</p>
+</div>
+
 <div class="task" data-status="done" data-batchable="false" id="task-12">
   <h3>12. Port backend/constitution.py's dynamic soul.md parsing into the live file</h3>
   <p class="meta"><strong>Done 2026-08-06, own firing, extra scrutiny applied as
@@ -1049,17 +1084,41 @@ branch) does the work → a PR.</li>
   review required regardless of CI color, per this task's own standing rule.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-13">
+<div class="task" data-status="done" data-batchable="true" id="task-13">
   <h3>13. Wire a real live consumer for components/common (Button/Card/Modal)</h3>
-  <p class="meta">Captured 2026-08-01 (this audit pass) — this is task 11's own
-  acknowledged leftover, which was sitting only in that task's prose until now. Exactly
-  the "don't want it looked over" case this pass exists to catch.</p>
+  <p class="meta"><strong>Done 2026-08-06.</strong> Captured 2026-08-01 — task 11's own
+  acknowledged leftover, which sat only in that task's prose until now.</p>
+  <p><strong>What actually happened:</strong> <code>ProposalsPanel.tsx</code>'s
+  Approve/Reject pair is now the first real consumer of <code>components/common</code>.
+  Chosen because it is genuinely live (the founder uses it to decide real proposals) and
+  because approve/reject is a real semantic pair, not a decorative swap.</p>
+  <p><strong>A real finding the swap surfaced:</strong> before this,
+  <code>components/common</code> had <strong>zero consumers</strong> — so every variant in
+  <code>Button.tsx</code> was an unvalidated guess that had never been rendered on a screen,
+  while the panel's own hand-written styling HAD shipped and been looked at. Where the two
+  disagreed, the panel's won: <code>danger</code> moved from solid red
+  (<code>bg-red-900</code>) to the bordered treatment actually in use. Safe precisely
+  because nothing else consumed it. Added <code>success</code> (its emerald mirror) and
+  size <code>xs</code> (the real buttons are smaller than the previous <code>sm</code>
+  floor). Also fixed a real latent bug: the loading spinner was hardcoded
+  <code>text-white</code>, invisible against the transparent bordered variants — now
+  inherits <code>currentColor</code>.</p>
+  <p><strong>A genuine upgrade, not just a refactor:</strong> the shared component gives
+  both buttons a real in-flight spinner via <code>isLoading</code>, which the hand-written
+  versions never had — a click previously just dimmed the button with no sign anything was
+  happening.</p>
   <p><strong>Prompt:</strong> Task 11 re-skinned <code>components/common/Button.tsx</code>/
   <code>Card.tsx</code>/<code>Modal.tsx</code> to the real Kai EL OS tokens, verified
   against the build, but zero screens actually use them yet. Find a real, currently
   ad-hoc button/card/modal pattern in a live component and swap it over.</p>
-  <p><strong>Acceptance:</strong> At least one real live screen importing from
-  <code>components/common</code>, verified by running the app, no regression.</p>
+  <p><strong>Acceptance (met):</strong> A real live screen (<code>ProposalsPanel</code>,
+  reachable in the Command Center) now imports from <code>components/common</code>.
+  Verified for real, not assumed: frontend build 243/243 pre-existing TS errors unchanged
+  (git-stash-verified baseline), zero errors in any touched file confirmed by grep; and 12
+  render assertions run against the actual component via <code>react-dom/server</code> —
+  emerald/red borders and text, <code>xs</code> sizing, spinner present only when loading,
+  spinner inheriting <code>currentColor</code> rather than white, auto-disable while
+  loading, and disable when no founder key — all 12 PASS.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="false" id="task-14">
@@ -1306,5 +1365,8 @@ branch) does the work → a PR.</li>
 2026-08-06 — Task 44 done + THE ANSWER to the founder's question "why is Kai not able to fully utilize each API key that's connected", measured live not inferred. (1) IMG_8553 arrived (the missing 15th photo) and contained a real bug of MY making: Kai El told the founder the Queen has "1743 reports" — 1743 is Nanuet's Elo, and my ctxLines rendered "Nanuet(1743) (Queen)" beside other agents reading "Ma'at(1200) reports to Kai El", so a bare parenthesised number sat right next to the word "reports". Not a hallucination; an ambiguous string read the only way it could be. Every number now carries an explicit label. (2) generate() is a FALLBACK CHAIN, not a router — it returns the instant one provider succeeds, so the per-provider "roles" the UI shows (Speed/Reasoning/Local intelligence) have zero routing logic behind them and were always decorative. Added an `only` parameter + {"provider":"..."} on /command_text that pins one key and returns an honest 502 rather than silently answering through a different provider (a silent fall-through would make any per-provider test a lie). (3) Ran 9 real production requests: 8 answered provider=mistral, 1 answered provider=groq, 0 answered claude — logged as task 45, the real finding. (4) Kai El passed a genuine end-to-end self-executable task: asked to name the hive's biggest gap and file it, he produced a correct CONCERN: marker with real substance, writing to hive_updates for real.
 2026-08-06 — Task 45 opened (BLOCKED, founder-only): Claude's API key is bound but failing 100% of the time. Measured, not inferred — 9 real requests, 0 answered by Claude, and since generate() tries Claude first and returns on success, zero Claude answers means it failed every call. Nobody noticed because every provider block is try/catch with silent fall-through, so a dead provider is indistinguishable from a healthy one — no log, no counter, no alert. Three real surfaces report this wrongly right now: /v11/llm/status says active_provider:'claude' (computed from first BOUND, never from who actually answered), the Command Center panel shows "Claude ONLINE Reasoning" on the founder's screen, and Kai El told the founder "the first-bound provider is Claude". All three say Claude; reality is Mistral. Most likely cause flagged honestly as unconfirmed from this container: model:'claude-sonnet-5' (index.js:692) may not be valid for the bound key, or the key is expired/out of credits — needs the founder's own key to tell which.
 2026-08-06 — Task 46 opened (BLOCKED, founder-only): unmerged branch code appears to reach production. The same live test returned near-verbatim tasks 42/43 ctxLines wording while PR #155 was still open and origin/main sat at ce9a78e; task 44 pushed minutes earlier was NOT live, consistent with a push-triggered build rather than a main-merge-triggered one. Matters because this session's absolute never-merge rule assumes unmerged work is not live — if branches deploy to the production hostname, pushing IS deploying and the review gate is weaker in practice than on paper. Compounding honesty bug found alongside: /debug/git returns branch:'main' and deployed_via:'...from main' as HARDCODED string literals (index.js:1939-1940), so the one endpoint whose job is reporting deploy identity always claims main regardless of what is deployed — exactly how this went unnoticed.
+2026-08-06 — Founder asked point-blank whether the "over 222" agents were still queued or had been left out. Checked rather than recalled; honest answer NO. SPORE_ROSTER.md exists and is careful (189 named roles: 78 role-types from CANVAS.md's speculative never-adopted studio plan + 111 from docs/ROLES.md's real live [ROLE:] commit-tag convention, and it explicitly corrects an earlier "202" estimate to 189 rather than leaving a round placeholder) — but it is a catalog of NAMES ONLY. No task, plan, schema, or code ever proposed to create/seat/wire them; the live agents table holds 8 rows. Logged as task 47, BLOCKED on the founder: needs (1) the real intended number and where 222 comes from vs the counted 189, (2) whether these are meant to be real LLM-backed agents like the Elders pilot or role LABELS for commits (which docs/ROLES.md's 111 already genuinely are and already are in live use), (3) how it sequences against task 38 (finish the 6-agent pilot) and task 41 (pay-to-exist) — creating 189+ more agents before finishing a 6-agent pilot would multiply the exact "name on an org chart with nothing behind it" fabrication the founder called out, and every agent with a real voice costs real tokens per call.
+2026-08-06 — Tasks 40/41 corrected from pending to blocked: both bodies already stated they need a founder scoping round before any code, so "pending" misrepresented them as workable. Protocol's own rule applied.
+2026-08-06 — Task 13 done: ProposalsPanel's Approve/Reject pair is now the first real consumer of components/common. Real finding the swap surfaced — the shared component had ZERO consumers, so every Button variant was an unvalidated guess never rendered on a screen, while the panel's hand-written styling had actually shipped; where they disagreed the panel's won (danger moved from solid bg-red-900 to the bordered treatment really in use), safe because nothing else consumed it. Added success + size xs to match the real buttons, and fixed a real latent bug: the loading spinner was hardcoded text-white, invisible on the transparent bordered variants, now inherits currentColor. Genuine upgrade not just a refactor — both buttons gain a real in-flight spinner they never had (a click previously just dimmed with no sign anything was happening). Verified: build 243/243 unchanged, zero errors in touched files, and 12 render assertions run against the real component via react-dom/server (borders, text colours, xs sizing, spinner only when loading, spinner colour inheritance, auto-disable while loading, disable without founder key) — all 12 PASS.
 </body>
 </html>
