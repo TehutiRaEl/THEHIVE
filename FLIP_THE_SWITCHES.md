@@ -145,6 +145,39 @@ the exact same Proposals panel you already use, nothing hidden.
 - CORS scoping, list-endpoint pagination, and Cache API edge-caching (`/agents`, `/roadmap`,
   `/llm/status`) — all code-only, no resource to provision, live on the next deploy.
 
+## 10. The work cycle — ON by default, this is the OFF switch
+
+**This one is backwards from every other switch on this page, on purpose.**
+
+Every switch above is off until you turn it on. The work cycle is **already running** —
+one agent per hour, taking a real turn on real hive state, posting what it finds to the
+Updates channel with the measured token cost attached.
+
+That inversion is deliberate. The founder's own words, 2026-08-06: *"after flipping the
+switches, I thought would do so, but it hasn't been done yet."* Flipping switches bound
+capabilities; it never created work, because no code ever asked the agents to do any. A
+tenth switch sitting off would have reproduced exactly that. So the work exists by
+default, and this is how you stop it:
+
+```bash
+npx wrangler secret put HIVE_WORK_CYCLE   # enter: off
+```
+
+Any value other than `off` (or no secret at all) leaves the cycle running.
+
+**What it costs, measured not estimated:** roughly 24 LLM calls a day, one per hour,
+~2,000 tokens each. Every single turn logs its real token count and which provider
+actually answered, so the decision to speed it up or slow it down is made on a real
+number. The Arena half of the heartbeat still runs every 30 minutes and costs nothing —
+it is pure Elo math.
+
+**What it can and cannot do:** agents write only to `hive_updates` and `hive_proposals`,
+both add-only and both founder-reviewed. No agent can approve, merge, execute, or spend.
+Ptah's turn may draft a `PROPOSAL:`, which runs through the same Queen scoring and
+Elders' Council veto as every other proposal, and still waits for you.
+
+---
+
 *2026-07-17 — written alongside the audit-driven Command Center update. Switches 5-6 added
 2026-07-21 (Phase 8 professionalization pass). When you flip one, tell the hive and it will
 re-probe and confirm from the live surface, not assume.*

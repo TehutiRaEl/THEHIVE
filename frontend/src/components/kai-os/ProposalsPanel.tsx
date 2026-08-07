@@ -11,6 +11,15 @@ interface Proposal {
   status: 'pending' | 'approved' | 'rejected';
   decided_at?: string;
   founder_note?: string;
+  // These four were already returned by GET /v11/proposals and already stored in D1,
+  // but this interface never declared them, so the panel silently dropped all four
+  // (task 50, 2026-08-06). That is why the founder's screen showed six flat "decided"
+  // rows while three of them had real work untouched: the distinction existed in the
+  // database and in Kai El's context, and only the human-facing surface was blind to it.
+  actioned_at?: string | null;
+  alignment_score?: number | null;
+  decided_by?: string | null;
+  elder_note?: string | null;
 }
 
 const V11 = `${API_BASE_URL}/v11`;
@@ -151,11 +160,57 @@ export default function ProposalsPanel() {
         <div className="space-y-2">
           <div className="text-slate-500 uppercase tracking-wider text-[10px]">Decided</div>
           {decided.map((p) => (
-            <div key={p.id} className="rounded-lg border border-white/5 bg-void-800/30 p-2.5 text-xs">
-              <span className={p.status === 'approved' ? 'text-emerald-400' : 'text-red-400'}>
-                {p.status === 'approved' ? '✓' : '✕'} {p.title}
-              </span>
-              {p.founder_note && <div className="text-slate-500 mt-1">"{p.founder_note}"</div>}
+            <div key={p.id} className="rounded-lg border border-white/5 bg-void-800/30 p-2.5 text-xs space-y-1">
+              <div className="flex items-start justify-between gap-2">
+                <span className={p.status === 'approved' ? 'text-emerald-400' : 'text-red-400'}>
+                  {p.status === 'approved' ? '✓' : '✕'} {p.title}
+                </span>
+                {/* The distinction the founder could not see before: "approved" and
+                    "approved AND the work actually happened" are different states, and
+                    only actioned_at separates them. Rejected rows get no badge — the
+                    concept does not apply to them. */}
+                {p.status === 'approved' && (
+                  p.actioned_at ? (
+                    <span
+                      title={`Work done ${p.actioned_at}`}
+                      className="shrink-0 text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border border-emerald-400/40 text-emerald-300"
+                    >
+                      work done
+                    </span>
+                  ) : (
+                    <span
+                      title="Approved, but no firing has picked this up yet"
+                      className="shrink-0 text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border border-amber-400/40 text-amber-300"
+                    >
+                      not started
+                    </span>
+                  )
+                )}
+              </div>
+              {/* Who decided it, and — when the Queen auto-approved — how aligned she
+                  scored it. Both were already stored and returned; neither was shown. */}
+              {(p.decided_by || typeof p.alignment_score === 'number') && (
+                <div className="text-slate-500">
+                  {/* decided_by is only ever 'queen' (set by queenDecide) or null — null
+                      means the founder used the founder-key-gated /decide endpoint. The
+                      explicit 'founder' case is handled too so it never renders the
+                      ungrammatical "Decided by founder" if that value ever appears. */}
+                  {p.decided_by === 'queen'
+                    ? 'Decided by the Queen'
+                    : (!p.decided_by || p.decided_by === 'founder')
+                      ? 'Decided by the founder'
+                      : `Decided by ${p.decided_by}`}
+                  {typeof p.alignment_score === 'number' && ` · alignment ${p.alignment_score}/100`}
+                </div>
+              )}
+              {/* An Elder's veto reason. If this is present the Queen wanted to approve
+                  and Ma'at or Solomon objected — the founder should always see why. */}
+              {p.elder_note && (
+                <div className="text-amber-300/80 border-l-2 border-amber-400/40 pl-2">
+                  Elders' Council: {p.elder_note}
+                </div>
+              )}
+              {p.founder_note && <div className="text-slate-500">"{p.founder_note}"</div>}
             </div>
           ))}
         </div>
