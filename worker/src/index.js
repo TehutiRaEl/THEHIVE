@@ -406,6 +406,23 @@ async function ensureTables(DB) {
   // Nanuet (the Queen) has no superior — reports_to stays NULL for her alone.
   await DB.prepare("UPDATE agents SET reports_to='Kai El' WHERE reports_to IS NULL AND name NOT IN ('Nanuet','Kai El')").run().catch(() => {});
   await DB.prepare("UPDATE agents SET reports_to='Nanuet' WHERE reports_to IS NULL AND name='Kai El'").run().catch(() => {});
+  // One new agent row for the orchestrator (2026-08-07, founder-directed full build).
+  // Idempotent by name, only the four columns every other query in this file actually
+  // reads/writes — this table's own CREATE statement predates this file (seeded once,
+  // outside of committed code), so this deliberately does not guess at any other
+  // column's shape. If the live schema really does require more, this insert no-ops
+  // safely and the next heartbeat retries — same degrade-quietly discipline as every
+  // other D1 write here, though the whole point of task 45's fix was to stop degrading
+  // THIS quietly, so: if the Orchestrator never appears in GET /v11/agents, that is the
+  // signal this insert is failing and needs a real look, not silent acceptance.
+  try {
+    const exists = await DB.prepare("SELECT 1 FROM agents WHERE name='Orchestrator'").first();
+    if (!exists) {
+      await DB.prepare(
+        "INSERT INTO agents (name, elo, soul, reports_to, status) VALUES ('Orchestrator', 1200, 0, 'Kai El', 'active')"
+      ).run();
+    }
+  } catch { /* agents table shape differs from assumed, or D1 not ready */ }
 }
 
 // ── The Development Roadmap's real data source (2026-08-04, task 30) ─────
@@ -648,6 +665,13 @@ const AGENT_JOBS = {
   'Sekhmet': "the Arena's judge — resolves every challenge via Elo math (resolveChallenge()); also has an on-demand explain/judge voice (POST /v11/council/consult)",
   'Ptah': 'architect-proposals — drafts real change proposals when Kai El\'s own reply starts with PROPOSAL: (this chat, not a separate agent)',
   'Horus': 'the watchtower — the hive\'s health/status surface (GET /v11/debug/health, /v11/pulse)',
+  // 'Orchestrator' (2026-08-07) is a functional working name, not hive mythology — the
+  // founder asked for this role directly ("an upgraded secretary... directly under Kai,"
+  // "the queen is supposed to delegate and expand on" it) but no name in THE_CODEX.md or
+  // SPORE_ROSTER.md fits it, and inventing one here would cross the Codex boundary
+  // FABLE_DNA.md Chromosome V reserves for the founder. Reports to Kai El, same as every
+  // other Elder — does not replace the council or its own reports_to chain.
+  'Orchestrator': 'coordination under Kai El — reads real provider health (provider_health, task 45) and what the Council has recently filed, and organizes it into one summary rather than routing anything itself; still write-only to hive_updates like every other agent turn',
 };
 
 // The genome's own chapter titles (2026-08-04, task 33) — Kai El previously had zero
@@ -733,6 +757,28 @@ const AGENT_WORK = [
       'line, then 2-3 sentences of substance. If nothing yet warrants a proposal, reply ' +
       'with 2 sentences saying what you are watching and why it is not ready. Do not force ' +
       'a proposal; a forced one wastes the founder\'s review.',
+  },
+  {
+    // The founder's coordination-layer request (2026-08-07): "an orchestrator bot
+    // directly under kai working as a upgraded secretary," which "the queen is
+    // supposed to delegate and expand on." Full build, confirmed directly with the
+    // founder rather than assumed. Reuses this exact AGENT_WORK shape — same
+    // generate() call, same postUpdate() reporting, same round-robin turn — so it
+    // costs about what one more Elder's turn costs, not a new architecture. Its own
+    // real name is an open founder decision (see AGENT_JOBS above); 'Orchestrator' is
+    // a working label only.
+    agent: 'Orchestrator',
+    focus: 'coordination',
+    system:
+      'You are the Orchestrator, a coordination role reporting to Kai El (a working name ' +
+      "only — the founder has not yet named this role; never invent hive mythology for " +
+      'yourself). The snapshot below includes real provider health (which of Claude/Groq/' +
+      'Mistral/Workers AI is actually answering right now, not just bound) and what the ' +
+      'Council has recently filed. Your job: organize it into ONE short brief, 3-4 ' +
+      'sentences — which recent finding matters most, and which provider depth-work vs. ' +
+      "speed-work should currently prefer given who's REALLY answering. You do not decide " +
+      'or route anything yourself; you only make the picture clearer for Kai El\'s next ' +
+      'synthesis turn. Ground every claim in the snapshot; never invent a fact.',
   },
   {
     agent: 'Kai El',
@@ -1091,8 +1137,12 @@ async function queenReview(env, requestUrl, { title, body }) {
       'You are the Queen (Nanuet) of THE HIVE, reviewing one pending proposal against the ' +
       "founder's real, written vision below. Score how aligned the proposal is, 0-100. " +
       'Be strict: default low. Only score 98 or above when the proposal clearly, concretely ' +
-      'serves the vision with no real risk or ambiguity. Reply with EXACTLY two lines: ' +
-      'a line "SCORE: <0-100>" and a line "REASON: <one short sentence>". Nothing else.\n\n' +
+      'serves the vision with no real risk or ambiguity. If, and only if, this proposal is ' +
+      'about coordination, provider routing, or the Orchestrator role you delegate work to ' +
+      '(reports to Kai El), let your REASON line briefly note what you are delegating or ' +
+      'expanding — that is real, part of your own responsibilities, not a new gate. Reply ' +
+      'with EXACTLY two lines: a line "SCORE: <0-100>" and a line "REASON: <one short ' +
+      'sentence>". Nothing else.\n\n' +
       'FOUNDER\'S VISION:\n' + vision.slice(0, 4000);
     const gen = await generate(env, {
       system, maxTokens: 100,

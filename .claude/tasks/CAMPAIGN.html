@@ -953,6 +953,22 @@ branch) does the work → a PR.</li>
   active one again — at minimum, <code>llm/status</code> must report the provider that
   actually answered last, not merely the first one bound. (3) is buildable without (1)
   and is the part that prevents a repeat.</p>
+  <p><strong>(3) shipped 2026-08-07, fixed first and standalone per the founder's own
+  sequencing choice</strong> (fix visibility before the bigger coordination-layer build,
+  so Kai El isn't reasoning on bad provider info while that's in progress). New bounded
+  <code>provider_health</code> table (upserted, exactly 4 rows forever — never a growing
+  log, respecting the founder's own flagged D1-space constraint) records the real outcome
+  of every <code>generate()</code> attempt, including the actual HTTP status/error body
+  that used to be silently discarded. <code>GET /v11/llm/status</code> now reports the
+  provider that really last answered, with a stated basis, instead of the first bound
+  one. <code>hiveSnapshot()</code> (read by every work-cycle agent) and Kai El's own
+  <code>ctxLines</code> (the exact surface that told the founder "the first-bound
+  provider is Claude") both now carry real per-provider health instead of assumed call
+  order. Verified against a real in-memory SQLite run (not just read): the upsert stays
+  at exactly one row per provider across repeated writes, and repeated failures update
+  the same row's <code>checked_at</code> rather than accumulating. (1) and (2) — the
+  actual key/model fix — remain founder-only, unchanged; this task stays <em>blocked</em>
+  on those, not closed.</p>
 </div>
 
 <div class="task" data-status="blocked" data-batchable="false" id="task-46">
@@ -1159,6 +1175,51 @@ branch) does the work → a PR.</li>
   <em>labels</em> for commits/workflows (which is what <code>docs/ROLES.md</code>'s 111
   already genuinely are, and are already in live use); (3) how this sequences against tasks
   38 (finish the 6) and 41 (pay-to-exist), since both bear directly on it.</p>
+</div>
+
+<div class="task" data-status="done" data-batchable="false" id="task-52">
+  <h3>52. The Orchestrator — a new coordination role directly under Kai El, founder-directed
+  full build</h3>
+  <p class="meta"><strong>Done 2026-08-07.</strong> Founder asked directly for "an
+  orchestrator bot directly under kai working as a upgraded secretary," explicitly the
+  full build rather than a small first step (checked via direct question, not assumed),
+  and for it to be "what the queen is supposed to delegate and expand on." Distinct from
+  task 47's 189/222-agent roster question — this is ONE new named role, not a step toward
+  that number; task 47 stays exactly as blocked.</p>
+  <p><strong>Also confirmed directly, both with the founder and independently with Kai
+  El:</strong> no full MCP server gateway (no MCP infrastructure exists yet, D1 space is
+  a real named constraint, and <code>memory/_graph.json</code>'s 101-node knowledge graph
+  is real on disk but was never wired into the live Worker at all) — a light coordination
+  layer inside <code>generate()</code> itself, which is what task 45's fix already built.
+  This task is the second half: an actual agent that reads that health data and organizes
+  it, rather than every founder-facing surface computing it fresh each time.</p>
+  <p><strong>What shipped:</strong> a new entry in the existing <code>AGENT_WORK</code>
+  round-robin (verified fair over 32 simulated ticks: exactly 4 turns each across all 8
+  agents including the new one) — reuses the same <code>generate()</code> call,
+  <code>postUpdate()</code> reporting, and write-only-to-<code>hive_updates</code>
+  boundary as every other agent turn, so this costs about what one more Elder's turn
+  costs, not a new subsystem. One new <code>agents</code> table row
+  (<code>reports_to='Kai El'</code>, matching the existing hard rule that only Nanuet may
+  have a NULL <code>reports_to</code>), seeded idempotently — verified against a real
+  SQLite run that seeding twice still leaves exactly one row. Nanuet's existing
+  proposal-scoring call gained one small, additive prompt line letting her note
+  delegation/expansion guidance in her existing REASON field when a proposal actually
+  touches this role — no new column, no rebuild of her job.</p>
+  <p><strong>Explicitly NOT built, flagged rather than guessed:</strong> no new D1 tables
+  beyond that one <code>agents</code> row (the founder's own D1-space concern, and task
+  47's "don't multiply the org-chart-with-nothing-behind-it problem" lesson applies here
+  too); no wiring of <code>memory/_graph.json</code> into the live Worker (a separate real
+  gap, its own founder decision); the role's <strong>real name is still an open founder
+  decision</strong> — 'Orchestrator' in code is a working label only, since no name in
+  <code>THE_CODEX.md</code> or <code>SPORE_ROSTER.md</code> fits and inventing hive
+  mythology mid-implementation would cross <code>FABLE_DNA.md</code> Chromosome V's own
+  Codex boundary.</p>
+  <p><strong>Acceptance:</strong> <code>node --check</code> clean. Rotation fairness and
+  the idempotent agent-seed both verified against real logic runs, not by inspection.
+  Live confirmation owed post-merge: dispatch <code>edge-health-probe</code>, confirm the
+  Orchestrator's <code>agent-work</code> updates appear in <code>GET /v11/updates</code>
+  on its turn, and report its real per-turn token cost the same way task 48 reported the
+  work cycle's first-day cost.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-12">
