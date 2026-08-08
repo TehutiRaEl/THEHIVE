@@ -13,6 +13,16 @@ capable of, and envisions; and find what it opens up that has not yet been consi
 **Disposition:** audit only. No code written from this document. No new CAMPAIGN tasks
 (count held at 60, per standing instruction); findings fold into existing tasks 41 / 47 / 51 / 53.
 
+**⚠️ Superseded, fabrication half only — see `VISION/2026-08-08-vision-arithmancer-full-
+dissection-011.md`.** This pass discarded every fabrication after flagging it false. The
+founder correctly named that as the actual gap the same day: *"filtering-and-rejecting isn't
+the job… what fabrications can we still derive improvements, implications and otherwise
+from."* 011 runs each fabrication below through the new `fabrication-mining` skill instead of
+stopping at "false." This file is kept as-is, uncorrected — the fact that a first pass
+under-mined the material is itself part of the record, not something to quietly fix in place.
+Everything else here (provenance, the "already built in System A" scoreboard, the recency-
+weighting finding) stands, unchanged and not superseded.
+
 ---
 
 ## 0. The headline, before either lens

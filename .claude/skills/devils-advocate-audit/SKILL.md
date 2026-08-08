@@ -81,6 +81,8 @@ Check `AUDIT_LEDGER.md` first — it tracks what's already been swept so this do
 
 Not a rewrite pass, not a style review, not `simplify` or `security-review` (use those skills for their own jobs). This skill's only question is: **does this actually do what its "done" status claims, verified by running it, not by reading it?** If the answer is yes, record that and move on — a clean bill of health is a real, useful outcome, not a wasted pass.
 
+Not a mining pass either. When this skill's own interrogation lands on a verdict of false/fabricated rather than "works" vs. "doesn't," that verdict is the handoff point to `fabrication-mining` — a sibling skill, not a step of this one. This skill's job ends at reaching the true/false verdict; `fabrication-mining` picks up from there to ask what a false claim was reaching for. Keeping the two separate means a devil's-advocate pass that finds nothing false stays a clean, short report, and a mining pass never gets run on something that hasn't actually been proven false yet.
+
 ## Origin
 
 Built 2026-07-31 at the founder's direct request, after the wallet.py bug (found by a coverage-writing pass, not by review) raised the question of how many similar bugs might be sitting unverified across everything already shipped — including a moment in the same session where a connector needed for a task turned out to require the founder's own setup step, which is exactly the kind of silent gap this skill is built to surface instead of let pass quietly. Hybridizes `memory/philosophy/devils-advocate.md` (the interrogation) with `.claude/skills/fable-debugger/SKILL.md` (the verification discipline) — neither replaces the other; this skill is what they produce together, aimed at something neither was pointed at before.

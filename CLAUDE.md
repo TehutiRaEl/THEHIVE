@@ -111,6 +111,17 @@ runs immediately, no `npm install`.
   top-level orchestrator and runs this gate — **nothing sits above it**, deliberately.
   Batching rule: `memory/philosophy/resonance-interference.md` — amplify in phase, cancel out
   of phase; sequence the out-of-phase rather than merging them.
+- **A false claim gets mined, not just discarded.** Founder correction, made three times
+  before a mechanism existed (`Fable_memory.md` 2026-08-02; `HIVE_UPDATES/2026-08-08-directive-
+  innovator-lens-correction-047.md`; `HIVE_UPDATES/2026-08-08-directive-fabrication-mining-
+  049.md`): *"filtering-and-rejecting isn't the job."* `.claude/skills/fabrication-mining/
+  SKILL.md` runs strictly **after** a claim is already judged false — never a substitute for
+  reaching that verdict — and produces one of five verdicts, including the load-bearing null
+  result `NO-SIGNAL` (some fabrications really are just wrong; a skill that always finds value
+  is doing motivated reasoning, not analysis). `dual-lens` invokes it as a conditional Stage 3
+  when the subject under review is source material with a discard pile to mine, not the hive's
+  own design decisions. Companion `FABRICATION_PATTERNS.md` tracks recurring fabrication
+  *shapes* across documents — a shape cited twice is predictive in a way one instance isn't.
 - **The organism.** `.claude/skills/autonomous-hive-agent/SKILL.md` names how the hive's
   autonomy pieces (audit, execution, skill-drafting, compounding efficiency, cross-domain
   synthesis, scheduling) work together; `.claude/HIVE_PULSE.md` is the one page every

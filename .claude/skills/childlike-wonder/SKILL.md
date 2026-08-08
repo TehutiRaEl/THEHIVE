@@ -79,6 +79,8 @@ because this repo has a measured history of doctrine with no mechanism behind it
 ## Links
 
 `dual-lens` (the binding gate — normally invoke that, not this alone) ·
-`devils-advocate-audit` (the other lens) · `polymath-lens` (cross-domain synthesis on
-finished deliverables — related to step 5 but for closing out, not deciding) ·
+`devils-advocate-audit` (the other lens) · `fabrication-mining` (this skill's mirror for the
+discard pile — asks "what did the reach for this reveal" about things already judged false,
+rather than "what could this become" about things judged real) · `polymath-lens` (cross-domain
+synthesis on finished deliverables — related to step 5 but for closing out, not deciding) ·
 `memory/philosophy/childlike-wonder.md` (source doctrine)
