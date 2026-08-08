@@ -105,6 +105,7 @@
 
   <nav class="toc" id="toc">
     <a href="#" data-tab="home"><span class="domain-num">0</span>How to use this document</a>
+    <a href="#" data-tab="projects"><span class="domain-num">★</span>THE PROJECT LEDGER — start here</a>
     <a href="#" data-tab="backend"><span class="domain-num">1</span>Backend — System A (FastAPI)</a>
     <a href="#" data-tab="worker"><span class="domain-num">2</span>Edge Worker — System B</a>
     <a href="#" data-tab="frontend"><span class="domain-num">3</span>Command Center / Frontend UI</a>
@@ -184,6 +185,264 @@ chat transcript rather than distilled plan content. Their existence, size, and l
 honestly in §6 rather than silently omitted or fabricated. Everything else listed above was read in
 full or, where explicitly noted (the two large MODIFICATIONS source-code files), read structurally
 in full with representative content quoted rather than the entire raw file reproduced.</div>
+</section>
+
+<!-- ================= TAB ★: THE PROJECT LEDGER ================= -->
+<section class="tab" id="tab-projects">
+<h2>★ · THE PROJECT LEDGER — start here</h2>
+<div class="src">Written 2026-08-07 after the founder recognised the real shape of the work:
+<em>"I was providing one project in essence that was more one project folder that had multiple
+projects and sub categories and sections and task and workflows in each individual project."</em>
+The nine tabs beside this one are organised by <strong>domain</strong> (where code lives). This tab is
+organised by <strong>project and dependency order</strong> (what to do next, and why that one first).
+Both views describe the same work — open a domain tab for depth, use this tab to decide what to touch.</div>
+
+<h3>How to resume from this page — for any AI, in any session</h3>
+<p>You do not need the conversation that produced this. Every project below carries the same six
+fields, in the same order, and that is deliberately the entire contract:</p>
+<ol>
+  <li><strong>Goal / done means</strong> — falsifiable, not aspirational.</li>
+  <li><strong>State</strong> — one of <code>unverified</code> → <code>compiles</code> →
+      <code>tested</code> → <code>merged</code> → <code>deployed</code> →
+      <code>verified-live</code>, <em>with its evidence</em>. These levels are
+      <strong>not cumulative by assumption</strong>: merged ≠ deployed, and deployed ≠ anything
+      ever ran it. Vocabulary and CI check: <code>.claude/skills/wired-or-not/SKILL.md</code>.</li>
+  <li><strong>Depends on</strong> — by project number. Do not start a project whose dependency is unmet.</li>
+  <li><strong>Next action</strong> — exactly one. Not a list.</li>
+  <li><strong>Blocked on founder</strong> — the specific decision needed, or "nothing".</li>
+  <li><strong>Skills</strong> — reach for these rather than re-deriving method.</li>
+</ol>
+<p><strong>Before you start anything:</strong> run <code>dual-lens</code> on any architectural
+choice (devil's advocate first, childlike wonder second — that order, always). If the founder sends
+new information mid-work, run <code>founder-input-intake</code> <em>before</em> your next action.
+Before batching two projects together, check
+<code>memory/philosophy/resonance-interference.md</code> — amplify in phase, sequence out of phase.</p>
+
+<h3>The order, and why</h3>
+<div class="founder-quote">"Infrastructure and money are just as important, but without
+infrastructure, it doesn't pay to exist if you have no infrastructure so infrastructure first."
+— the founder, 2026-08-07, overriding a proposal that put verification first. They are right: you
+cannot monetise what has nowhere to run.</div>
+
+<table>
+<tr><th>#</th><th>Project</th><th>State</th><th>Gate it opens</th></tr>
+<tr><td><strong>P0</strong></td><td>Infrastructure &amp; deploy truth</td><td><span class="tag blocked">blocked</span></td><td>A known host; certainty about what deploys</td></tr>
+<tr><td><strong>P1</strong></td><td>Pay-to-exist / economy</td><td><span class="tag blocked">blocked</span></td><td>The hive can fund and meter itself</td></tr>
+<tr><td><strong>P2</strong></td><td>Truth &amp; verification</td><td><span class="tag live">mostly shipped</span></td><td>Claims can be trusted</td></tr>
+<tr><td><strong>P3</strong></td><td>The agent system</td><td><span class="tag live">running</span></td><td>Agents do real work reliably</td></tr>
+<tr><td><strong>P4</strong></td><td>Command Center truth</td><td><span class="tag blocked">partly wrong</span></td><td>The UI stops lying</td></tr>
+<tr><td><strong>P5</strong></td><td>Federation / colonies</td><td><span class="tag decision">unaudited</span></td><td>The mesh is real</td></tr>
+<tr><td><strong>P6</strong></td><td>MCP / Python harness</td><td><span class="tag dead">not started</span></td><td>—</td></tr>
+<tr><td><strong>P7</strong></td><td>Ventures</td><td><span class="tag blocked">awaiting founder</span></td><td>—</td></tr>
+</table>
+
+<hr>
+
+<details open>
+<summary>P0 · Infrastructure &amp; deploy truth <span class="tag blocked">blocked on founder</span></summary>
+<p><strong>1. Goal / done means.</strong> The hive has a known place to run that is not only the
+edge, <em>and</em> it is certain what code is actually serving production. Done when: a host exists
+and answers a health check, and <code>/v11/debug/git</code> reports real build identity instead of a
+hardcoded string.</p>
+<p><strong>2. State: <code>unverified</code> — and one part is proven broken.</strong></p>
+<ul>
+  <li><strong>Proven (edge-health-probe runs <code>31216723801</code>, <code>31216919290</code>):</strong>
+  unmerged branch code IS serving production. <code>active_provider_basis</code> and the
+  <code>Orchestrator</code> agent row appear in live responses with <strong>zero</strong> occurrences
+  in <code>origin/main</code>. Pushing a branch here is a production deploy. In the same run,
+  <code>/v11/debug/git</code> returned <code>"branch":"main"</code> — the deploy-identity endpoint
+  stating a falsehood.</li>
+  <li><strong>Proven:</strong> System A is live nowhere — <code>thehive-queen.onrender.com/v11/health</code>
+  returns <strong>404</strong>. <code>render.yaml</code> is an undeployed blueprint.</li>
+  <li><strong>Ready, never switched on:</strong> <code>.github/workflows/deploy.yml</code> lines 24–58
+  already target an Oracle Always Free box, run <code>docker-compose up -d --build</code>, and
+  health-check <code>localhost:8080</code>. Inert only because <code>ORACLE_HOST</code>,
+  <code>ORACLE_USER</code>, <code>ORACLE_SSH_KEY</code> are unset.</li>
+</ul>
+<p><strong>3. Depends on.</strong> Nothing. This is the root.</p>
+<p><strong>4. Next action.</strong> Founder decides the Oracle box: provision it (set the three
+secrets — <code>deploy.yml</code> then works with no code change) <em>or</em> decide against it, in
+which case System A gets honestly marked retired, <code>deploy.yml</code> is deleted rather than left
+skipping forever, and <code>biosystem.html</code>'s "Demo Mode — start JASPER backend" message is
+reworded to stop implying a backend is coming.</p>
+<p><strong>5. Blocked on founder.</strong> Two decisions. <em>(a)</em> Oracle box: provision or
+retire (CAMPAIGN task 53). <em>(b)</em> Cloudflare Workers Builds branch config — restrict production
+to <code>main</code>, or accept branch deploys knowingly and rewrite the never-merge rule to match
+reality (task 46). <strong>The Cloudflare Developer Platform connector is installed but disabled in
+chat</strong>; enabling it lets an AI read this configuration directly instead of asking.</p>
+<p><strong>6. Skills.</strong> <code>wired-or-not</code> (never claim a deploy without evidence),
+<code>dual-lens</code> (provision-vs-retire is architectural), <code>devils-advocate-audit</code>.</p>
+<p><strong>Why one decision unblocks three things:</strong> the Oracle box is simultaneously the
+missing host for System A, the reason <code>biosystem.html</code> shows Demo Mode, and the only place
+a Python/MCP harness (P6) could ever run.</p>
+</details>
+
+<details>
+<summary>P1 · Pay-to-exist / economy <span class="tag blocked">blocked on founder</span></summary>
+<p><strong>1. Goal / done means.</strong> The hive can see what it costs to stay alive, and fund it.
+Done when: real spend is tracked per call, a wallet exists, and the token ceiling measures work rather
+than cache mechanics.</p>
+<p><strong>2. State: <code>tested</code>, partly <code>verified-live</code>.</strong> Real measured
+cost now exists — the work cycle runs at <strong>~900 tokens/turn, ~24 turns/day</strong>
+(probe <code>31216919290</code>), <em>under</em> the 2k/turn estimate. So "start slow, ramp on real
+numbers" finally has real numbers. The wallet/ledger itself (CAMPAIGN task 41) is unbuilt.</p>
+<p><strong>3. Depends on.</strong> P0 — you cannot price infrastructure you have not chosen.</p>
+<p><strong>4. Next action.</strong> Founder picks the token-ceiling measure (task 51): count real
+input+output only (measured 422,464 — the honest measure of reasoning done), raise the limit, or keep
+counting cache creation and accept early stops.</p>
+<p><strong>5. Blocked on founder.</strong> Task 51 (ceiling measure). Task 45 — the bound
+<code>ANTHROPIC_API_KEY</code> is <strong>rejected as invalid</strong>; production returned
+Anthropic's verbatim <code>401 authentication_error — "API key is invalid."</code> No code change
+fixes a credential. Task 41 (wallet) needs scope.</p>
+<p><strong>6. Skills.</strong> <code>wired-or-not</code>, <code>dual-lens</code>,
+<code>checks-and-balances</code> (spending is authority).</p>
+</details>
+
+<details>
+<summary>P2 · Truth &amp; verification <span class="tag live">mostly shipped 2026-08-07</span></summary>
+<p><strong>1. Goal / done means.</strong> A claim in this repo can be trusted without re-deriving it.
+Done when every completion claim names a truth level and carries checkable evidence.</p>
+<p><strong>2. State: <code>merged</code> for the mechanism, <code>verified-live</code> for the probe
+assertion.</strong> Shipped: <code>wired-or-not</code> skill (five levels),
+<code>scripts/check-claims.py</code> wired into CI (a <code>verified-live</code> claim without a run
+ID / SHA / committed test path fails the build), 35 Worker tests in <code>worker/test/</code>
+(mutation-tested — breaking the routing failed 5 and 7 tests respectively), and the probe's
+work-cycle assertion.</p>
+<p><strong>The finding that created this project:</strong> 34 of 36 <code>done</code> tasks had never
+been confirmed against production, and <strong>84%</strong> of tasks promising "verification owed
+post-merge" never got it. Full audit:
+<code>Project_file/Founders Visonary Folder/VISION/2026-08-07-vision-reality-audit-007.md</code>.</p>
+<p><strong>3. Depends on.</strong> Nothing — it was built first precisely because everything else
+needs it.</p>
+<p><strong>4. Next action.</strong> Extend Worker test coverage to the <code>fetch</code> handler
+(<code>/venture/plan</code>, <code>/legal/research</code>, rate-limit + token gating) — CAMPAIGN task
+15 is <code>in-progress</code>, not done, and says so.</p>
+<p><strong>5. Blocked on founder.</strong> Nothing. This one can proceed.</p>
+<p><strong>6. Skills.</strong> <code>wired-or-not</code>, <code>devils-advocate-audit</code>,
+<code>nine-miss-truths</code>.</p>
+</details>
+
+<details>
+<summary>P3 · The agent system <span class="tag live">verified running</span></summary>
+<p><strong>1. Goal / done means.</strong> Agents do real, useful, visible work on real hive state.
+Done when every named agent has a real job, takes real turns, and the roster question is settled.</p>
+<p><strong>2. State: <code>verified-live</code> — edge-health-probe run <code>31216919290</code>.</strong>
+17 <code>agent-work</code> rows, exactly hourly across 8+ hours, <strong>7 distinct agents rotating</strong>
+(Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thoth), writing to real D1. The agents also generated
+real proposals (#7, #8). <strong>Exception, stated honestly:</strong> the Orchestrator is
+<code>deployed</code> (its row is in <code>/v11/agents</code>) but has <em>not</em> been observed
+taking a work turn — so it is <strong>not</strong> <code>verified-live</code>.</p>
+<p><strong>3. Depends on.</strong> P1 — every agent turn costs tokens.</p>
+<p><strong>4. Next action.</strong> Observe one Orchestrator turn in <code>/v11/updates</code> and
+record it, moving it from <code>deployed</code> to <code>verified-live</code>.</p>
+<p><strong>5. Blocked on founder.</strong> Task 47 — the real intended headcount (222 vs.
+<code>SPORE_ROSTER.md</code>'s counted 189), and whether those are real LLM-backed agents or role
+<em>labels</em>. Founder has already decided the sequencing: <em>"drop the 100k, focus on the 8."</em>
+Also: the Orchestrator still has a working label, not a name — naming crosses
+<code>FABLE_DNA.md</code> Chromosome V and stays founder territory.</p>
+<p><strong>6. Skills.</strong> <code>checks-and-balances</code> (new agents = new authority),
+<code>dual-lens</code>, <code>wired-or-not</code>.</p>
+</details>
+
+<details>
+<summary>P4 · Command Center truth <span class="tag blocked">partly wrong today</span></summary>
+<p><strong>1. Goal / done means.</strong> What the founder sees on screen is what is actually true.
+Done when no component is orphaned, one frontend is canonical, and no panel implies a backend that
+does not exist.</p>
+<p><strong>2. State: <code>deployed</code> but partly untrue.</strong> <code>/app/</code> serves a real
+bundle (<code>assets/index-pdM0psdT.js</code>) and the 13 tabs are genuinely lazy-loaded from
+<code>frontend/src/pages/KaiElOS.tsx</code>. But <strong>11 files are genuinely orphaned</strong> —
+imported by nothing: <code>TesseractChamber</code>, <code>MissionCard</code>,
+<code>MissionTimeline</code>, <code>ConstitutionVisualizer</code>, <code>MemoryGraphEnhanced</code>,
+<code>AchievementToast</code>, <code>LevelUpNotification</code>, <code>Avatar</code>,
+<code>AvatarCustomizer</code>, <code>worlds/AchievementTracker</code>,
+<code>worlds/MultiplayerManager</code>. That is the honest core of "the Command Center was never
+truly up to date."</p>
+<div class="src"><strong>Method warning for whoever audits this next:</strong> a first scan reported
+14 dead tabs. That was <strong>wrong</strong> — they are <code>lazy(() =&gt; import(...))</code>-loaded.
+Any orphan scan here must resolve dynamic imports, or it will manufacture false findings.</div>
+<p><strong>3. Depends on.</strong> P2 (so "wired" claims are trustworthy).</p>
+<p><strong>4. Next action.</strong> For each of the 11: wire it in or delete it. Leaving them is what
+makes "the Command Center is current" untrue.</p>
+<p><strong>5. Blocked on founder.</strong> Which frontend is canonical — this React Command Center, or
+the separate "gamified UI" set (<code>TesseractChamber</code> et al.) merged via
+<code>feature/gamified-ui-components</code>. <code>CLAUDE.md</code> has flagged this as unchecked for
+weeks.</p>
+<p><strong>6. Skills.</strong> <code>ux-review</code>, <code>design-review</code>,
+<code>consistency-check</code>, <code>wired-or-not</code>.</p>
+</details>
+
+<details>
+<summary>P5 · Federation / colonies <span class="tag decision">unaudited</span></summary>
+<p><strong>1. Goal / done means.</strong> The 6 colonies genuinely receive constitution sync and
+report back. Done when each colony's health and constitution version is verifiable from the Queen.</p>
+<p><strong>2. State: <code>deployed</code>, unaudited.</strong>
+<code>/v11/debug/colony-ping</code> returns all six (NAR2, 4DBRAIN, aether, automatisch, Kimi-K2,
+LocalAGI) marked <code>"checked-in-ci"</code> — the edge cannot reach colony origins directly, so
+that field is a pointer to CI, not a live health result.</p>
+<p><strong>3. Depends on.</strong> P0, P2.</p>
+<p><strong>4. Next action.</strong> Read a real colony-health CI run and record which colonies
+actually answered, at what constitution version.</p>
+<p><strong>5. Blocked on founder.</strong> Nothing known.</p>
+<p><strong>6. Skills.</strong> <code>colony-health-monitor</code> (subagent),
+<code>constitutional-validator</code>, <code>merge-verify</code>.</p>
+</details>
+
+<details>
+<summary>P6 · MCP / Python harness <span class="tag dead">not started, blocked by construction</span></summary>
+<p><strong>1. Goal / done means.</strong> A deterministic phase-runner drives agent work, so the model
+reasons inside one phase instead of orchestrating itself.</p>
+<p><strong>2. State: <code>unverified</code> — nothing built, deliberately.</strong> Founder's
+standing decision on the source document: triage only, no build. Source preserved at
+<code>SOURCES/research-notes/2026-08-07-agentic-harness-mcp-waterfall.md</code>, triage at
+<code>VISION/2026-08-07-vision-agentic-harness-triage-006.md</code>.</p>
+<p><strong>3. Depends on.</strong> <strong>P0, absolutely.</strong> This needs a long-running process,
+a real filesystem, and Docker. A Cloudflare Worker structurally cannot provide any of the three.</p>
+<p><strong>4. Next action.</strong> None until P0 resolves. If it does: build the deterministic
+phase-runner <em>first</em> — <em>"do not let the AI orchestrate itself"</em> is the load-bearing idea;
+everything else is decoration on top of it.</p>
+<p><strong>5. Blocked on founder.</strong> P0's host decision. Founder decisions already on record:
+drop the 100k-agent layer, focus on the existing 8; self-expansion stays gated default-off like
+<code>AUTOMATON_FINANCIAL_AUTONOMY</code>.</p>
+<p><strong>6. Skills.</strong> <code>agent-harness</code>, <code>hive-conductor</code>,
+<code>alchemical-process</code> (extract the minimal pattern, never adopt a whole framework).</p>
+<div class="src"><strong>Do not copy the source document's code.</strong> Its orchestrator does not
+compile — <code>json.dump(plan_data, indent=2, f)</code> is a SyntaxError, confirmed with
+<code>py_compile</code>. Architecture sketch, not tested code.</div>
+</details>
+
+<details>
+<summary>P7 · Ventures <span class="tag blocked">awaiting founder</span></summary>
+<p><strong>1. Goal / done means.</strong> The hive pursues real revenue under the Constitution.</p>
+<p><strong>2. State: <code>unverified</code>.</strong> Five approved-but-unactioned proposals sit in
+production (probe <code>31216723801</code>): #8 and #7 (agent-generated, about unactioned work
+itself), #6 (book-merch dropshipping), #5 (free-API discovery), #1 (create a "venture" colony repo).</p>
+<p><strong>3. Depends on.</strong> P1 — ventures without a wallet or cost model are guesses.</p>
+<p><strong>4. Next action.</strong> Founder triages the five, since #1 is explicitly founder-only by
+its own body text.</p>
+<p><strong>5. Blocked on founder.</strong> All of it. Real money and entity formation are permanently
+founder-held (<code>soul.md</code>).</p>
+<p><strong>6. Skills.</strong> <code>dual-lens</code>, <code>constitutional-validator</code>,
+<code>devils-advocate-audit</code>, <code>MANDATE_TRIAGE.md</code>.</p>
+</details>
+
+<hr>
+<h3>Everything currently blocked on the founder, in one place</h3>
+<table>
+<tr><th>P</th><th>Decision needed</th><th>Where</th></tr>
+<tr><td>P0</td><td>Provision the Oracle box, or retire System A honestly</td><td>task 53</td></tr>
+<tr><td>P0</td><td>Cloudflare Workers Builds: restrict to <code>main</code>, or accept branch deploys</td><td>task 46</td></tr>
+<tr><td>P1</td><td>Replace the invalid <code>ANTHROPIC_API_KEY</code></td><td>task 45</td></tr>
+<tr><td>P1</td><td>Token-ceiling measure: real work only / raise / keep</td><td>task 51</td></tr>
+<tr><td>P3</td><td>Real agent headcount, and real agents vs. role labels</td><td>task 47</td></tr>
+<tr><td>P3</td><td>Name the Orchestrator</td><td>task 52</td></tr>
+<tr><td>P4</td><td>Which frontend is canonical</td><td>CLAUDE.md</td></tr>
+<tr><td>P7</td><td>Triage the 5 approved-unactioned proposals</td><td>live D1</td></tr>
+</table>
+<p class="src">Two connector/settings actions would remove several of these from the founder's plate
+by letting an AI read the answer directly: enable the <strong>Cloudflare Developer Platform</strong>
+connector (installed, currently disabled in chat) and apply <strong>branch protection + required
+status checks</strong> — see <code>docs/BRANCH_PROTECTION.md</code>.</p>
 </section>
 
 <!-- ================= TAB 1: BACKEND (SYSTEM A) ================= -->

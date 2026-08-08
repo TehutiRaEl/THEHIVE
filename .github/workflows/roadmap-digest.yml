@@ -1,0 +1,111 @@
+name: Roadmap Digest → Command Center
+
+# Pushes the P0-P7 project ledger from FULL_PLAN.html into the Command Center's roadmap panel.
+#
+# Why a workflow and not a copy: the ledger lives in .claude/tasks/FULL_PLAN.html, which the
+# Worker cannot read (the ASSETS binding only serves docs/). Copying it into docs/ would create
+# a second file that silently drifts — the exact bug task 30 fixed for this very panel, which
+# had been telling the founder to provision four things they had already provisioned.
+#
+# So the repo file stays the single source of truth and this job pushes a derived digest into
+# the existing roadmap_items D1 table via the already-built, founder-gated
+# POST /v11/roadmap/development. Same proven shape as task-digest.yml → /v11/hive/task-digest.
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '25 */6 * * *'
+  push:
+    paths:
+      - .claude/tasks/FULL_PLAN.html
+      - .github/workflows/roadmap-digest.yml
+
+jobs:
+  digest:
+    name: Extract the P0-P7 ledger and post it to the Command Center
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the digest
+        run: |
+          python3 - <<'PYEOF' > /tmp/roadmap.json
+          import html as htmlmod
+          import json, re
+
+          html = open('.claude/tasks/FULL_PLAN.html', encoding='utf-8').read()
+          sec = re.search(r'id="tab-projects">(.*?)</section>', html, re.S)
+          if not sec:
+              raise SystemExit('::error::project ledger section not found in FULL_PLAN.html')
+          sec = sec.group(1)
+
+          def text(s):
+              # unescape AFTER stripping tags, so "&amp;" renders as "&" in the panel
+              # rather than leaking raw entities onto the founder's screen
+              return ' '.join(htmlmod.unescape(re.sub(r'<[^>]+>', ' ', s)).split())
+
+          # Non-greedy on BOTH groups, then filter. An earlier version allowed the title
+          # group to contain tags, which let it run past </summary> and swallow every
+          # project into one — 8 projects parsed as 1, with P0's title on P7's body.
+          # Caught by running this parser against the real file before the workflow shipped.
+          items = []
+          pairs = [(h, b) for h, b in re.findall(r'<summary>(.*?)</summary>(.*?)</details>', sec, re.S)
+                   if re.match(r'\s*P\d\b', text(h))]
+          for i, (head, body) in enumerate(pairs):
+              title = text(head)
+              # The status tag the ledger already renders — reused rather than re-derived,
+              # so the UI badge and the document can never disagree.
+              tag = re.search(r'class="tag (\w+)"', head)
+              status = {'live': 'active', 'blocked': 'blocked',
+                        'dead': 'backlog', 'decision': 'decision'}.get(
+                            tag.group(1) if tag else '', 'backlog')
+
+              # Pull the two fields a founder glancing at the panel most needs.
+              def field(name):
+                  m = re.search(rf'<strong>\d\.\s*{name}[^<]*</strong>(.*?)(?=<p><strong>\d\.|\Z)',
+                                body, re.S)
+                  return text(m.group(1))[:400] if m else ''
+
+              nxt = field('Next action')
+              blocked = field('Blocked on founder')
+              parts = []
+              if nxt: parts.append('NEXT: ' + nxt)
+              if blocked: parts.append('BLOCKED ON YOU: ' + blocked)
+              parts.append('Full detail + resume instructions: .claude/tasks/FULL_PLAN.html '
+                           '→ "THE PROJECT LEDGER" tab.')
+
+              items.append({
+                  'section': 'projects',
+                  'title': title[:200],
+                  'status': status,
+                  'statusLabel': (tag.group(1) if tag else 'backlog'),
+                  'body': ' · '.join(parts)[:900],
+                  'sort_order': i,
+              })
+
+          if not items:
+              raise SystemExit('::error::no P0-P7 projects parsed — refusing to push an empty roadmap')
+          print(json.dumps({'section': 'projects', 'items': items}))
+          PYEOF
+          echo "── parsed $(python3 -c "import json;print(len(json.load(open('/tmp/roadmap.json'))['items']))") projects"
+          python3 -c "
+          import json
+          for it in json.load(open('/tmp/roadmap.json'))['items']:
+              print(' ', it['statusLabel'].ljust(9), it['title'][:70])
+          "
+
+      - name: Post it to the Command Center
+        env:
+          FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
+        run: |
+          if [ -z "$FOUNDER_KEY" ]; then
+            echo "::warning::FOUNDER_KEY not set — /v11/roadmap/development is founder-gated (it writes what the founder sees, so an anonymous caller must not be able to rewrite the roadmap). Digest above was still built correctly; skipping the post."
+            exit 0
+          fi
+          code=$(curl -sS -m 25 -o /tmp/resp.json -w '%{http_code}' \
+              -X POST "https://thehive.sovereignhive.workers.dev/v11/roadmap/development" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $FOUNDER_KEY" \
+              --data-binary @/tmp/roadmap.json)
+          echo "status=$code"; cat /tmp/resp.json; echo
+          [ "$code" = "200" ] || { echo "::error::roadmap post failed ($code)"; exit 1; }
