@@ -59,7 +59,7 @@ jobs:
 
       - name: Post it to the hive
         env:
-          FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
+          FOUNDER_KEY: ${{ secrets.FOUNDERS_KEY }}
         run: |
           if [ -z "$FOUNDER_KEY" ]; then
             echo "::warning::FOUNDER_KEY secret not set — the digest endpoint is founder-key gated (it feeds autonomous agents, so an anonymous caller must not be able to hand them a fabricated task list). Skipping the post; the digest above was still built correctly."
