@@ -835,6 +835,25 @@ branch) does the work → a PR.</li>
   founder-only architectural decision (financial infrastructure + a possible new spending-
   cap/self-preservation mechanism for the hive), same standing practice as every other item
   of this size this session. Needs a real scoping round before any code.</p>
+  <p><strong>Two real inputs added 2026-08-08</strong> from the Arithmancer PDF audit
+  (<code>VISION/2026-08-08-vision-arithmancer-thermodynamics-audit-010.md</code>) — folded in
+  here rather than opened as new tasks, per the standing no-new-tasks rule:</p>
+  <p><strong>(a) The storage worry above already has an answer written, in the dead half.</strong>
+  <code>backend/core/criteria.py</code> is a real, tested retention policy — age
+  (90-day default), relevance (adoption count), health flags, and an archive-never-destroy
+  discipline into <code>pruned_memory</code>. It has never run, because System A runs nowhere
+  (task 53). The hive has meanwhile been improvising the same principle ad hoc: task 45's
+  <code>provider_health</code> is deliberately "exactly 4 rows forever — never a growing log."
+  That was a good instinct made one table at a time; <code>criteria.py</code> is the same
+  instinct written down as a policy. Start scoping from it rather than from a blank page.</p>
+  <p><strong>(b) Task 51 solved the measurement; it did not touch the cost.</strong> The
+  ceiling now counts real work, but ~90-96% of actual spend was cache creation driven by
+  re-materialising a very large context every turn. That is a real cost lever, not just an
+  accounting one, and it belongs to this task: the cheapest version is carrying a small,
+  deliberately-compressed essence forward instead of the whole conversation —
+  <code>.claude/HIVE_PULSE.md</code> is already a hand-built instance of exactly that pattern
+  ("one page, kept small on purpose… read first, in full — nothing else"), it was simply never
+  recognised as a cost mechanism.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="true" id="task-42">
@@ -1451,6 +1470,37 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   A should be honestly marked retired, <code>deploy.yml</code> removed rather than left
   permanently skipping, and <code>biosystem.html</code>'s Demo Mode label reworded to say the
   backend is not coming rather than implying the founder should go start it.</p>
+  <p><strong>New evidence for the "provision" side, 2026-08-08 — arriving from outside the
+  hive.</strong> The Arithmancer PDF audit
+  (<code>VISION/2026-08-08-vision-arithmancer-thermodynamics-audit-010.md</code>) argues at
+  length that a specific cluster of ideas is the unexplored frontier "where no corporation
+  dares to play." Every one of them is <em>already real code in System A</em>, grepped and
+  cited today — and therefore already paid for, already written, and running nowhere:</p>
+  <ul>
+    <li>a 7.83 Hz Schumann carrier — <code>core/frequency_guild.py:21</code>, plus
+    <code>tier3/arena_renderer.py</code>, <code>tier3/tesseract_model.py</code>,
+    <code>core/arena.py:164</code>, <code>api/routes.py:368,372</code>;</li>
+    <li>"store the gradient, not the past" — <code>core/alchemy.py</code>'s
+    Capture→Evaluate→<strong>Prune</strong>→Dissect→Return→Propagate with a literal
+    <code>_prune_to_essence()</code>, which is <em>canonical law in <code>soul.md</code></em>,
+    not a sketch;</li>
+    <li>deliberate graceful forgetting — <code>core/criteria.py</code>,
+    <code>config.py:31</code>'s <code>decay_rate = 0.95</code>;</li>
+    <li>holographic binding / eigenvector essence — <code>core/hdc.py</code>, real 1024-dim VSA.</li>
+  </ul>
+  <p>This does not decide anything — provisioning cost and ongoing maintenance remain exactly
+  the founder's call, and "retire it honestly" is still a legitimate answer. It changes what is
+  on the scale: this decision is not only about whether a Python host is worth the upkeep, it
+  is about whether the hive's most distinctive built-and-paid-for capabilities ever run at all.</p>
+  <p><strong>A related, smaller finding from the same audit</strong>, recorded here because it
+  is more evidence that the dead half already reasoned about things the live half has not:
+  the live Worker's semantic memory has <strong>no recency weighting whatsoever</strong>.
+  <code>remember()</code> (<code>worker/src/index.js:1160</code>) stores a real <code>ts</code>
+  in every row's metadata; <code>recall()</code> (<code>:1171</code>) is pure cosine
+  <code>topK</code> and never reads it, so a day-one fact outranks today's whenever it embeds
+  closer. The field needed to fix it is already stored and a decay constant already exists in
+  the repo — it is a re-rank over data already present, and now testable, since
+  <code>worker/test/</code> exists (task 15). Deliberately not opened as a new task.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-12">
