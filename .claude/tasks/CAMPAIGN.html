@@ -1177,9 +1177,8 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   rendered the ungrammatical "Decided by founder"), now fixed.</p>
 </div>
 
-<div class="task" data-status="blocked" data-batchable="false" id="task-51">
-  <h3>51. The 3M-token ceiling is unusable in a persistent session — 96% of what it
-  counts is cache creation, not real work</h3>
+<div class="task" data-status="done" data-batchable="false" id="task-51">
+  <h3>51. The 3M-token ceiling counted cache creation, not real work — DECIDED and fixed 2026-08-08</h3>
   <p class="meta"><strong>Found 2026-08-07 by the ceiling check doing its job and
   stopping this firing before any task was started.</strong> Blocked on the founder: the
   ceiling is founder-set, so only the founder can change it.</p>
@@ -1239,6 +1238,34 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   complete sessions of autonomous work and will cost every future one until decided. The three
   options are unchanged: (a) count only real input+output; (b) keep counting cache creation but
   raise the limit; (c) keep exactly as-is and accept that firings stop early.</p>
+  <p><strong>DECIDED 2026-08-08 — the founder chose (a): count real input + output only.</strong>
+  Asked directly, while present and directing. Shipped the same session, in the one place the
+  script's own comment already named as the adjustment point.</p>
+  <p><strong>What changed:</strong> <code>.claude/scripts/session-usage.sh</code>'s
+  <code>total</code> is now <code>total_in + total_out</code>. Cache reads stay excluded as they
+  always were. Cache creation is <em>still reported</em>, on the same line, explicitly labelled
+  <em>"reported separately, NOT counted"</em> — deliberately kept off the summable
+  <code>TOKENS:</code> figure, because task 39 fixed a real bug caused by two different meanings
+  sharing one label, and repeating that would be the same mistake wearing a different hat. Task
+  39's checkpoint/delta logic is untouched, and <code>TOKENS: &lt;n&gt;</code> is still the first
+  thing on the line so the protocol's own unanchored grep keeps matching.</p>
+  <p><strong>Acceptance (met — tested with a fixture, not just observed):</strong> a real bug was
+  caught and fixed mid-change first — a backtick in an added comment sat inside the
+  <code>python3 -c "…"</code> double-quoted string and became live command substitution
+  (<code>bash</code> tried to execute <code>TOKENS: &lt;n&gt;</code>); found by running the script,
+  not by reading it. Then proven on a 3-entry fixture with known values:
+  cumulative mode returned <strong>TOKENS: 160</strong> (100+50+7+3) with 1,700,000 cache creation
+  correctly excluded-but-reported; a re-run with no new entries returned <strong>0</strong>, not a
+  re-sum; appending one more entry returned <strong>15</strong>, not 175 — so the delta really is a
+  delta. <code>bash -n</code> clean, no stderr noise.</p>
+  <p><strong>A third independent measurement, taken during this change</strong> and consistent with
+  the two above: this session read <strong>94,038</strong> real reasoning against
+  <strong>822,063</strong> cache creation — <strong>89.7%</strong> cache under the old measure.
+  Three measurements, same shape.</p>
+  <p><strong>Still true and still owed:</strong> this makes the rail measure work instead of
+  conversation age; it does <em>not</em> make cache creation free. That is real spend, and it now
+  feeds <strong>task 41</strong> (the Hoard paying for its own existence) as a visible,
+  separately-labelled number rather than a hidden one.</p>
 </div>
 
 <div class="task" data-status="blocked" data-batchable="false" id="task-47">

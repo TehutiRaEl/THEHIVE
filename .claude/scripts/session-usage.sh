@@ -13,6 +13,12 @@
 # That exact line format is what CAMPAIGN.html's ceiling check greps for —
 # don't change the format without updating the check that reads it.
 #
+# What TOKENS counts (founder decision 2026-08-08, CAMPAIGN.html task 51):
+# real input + real output ONLY. Cache creation and cache reads are both
+# excluded. Cache creation is still printed, labelled, at the end of the
+# line — visible but never summable. See the comment at the `total = ...`
+# line below for the two measurements that drove the change.
+#
 # Checkpointed delta (added 2026-08-06, CAMPAIGN.html task 39): this script
 # originally summed the WHOLE transcript every time, which is correct only
 # if each firing starts a genuinely fresh session. THEHIVE's daily Routine
@@ -89,12 +95,27 @@ with open(transcript) as f:
         total_out += usage.get('output_tokens', 0)
         total_cache_create += usage.get('cache_creation_input_tokens', 0)
 
-# Billable-weight total: real input + real output + real cache writes.
-# Cache READS are deliberately excluded from this sum — they're billed at a
-# fraction of input price, and including them would make the ceiling
-# massively overstate cost for a long, well-cached session. If that
-# judgment call turns out wrong, adjust here — it's one line, documented.
-total = total_in + total_out + total_cache_create
+# Real reasoning total: input + output only. Founder decision, 2026-08-08
+# (CAMPAIGN.html task 51) — this line previously also added
+# total_cache_create, and that judgment call was explicitly flagged as
+# revisable right here ('if that judgment turns out wrong, adjust here').
+# It turned out wrong, and it was measured twice before being changed:
+#   2026-08-07  ceiling total 10,125,486  — 96%   cache creation
+#   2026-08-08  ceiling total 13,941,762  — 94.7% cache creation
+# Both firings were stopped by the ceiling before doing any work, while the
+# genuine reasoning underneath was 422,464 and 734,232 respectively — both
+# comfortably under the 3,000,000 limit. Cache creation scales with how long
+# and large this persistent, self-bound conversation has grown, NOT with how
+# much work a firing does, so counting it made the rail fire on conversation
+# age rather than on cost of work. Cache READS stay excluded as they always
+# were (billed at a fraction of input price).
+total = total_in + total_out
+
+# Cache creation is still REPORTED, never silently dropped — it is real spend
+# and the founder should be able to see it. It is deliberately kept off the
+# TOKENS figure and labelled, because task 39 fixed a real bug caused
+# by two different meanings sharing one summable label. Never add this number
+# to a TOKENS total.
 
 # Advance the checkpoint to the newest timestamp actually seen this run —
 # NOT to 'now', so a transcript that hasn't grown since the last check
@@ -103,8 +124,10 @@ if latest_ts:
     with open(checkpoint_file, 'w') as cf:
         cf.write(latest_ts)
 
+basis = f'real input {total_in} + output {total_out}; cache-creation {total_cache_create} reported separately, NOT counted'
+
 if since_ts is None:
-    print(f'TOKENS: {total} (CUMULATIVE — no prior checkpoint for this transcript, this is the whole-session total, not one firing\'s delta; checkpoint now set for next run)')
+    print(f'TOKENS: {total} (CUMULATIVE — no prior checkpoint for this transcript, this is the whole-session total, not one firing\'s delta; checkpoint now set for next run) [{basis}]')
 else:
-    print(f'TOKENS: {total} (delta since {since_ts}, {counted_lines} usage-bearing entries)')
+    print(f'TOKENS: {total} (delta since {since_ts}, {counted_lines} usage-bearing entries) [{basis}]')
 "
