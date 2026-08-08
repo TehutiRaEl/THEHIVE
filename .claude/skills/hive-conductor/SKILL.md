@@ -1,6 +1,6 @@
 ---
 name: hive-conductor
-description: The Master Harness of the Sovereign Hive. Use when a founder directive needs to be decomposed into sub-tasks, routed to the right hive domain (backend/edge, frontend, colonies, governance, strategy), driven to a verified close, and gated by the Constitution (F-001…F-006) before anything ships. This is the top-level orchestrator that sits above the domain harnesses — the "Hive Conductor" in the multi-level MCP-harness architecture.
+description: The Master Harness of the Sovereign Hive. Use when a founder directive needs to be decomposed into sub-tasks, routed to the right hive domain (backend/edge, frontend, colonies, governance, strategy), driven to a verified close, and gated by the Constitution (F-001…F-006) before anything ships. Also use when batching several tasks at once — it checks whether they amplify or cancel each other before running them together — and when a directive needs the right skill selected out of the ~70 the hive already has rather than a new one built. This is the top-level orchestrator that sits above the domain harnesses; there is deliberately no skill above it.
 ---
 
 # The Hive Conductor — Master Harness
@@ -74,6 +74,80 @@ Manifests live in `harnesses/`. Each maps to a team seat and a code surface.
    dependency (backend before the frontend that calls it; governance gate always last).
 3. No clear match → ask the founder one question with a recommended lane.
 
+## Phase 0.5 — Reach for what exists before building anything (2026-08-07)
+
+The hive has **~70 skills**. The most expensive recurring mistake is not a bad build — it is
+a *redundant* one. Two measured examples from a single day: a session was asked to create a
+devil's-advocate skill that had existed for weeks, and a "childlike wonder" skill whose full
+method was already sitting in `memory/philosophy/`, unbuilt, while the doctrine calling both
+lenses non-negotiable had been in the repo the whole time.
+
+Before decomposing, run the catalog check — cheap, and it converts "build" into "invoke":
+
+| Need | Reach for |
+|---|---|
+| Founder just sent new info mid-work | `founder-input-intake` → then `founder-directive-capture` |
+| A design/architecture decision | `dual-lens` (never one lens alone) |
+| Re-audit something already marked done | `devils-advocate-audit` |
+| About to claim something works | `wired-or-not` — name the level, bring evidence |
+| A repeated multi-step workflow | `workflow-optimizer` |
+| "Where were we?" at session start | `recursive-growth` |
+| An external repo or document to absorb | `research-to-dna` / `alchemical-process` |
+| Landing a PR green | `merge-readiness` |
+| Closing out a finished deliverable | `polymath-lens`, then `session-harvest` |
+| Something odd but not yet a bug | `anomaly-triage` |
+| Before settling on a root cause | `nine-miss-truths` |
+| Authority/power balance question | `checks-and-balances` |
+
+**`skill-census` lists the real current set** — run it rather than trusting this table if
+they disagree. A stale table in a skill file is the same class of bug as a stale `done`.
+
+## Phase 0.6 — Batching: check resonance before running tasks together
+
+Doctrine: `memory/philosophy/resonance-interference.md` (the founder's own framing —
+work streams **amplify in phase, cancel out of phase**).
+
+Batch tasks only after checking their phase relationship:
+
+**Batch together (in phase)** — same file or subsystem; one unblocks another; one probe run
+or test suite proves both; one's finding sharpens the other's question.
+
+**Sequence, never merge (out of phase)** — contradictory edits to the same lines; one
+invalidates the other's premise; one would be verified against state the other is mid-change
+on; **one is blocked on a founder decision the other assumes an answer to.**
+
+**Watch for the standing wave** — effort spent, position unchanged. The real instance in this
+project: agent layers stacked four deep (tasks 37 → 38 → 48 → 52) while the verification each
+promised was never performed. Ask every batch: *has anything measurable changed, or only the
+amount of work done?*
+
+## Phase 0.7 — Decisions pass the dual lens before they become tasks
+
+Any **architectural** choice inside a directive — a new subsystem, schema change, agent,
+capability, or governance/spending change — goes through `dual-lens` before decomposition:
+devils-advocate first, childlike-wonder second, **in that order** (wonder first produces
+advocacy, not design). A decision reviewed by one lens does not pass; it is reported as
+`single-lens, incomplete`.
+
+This applies to **founder proposals too**. `MANDATE_TRIAGE.md` already says nothing gets
+rubber-stamped — running both lenses on a founder idea is respect, not obstruction.
+
+## Evolving on new data
+
+The Conductor does not implement its own learning loop; it hands off:
+
+- **After any repeated workflow** → `workflow-optimizer` records what was slow or missing.
+- **At session start** → `recursive-growth` reads the master plan and folds verified fixes
+  back in as lessons.
+- **New founder input mid-flight** → `founder-input-intake` re-plans *before* the next
+  action; `founder-directive-capture` archives the verbatim record.
+- **New AI-field capability** (a model, protocol, or technique that changes what is possible)
+  → `research-to-dna` for the intake gate, `alchemical-process` for extracting the minimal
+  pattern rather than adopting a whole framework, then `dual-lens` before it changes anything
+  structural. **Novelty is not a reason to adopt.** The founder's own standing decision on
+  the 2026-08-07 agentic-harness document was to take the principles and explicitly discard
+  the parts that outran the hive's real footing.
+
 ## The governance gate (non-negotiable, runs before every close)
 Before the Conductor closes ANY directive, the change must pass F-001…F-006:
 - **F-001 Data Sovereignty** — no user data leaves the hive's own surfaces without consent.
@@ -89,6 +163,48 @@ A directive that can't clear the gate is escalated to the founder with the faili
 3. One writer per memory file; plans and state live in the repo (ephemeral containers).
 4. Probe before claim. The loop, not optimism, decides "done."
 5. The founder is the only human hands: merges, secrets, subdomains, and any irreversible action wait for them.
+
+## Do / Don't — explicit, because each one is a mistake actually made here
+
+**Do**
+- **Check the catalog before building** (Phase 0.5). Invoking beats rebuilding.
+- **Name the claim level with evidence** — `compiles` → `tested` → `merged` → `deployed` →
+  `verified-live` (`wired-or-not`). A `verified-live` claim needs a run ID, SHA, or committed
+  test path; `scripts/check-claims.py` enforces it in CI.
+- **Verify the layer beneath before building the next one.** Four agent layers were stacked
+  on a foundation that had never once been confirmed live.
+- **Commit tests to the repo.** Tests written into a scratch directory die with the container
+  — measured, twice, on 2026-08-07.
+- **Report a negative finding as a finding.** "The agents are not running" is a successful
+  outcome, not something to soften.
+- **Say when you skipped a gate.** Skipping and not saying is the only unrecoverable version.
+
+**Don't**
+- **Don't invent Codex mythology** — names, lore, canon are founder territory
+  (`FABLE_DNA.md` Chromosome V). The Orchestrator agent still has a working label, not a name,
+  on purpose.
+- **Don't invent a meaning for founder terminology.** Ask. "Conjugated wave theories" became
+  real doctrine only after the founder defined it.
+- **Don't promote a paraphrase into a quote** — including a UI selection recorded as if typed.
+- **Don't guess a founder-blocked answer to keep moving.** Do every unblocked part, state
+  what is blocked, stop there.
+- **Don't merge, spend, or take an irreversible action** — ever, regardless of how well a
+  gate passed.
+- **Don't batch out-of-phase tasks** (Phase 0.6) — sequence them.
+- **Don't let wonder soften a real risk, or risk kill a real possibility.** Both lenses
+  report; neither cancels the other.
+- **Don't run wonder before devils-advocate.** That order produces advocacy, not design.
+
+## Honest limits
+
+Everything in Phases 0.5–0.7 and this Do/Don't list is **procedural** — no machine enforces
+it. The only machine-checked pieces in this repo's whole discipline are
+`scripts/check-claims.py` (evidence behind `verified-live` claims) and the
+`edge-health-probe` work-cycle assertion (whether the agents genuinely run).
+
+Stated plainly because the audit that produced these rules found the opposite pattern
+everywhere: doctrine declared non-negotiable with nothing behind it. **Assume this skill can
+be skipped, and treat "did the Conductor actually run these phases?" as a live question.**
 
 ## Quick start
 ```bash

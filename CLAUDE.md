@@ -97,6 +97,20 @@ runs immediately, no `npm install`.
   `scripts/check-claims.py` in CI, which is the half that survives a context cutoff.
   Reasoning: `.claude/skills/wired-or-not/SKILL.md`. Findings:
   `Project_file/Founders Visonary Folder/VISION/2026-08-07-vision-reality-audit-007.md`.
+- **Founder input changes the plan now, not later.** When the founder sends new information
+  mid-work, `founder-input-intake` runs *before* the next action: does it INVALIDATE what's in
+  flight (stop), CHANGE it (re-plan), CONFIRM it (proceed), or EXTEND it (fold in, don't
+  derail)? The result gets written into the plan file, because a triage held only in a
+  session's head dies with that session. `founder-directive-capture` still owns the permanent
+  verbatim archive — run both, they're not alternatives.
+- **Both lenses, or the decision is incomplete.** `memory/philosophy/dual-lens-framework.md`
+  has always called both non-negotiable, but only `devils-advocate-audit` was ever built as a
+  skill — so every "framework" decision before 2026-08-07 was single-lens by construction.
+  `childlike-wonder` and the binding `dual-lens` gate now exist. Order is fixed: interrogate
+  first, expand second (wonder first produces advocacy, not design). `hive-conductor` is the
+  top-level orchestrator and runs this gate — **nothing sits above it**, deliberately.
+  Batching rule: `memory/philosophy/resonance-interference.md` — amplify in phase, cancel out
+  of phase; sequence the out-of-phase rather than merging them.
 - **The organism.** `.claude/skills/autonomous-hive-agent/SKILL.md` names how the hive's
   autonomy pieces (audit, execution, skill-drafting, compounding efficiency, cross-domain
   synthesis, scheduling) work together; `.claude/HIVE_PULSE.md` is the one page every

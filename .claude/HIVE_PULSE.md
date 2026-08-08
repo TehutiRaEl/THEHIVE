@@ -186,6 +186,23 @@ Full reasoning → `.claude/skills/wired-or-not/SKILL.md`. Findings →
 does fire the real cron against the real D1 — 17 `agent-work` rows, exactly hourly, 7
 agents rotating, ~900 tokens/turn. `edge-health-probe.yml` now asserts this every run.
 
+## The loop — four triggers, nothing auto-loads (2026-08-07)
+
+Pointer only, deliberately: the full skills load **on trigger**, not at session start, because
+task 51's token ceiling is still unresolved.
+
+| When | Run |
+|---|---|
+| Founder sends new info **mid-work** | `founder-input-intake` — triage INVALIDATES / CHANGES / CONFIRMS / EXTENDS *before* the next action, write the result into the plan. Then `founder-directive-capture` for the verbatim archive. |
+| An **architectural decision** is on the table | `dual-lens` — devils-advocate **then** childlike-wonder. One lens = `single-lens, incomplete`. |
+| **Batching** several tasks | `hive-conductor` Phase 0.6 — amplify in phase, cancel out of phase. Sequence the out-of-phase. |
+| About to say something **works** | `wired-or-not` — name the level, bring evidence. |
+
+`memory/philosophy/` holds the doctrine: `dual-lens-framework.md` (both lenses
+non-negotiable), `childlike-wonder.md`, `devils-advocate.md`, `resonance-interference.md`
+(the founder's amplify/cancel framing). `hive-conductor` is the top orchestrator — **nothing
+sits above it**, on purpose.
+
 ## Kai El bridge — quick reference
 
 Kai El's `/command_text` reply starting `CONCERN: <title>` or `PROPOSAL: <title>`
