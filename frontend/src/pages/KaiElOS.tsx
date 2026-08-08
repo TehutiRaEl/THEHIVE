@@ -21,6 +21,8 @@ import ConstitutionViewer from '../components/kai-os/ConstitutionViewer';
 import Observatory from '../components/kai-os/Observatory';
 import BiosystemOverlay from '../components/kai-os/BiosystemOverlay';
 import GatewayConsoleOverlay from '../components/kai-os/GatewayConsoleOverlay';
+import CampaignOverlay from '../components/kai-os/CampaignOverlay';
+import FullPlanOverlay from '../components/kai-os/FullPlanOverlay';
 import GrokBridgePanel from '../components/kai-os/GrokBridgePanel';
 
 // Legacy 13 tabs — lazy-loaded so the initial Kai EL OS shell does not pay for
@@ -65,6 +67,8 @@ export default function KaiElOS() {
   const [observatory, setObservatory] = useState(false);
   const [biosystem, setBiosystem] = useState(false);
   const [gatewayConsole, setGatewayConsole] = useState(false);
+  const [campaignOverlay, setCampaignOverlay] = useState(false);
+  const [fullPlanOverlay, setFullPlanOverlay] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [communeOpen, setCommuneOpen] = useState(false);
 
@@ -140,7 +144,15 @@ export default function KaiElOS() {
     },
     connectors: { title: 'Connectors', body: <p className="text-slate-500 text-sm">Not yet connected — planned.</p> },
     training: { title: 'Training', body: <p className="text-slate-500 text-sm">Not yet built — planned.</p> },
-    roadmap: { title: 'Development Roadmap', body: <RoadmapPanel /> },
+    roadmap: {
+      title: 'Development Roadmap',
+      body: (
+        <RoadmapPanel
+          onOpenCampaign={() => setCampaignOverlay(true)}
+          onOpenFullPlan={() => setFullPlanOverlay(true)}
+        />
+      ),
+    },
     'grok-bridge': { title: 'Grok Bridge', body: <GrokBridgePanel /> },
   };
 
@@ -210,6 +222,8 @@ export default function KaiElOS() {
           <Observatory active={observatory} onClose={() => setObservatory(false)} hive={hive} speaking={speaking} onSelect={handleSelect} />
           <BiosystemOverlay active={biosystem} onClose={() => setBiosystem(false)} />
           <GatewayConsoleOverlay active={gatewayConsole} onClose={() => setGatewayConsole(false)} />
+          <CampaignOverlay active={campaignOverlay} onClose={() => setCampaignOverlay(false)} />
+          <FullPlanOverlay active={fullPlanOverlay} onClose={() => setFullPlanOverlay(false)} />
         </div>
       </div>
     );
@@ -291,6 +305,8 @@ export default function KaiElOS() {
       <Observatory active={observatory} onClose={() => setObservatory(false)} hive={hive} speaking={speaking} onSelect={handleSelect} />
       <BiosystemOverlay active={biosystem} onClose={() => setBiosystem(false)} />
       <GatewayConsoleOverlay active={gatewayConsole} onClose={() => setGatewayConsole(false)} />
+      <CampaignOverlay active={campaignOverlay} onClose={() => setCampaignOverlay(false)} />
+      <FullPlanOverlay active={fullPlanOverlay} onClose={() => setFullPlanOverlay(false)} />
     </div>
   );
 }
