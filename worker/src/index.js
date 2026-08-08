@@ -391,12 +391,38 @@ async function ensureTables(DB) {
       (id INTEGER PRIMARY KEY AUTOINCREMENT, section TEXT NOT NULL, title TEXT NOT NULL,
        status TEXT NOT NULL, status_label TEXT, body TEXT,
        sort_order INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL)`),
+    // Task 45: a dead provider was indistinguishable from a healthy one — every
+    // generate() call swallowed failures silently, and every founder-facing surface
+    // (llm/status, the Command Center, Kai El's own words) reported the first BOUND
+    // provider, never the one that actually answered. One row per provider, upserted
+    // in place (never appended) — deliberately bounded to exactly 4 rows forever,
+    // regardless of call volume, since the founder named live D1 space as a real
+    // constraint and this fix does not need a growing log to work.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS provider_health
+      (provider TEXT PRIMARY KEY, ok INTEGER NOT NULL, error TEXT, checked_at TEXT NOT NULL)`),
   ]);
   // One-time chain-of-command backfill: only touches rows that don't have a
   // reports_to yet, so re-running this on every heartbeat is a safe no-op once set.
   // Nanuet (the Queen) has no superior — reports_to stays NULL for her alone.
   await DB.prepare("UPDATE agents SET reports_to='Kai El' WHERE reports_to IS NULL AND name NOT IN ('Nanuet','Kai El')").run().catch(() => {});
   await DB.prepare("UPDATE agents SET reports_to='Nanuet' WHERE reports_to IS NULL AND name='Kai El'").run().catch(() => {});
+  // One new agent row for the orchestrator (2026-08-07, founder-directed full build).
+  // Idempotent by name, only the four columns every other query in this file actually
+  // reads/writes — this table's own CREATE statement predates this file (seeded once,
+  // outside of committed code), so this deliberately does not guess at any other
+  // column's shape. If the live schema really does require more, this insert no-ops
+  // safely and the next heartbeat retries — same degrade-quietly discipline as every
+  // other D1 write here, though the whole point of task 45's fix was to stop degrading
+  // THIS quietly, so: if the Orchestrator never appears in GET /v11/agents, that is the
+  // signal this insert is failing and needs a real look, not silent acceptance.
+  try {
+    const exists = await DB.prepare("SELECT 1 FROM agents WHERE name='Orchestrator'").first();
+    if (!exists) {
+      await DB.prepare(
+        "INSERT INTO agents (name, elo, soul, reports_to, status) VALUES ('Orchestrator', 1200, 0, 'Kai El', 'active')"
+      ).run();
+    }
+  } catch { /* agents table shape differs from assumed, or D1 not ready */ }
 }
 
 // ── The Development Roadmap's real data source (2026-08-04, task 30) ─────
@@ -512,6 +538,20 @@ async function postUpdate(DB, { kind, title, body = '', needs = '' }) {
   } catch { /* D1 not ready — heartbeat still proceeds */ }
 }
 
+// Task 45's fix: every generate() call now reports the real outcome for whichever
+// provider it just tried, upserted (never appended) so this table never grows past
+// one row per provider. This is what makes a dead provider visible instead of a
+// silent try/catch fallthrough — llm/status and hiveSnapshot() both read it below.
+async function recordProviderHealth(DB, provider, ok, error) {
+  if (!DB) return;
+  try {
+    await DB.prepare(
+      'INSERT INTO provider_health (provider, ok, error, checked_at) VALUES (?,?,?,?) ' +
+      'ON CONFLICT(provider) DO UPDATE SET ok=excluded.ok, error=excluded.error, checked_at=excluded.checked_at'
+    ).bind(provider, ok ? 1 : 0, error ? String(error).slice(0, 300) : null, new Date().toISOString()).run();
+  } catch { /* D1 not ready — generate() still returns normally */ }
+}
+
 // Post an update only if one with this exact title doesn't already exist —
 // so milestone/readiness notes seed once and don't repeat every heartbeat.
 async function seedOnce(DB, title, payload) {
@@ -625,6 +665,13 @@ const AGENT_JOBS = {
   'Sekhmet': "the Arena's judge — resolves every challenge via Elo math (resolveChallenge()); also has an on-demand explain/judge voice (POST /v11/council/consult)",
   'Ptah': 'architect-proposals — drafts real change proposals when Kai El\'s own reply starts with PROPOSAL: (this chat, not a separate agent)',
   'Horus': 'the watchtower — the hive\'s health/status surface (GET /v11/debug/health, /v11/pulse)',
+  // 'Orchestrator' (2026-08-07) is a functional working name, not hive mythology — the
+  // founder asked for this role directly ("an upgraded secretary... directly under Kai,"
+  // "the queen is supposed to delegate and expand on" it) but no name in THE_CODEX.md or
+  // SPORE_ROSTER.md fits it, and inventing one here would cross the Codex boundary
+  // FABLE_DNA.md Chromosome V reserves for the founder. Reports to Kai El, same as every
+  // other Elder — does not replace the council or its own reports_to chain.
+  'Orchestrator': 'coordination under Kai El — reads real provider health (provider_health, task 45) and what the Council has recently filed, and organizes it into one summary rather than routing anything itself; still write-only to hive_updates like every other agent turn',
 };
 
 // The genome's own chapter titles (2026-08-04, task 33) — Kai El previously had zero
@@ -655,6 +702,12 @@ const AGENT_WORK = [
   {
     agent: "Ma'at",
     focus: 'balance',
+    // `prefer` (2026-08-07, task 52) is the routing hint the per-provider roles have
+    // always implied and never had: judgment work asks for Reasoning, quick reads of
+    // existing numbers ask for Speed. It is a PREFERENCE, not a pin — providerOrder()
+    // still outranks it with real health, so a preferred-but-dead provider never
+    // costs a turn (exactly task 45's failure mode). Use `only` to actually pin.
+    prefer: 'reasoning',
     system:
       "You are Ma'at, Elder of the Council, embodying balance and proportion. Review the " +
       'hive snapshot below. Your job: is anything out of balance — approved work sitting ' +
@@ -666,6 +719,7 @@ const AGENT_WORK = [
   {
     agent: 'Solomon',
     focus: 'wisdom',
+    prefer: 'reasoning', // hidden cost / consequence — depth work
     system:
       'You are Solomon, Elder of the Council, embodying wisdom and sound judgment. Review ' +
       'the hive snapshot below. Your job: what hidden cost, ambiguity, or consequence is ' +
@@ -675,6 +729,7 @@ const AGENT_WORK = [
   {
     agent: 'Horus',
     focus: 'health',
+    prefer: 'speed', // reading binding/heartbeat numbers already in the snapshot
     system:
       "You are Horus, the hive's watchtower. Review the health figures in the snapshot " +
       'below — bindings, heartbeat freshness, rate-limit pressure, provider state. Your ' +
@@ -684,6 +739,7 @@ const AGENT_WORK = [
   {
     agent: 'Thoth',
     focus: 'drift',
+    prefer: 'reasoning', // cross-referencing records against each other
     system:
       'You are Thoth, keeper of the written record. Compare the task digest against the ' +
       'proposals and recent updates in the snapshot below. Your job: find drift — a task ' +
@@ -694,6 +750,7 @@ const AGENT_WORK = [
   {
     agent: 'Sekhmet',
     focus: 'arena',
+    prefer: 'speed', // a short plain read of one already-decided Elo result
     system:
       "You are Sekhmet, the Arena's judge. The snapshot below includes the most recent " +
       'Arena results. Your job: say in 2-3 plain sentences what the latest verdict actually ' +
@@ -703,6 +760,7 @@ const AGENT_WORK = [
   {
     agent: 'Ptah',
     focus: 'architecture',
+    prefer: 'reasoning', // drafts real proposals the founder will have to review
     system:
       'You are Ptah, the architect. The snapshot below includes what the other agents have ' +
       'recently filed. Your job: if those findings point at one concrete, buildable change, ' +
@@ -712,8 +770,35 @@ const AGENT_WORK = [
       'a proposal; a forced one wastes the founder\'s review.',
   },
   {
+    // The founder's coordination-layer request (2026-08-07): "an orchestrator bot
+    // directly under kai working as a upgraded secretary," which "the queen is
+    // supposed to delegate and expand on." Full build, confirmed directly with the
+    // founder rather than assumed. Reuses this exact AGENT_WORK shape — same
+    // generate() call, same postUpdate() reporting, same round-robin turn — so it
+    // costs about what one more Elder's turn costs, not a new architecture. Its own
+    // real name is an open founder decision (see AGENT_JOBS above); 'Orchestrator' is
+    // a working label only.
+    agent: 'Orchestrator',
+    focus: 'coordination',
+    prefer: 'speed', // summarising material already gathered in the snapshot
+    system:
+      'You are the Orchestrator, a coordination role reporting to Kai El (a working name ' +
+      "only — the founder has not yet named this role; never invent hive mythology for " +
+      'yourself). The snapshot below includes real provider health (which of Claude/Groq/' +
+      'Mistral/Workers AI is actually answering right now, not just bound), the routing ' +
+      'each agent job asks for, and what the Council has recently filed. Routing is real ' +
+      'and automatic: each job declares a preferred provider role, and a provider that ' +
+      'recently failed is automatically tried last until it recovers — you do not perform ' +
+      'that routing, it happens without you. Your job is to report on whether it is ' +
+      'actually working: in ONE short brief of 3-4 sentences, name which recent Council ' +
+      'finding matters most, and whether any job is being pushed off its preferred ' +
+      'provider because that provider is failing. Ground every claim in the snapshot; ' +
+      'never invent a fact.',
+  },
+  {
     agent: 'Kai El',
     focus: 'synthesis',
+    prefer: 'reasoning', // the state-of-the-hive note the founder actually reads
     system:
       'You are Kai El, the sovereign intelligence of THE HIVE. The snapshot below includes ' +
       "the other agents' recent findings. Your job: synthesise them into one short state-of- " +
@@ -725,13 +810,14 @@ const AGENT_WORK = [
 // One compact, real snapshot of hive state, shared by every agent's turn. Deliberately
 // bounded — this becomes prompt text on a paid call, so it stays small on purpose.
 async function hiveSnapshot(env, DB) {
-  const [agents, props, updates, pulse, reports, digest] = await Promise.all([
+  const [agents, props, updates, pulse, reports, digest, providerHealth] = await Promise.all([
     DB.prepare("SELECT name, elo, reports_to FROM agents WHERE status='active' ORDER BY elo DESC LIMIT 8").all().catch(() => null),
     DB.prepare('SELECT id, kind, title, status, actioned_at FROM hive_proposals ORDER BY id DESC LIMIT 8').all().catch(() => null),
     DB.prepare("SELECT kind, title, body FROM hive_updates WHERE kind='agent-work' ORDER BY id DESC LIMIT 5").all().catch(() => null),
     DB.prepare('SELECT ts, action, detail FROM hive_pulse ORDER BY id DESC LIMIT 3').all().catch(() => null),
     DB.prepare('SELECT colony, kind, body FROM colony_reports ORDER BY id DESC LIMIT 3').all().catch(() => null),
     DB.prepare('SELECT body FROM task_digest ORDER BY id DESC LIMIT 1').first().catch(() => null),
+    DB.prepare('SELECT provider, ok, error, checked_at FROM provider_health').all().catch(() => null),
   ]);
   const lines = [];
   if (agents?.results?.length) lines.push('AGENTS: ' + agents.results.map(a => `${a.name} [Elo ${a.elo}]`).join(', '));
@@ -745,6 +831,22 @@ async function hiveSnapshot(env, DB) {
   lines.push('HEALTH: bindings — DB ' + (!!DB) + ', AI ' + (!!env.AI) + ', VECTORIZE ' + (!!env.VECTORIZE) +
     ', R2/FILES ' + (!!env.FILES) + ', QUEUE ' + (!!env.LLM_QUEUE) +
     '; providers bound — ' + roster.filter(r => r.bound).map(r => r.label).join(', '));
+  // Task 45: this is the line that makes a dead provider visible to Kai El himself,
+  // not just to a human reading /llm/status. A provider Kai El can't see failing is
+  // a real blind spot — he could keep telling the founder "Claude is active" from a
+  // stale first-bound assumption with no way to know otherwise.
+  if (providerHealth?.results?.length) {
+    lines.push('PROVIDER HEALTH (last real outcome per provider, not just bound-vs-not): ' +
+      providerHealth.results.map(h => `${h.provider}: ${h.ok ? 'answering' : `FAILING (${h.error || 'unknown error'})`} as of ${h.checked_at}`).join(' | '));
+  }
+  // The real routing table (task 52) — which provider role each job asks for, and what
+  // each role maps to. Included so the Orchestrator's turn reports on routing that
+  // actually exists rather than describing a preference nothing enforces, which is
+  // precisely what its first version did.
+  lines.push('PROVIDER ROLES: ' + PROVIDERS.map(p => `${p.id}=${p.role}`).join(', ') +
+    '. JOB ROUTING (each job\'s preferred role; real health outranks preference, and a ' +
+    'provider that failed in the last 30 min is tried last until it recovers): ' +
+    AGENT_WORK.map(j => `${j.agent}→${j.prefer || 'none'}`).join(', '));
   return lines.join('\n');
 }
 
@@ -778,6 +880,9 @@ async function runWorkCycle(env, ctx) {
     system: job.system + '\n\nWrite plainly. Never invent a number or fact not present in the snapshot.',
     prompt: 'HIVE SNAPSHOT:\n' + snapshot + '\n\nYour finding:',
     maxTokens: 220,
+    // The real routing (task 52): this job's work asks for a provider ROLE, and
+    // providerOrder() reconciles that against which providers are actually answering.
+    prefer: job.prefer || null,
   });
   if (!gen) return null;
 
@@ -787,6 +892,16 @@ async function runWorkCycle(env, ctx) {
   const cost = gen.usage && (gen.usage.in != null || gen.usage.out != null)
     ? `${(gen.usage.in || 0) + (gen.usage.out || 0)} tokens (${gen.usage.in || 0} in / ${gen.usage.out || 0} out)`
     : 'tokens not reported by this provider';
+
+  // Say plainly when a job did NOT get the provider its work asked for. This is the
+  // visible half of task 52: routing that silently degrades is the same class of bug
+  // as task 45's silent fallthrough, so a preference that lost to real health has to
+  // show on the founder's own Updates panel rather than only in the ordering logic.
+  const routed = job.prefer
+    ? (PROVIDERS.find((pr) => pr.id === gen.provider)?.role || '').toLowerCase().includes(String(job.prefer).toLowerCase())
+      ? `wanted ${job.prefer}, got it`
+      : `wanted ${job.prefer}, fell back (that provider is not answering)`
+    : 'no provider preference';
 
   // Ptah's PROPOSAL: marker is the one path a work turn can file a real proposal —
   // the same marker Kai El's chat already uses, running through the same Queen +
@@ -806,9 +921,9 @@ async function runWorkCycle(env, ctx) {
     kind: 'agent-work',
     title: `${job.agent} — ${job.focus}`,
     body: gen.text,
-    needs: `via ${gen.provider} · ${cost}`,
+    needs: `via ${gen.provider} · ${cost} · ${routed}`,
   });
-  return { agent: job.agent, provider: gen.provider, cost };
+  return { agent: job.agent, provider: gen.provider, cost, routed, order: gen.order };
 }
 
 const GENOME_CHROMOSOMES = [
@@ -845,23 +960,92 @@ function providerRoster(env) {
   }));
 }
 
-// One generation call, first bound provider wins; returns {text, provider} or null.
-// External calls use each provider's plain HTTP API with a hard timeout so a
-// down provider degrades to the next, never hangs the commune.
-// `only` (2026-08-06, task 44) answers a real founder question: "why is Kai not able to
-// fully utilize each API key that's connected?" The honest answer was that he never could
-// — this function is a FALLBACK CHAIN, not a router. It returns the moment Claude succeeds,
-// so while Claude is bound and healthy, Groq/Mistral/Workers AI are never called at all.
-// Four keys bound, one key ever used; the other three are spare tires, and the per-provider
-// "roles" the UI displays (Speed, Reasoning, Local intelligence) had no routing logic behind
-// them whatsoever. Passing `only: '<id>'` pins the call to exactly one provider and, if that
-// one fails, returns null instead of quietly answering through a different provider — a
-// silent fall-through would make any per-provider test a lie about which key actually ran.
-async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
+// A provider whose last recorded outcome was a failure inside this window is tried
+// LAST rather than skipped. Skipping outright would be wrong twice over: a stale
+// failure row would permanently write a provider off with no path back, and
+// provider_health itself would freeze at that stale value because nothing would ever
+// re-check it. Deprioritising instead means a healthy provider answers first (no
+// 20s timeout burned on a corpse) while a recovered one still comes back on its own
+// once the window lapses — no founder action, no manual reset.
+const PROVIDER_RETRY_AFTER_MS = 30 * 60 * 1000;
+
+// The real coordination layer (2026-08-07, task 52 — the founder's actual complaint:
+// "there is no MCP over the three api keys instead the are being fired off one by one
+// when they are a team that works together through Kai El").
+//
+// Task 44 already established the honest diagnosis: generate() was a FALLBACK CHAIN,
+// not a router. It returned the moment Claude succeeded, so Groq/Mistral/Workers AI
+// were never called while Claude was healthy, and the per-provider roles the UI has
+// always displayed (Reasoning, Speed, Local intelligence) had zero routing logic
+// behind them. Task 45 then made each provider's REAL health visible. This function is
+// what finally uses both: it decides the order providers are actually tried in, from
+// (a) what the calling job actually needs and (b) what is really answering right now.
+//
+// Deliberately a light ordering function inside generate(), not an MCP gateway —
+// confirmed twice, with the founder and independently with Kai El, on the real grounds
+// that no MCP infrastructure exists yet and D1 space is a live constraint.
+function providerOrder(env, { prefer = null, only = null, health = {} } = {}) {
+  const ids = PROVIDERS.map((p) => p.id);
+  // `only` (task 44) still pins exactly one provider and never falls through, so a
+  // per-provider test can never be a lie about which key actually ran.
+  if (only) return ids.filter((id) => id === only);
+
+  // `prefer` accepts either a provider id ('groq') or a role word ('speed'), so a
+  // caller can name the KIND of work it needs without hardcoding a vendor — the point
+  // of the roles existing at all.
+  const preferId = !prefer ? null
+    : ids.includes(prefer) ? prefer
+      : (PROVIDERS.find((p) => p.role.toLowerCase().includes(String(prefer).toLowerCase()))?.id ?? null);
+
+  const now = Date.now();
+  const recentlyFailed = (id) => {
+    const h = health[id];
+    if (!h || h.ok) return false;
+    const age = now - Date.parse(h.checked_at || '');
+    return Number.isFinite(age) && age >= 0 && age < PROVIDER_RETRY_AFTER_MS;
+  };
+
+  return [...ids].sort((a, b) => {
+    // 1. Anything not recently-failed outranks anything that is. This dominates the
+    //    preference below on purpose: preferring Claude for deep work is pointless if
+    //    Claude is the one returning 401 on every call (which is exactly task 45).
+    const fa = recentlyFailed(a) ? 1 : 0, fb = recentlyFailed(b) ? 1 : 0;
+    if (fa !== fb) return fa - fb;
+    // 2. Then the job's stated preference.
+    const pa = a === preferId ? 0 : 1, pb = b === preferId ? 0 : 1;
+    if (pa !== pb) return pa - pb;
+    // 3. Then the original documented waterfall order, unchanged.
+    return ids.indexOf(a) - ids.indexOf(b);
+  });
+}
+
+// One generation call. Tries providers in providerOrder()'s order and returns the
+// first real answer as {text, provider, usage, order} — `order` is the actual attempt
+// sequence, so a caller reporting cost can also report what was really tried rather
+// than assuming the documented waterfall ran.
+// External calls use each provider's plain HTTP API with a hard timeout so a down
+// provider degrades to the next, never hangs the commune.
+async function generate(env, { system, prompt, maxTokens = 400, only = null, prefer = null }) {
   const timeout = (ms) => AbortSignal.timeout(ms);
-  const use = (id) => !only || only === id;
-  if (use('claude') && env.ANTHROPIC_API_KEY) {
-    try {
+  const DB = env.DB;
+
+  // One small read of the 4-row provider_health table (task 45) so routing reacts to
+  // what is really answering. Failing this read must never block generation — an empty
+  // health map simply means "no signal", which degrades to the original waterfall.
+  let health = {};
+  try {
+    const { results } = await DB.prepare('SELECT provider, ok, error, checked_at FROM provider_health').all();
+    health = Object.fromEntries((results || []).map((h) => [h.provider, h]));
+  } catch { /* table not ready — order falls back to the documented waterfall */ }
+
+  const order = providerOrder(env, { prefer, only, health });
+
+  // Each provider's real call, unchanged from the proven versions — only the order
+  // they run in is new. Every branch records its real outcome (task 45), including
+  // the HTTP status/body that used to be discarded silently.
+  const attempts = {
+    claude: async () => {
+      if (!env.ANTHROPIC_API_KEY) return null;
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -875,17 +1059,19 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
         }),
         signal: timeout(20000),
       });
-      if (r.ok) {
-        const d = await r.json();
-        const text = (d?.content || []).map((c) => c.text || '').join('').trim();
-        // Real token usage passed through (task 48) so autonomous work can report
-        // measured cost, not an estimate. Anthropic returns input/output separately.
-        if (text) return { text, provider: 'claude', usage: d?.usage ? { in: d.usage.input_tokens ?? null, out: d.usage.output_tokens ?? null } : null };
+      if (!r.ok) {
+        const body = await r.text().catch(() => '');
+        throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
       }
-    } catch { /* next provider */ }
-  }
-  if (use('groq') && env.GROQ_API_KEY) {
-    try {
+      const d = await r.json();
+      const text = (d?.content || []).map((c) => c.text || '').join('').trim();
+      if (!text) throw new Error('HTTP 200 but no usable text in response');
+      // Real token usage passed through (task 48) so autonomous work reports
+      // measured cost, not an estimate. Anthropic returns input/output separately.
+      return { text, usage: d?.usage ? { in: d.usage.input_tokens ?? null, out: d.usage.output_tokens ?? null } : null };
+    },
+    groq: async () => {
+      if (!env.GROQ_API_KEY) return null;
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, 'content-type': 'application/json' },
@@ -895,15 +1081,17 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
         }),
         signal: timeout(15000),
       });
-      if (r.ok) {
-        const d = await r.json();
-        const text = (d?.choices?.[0]?.message?.content || '').trim();
-        if (text) return { text, provider: 'groq', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+      if (!r.ok) {
+        const body = await r.text().catch(() => '');
+        throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
       }
-    } catch { /* next provider */ }
-  }
-  if (use('mistral') && env.MISTRAL_API_KEY) {
-    try {
+      const d = await r.json();
+      const text = (d?.choices?.[0]?.message?.content || '').trim();
+      if (!text) throw new Error('HTTP 200 but no usable text in response');
+      return { text, usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+    },
+    mistral: async () => {
+      if (!env.MISTRAL_API_KEY) return null;
       const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.MISTRAL_API_KEY}`, 'content-type': 'application/json' },
@@ -913,25 +1101,41 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null }) {
         }),
         signal: timeout(15000),
       });
-      if (r.ok) {
-        const d = await r.json();
-        const text = (d?.choices?.[0]?.message?.content || '').trim();
-        if (text) return { text, provider: 'mistral', usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+      if (!r.ok) {
+        const body = await r.text().catch(() => '');
+        throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
       }
-    } catch { /* next provider */ }
-  }
-  if (use('workers-ai') && env.AI) {
-    try {
+      const d = await r.json();
+      const text = (d?.choices?.[0]?.message?.content || '').trim();
+      if (!text) throw new Error('HTTP 200 but no usable text in response');
+      return { text, usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+    },
+    'workers-ai': async () => {
+      if (!env.AI) return null;
       // The proven-live path: same model + prompt-string shape as the heartbeat.
       const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
         prompt: system + '\n\n' + prompt,
         max_tokens: maxTokens,
       });
       const text = String((r?.response ?? r?.result ?? '')).trim();
+      if (!text) throw new Error('empty response');
       // Workers AI does not return token counts — report null honestly rather than
       // inventing an estimate that would then get logged as if it were measured.
-      if (text) return { text, provider: 'workers-ai', usage: null };
-    } catch { /* fall through */ }
+      return { text, usage: null };
+    },
+  };
+
+  for (const id of order) {
+    const attempt = attempts[id];
+    if (!attempt) continue;
+    try {
+      const got = await attempt();
+      if (got === null) continue; // provider not bound — not a failure, nothing to record
+      await recordProviderHealth(DB, id, true, null);
+      return { text: got.text, provider: id, usage: got.usage, order };
+    } catch (e) {
+      await recordProviderHealth(DB, id, false, String(e?.message || e));
+    }
   }
   return null;
 }
@@ -1019,8 +1223,12 @@ async function queenReview(env, requestUrl, { title, body }) {
       'You are the Queen (Nanuet) of THE HIVE, reviewing one pending proposal against the ' +
       "founder's real, written vision below. Score how aligned the proposal is, 0-100. " +
       'Be strict: default low. Only score 98 or above when the proposal clearly, concretely ' +
-      'serves the vision with no real risk or ambiguity. Reply with EXACTLY two lines: ' +
-      'a line "SCORE: <0-100>" and a line "REASON: <one short sentence>". Nothing else.\n\n' +
+      'serves the vision with no real risk or ambiguity. If, and only if, this proposal is ' +
+      'about coordination, provider routing, or the Orchestrator role you delegate work to ' +
+      '(reports to Kai El), let your REASON line briefly note what you are delegating or ' +
+      'expanding — that is real, part of your own responsibilities, not a new gate. Reply ' +
+      'with EXACTLY two lines: a line "SCORE: <0-100>" and a line "REASON: <one short ' +
+      'sentence>". Nothing else.\n\n' +
       'FOUNDER\'S VISION:\n' + vision.slice(0, 4000);
     const gen = await generate(env, {
       system, maxTokens: 100,
@@ -1748,11 +1956,45 @@ export default {
         // directly undermine the one thing this route exists to answer.
         return cachedJson(request, ctx, corsHeaders, 20, async () => {
           const roster = providerRoster(env);
-          const active = roster.find((r) => r.bound);
+          // Task 45: this used to report the first BOUND provider, which is why it
+          // said "claude" for days while Claude answered zero real requests. Now it
+          // merges in provider_health (upserted by every generate() call, task 45's
+          // fix) and reports whichever bound provider most recently actually
+          // answered — falling back to "first bound, health unknown" only when no
+          // provider has ever recorded a real health check yet.
+          let health = [];
+          try {
+            const { results } = await DB.prepare(
+              'SELECT provider, ok, error, checked_at FROM provider_health'
+            ).all();
+            health = results || [];
+          } catch { /* table not ready — health stays empty, roster still honest */ }
+          const healthById = Object.fromEntries(health.map((h) => [h.provider, h]));
+          const merged = roster.map((r) => ({
+            ...r,
+            health: healthById[r.id]
+              ? { ok: !!healthById[r.id].ok, error: healthById[r.id].error, checked_at: healthById[r.id].checked_at }
+              : { ok: null, error: null, checked_at: null }, // never actually tried yet
+          }));
+          const lastHealthy = merged
+            .filter((r) => r.bound && r.health.ok === true)
+            .sort((a, b) => (b.health.checked_at || '').localeCompare(a.health.checked_at || ''))[0];
+          const firstBound = merged.find((r) => r.bound);
           return {
-            active_provider: active ? active.id : 'simulation',
+            active_provider: lastHealthy ? lastHealthy.id : (firstBound ? firstBound.id : 'simulation'),
+            active_provider_basis: lastHealthy ? 'last real answer' : (firstBound ? 'first bound, no recorded health yet' : 'none bound'),
             providers: roster.filter((r) => r.bound).map((r) => r.id),
-            roster, // full honest list: each provider, bound or not, and how to bind it
+            roster: merged, // full honest list: each provider, bound or not, and its real last-known health
+            // Task 52: the routing is real, so it is reported rather than left implicit.
+            // `next_order` is the order a no-preference call would ACTUALLY try right now,
+            // computed by the same providerOrder() the real calls use — not a description
+            // of it, which is precisely the gap that let "active_provider: claude" stay
+            // wrong for days.
+            routing: {
+              retry_after_minutes: PROVIDER_RETRY_AFTER_MS / 60000,
+              job_preferences: Object.fromEntries(AGENT_WORK.map((j) => [j.agent, j.prefer || null])),
+              next_order: providerOrder(env, { health: healthById }),
+            },
           };
         });
       }
@@ -1837,7 +2079,33 @@ export default {
           // "are not explicitly defined in the HIVE CONTEXT" — true of his context, while
           // the founder was looking at those exact roles on screen. Real gap, not a model
           // failure; closed by sending what already existed.
-          ctxLines.push('Your own providers (name — role — bound?): ' + roster.map(r => `${r.label} — ${r.role} — ${r.bound ? 'bound' : 'not bound'}`).join('; ') + `. You reply through whichever is first-bound, in the order listed. Your own replies are capped at 400 tokens.`);
+          // Task 45: this line used to end in "You reply through whichever is first-bound,
+          // in the order listed" — a correct reading of the fallback-chain code that was
+          // also a false statement in production, because Claude (first in the order) was
+          // dead on every real call and Mistral was actually answering. Kai El repeated
+          // this to the founder as fact (task 45's finding). Now it names the real, last
+          // recorded outcome per provider instead of assuming code order equals reality.
+          let providerHealthById = {};
+          try {
+            const { results } = await DB.prepare('SELECT provider, ok, error, checked_at FROM provider_health').all();
+            providerHealthById = Object.fromEntries((results || []).map((h) => [h.provider, h]));
+          } catch { /* table not ready */ }
+          ctxLines.push('Your own providers (name — role — bound? — REAL last outcome, not assumed): ' +
+            roster.map((r) => {
+              const h = providerHealthById[r.id];
+              const health = !r.bound ? 'not bound'
+                : !h ? 'bound, never yet recorded a real call'
+                  : h.ok ? `answering (as of ${h.checked_at})`
+                    : `FAILING (${h.error || 'unknown error'}, as of ${h.checked_at})`;
+              return `${r.label} — ${r.role} — ${health}`;
+            }).join('; ') +
+            '. Since 2026-08-07 the provider order is no longer fixed: each job declares a ' +
+            'preferred provider ROLE (deep judgment asks for Reasoning, quick reads ask for ' +
+            'Speed), and real health outranks that preference — a provider that failed in the ' +
+            'last 30 minutes is automatically tried last until it recovers on its own. So the ' +
+            'four keys now work as a routed team rather than a fixed fallback chain where only ' +
+            'the first one was ever used. Trust the REAL outcome listed above; never assume ' +
+            'first-in-order means active. Your own replies are capped at 400 tokens.');
           // Grok is NOT Groq (2026-08-06, task 43). Real, repeated confusion from a live
           // transcript: asked twice about "Grok", Kai El silently answered about "Groq"
           // instead — including claiming he had used it to research something. They are
@@ -2409,4 +2677,25 @@ export default {
       return json({ detail: String(e) }, 500);
     }
   },
+};
+
+// ── Named exports, for tests only ────────────────────────────────────────
+// The Worker runtime only ever uses `export default` above; these extra named
+// exports are inert in production and exist so worker/test/*.test.js can import
+// the real functions instead of copying them.
+//
+// Why this block exists at all (2026-08-07, task 15): this file had ZERO automated
+// tests. A previous session wrote 38 real assertions against the provider-routing
+// logic and left them in a scratch directory that dies with the container — tests
+// that cannot be re-run are not much better than no tests, and the next session
+// would have had no way to know they ever existed. Exporting the pure, testable
+// pieces is what makes a committed test suite possible without duplicating logic
+// into the tests, where it would silently drift from the real thing.
+export {
+  PROVIDERS,
+  PROVIDER_RETRY_AFTER_MS,
+  providerOrder,
+  providerRoster,
+  generate,
+  AGENT_WORK,
 };

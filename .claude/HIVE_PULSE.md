@@ -166,6 +166,43 @@ self-rescheduling `send_later` chain (that pattern silently stalled this arc onc
 already). Each firing: read this file first → do the work → update this file → stop.
 Full design → `.claude/skills/autonomous-hive-agent/SKILL.md`.
 
+## Never write a bare "done" (2026-08-07, founder-ordered audit)
+
+A reality audit measured it: **34 of 36 `done` tasks had never been confirmed against
+production**, and **11 of 13 tasks that promised "verification owed post-merge" never got
+it (84%)** — because the caveat lived in a session's context and died with it, while
+`data-status="done"` survived as a binary.
+
+So: every completion claim names its level — `compiles` → `tested` → `merged` → `deployed`
+→ `verified-live` — and the levels are **not** cumulative by assumption. A `verified-live`
+claim needs a reference someone can check without trusting you (run ID / SHA / committed
+test path); `scripts/check-claims.py` fails CI otherwise. A `done` inherited from before
+this date carries **no** level — treat it as `unverified` until re-derived.
+
+Full reasoning → `.claude/skills/wired-or-not/SKILL.md`. Findings →
+`Project_file/Founders Visonary Folder/VISION/2026-08-07-vision-reality-audit-007.md`.
+
+**Proven live 2026-08-07** (edge-health-probe run `31216919290`): the work cycle really
+does fire the real cron against the real D1 — 17 `agent-work` rows, exactly hourly, 7
+agents rotating, ~900 tokens/turn. `edge-health-probe.yml` now asserts this every run.
+
+## The loop — four triggers, nothing auto-loads (2026-08-07)
+
+Pointer only, deliberately: the full skills load **on trigger**, not at session start, because
+task 51's token ceiling is still unresolved.
+
+| When | Run |
+|---|---|
+| Founder sends new info **mid-work** | `founder-input-intake` — triage INVALIDATES / CHANGES / CONFIRMS / EXTENDS *before* the next action, write the result into the plan. Then `founder-directive-capture` for the verbatim archive. |
+| An **architectural decision** is on the table | `dual-lens` — devils-advocate **then** childlike-wonder. One lens = `single-lens, incomplete`. |
+| **Batching** several tasks | `hive-conductor` Phase 0.6 — amplify in phase, cancel out of phase. Sequence the out-of-phase. |
+| About to say something **works** | `wired-or-not` — name the level, bring evidence. |
+
+`memory/philosophy/` holds the doctrine: `dual-lens-framework.md` (both lenses
+non-negotiable), `childlike-wonder.md`, `devils-advocate.md`, `resonance-interference.md`
+(the founder's amplify/cancel framing). `hive-conductor` is the top orchestrator — **nothing
+sits above it**, on purpose.
+
 ## Kai El bridge — quick reference
 
 Kai El's `/command_text` reply starting `CONCERN: <title>` or `PROPOSAL: <title>`

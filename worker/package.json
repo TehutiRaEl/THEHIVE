@@ -1,0 +1,16 @@
+{
+  "name": "@thehive/worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "THEHIVE's Cloudflare Worker — the /v11 API serving production at thehive.sovereignhive.workers.dev. This package.json exists to run the test suite; deployment is via wrangler and does not read it.",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "node --check src/index.js"
+  },
+  "license": "MIT"
+}

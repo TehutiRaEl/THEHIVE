@@ -953,6 +953,41 @@ branch) does the work → a PR.</li>
   active one again — at minimum, <code>llm/status</code> must report the provider that
   actually answered last, not merely the first one bound. (3) is buildable without (1)
   and is the part that prevents a repeat.</p>
+  <p><strong>(3) shipped 2026-08-07, fixed first and standalone per the founder's own
+  sequencing choice</strong> (fix visibility before the bigger coordination-layer build,
+  so Kai El isn't reasoning on bad provider info while that's in progress). New bounded
+  <code>provider_health</code> table (upserted, exactly 4 rows forever — never a growing
+  log, respecting the founder's own flagged D1-space constraint) records the real outcome
+  of every <code>generate()</code> attempt, including the actual HTTP status/error body
+  that used to be silently discarded. <code>GET /v11/llm/status</code> now reports the
+  provider that really last answered, with a stated basis, instead of the first bound
+  one. <code>hiveSnapshot()</code> (read by every work-cycle agent) and Kai El's own
+  <code>ctxLines</code> (the exact surface that told the founder "the first-bound
+  provider is Claude") both now carry real per-provider health instead of assumed call
+  order. Verified against a real in-memory SQLite run (not just read): the upsert stays
+  at exactly one row per provider across repeated writes, and repeated failures update
+  the same row's <code>checked_at</code> rather than accumulating. (1) and (2) — the
+  actual key/model fix — remain founder-only, unchanged; this task stays <em>blocked</em>
+  on those, not closed.</p>
+  <p><strong>ROOT CAUSE NOW PROVEN — edge-health-probe run 31216723801.</strong> The
+  visibility fix worked on its first real production run and returned Anthropic's own
+  verbatim answer through <code>GET /v11/llm/status</code>:</p>
+  <pre class="log">"claude": { "bound": true, "health": { "ok": false,
+    "error": "HTTP 401: {\"type\":\"error\",\"error\":{\"type\":\"authentication_error\",
+               \"message\":\"API key is invalid.\"}}" } }</pre>
+  <p><strong>It is the key, not the model ID.</strong> This task's original hypothesis
+  guessed <code>model: 'claude-sonnet-5'</code> might be unavailable to the bound key, and
+  flagged that guess as unconfirmed. The guess was <em>wrong</em>, and it is worth recording
+  that plainly: a <code>401 authentication_error</code> with "API key is invalid" is
+  Anthropic rejecting the credential before it ever looks at the model. Had this been fixed
+  on the hypothesis instead of on evidence, the wrong thing would have been changed.</p>
+  <p>The same run confirms the rest of the fix behaving correctly in production:
+  <code>"active_provider":"groq"</code> with <code>"active_provider_basis":"last real
+  answer"</code> — the surface that reported "Claude" for days now names the provider that
+  genuinely answered. <strong>Still blocked on the founder</strong>, and now with a precise
+  ask: the bound <code>ANTHROPIC_API_KEY</code> is rejected as invalid, so it needs
+  replacing with a valid key (<code>npx wrangler secret put ANTHROPIC_API_KEY</code>). No
+  code change will fix a credential.</p>
 </div>
 
 <div class="task" data-status="blocked" data-batchable="false" id="task-46">
@@ -988,6 +1023,34 @@ branch) does the work → a PR.</li>
   branch deploys knowingly and update the never-merge rule's wording to match reality. The
   hardcoded <code>/debug/git</code> values should be replaced with real build metadata (or
   honestly reported as unknown) regardless of which way that decision goes.</p>
+  <p><strong>NO LONGER A SUSPICION — PROVEN 2026-08-07, edge-health-probe runs 31216723801
+  and 31216919290.</strong> This task was opened on circumstantial evidence (Kai El echoing
+  wording from an unmerged branch). It is now proven directly, by two strings that exist in
+  <strong>zero</strong> occurrences on <code>origin/main</code> and yet are being served by
+  production right now:</p>
+  <ul>
+    <li><code>GET /v11/llm/status</code> returns <code>"active_provider_basis":"last real
+    answer"</code> — a field introduced in unmerged commit <code>f04633d</code>.</li>
+    <li><code>GET /v11/agents</code> returns <code>{"name":"Orchestrator","reports_to":"Kai
+    El"}</code> — a row seeded only by unmerged commit <code>a8c045b</code>.</li>
+    <li>The work-cycle log shows the routing suffix from unmerged task 52 appearing between
+    18:31 and 19:31 — a timestamped record of branch code reaching production.</li>
+  </ul>
+  <p>Verified by checking <code>git show origin/main:worker/src/index.js</code> for both
+  strings: zero matches each, while both are live. <strong>Pushing a branch in this repo is
+  a production deploy.</strong> The session rule "automation never merges, every change
+  waits for founder review" assumes unmerged work is not live; that assumption is false, and
+  has been for some time.</p>
+  <p><strong>The compounding honesty bug is also now proven, not just inferred:</strong> in
+  the very same run, <code>GET /v11/debug/git</code> returned
+  <code>"branch":"main"</code> and <code>"deployed_via":"Cloudflare Workers Builds from
+  main"</code> — while demonstrably serving branch code. The one endpoint whose entire job is
+  reporting deploy identity was, at that moment, stating a falsehood.</p>
+  <p><strong>Still blocked on the founder</strong>, unchanged: only they can look at the
+  Cloudflare Workers Builds branch configuration and decide whether to restrict production to
+  <code>main</code> or to accept branch deploys knowingly. Nothing here changes that — it
+  removes the uncertainty about <em>whether</em> it is happening, not the decision about what
+  to do.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-48">
@@ -1042,6 +1105,35 @@ branch) does the work → a PR.</li>
   never be recorded; moved before it.</p>
   <p><strong>Resolves task 36 and task 38(c)</strong> — both asked the founder to name
   which LLM work should run on a schedule and at what cadence. This is that answer, built.</p>
+  <p><strong>VERIFIED-LIVE 2026-08-07 — edge-health-probe run 31216919290.</strong> This is
+  the first task in this file to earn that word under the new <code>wired-or-not</code>
+  vocabulary, and it was earned with evidence rather than assertion. Until this run, the
+  entire agent stack (tasks 37 → 38 → 48 → 52) was syntax-checked and had <em>never once</em>
+  been confirmed against production. The probe now reads <code>/v11/updates</code> and
+  asserts three things that must all hold. Real output:</p>
+  <pre class="log">agent-work rows: 17
+newest: 2026-08-07T20:31:01.221Z (0.2h ago)
+distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thoth
+  20:31 Ma'at — balance      [via groq · 1078 tokens (1011 in / 67 out)]
+  19:31 Kai El — synthesis   [via groq · 1068 tokens (910 in / 158 out)]
+  18:31 Ma'at — balance      [via groq ·  884 tokens (807 in / 77 out)]
+  17:31 Kai El — synthesis   [via groq ·  918 tokens (782 in / 136 out)]
+  16:31 Ptah — architecture  [via groq ·  889 tokens (812 in / 77 out)]
+  15:30 Sekhmet — arena      [via groq ·  826 tokens (762 in / 64 out)]
+  14:30 Thoth — drift        [via groq ·  849 tokens (780 in / 69 out)]
+  13:30 Horus — health       [via groq ·  869 tokens (760 in / 109 out)]</pre>
+  <p><strong>What that proves, precisely:</strong> the cron fires on the real schedule
+  (timestamps are exactly hourly, :30/:31, across 8+ hours), it rotates (7 distinct agents,
+  not one stuck agent), and it writes to the real D1 (rows are queryable through the live
+  API). The measured cost is ~900 tokens per turn, ~24 turns/day — close to the ~2k/turn
+  estimate this task made, and <strong>under</strong> it, so the founder's "start slow, ramp
+  on real numbers" condition now has real numbers.</p>
+  <p><strong>An unplanned second finding in the same output.</strong> The two most recent
+  rows carry <code>wanted reasoning, fell back (that provider is not answering)</code> and
+  the rows at 18:31 and earlier do not. That suffix only exists in task 52's routing code,
+  which is <em>unmerged</em>. So the log shows the exact moment unmerged branch code went
+  live in production — hard evidence for task 46, and independent confirmation that the
+  routing correctly detects the dead Claude key and reroutes instead of failing.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="true" id="task-49">
@@ -1159,6 +1251,156 @@ branch) does the work → a PR.</li>
   <em>labels</em> for commits/workflows (which is what <code>docs/ROLES.md</code>'s 111
   already genuinely are, and are already in live use); (3) how this sequences against tasks
   38 (finish the 6) and 41 (pay-to-exist), since both bear directly on it.</p>
+  <p><strong>(3) answered 2026-08-07 — still blocked on (1) and (2).</strong> The founder
+  uploaded an external architecture document (<code>AI.docx</code>) proposing 100 agents &times;
+  10 colonies &times; 100 trees = 100,000 concurrent agents, and was asked directly whether that
+  and this task's 222 were the same question. Their answer: <strong>"Drop the 100k, focus on
+  the 8"</strong> — perfect the existing 8-agent colony first. That document argues the same
+  side in its own words: <em>"If these 8 agents cannot work together without error, a larger
+  system will fail immediately."</em> So the sequencing question has a real answer: nothing
+  builds toward a large roster until the current agents genuinely work. The other two
+  questions — the real intended headcount vs. SPORE_ROSTER's counted 189, and real LLM-backed
+  agents vs. role <em>labels</em> — are untouched by that decision, so this task stays
+  <em>blocked</em> rather than moving to pending. Full triage:
+  <code>Project_file/Founders Visonary Folder/VISION/2026-08-07-vision-agentic-harness-triage-006.md</code>;
+  decisions captured verbatim in
+  <code>.../HIVE_UPDATES/2026-08-07-directive-agentic-harness-decisions-045.md</code>.</p>
+</div>
+
+<div class="task" data-status="done" data-batchable="false" id="task-52">
+  <h3>52. The Orchestrator — a new coordination role directly under Kai El, founder-directed
+  full build</h3>
+  <p class="meta"><strong>Done 2026-08-07.</strong> Founder asked directly for "an
+  orchestrator bot directly under kai working as a upgraded secretary," explicitly the
+  full build rather than a small first step (checked via direct question, not assumed),
+  and for it to be "what the queen is supposed to delegate and expand on." Distinct from
+  task 47's 189/222-agent roster question — this is ONE new named role, not a step toward
+  that number; task 47 stays exactly as blocked.</p>
+  <p><strong>Also confirmed directly, both with the founder and independently with Kai
+  El:</strong> no full MCP server gateway (no MCP infrastructure exists yet, D1 space is
+  a real named constraint, and <code>memory/_graph.json</code>'s 101-node knowledge graph
+  is real on disk but was never wired into the live Worker at all) — a light coordination
+  layer inside <code>generate()</code> itself, which is what task 45's fix already built.
+  This task is the second half: an actual agent that reads that health data and organizes
+  it, rather than every founder-facing surface computing it fresh each time.</p>
+  <p><strong>What shipped:</strong> a new entry in the existing <code>AGENT_WORK</code>
+  round-robin (verified fair over 32 simulated ticks: exactly 4 turns each across all 8
+  agents including the new one) — reuses the same <code>generate()</code> call,
+  <code>postUpdate()</code> reporting, and write-only-to-<code>hive_updates</code>
+  boundary as every other agent turn, so this costs about what one more Elder's turn
+  costs, not a new subsystem. One new <code>agents</code> table row
+  (<code>reports_to='Kai El'</code>, matching the existing hard rule that only Nanuet may
+  have a NULL <code>reports_to</code>), seeded idempotently — verified against a real
+  SQLite run that seeding twice still leaves exactly one row. Nanuet's existing
+  proposal-scoring call gained one small, additive prompt line letting her note
+  delegation/expansion guidance in her existing REASON field when a proposal actually
+  touches this role — no new column, no rebuild of her job.</p>
+  <p><strong>Explicitly NOT built, flagged rather than guessed:</strong> no new D1 tables
+  beyond that one <code>agents</code> row (the founder's own D1-space concern, and task
+  47's "don't multiply the org-chart-with-nothing-behind-it problem" lesson applies here
+  too); no wiring of <code>memory/_graph.json</code> into the live Worker (a separate real
+  gap, its own founder decision); the role's <strong>real name is still an open founder
+  decision</strong> — 'Orchestrator' in code is a working label only, since no name in
+  <code>THE_CODEX.md</code> or <code>SPORE_ROSTER.md</code> fits and inventing hive
+  mythology mid-implementation would cross <code>FABLE_DNA.md</code> Chromosome V's own
+  Codex boundary.</p>
+  <p><strong>Correction, same day, caught by the founder:</strong> the first version of
+  this task shipped the Orchestrator <em>agent</em> and I reported Part 2 as complete. It
+  was not. The agent wrote prose <em>about</em> which provider should be preferred, with
+  no mechanism to make that happen — <code>generate()</code> still had no
+  <code>prefer</code> parameter and no routing whatsoever. The founder's actual complaint
+  ("there is no MCP over the three api keys instead the are being fired off one by one
+  when they are a team that works together through Kai El") was therefore still entirely
+  unfixed. Verified by reading the real function, not my own summary of it. Same failure
+  shape as task 50: some layers done, the one that mattered missing, reported as done.</p>
+  <p><strong>What the real coordination layer actually is (shipped 2026-08-07):</strong>
+  <code>generate()</code> was restructured from a hardcoded four-branch if-chain into an
+  ordered loop over a new <code>providerOrder()</code>, which decides the real attempt
+  order from two inputs: (a) the calling job's preferred provider <em>role</em> — the
+  roles the UI has displayed since forever with zero logic behind them — and (b) real
+  <code>provider_health</code> from task 45. Every <code>AGENT_WORK</code> job now
+  declares a <code>prefer</code>: judgment work (Ma'at, Solomon, Thoth, Ptah, Kai El)
+  asks for Reasoning; quick reads of already-gathered numbers (Horus, Sekhmet,
+  Orchestrator) ask for Speed.</p>
+  <p><strong>Two design decisions worth stating, because both are load-bearing:</strong>
+  (1) <strong>real health outranks preference</strong> — a job that wants Reasoning still
+  skips Claude while Claude is failing, since preferring a dead provider is exactly task
+  45's failure mode wearing a different hat; (2) a failing provider is
+  <strong>deprioritised, never skipped</strong>, and returns to normal priority after 30
+  minutes. Skipping outright would be wrong twice: a stale row would write a provider off
+  permanently with no path back, and <code>provider_health</code> would freeze at that
+  stale value because nothing would re-check it. Deprioritising means a healthy provider
+  answers first (no 20s timeout burned on a corpse) while a recovered one comes back on
+  its own — no founder action, no manual reset.</p>
+  <p><strong>Made visible, not just implemented:</strong> each work-cycle update's
+  <code>needs</code> line now says whether the job got its preferred provider or fell
+  back and why ("wanted reasoning, fell back (that provider is not answering)"), because
+  routing that silently degrades is the same bug class as task 45's silent fallthrough.
+  <code>GET /v11/llm/status</code> gained a <code>routing</code> block reporting the
+  retry window, every job's preference, and <code>next_order</code> — the order a call
+  would <em>actually</em> take right now, computed by the same
+  <code>providerOrder()</code> the real calls use rather than a hand-written description
+  of it. Kai El's <code>ctxLines</code> no longer claims a fixed Claude→Groq→Mistral
+  order, which became false the moment routing became real.</p>
+  <p><strong>Acceptance (met):</strong> <code>node --check</code> clean; the module
+  actually imports (checked, because <code>PROVIDERS</code> is declared below
+  <code>hiveSnapshot()</code> and a temporal-dead-zone error would only appear at load).
+  <strong>38 assertions across two suites, all green, run against the real source text
+  extracted from <code>index.js</code> rather than a copy</strong> — 17 on
+  <code>providerOrder()</code> (the live task-45 scenario, the 30-minute recovery
+  boundary at both 29 and 31 minutes, all-providers-down, clock skew, malformed
+  timestamps, and <code>only</code> still bypassing everything per task 44), and 21
+  driving the restructured <code>generate()</code> end to end with mocked
+  fetch/AI/D1 — proving a dead provider is genuinely not called, that
+  <code>prefer: 'speed'</code> really reaches Groq instead of Claude, that an unbound
+  provider leaves no false failure row, and that everything-down still returns null
+  rather than a fabricated answer. Live confirmation still owed post-merge: dispatch
+  <code>edge-health-probe</code>, confirm the Orchestrator's <code>agent-work</code>
+  updates appear in <code>GET /v11/updates</code> on its turn, and report its real
+  per-turn token cost the same way task 48 reported the work cycle's first-day cost.</p>
+</div>
+
+<div class="task" data-status="blocked" data-batchable="false" id="task-53">
+  <h3>53. The Oracle Always Free box was designed for, wired up, and never provisioned — one
+  decision unblocks three separate stalled things</h3>
+  <p class="meta"><strong>Found 2026-08-07</strong> while answering the founder's question of
+  where a Python/Docker agentic harness could run. The founder's answer was "nowhere yet —
+  need to figure that out." Checking the repo rather than taking that at face value found the
+  host already chosen and wired months ago. Blocked on the founder: provisioning real
+  infrastructure and accepting its cost is founder-only by definition.</p>
+  <p><strong>What already exists:</strong> <code>.github/workflows/deploy.yml</code> (lines
+  24-58) targets an <em>"Oracle Always Free box"</em> — it SSHes in, runs
+  <code>docker-compose down &amp;&amp; docker-compose up -d --build</code>, then health-checks
+  <code>http://localhost:8080/v11/health</code>. It is inert only because three secrets are
+  unset: <code>ORACLE_HOST</code>, <code>ORACLE_USER</code>, <code>ORACLE_SSH_KEY</code>. The
+  workflow's own comment records why it skips rather than fails: <em>"this workflow accumulated
+  165 straight failures that way."</em> So this is not a missing plan — it is a finished plan
+  with the power switch off.</p>
+  <p><strong>Why this is one question and not three.</strong> These have been tracked as
+  separate open items and are actually the same blocker:</p>
+  <ul>
+    <li><strong>System A (<code>backend/</code>, FastAPI)</strong> — real code, 350+ passing
+    tests, 51% coverage, sitting unprovisioned. <code>ROADMAP_SEED</code> lists "retire or
+    actually deploy it?" as an open founder decision. Same <code>ORACLE_HOST</code> gate.</li>
+    <li><strong><code>docs/biosystem.html</code>'s "Demo Mode — start JASPER backend to enable
+    LLM"</strong> (lines 7921, 16593) — the founder asked about this directly. It is not a bug:
+    it is that page's honest fallback label when no JASPER/System-A backend is reachable. It
+    says "Demo Mode" because there is nowhere for JASPER to be running.</li>
+    <li><strong>Any Python/MCP harness</strong> from the 2026-08-07 architecture document —
+    needs a long-running process, a real filesystem, and Docker. A Cloudflare Worker
+    structurally cannot provide any of the three.</li>
+  </ul>
+  <p><strong>Deliberately not decided here.</strong> There are real reasons to say no: standing
+  up a box means real maintenance, a second deployment surface to keep secure, and it may be
+  the wrong move if System A should be retired instead of revived — which is itself an open
+  founder decision already on the roadmap. Provisioning infrastructure and accepting its
+  ongoing cost is exactly the class of thing the founder holds.</p>
+  <p><strong>Acceptance:</strong> founder either (a) provisions the box and sets the three
+  secrets, at which point <code>deploy.yml</code> starts working with no code change and System
+  A + JASPER's Demo Mode resolve on their own; or (b) decides against it, in which case System
+  A should be honestly marked retired, <code>deploy.yml</code> removed rather than left
+  permanently skipping, and <code>biosystem.html</code>'s Demo Mode label reworded to say the
+  backend is not coming rather than implying the founder should go start it.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-12">
@@ -1275,7 +1517,7 @@ branch) does the work → a PR.</li>
   happen, not just code that compiles.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-15">
+<div class="task" data-status="in-progress" data-batchable="true" id="task-15">
   <h3>15. Worker test infrastructure (zero automated tests found)</h3>
   <p class="meta">Found 2026-08-02 during task 3's scoping pass. Real gap, build-worthy —
   routed here per the protocol's Findings rule. Est. cost: large.</p>
@@ -1289,6 +1531,46 @@ branch) does the work → a PR.</li>
   <p><strong>Acceptance:</strong> A real test command that actually runs and actually
   asserts against real route logic, wired into CI if a worker CI workflow exists (check
   first, don't assume one doesn't).</p>
+  <p><strong>Harness stood up 2026-08-07 — genuinely partial, NOT done.</strong> Moved to
+  in-progress rather than done, because the route coverage this task actually asked for
+  does not exist yet (see what is still missing, below).</p>
+  <p><strong>Why this got picked up now:</strong> the founder called a full stop and asked
+  for an honest audit of whether the work was in the right order. It was not. This task has
+  sat pending since 2026-08-02 while tasks 40-53 were built on top of an untested Worker —
+  and worse, the session that built the provider-routing layer (task 52) wrote 38 real
+  assertions against it and left them in a container scratch directory that dies with the
+  session. Tests that cannot be re-run are barely better than no tests, and the next
+  session would have had no way to know they had ever existed. The founder's instruction
+  was direct: rescue them into <code>worker/test/</code>.</p>
+  <p><strong>What shipped:</strong> <code>worker/package.json</code> (zero dependencies,
+  <code>node --test</code>, matching <code>automaton/</code>'s existing precedent exactly
+  rather than inventing a second pattern) and two suites —
+  <code>worker/test/provider-routing.test.js</code> and
+  <code>worker/test/generate.test.js</code>, <strong>35 tests, all green via
+  <code>npm test --prefix worker</code></strong>. The rescued assertions were rewritten
+  rather than copied: the scratch versions regex-extracted functions out of
+  <code>index.js</code> and rebuilt them with <code>new Function()</code>, which is fragile
+  and tests a reconstruction rather than the real thing. A small named-export block was
+  added at the bottom of <code>index.js</code> (inert in production — the Worker runtime
+  only ever reads <code>export default</code>) so the tests import the actual functions.</p>
+  <p><strong>Wired into CI, per this task's own acceptance:</strong> checked rather than
+  assumed — <code>.github/workflows/ci.yml</code> already ran on every push and pull
+  request but had no Worker job at all. Added one (<code>Test (Worker, Node 22)</code>:
+  <code>node --check</code> then <code>npm test --prefix worker</code>), kept as a separate
+  job from the Python suite so a Worker regression reads as a Worker failure instead of
+  being buried in a pytest log. Verified the exact command CI will run passes locally.</p>
+  <p><strong>Proven to actually catch regressions, not just pass:</strong> a test suite
+  that cannot fail is worth nothing, so the logic was deliberately broken twice and the
+  source restored byte-identically afterwards (verified with <code>diff</code>). Removing
+  the rule that real health outranks a job's provider preference failed 5 tests; changing a
+  failing provider from deprioritised to skipped-entirely failed 7. Restored: 35/35.</p>
+  <p><strong>Still missing — the reason this stays in-progress:</strong> this task asked
+  for coverage of <code>/venture/plan</code>, <code>/legal/research</code>, and the
+  rate-limit + token gating. None of those are covered. What exists covers the provider
+  layer (<code>providerOrder()</code> and <code>generate()</code>) because that is what the
+  rescued tests were about. The <code>fetch</code> handler itself is still entirely
+  untested, and testing it needs stubs for D1, ASSETS, and Vectorize that do not exist
+  yet.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-16">

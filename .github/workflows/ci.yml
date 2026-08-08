@@ -38,3 +38,36 @@ jobs:
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
+
+  # The Worker had zero automated tests until 2026-08-07 (task 15). A previous session
+  # wrote real assertions against the provider-routing logic and left them in a scratch
+  # directory that dies with the container — this job exists so that cannot happen again:
+  # tests nobody runs automatically rot the same way, just more slowly.
+  #
+  # Separate job, not a step in the Python one: different runtime, and a Worker
+  # regression should be readable as a Worker failure rather than buried in a pytest log.
+  # Zero dependencies — Node 22's built-in node:test only, same precedent as automaton/.
+  worker:
+    name: Test (Worker, Node 22)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Syntax-check the Worker
+        run: node --check worker/src/index.js
+
+      - name: Run Worker tests
+        run: npm test --prefix worker
+
+      # The machine half of .claude/skills/wired-or-not/SKILL.md. The skill is the
+      # reasoning; THIS is what survives a session running out of context, because it runs
+      # whether or not anyone read the skill. A task claiming verified-live must carry a
+      # reference a person can check without trusting the claimer.
+      - name: Claims must carry evidence (wired-or-not)
+        run: python3 scripts/check-claims.py

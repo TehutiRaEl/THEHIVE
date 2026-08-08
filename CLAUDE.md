@@ -87,6 +87,30 @@ runs immediately, no `npm install`.
   resume after. Code/commits/PR bodies/technical content stay full, normal prose, per
   caveman's own existing rule. `caveman-eli5` remains available on request for
   explicitly-plain-English explanations; it does not replace this default.
+- **Never write a bare "done."** A founder-ordered reality audit (2026-08-07) measured that
+  34 of 36 `done` tasks had never been confirmed against production, and that 84% of tasks
+  promising "verification owed post-merge" never got it — the caveat died with the session's
+  context while the `done` marker survived. Every completion claim now names its level:
+  `compiles` → `tested` → `merged` → `deployed` → `verified-live`, **not** cumulative by
+  assumption (merged ≠ deployed; deployed ≠ anything ever ran it). A `verified-live` claim
+  needs a checkable reference — run ID, SHA, or committed test path — enforced by
+  `scripts/check-claims.py` in CI, which is the half that survives a context cutoff.
+  Reasoning: `.claude/skills/wired-or-not/SKILL.md`. Findings:
+  `Project_file/Founders Visonary Folder/VISION/2026-08-07-vision-reality-audit-007.md`.
+- **Founder input changes the plan now, not later.** When the founder sends new information
+  mid-work, `founder-input-intake` runs *before* the next action: does it INVALIDATE what's in
+  flight (stop), CHANGE it (re-plan), CONFIRM it (proceed), or EXTEND it (fold in, don't
+  derail)? The result gets written into the plan file, because a triage held only in a
+  session's head dies with that session. `founder-directive-capture` still owns the permanent
+  verbatim archive — run both, they're not alternatives.
+- **Both lenses, or the decision is incomplete.** `memory/philosophy/dual-lens-framework.md`
+  has always called both non-negotiable, but only `devils-advocate-audit` was ever built as a
+  skill — so every "framework" decision before 2026-08-07 was single-lens by construction.
+  `childlike-wonder` and the binding `dual-lens` gate now exist. Order is fixed: interrogate
+  first, expand second (wonder first produces advocacy, not design). `hive-conductor` is the
+  top-level orchestrator and runs this gate — **nothing sits above it**, deliberately.
+  Batching rule: `memory/philosophy/resonance-interference.md` — amplify in phase, cancel out
+  of phase; sequence the out-of-phase rather than merging them.
 - **The organism.** `.claude/skills/autonomous-hive-agent/SKILL.md` names how the hive's
   autonomy pieces (audit, execution, skill-drafting, compounding efficiency, cross-domain
   synthesis, scheduling) work together; `.claude/HIVE_PULSE.md` is the one page every
@@ -95,11 +119,15 @@ runs immediately, no `npm install`.
 
 ## What is NOT yet reconciled (read this before assuming one system is "the" system)
 
-- Whether `backend/` (FastAPI, System A) is actually deployed anywhere live, or is real
-  code sitting unprovisioned — this session's `deploy.yml` check found the Oracle Cloud
-  target gated behind an unset `ORACLE_HOST` secret, meaning System A's backend has not
-  been verified live in production this session. System B's Worker **has** been repeatedly
-  verified live. Don't assume either status without checking again — probe, don't guess.
+- ~~Whether `backend/` (FastAPI, System A) is actually deployed anywhere live~~ —
+  **ANSWERED 2026-08-07, edge-health-probe run `31216723801`: it is NOT live anywhere.**
+  `https://thehive-queen.onrender.com/v11/health` returns **404** — `render.yaml` is an
+  undeployed blueprint, not a running service, and `deploy.yml`'s Oracle target is still
+  gated behind an unset `ORACLE_HOST`. System A is real, tested code that runs nowhere.
+  This is also why `docs/biosystem.html` shows *"Demo Mode — start JASPER backend to enable
+  LLM"*: there is no JASPER backend to reach. One provisioning decision (task 53) would
+  resolve all three. System B's Worker **is** live and now proven to be running its agents
+  (run `31216919290`).
 - Two frontend efforts exist: this session's React Command Center (`frontend/`,
   `docs/app/`) and a separate "gamified UI" component set merged via a different branch
   (`feature/gamified-ui-components` — HiveDashboard, ColonyCard, TesseractChamber,
