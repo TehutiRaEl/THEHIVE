@@ -34,7 +34,14 @@ export interface DevelopmentRoadmap {
   decisionsPending: RoadmapCard[]
   inProgress: RoadmapCard[]
   backlog: RoadmapCard[]
-  snapshot: { founderActionsOutstanding: number; decisions: number; backlogItems: number }
+  // projects/campaign added 2026-08-08 — populated by scheduled digest workflows
+  // (roadmap-digest.yml, campaign-roadmap-digest.yml) reading FULL_PLAN.html/
+  // CAMPAIGN.html directly. The Worker route was returning these as empty
+  // because bySection() never read either section back out — fixed alongside
+  // this type.
+  projects: RoadmapCard[]
+  campaign: RoadmapCard[]
+  snapshot: { founderActionsOutstanding: number; decisions: number; backlogItems: number; projects: number; campaignItems: number }
   generated_at?: string
   note?: string
 }

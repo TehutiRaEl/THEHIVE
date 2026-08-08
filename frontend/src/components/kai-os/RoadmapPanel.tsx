@@ -89,6 +89,18 @@ export default function RoadmapPanel() {
       </section>
 
       <section>
+        <SectionHead
+          title="Project Ledger (P0–P7)"
+          sub="from FULL_PLAN.html, refreshed every 6h — full detail in the Full Plan below"
+        />
+        <div className="space-y-2">
+          {dev?.projects.length
+            ? dev.projects.map((c) => <Card key={c.title} card={c} />)
+            : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'not yet synced — see .claude/tasks/FULL_PLAN.html directly'}</p>}
+        </div>
+      </section>
+
+      <section>
         <SectionHead title="Decisions pending" sub="your call, not a task" />
         <div className="space-y-2">
           {dev?.decisionsPending.length
@@ -147,6 +159,18 @@ export default function RoadmapPanel() {
           {dev?.backlog.length
             ? dev.backlog.map((c) => <Card key={c.title} card={c} />)
             : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'backlog empty'}</p>}
+        </div>
+      </section>
+
+      <section>
+        <SectionHead
+          title="Live Task Queue"
+          sub="from CAMPAIGN.html, refreshed every 6h — full log in the Task Queue below"
+        />
+        <div className="space-y-2">
+          {dev?.campaign.length
+            ? dev.campaign.map((c) => <Card key={c.title} card={c} />)
+            : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'not yet synced — see .claude/tasks/CAMPAIGN.html directly'}</p>}
         </div>
       </section>
 

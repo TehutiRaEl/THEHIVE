@@ -1616,18 +1616,32 @@ export default {
         const founderActions = roadmapFounderActions(env);
         const decisions = bySection('decisions');
         const backlog = bySection('backlog');
+        // 'projects' (roadmap-digest.yml, the P0-P7 ledger from FULL_PLAN.html) and
+        // 'campaign' (campaign-roadmap-digest.yml, the live task queue from
+        // CAMPAIGN.html) were both being written to roadmap_items and pulled into
+        // `stored` above, then silently dropped — bySection() never asked for either
+        // section, so two real, reliably-running workflows had been posting genuine
+        // data into this table with nothing on the read side ever surfacing it. Found
+        // 2026-08-08 by checking what `stored` actually contained against what this
+        // handler returned, not assumed from the workflows' own "done" status.
+        const projects = bySection('projects');
+        const campaign = bySection('campaign');
         return json({
           founderActions,
           decisionsPending: decisions,
           inProgress: bySection('in_progress'),
           backlog,
+          projects,
+          campaign,
           snapshot: {
             founderActionsOutstanding: founderActions.filter((c) => c.status !== 'done').length,
             decisions: decisions.length,
             backlogItems: backlog.length,
+            projects: projects.length,
+            campaignItems: campaign.length,
           },
           generated_at: new Date().toISOString(),
-          note: 'founderActions are derived live from real binding presence and cannot go stale; the other sections are stored in D1 and editable via POST /v11/roadmap/development (founder key required). Completed phases are an append-only historical record and stay in the frontend.',
+          note: 'founderActions are derived live from real binding presence and cannot go stale; the other sections are stored in D1 and editable via POST /v11/roadmap/development (founder key required). projects/campaign are populated by scheduled digest workflows reading FULL_PLAN.html/CAMPAIGN.html directly — the repo files stay the single source of truth. Completed phases are an append-only historical record and stay in the frontend.',
         });
       }
       // Founder-gated edit — the whole point of task 30: updating the roadmap must no
@@ -1645,10 +1659,57 @@ export default {
         }
         const rb = await request.json().catch(() => ({}));
         const section = (rb.section || '').toString().trim();
-        const title = (rb.title || '').toString().trim().slice(0, 200);
-        if (!['decisions', 'in_progress', 'backlog'].includes(section)) {
-          return json({ detail: "section must be one of: decisions, in_progress, backlog (founderActions are derived live and cannot be edited; completed phases are an append-only historical record)" }, 400);
+        // 'projects' (roadmap-digest.yml) and 'campaign' (campaign-roadmap-digest.yml)
+        // added 2026-08-08 — both workflows had been building correct digests and
+        // POSTing them on schedule since they were created, but this whitelist rejected
+        // both sections with a 400 every single time (confirmed live: their own repo
+        // secret was ALSO never set, so the POST never even fired — this whitelist gap
+        // would have surfaced as a second, separate failure the moment it was).
+        const validSections = ['decisions', 'in_progress', 'backlog', 'projects', 'campaign'];
+        if (!validSections.includes(section)) {
+          return json({ detail: `section must be one of: ${validSections.join(', ')} (founderActions are derived live and cannot be edited; completed phases are an append-only historical record)` }, 400);
         }
+
+        // Batch upsert — the shape roadmap-digest.yml/campaign-roadmap-digest.yml
+        // actually send: {section, items:[{title,status,statusLabel,body,sortOrder}]}.
+        // Full-replace semantics per section: every item in the batch is upserted, and
+        // any existing row in this section NOT present in the batch is deleted — a
+        // digest should always reflect its source document's CURRENT state, never
+        // accumulate rows the source no longer has (a real, named D1-space concern
+        // elsewhere in this repo; this prevents exactly that kind of unbounded growth).
+        if (Array.isArray(rb.items)) {
+          const items = rb.items.slice(0, 50); // sane cap, not a real limit anyone should hit
+          const now = new Date().toISOString();
+          const keepTitles = [];
+          for (const [i, it] of items.entries()) {
+            const t = (it.title || '').toString().trim().slice(0, 200);
+            if (!t) continue;
+            keepTitles.push(t);
+            const status = (it.status || 'backlog').toString().slice(0, 20);
+            const statusLabel = (it.statusLabel || '').toString().slice(0, 40);
+            const body = (it.body || '').toString().slice(0, 2000);
+            const rawSort = it.sortOrder ?? it.sort_order;
+            const sortOrder = Number.isFinite(+rawSort) ? +rawSort : i;
+            const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, t).first();
+            if (existing) {
+              await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
+                .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
+            } else {
+              await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
+                .bind(section, t, status, statusLabel, body, sortOrder, now).run();
+            }
+          }
+          if (keepTitles.length) {
+            const placeholders = keepTitles.map(() => '?').join(',');
+            await DB.prepare(`DELETE FROM roadmap_items WHERE section=? AND title NOT IN (${placeholders})`)
+              .bind(section, ...keepTitles).run();
+          }
+          return json({ ok: true, section, upserted: keepTitles.length });
+        }
+
+        // Single-item upsert/delete — the founder's own manual edits (panel or curl),
+        // unchanged from the original design.
+        const title = (rb.title || '').toString().trim().slice(0, 200);
         if (!title) return json({ detail: 'title required' }, 400);
         if (rb.status === 'delete') {
           const del = await DB.prepare('DELETE FROM roadmap_items WHERE section=? AND title=?').bind(section, title).run();

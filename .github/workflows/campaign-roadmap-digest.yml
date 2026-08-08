@@ -1,0 +1,122 @@
+name: Campaign Digest → Command Center
+
+# Pushes CAMPAIGN.html's live task queue into the Command Center's roadmap panel — the
+# CAMPAIGN.html-equivalent of roadmap-digest.yml (which does the same for FULL_PLAN.html's
+# P0-P7 ledger, section='projects'). This one posts section='campaign'.
+#
+# Why a workflow and not a copy: same reasoning as roadmap-digest.yml and task-digest.yml —
+# CAMPAIGN.html lives in .claude/tasks/, which the Worker's ASSETS binding cannot serve
+# (only docs/ is served). Copying it into docs/ would create a second file that silently
+# drifts — the exact bug task 30 fixed for this very panel. So the repo file stays the
+# single source of truth and this job pushes a derived digest into the roadmap_items D1
+# table via the existing, founder-gated POST /v11/roadmap/development.
+#
+# Reuses task-digest.yml's own proven extraction regex for task rows (matched against the
+# real file, not re-derived) rather than writing a second parser for the same document.
+
+on:
+  workflow_dispatch: {}
+  # Offset from roadmap-digest.yml's :25 and task-digest.yml's :05 so the three digest
+  # workflows never hit the endpoint in the same minute.
+  schedule:
+    - cron: '40 */6 * * *'
+  push:
+    paths:
+      - .claude/tasks/CAMPAIGN.html
+      - .github/workflows/campaign-roadmap-digest.yml
+
+jobs:
+  digest:
+    name: Extract the live task queue and post it to the Command Center
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the digest
+        run: |
+          python3 - <<'PYEOF' > /tmp/campaign-roadmap.json
+          import html as htmlmod
+          import json, re
+
+          html = open('.claude/tasks/CAMPAIGN.html', encoding='utf-8').read()
+
+          # Same regex as task-digest.yml, proven against the real file — not re-derived.
+          rows = []
+          for m in re.finditer(
+                  r'<div class="task" data-status="([a-z-]+)"[^>]*id="task-([0-9a-z]+)"[^>]*>\s*<h3>(.*?)</h3>',
+                  html, re.S):
+              status, tid, title = m.groups()
+              title = ' '.join(htmlmod.unescape(re.sub(r'<[^>]+>', ' ', title)).split())
+              # task-digest.yml keeps the leading "14. " (its output is machine-read, never
+              # displayed) — this digest renders as a UI card title, so the redundant
+              # "#14 14. …" that pattern would produce is stripped here instead.
+              title = re.sub(r'^\d+\.\s*', '', title)
+              rows.append((tid, status, title[:110]))
+
+          if not rows:
+              raise SystemExit('::error::no tasks parsed from CAMPAIGN.html — refusing to push an empty queue')
+
+          counts = {}
+          for _, s, _ in rows:
+              counts[s] = counts.get(s, 0) + 1
+          summary_line = ', '.join(f'{v} {k}' for k, v in sorted(counts.items()))
+
+          order = {'in-progress': 0, 'pending': 1, 'blocked': 2, 'done': 3}
+          rows_sorted = sorted(rows, key=lambda r: (order.get(r[1], 9), r[0]))
+          next_up = [r for r in rows_sorted if r[1] in ('in-progress', 'pending')][:5]
+
+          # Last few Campaign Log entries — plain text lines inside <div class="log"
+          # id="campaign-log"> ... </body> (the div is deliberately left unclosed in the
+          # source file; browsers tolerate it, so the workflow does too).
+          log_match = re.search(r'id="campaign-log">(.*?)</body>', html, re.S)
+          log_lines = [l.strip() for l in log_match.group(1).splitlines() if l.strip()] if log_match else []
+          recent = log_lines[-3:]
+
+          items = [{
+              'title': 'Queue status',
+              'status': 'active', 'statusLabel': 'live',
+              'body': f'{summary_line}. Full log: .claude/tasks/CAMPAIGN.html.',
+              'sort_order': 0,
+          }]
+          for i, (tid, status, title) in enumerate(next_up, start=1):
+              items.append({
+                  'title': f'#{tid} {title}'[:200],
+                  'status': 'active' if status == 'in-progress' else 'backlog',
+                  'statusLabel': status,
+                  'body': f'Task #{tid}, {status}. Full detail: .claude/tasks/CAMPAIGN.html.',
+                  'sort_order': i,
+              })
+          if recent:
+              items.append({
+                  'title': 'Most recent activity',
+                  'status': 'active', 'statusLabel': 'log',
+                  'body': ' / '.join(r[:280] for r in recent)[:1900],
+                  'sort_order': len(items),
+              })
+
+          print(json.dumps({'section': 'campaign', 'items': items}))
+          PYEOF
+          echo "── digest built ($(wc -c < /tmp/campaign-roadmap.json) chars)"
+          python3 -c "
+          import json
+          d = json.load(open('/tmp/campaign-roadmap.json'))
+          print(' ', d['items'][0]['body'][:120])
+          for it in d['items'][1:]:
+              print(' ', it['statusLabel'].ljust(11), it['title'][:70])
+          "
+
+      - name: Post it to the Command Center
+        env:
+          FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
+        run: |
+          if [ -z "$FOUNDER_KEY" ]; then
+            echo "::warning::FOUNDER_KEY secret not set — /v11/roadmap/development is founder-gated (it writes what the founder sees, so an anonymous caller must not be able to rewrite the roadmap). Digest above was still built correctly; skipping the post."
+            exit 0
+          fi
+          code=$(curl -sS -m 25 -o /tmp/resp.json -w '%{http_code}' \
+              -X POST "https://thehive.sovereignhive.workers.dev/v11/roadmap/development" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $FOUNDER_KEY" \
+              --data-binary @/tmp/campaign-roadmap.json)
+          echo "status=$code"; cat /tmp/resp.json; echo
+          [ "$code" = "200" ] || { echo "::error::campaign roadmap post failed ($code)"; exit 1; }
