@@ -221,15 +221,18 @@ Full reasoning → `.claude/skills/wired-or-not/SKILL.md`. Findings →
 does fire the real cron against the real D1 — 17 `agent-work` rows, exactly hourly, 7
 agents rotating, ~900 tokens/turn. `edge-health-probe.yml` now asserts this every run.
 
-## The loop — four triggers, nothing auto-loads (2026-08-07)
+## The loop — five triggers, nothing auto-loads (updated 2026-08-08)
 
-Pointer only, deliberately: the full skills load **on trigger**, not at session start, because
-task 51's token ceiling is still unresolved.
+Pointer only, deliberately: the full skills load **on trigger**, not at session start. (This
+line previously said "because task 51's token ceiling is still unresolved" — **task 51 was
+decided 2026-08-08**, count-real-work-only; the pointer-only discipline stays regardless, on
+its own merits, not because of an unresolved ceiling.)
 
 | When | Run |
 |---|---|
 | Founder sends new info **mid-work** | `founder-input-intake` — triage INVALIDATES / CHANGES / CONFIRMS / EXTENDS *before* the next action, write the result into the plan. Then `founder-directive-capture` for the verbatim archive. |
-| An **architectural decision** is on the table | `dual-lens` — devils-advocate **then** childlike-wonder. One lens = `single-lens, incomplete`. |
+| An **architectural decision** is on the table | `dual-lens` — devils-advocate **then** childlike-wonder. One lens = `single-lens, incomplete`. When the subject is source material (a document, external research) rather than the hive's own design, `dual-lens` runs `fabrication-mining` as a conditional third stage on whatever Stage 1 found false. |
+| A claim was just judged **false or fabricated** | `fabrication-mining` — don't just discard it; ask what it was reaching for. Five verdicts, including the load-bearing null result `NO-SIGNAL`. Never for confirmed security threats — those go to `anomaly-triage` tier 3. |
 | **Batching** several tasks | `hive-conductor` Phase 0.6 — amplify in phase, cancel out of phase. Sequence the out-of-phase. |
 | About to say something **works** | `wired-or-not` — name the level, bring evidence. |
 

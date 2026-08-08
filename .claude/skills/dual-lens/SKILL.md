@@ -6,10 +6,14 @@ description: >
   expands what it could become) and refuses to pass a decision reviewed by only one. Use
   before committing to any structural choice: a new subsystem, a schema change, an agent or
   capability, a change to how the hive governs or spends, or any founder proposal being
-  evaluated. Explicitly NOT for routine bug fixes, verification passes, or mechanical work
-  where the answer is known and just needs doing — running both lenses on a typo is pure
-  overhead. This is the enforcement wrapper for memory/philosophy/dual-lens-framework.md,
-  which declared both lenses non-negotiable and had no mechanism behind it.
+  evaluated. When the subject is source material — a document, external research, a founder-
+  shared PDF — rather than the hive's own design, a third stage (fabrication-mining) runs
+  after the first two whenever devils-advocate found something false along the way; skip it
+  when there is no discard pile to mine. Explicitly NOT for routine bug fixes, verification
+  passes, or mechanical work where the answer is known and just needs doing — running both
+  lenses on a typo is pure overhead. This is the enforcement wrapper for
+  memory/philosophy/dual-lens-framework.md, which declared both lenses non-negotiable and had
+  no mechanism behind it.
 ---
 
 # dual-lens — neither lens is optional
@@ -35,7 +39,7 @@ produces advocacy, not design.** Once you have described how wonderful something
 you are motivated to find its risks survivable. Reversing the order is the single most
 common way this gate gets quietly defeated.
 
-### 1. Devil's advocate — what could break?
+### Stage 1 — Devil's advocate: what could break?
 
 Full method: `devils-advocate-audit`. Minimum for this gate:
 - What fails, and what does that failure cost?
@@ -43,18 +47,44 @@ Full method: `devils-advocate-audit`. Minimum for this gate:
 - What does it couple that was previously independent?
 - What claim does it make that is not yet evidenced (`wired-or-not`)?
 
-### 2. Childlike wonder — what could it become?
+### Stage 2 — Childlike wonder: what could it become?
 
 Full method: `childlike-wonder`. Minimum for this gate:
 - If it worked perfectly, what becomes possible that could not before?
 - What named constraint, if removed, changes the answer?
 - What cross-domain connection is invisible from inside this problem?
 
-### 3. The verdict
+### Stage 3 — Fabrication-mining: conditional, source material only
 
-Both lenses report. **Neither cancels the other.** A real risk is not erased by a beautiful
-possibility, and a real possibility is not erased by a manageable risk. Say what each found,
-then state the decision and which lens it favours and why.
+**Runs only when the subject under review is source material** — a document, a founder-shared
+PDF, external research, a proposal built from outside claims — **not** when it is one of the
+hive's own design decisions. A new subsystem or schema change has no discard pile to mine;
+forcing this stage onto routine architectural decisions is exactly the kind of theatre "Don't"
+below warns against.
+
+**Trigger condition:** Stage 1 found one or more claims in the source material that are false,
+fabricated, or unverifiable — not merely risky, actually false. If Stage 1 found the material
+entirely sound, or found risks in a genuine design rather than falsehoods in a document, this
+stage does not run — say so, rather than forcing a mining pass with nothing to mine.
+
+When triggered: run `fabrication-mining` on each false claim Stage 1 identified. That skill's
+five-verdict method (`POINTS-AT-A-REAL-GAP` / `INDEPENDENT-REDERIVATION` / `LIVE-FIXTURE` /
+`MIRROR` / `NO-SIGNAL`) produces what Stage 1 alone cannot: not just "this is false," but what
+the falsehood was reaching for, checked against what the hive actually has. See
+`fabrication-mining/SKILL.md` for the full method — it is not reproduced here.
+
+**Worked example:** `VISION/2026-08-08-vision-arithmancer-thermodynamics-audit-010.md`
+(Stages 1–2, source-material decisions) and
+`VISION/2026-08-08-vision-arithmancer-full-dissection-011.md` (Stage 3, added after the
+founder's own correction that a fabrication-only-discarded pass had missed the actual ask).
+
+### The verdict
+
+Every lens that ran reports. **None cancels another.** A real risk is not erased by a
+beautiful possibility, a real possibility is not erased by a manageable risk, and a mined
+finding from Stage 3 does not soften a risk Stage 1 found — `fabrication-mining`'s own hard
+boundary says the same thing from the other direction. Say what each found, then state the
+decision and which lens it favours and why.
 
 ## The refusal — the actual gate
 
@@ -107,7 +137,8 @@ cutoff; findings in a session's head do not.
 
 ## Links
 
-`devils-advocate-audit` · `childlike-wonder` · `wired-or-not` (claim levels) ·
+`devils-advocate-audit` · `childlike-wonder` · `fabrication-mining` (conditional Stage 3, source
+material only) · `wired-or-not` (claim levels) ·
 `hive-conductor` (invokes this gate when routing decisions) ·
 `memory/philosophy/dual-lens-framework.md` (source doctrine) ·
 `memory/philosophy/resonance-interference.md`
