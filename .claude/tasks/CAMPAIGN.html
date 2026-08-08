@@ -1567,7 +1567,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   happen, not just code that compiles.</p>
 </div>
 
-<div class="task" data-status="in-progress" data-batchable="true" id="task-15">
+<div class="task" data-status="done" data-batchable="true" id="task-15">
   <h3>15. Worker test infrastructure (zero automated tests found)</h3>
   <p class="meta">Found 2026-08-02 during task 3's scoping pass. Real gap, build-worthy —
   routed here per the protocol's Findings rule. Est. cost: large.</p>
@@ -1614,13 +1614,41 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   source restored byte-identically afterwards (verified with <code>diff</code>). Removing
   the rule that real health outranks a job's provider preference failed 5 tests; changing a
   failing provider from deprioritised to skipped-entirely failed 7. Restored: 35/35.</p>
-  <p><strong>Still missing — the reason this stays in-progress:</strong> this task asked
-  for coverage of <code>/venture/plan</code>, <code>/legal/research</code>, and the
-  rate-limit + token gating. None of those are covered. What exists covers the provider
-  layer (<code>providerOrder()</code> and <code>generate()</code>) because that is what the
-  rescued tests were about. The <code>fetch</code> handler itself is still entirely
-  untested, and testing it needs stubs for D1, ASSETS, and Vectorize that do not exist
-  yet.</p>
+  <p><strong>~~Still missing — the reason this stays in-progress~~ — CLOSED 2026-08-08.</strong>
+  The gap named here was real: <code>/venture/plan</code>, <code>/legal/research</code> and the
+  rate-limit + token gating had no coverage, and the <code>fetch</code> handler was entirely
+  untested because the stubs did not exist. Built now.</p>
+  <p><strong>What shipped (2026-08-08):</strong> <code>worker/test/helpers/env.js</code> — the
+  stubs that were the actual blocker (D1 with the three shapes the Worker really uses, a KV
+  counter that genuinely increments so the 30/min boundary is drivable, plus ASSETS/Vectorize/
+  Queues/AI as presence-togglable bindings) — and <code>worker/test/routes.test.js</code>,
+  which drives the <strong>real</strong> <code>fetch</code> handler through
+  <code>worker.fetch(request, env, ctx)</code> rather than any reconstruction of it.
+  <strong>35 tests → 58, all green</strong> via <code>npm test --prefix worker</code>. No new
+  dependencies; the existing thin-stub style from <code>generate.test.js</code> was extended
+  rather than a second pattern invented.</p>
+  <p><strong>A real blocker found by running it, not by reading it:</strong>
+  <code>cachedJson()</code> (<code>src/index.js:62</code>) reads <code>caches.default</code>,
+  a Workers global that is <code>undefined</code> in Node — every cached route throws before
+  reaching an assertion without a stub for it. That is why <code>installCaches()</code> exists;
+  it is not decoration.</p>
+  <p><strong>The gates are the point, and they have three different failure defaults</strong>
+  — <code>rateLimitOk</code> fails OPEN (anti-spam, not a boundary), <code>tokenOk</code> fails
+  OPEN with no <code>WORKER_ADMIN_KEY</code> (dev mode), <code>founderAuthOk</code> fails
+  <em>CLOSED</em> with no <code>FOUNDER_KEY</code> (approving a proposal is high-stakes).
+  Getting one backwards would be a real security bug that reads like a typo, so each is now
+  asserted in both directions.</p>
+  <p><strong>Proven able to fail, per this task's own precedent</strong> — three deliberate
+  mutations, source restored byte-identically afterwards (<code>diff -q</code>: IDENTICAL):
+  making <code>founderAuthOk</code> fail open failed <strong>1</strong> test; moving the
+  rate-limit boundary from <code>&gt;= 30</code> to <code>&gt; 30</code> failed
+  <strong>1</strong>; making <code>tokenOk</code> fail closed failed <strong>13</strong>. Each
+  count matches exactly what that mutation logically predicts, which is itself evidence the
+  assertions are precise rather than accidentally broad.</p>
+  <p><strong>Honest scope note:</strong> this closes what task 15's acceptance actually named.
+  It does <em>not</em> mean the Worker is comprehensively tested — <code>/command_text</code>,
+  the proposals lifecycle, the Arena routes and the work cycle remain uncovered. Naming that
+  rather than letting "task 15 done" imply more than it does.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-16">
@@ -1840,5 +1868,9 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
 2026-08-06 — Task 50 done: the founder was right and I was wrong. I reported the proposals as updated; the database and Kai El's context were, but ProposalsPanel.tsx never declared actioned_at/alignment_score/decided_by/elder_note, so the panel silently dropped all four fields the API had been returning and split purely on status. The screen the founder actually looks at was the one blind layer. All four now render — emerald "work done" vs amber "not started" badges on approved rows, rejected rows correctly get neither, plus who decided it, the Queen's alignment score, and any Elder veto reason. 15 render assertions all PASS; one initial failure was a real bug ("Decided by founder" vs "Decided by the founder"), fixed, the other was my own test not decoding React entity escaping.
 2026-08-06 — Tasks 40/41 corrected from pending to blocked: both bodies already stated they need a founder scoping round before any code, so "pending" misrepresented them as workable. Protocol's own rule applied.
 2026-08-06 — Task 13 done: ProposalsPanel's Approve/Reject pair is now the first real consumer of components/common. Real finding the swap surfaced — the shared component had ZERO consumers, so every Button variant was an unvalidated guess never rendered on a screen, while the panel's hand-written styling had actually shipped; where they disagreed the panel's won (danger moved from solid bg-red-900 to the bordered treatment really in use), safe because nothing else consumed it. Added success + size xs to match the real buttons, and fixed a real latent bug: the loading spinner was hardcoded text-white, invisible on the transparent bordered variants, now inherits currentColor. Genuine upgrade not just a refactor — both buttons gain a real in-flight spinner they never had (a click previously just dimmed with no sign anything was happening). Verified: build 243/243 unchanged, zero errors in touched files, and 12 render assertions run against the real component via react-dom/server (borders, text colours, xs sizing, spinner only when loading, spinner colour inheritance, auto-disable while loading, disable without founder key) — all 12 PASS.
+2026-08-08 — FIRING START (founder-directed, interactive, not the Routine). Ceiling check ran first as required: 1 dated entry today, 0 TOKENS: lines logged for 2026-08-08, so count=1/sum=0 — under the 4-firing/3M ceiling, proceeded. Automation audit: the "2 AM automation" resolved to TWO different triggers, not one drifted one — trig_013BTxUthvLX3C4nLs7MypVC fired 09:00Z = 2 AM PT and was DELETED 2026-08-01; its 2026-08-04 replacement trig_01CJsVYwDs4pHMoFEC5JFi7V fires 0 4 * * * UTC = 9 PM PT. Founder's memory is of the deleted one. None of the 9 scheduled GitHub workflows fire at 2 AM PT either (closest: colony-health.yml 0 6 * * * = 2 AM Eastern). The surviving Routine's live state stays UNVERIFIED — list_triggers needs interactive approval and was denied 3 times (1x 08-07, 2x 08-08); nothing was fired.
+2026-08-08 — Task 51 DECIDED by the founder and shipped same session: count real input+output only. session-usage.sh's total is now total_in+total_out; cache creation still reported on the same line, labelled "NOT counted", deliberately kept off the summable TOKENS: figure (task 39's lesson about two meanings sharing one label). Task 39's checkpoint/delta logic untouched. Three measurements agree on the shape: 96.0% cache (08-07), 94.7% (08-08), 89.7% (this session) — real reasoning was under the 3M limit every time. Caught a real bug mid-change by RUNNING the script rather than reading it: a backtick in an added comment sat inside the python3 -c "..." string and became live command substitution. Verified on a known-value fixture: cumulative 160 (100+50+7+3) with 1.7M cache excluded-but-reported; re-run with no new entries returns 0 not a re-sum; +1 entry returns 15 not 175. bash -n clean.
+2026-08-08 — HIVE_PULSE.md corrected — it had claimed "ALL Routines deleted, nothing fires automatically" for four days AFTER the 2026-08-04 replacement was wired, so the one file every firing reads first was the file misinforming it. Fixed four stale claims (the 2AM/9PM two-trigger resolution, the surviving Routine's honest unverified state, "Open PRs: #143 only" when there are ZERO — #155-#159 all merged, and two later bullets still describing deleted crons as live), kept the 2026-08-01 incident history deliberately since it is why the rule exists, and added the 9 scheduled workflows that genuinely do run. Root cause named in-file: "do not recreate any Routine without approval" was read as "assume none exist."
+2026-08-08 — Task 15 DONE — the fetch-handler coverage this task actually asked for, closing a gap it had honestly carried since 2026-08-02. Built worker/test/helpers/env.js (the stubs WERE the blocker: D1 in the three shapes the Worker really uses, a KV counter that genuinely increments so the 30/min boundary is drivable, ASSETS/Vectorize/Queues/AI presence-togglable) and worker/test/routes.test.js, driving the REAL handler via worker.fetch(request, env, ctx), not a reconstruction. 35 -> 58 tests, all green, zero new dependencies, extending generate.test.js's existing thin-stub style rather than inventing a second pattern. Real blocker found by running not reading: cachedJson() reads caches.default, a Workers global that is undefined in Node — every cached route throws without a stub for it. Covered /venture/plan, /legal/research, and all three gates in BOTH directions, because they have three different failure defaults on purpose (rateLimitOk open, tokenOk open without WORKER_ADMIN_KEY, founderAuthOk CLOSED without FOUNDER_KEY) and flipping one would be a security bug that reads like a typo. Proven able to fail via 3 deliberate mutations, source restored byte-identically (diff -q IDENTICAL): founderAuthOk fail-open -> 1 failure, rate-limit >=30 to >30 -> 1, tokenOk fail-closed -> 13 — each count matching what that mutation logically predicts. Honest scope note recorded in the task: /command_text, proposals lifecycle, Arena and the work cycle remain uncovered; "task 15 done" must not imply more than it does.
 </body>
 </html>
