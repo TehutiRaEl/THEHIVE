@@ -835,6 +835,25 @@ branch) does the work → a PR.</li>
   founder-only architectural decision (financial infrastructure + a possible new spending-
   cap/self-preservation mechanism for the hive), same standing practice as every other item
   of this size this session. Needs a real scoping round before any code.</p>
+  <p><strong>Two real inputs added 2026-08-08</strong> from the Arithmancer PDF audit
+  (<code>VISION/2026-08-08-vision-arithmancer-thermodynamics-audit-010.md</code>) — folded in
+  here rather than opened as new tasks, per the standing no-new-tasks rule:</p>
+  <p><strong>(a) The storage worry above already has an answer written, in the dead half.</strong>
+  <code>backend/core/criteria.py</code> is a real, tested retention policy — age
+  (90-day default), relevance (adoption count), health flags, and an archive-never-destroy
+  discipline into <code>pruned_memory</code>. It has never run, because System A runs nowhere
+  (task 53). The hive has meanwhile been improvising the same principle ad hoc: task 45's
+  <code>provider_health</code> is deliberately "exactly 4 rows forever — never a growing log."
+  That was a good instinct made one table at a time; <code>criteria.py</code> is the same
+  instinct written down as a policy. Start scoping from it rather than from a blank page.</p>
+  <p><strong>(b) Task 51 solved the measurement; it did not touch the cost.</strong> The
+  ceiling now counts real work, but ~90-96% of actual spend was cache creation driven by
+  re-materialising a very large context every turn. That is a real cost lever, not just an
+  accounting one, and it belongs to this task: the cheapest version is carrying a small,
+  deliberately-compressed essence forward instead of the whole conversation —
+  <code>.claude/HIVE_PULSE.md</code> is already a hand-built instance of exactly that pattern
+  ("one page, kept small on purpose… read first, in full — nothing else"), it was simply never
+  recognised as a cost mechanism.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="true" id="task-42">
@@ -1177,9 +1196,8 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   rendered the ungrammatical "Decided by founder"), now fixed.</p>
 </div>
 
-<div class="task" data-status="blocked" data-batchable="false" id="task-51">
-  <h3>51. The 3M-token ceiling is unusable in a persistent session — 96% of what it
-  counts is cache creation, not real work</h3>
+<div class="task" data-status="done" data-batchable="false" id="task-51">
+  <h3>51. The 3M-token ceiling counted cache creation, not real work — DECIDED and fixed 2026-08-08</h3>
   <p class="meta"><strong>Found 2026-08-07 by the ceiling check doing its job and
   stopping this firing before any task was started.</strong> Blocked on the founder: the
   ceiling is founder-set, so only the founder can change it.</p>
@@ -1239,6 +1257,34 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   complete sessions of autonomous work and will cost every future one until decided. The three
   options are unchanged: (a) count only real input+output; (b) keep counting cache creation but
   raise the limit; (c) keep exactly as-is and accept that firings stop early.</p>
+  <p><strong>DECIDED 2026-08-08 — the founder chose (a): count real input + output only.</strong>
+  Asked directly, while present and directing. Shipped the same session, in the one place the
+  script's own comment already named as the adjustment point.</p>
+  <p><strong>What changed:</strong> <code>.claude/scripts/session-usage.sh</code>'s
+  <code>total</code> is now <code>total_in + total_out</code>. Cache reads stay excluded as they
+  always were. Cache creation is <em>still reported</em>, on the same line, explicitly labelled
+  <em>"reported separately, NOT counted"</em> — deliberately kept off the summable
+  <code>TOKENS:</code> figure, because task 39 fixed a real bug caused by two different meanings
+  sharing one label, and repeating that would be the same mistake wearing a different hat. Task
+  39's checkpoint/delta logic is untouched, and <code>TOKENS: &lt;n&gt;</code> is still the first
+  thing on the line so the protocol's own unanchored grep keeps matching.</p>
+  <p><strong>Acceptance (met — tested with a fixture, not just observed):</strong> a real bug was
+  caught and fixed mid-change first — a backtick in an added comment sat inside the
+  <code>python3 -c "…"</code> double-quoted string and became live command substitution
+  (<code>bash</code> tried to execute <code>TOKENS: &lt;n&gt;</code>); found by running the script,
+  not by reading it. Then proven on a 3-entry fixture with known values:
+  cumulative mode returned <strong>TOKENS: 160</strong> (100+50+7+3) with 1,700,000 cache creation
+  correctly excluded-but-reported; a re-run with no new entries returned <strong>0</strong>, not a
+  re-sum; appending one more entry returned <strong>15</strong>, not 175 — so the delta really is a
+  delta. <code>bash -n</code> clean, no stderr noise.</p>
+  <p><strong>A third independent measurement, taken during this change</strong> and consistent with
+  the two above: this session read <strong>94,038</strong> real reasoning against
+  <strong>822,063</strong> cache creation — <strong>89.7%</strong> cache under the old measure.
+  Three measurements, same shape.</p>
+  <p><strong>Still true and still owed:</strong> this makes the rail measure work instead of
+  conversation age; it does <em>not</em> make cache creation free. That is real spend, and it now
+  feeds <strong>task 41</strong> (the Hoard paying for its own existence) as a visible,
+  separately-labelled number rather than a hidden one.</p>
 </div>
 
 <div class="task" data-status="blocked" data-batchable="false" id="task-47">
@@ -1424,6 +1470,37 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   A should be honestly marked retired, <code>deploy.yml</code> removed rather than left
   permanently skipping, and <code>biosystem.html</code>'s Demo Mode label reworded to say the
   backend is not coming rather than implying the founder should go start it.</p>
+  <p><strong>New evidence for the "provision" side, 2026-08-08 — arriving from outside the
+  hive.</strong> The Arithmancer PDF audit
+  (<code>VISION/2026-08-08-vision-arithmancer-thermodynamics-audit-010.md</code>) argues at
+  length that a specific cluster of ideas is the unexplored frontier "where no corporation
+  dares to play." Every one of them is <em>already real code in System A</em>, grepped and
+  cited today — and therefore already paid for, already written, and running nowhere:</p>
+  <ul>
+    <li>a 7.83 Hz Schumann carrier — <code>core/frequency_guild.py:21</code>, plus
+    <code>tier3/arena_renderer.py</code>, <code>tier3/tesseract_model.py</code>,
+    <code>core/arena.py:164</code>, <code>api/routes.py:368,372</code>;</li>
+    <li>"store the gradient, not the past" — <code>core/alchemy.py</code>'s
+    Capture→Evaluate→<strong>Prune</strong>→Dissect→Return→Propagate with a literal
+    <code>_prune_to_essence()</code>, which is <em>canonical law in <code>soul.md</code></em>,
+    not a sketch;</li>
+    <li>deliberate graceful forgetting — <code>core/criteria.py</code>,
+    <code>config.py:31</code>'s <code>decay_rate = 0.95</code>;</li>
+    <li>holographic binding / eigenvector essence — <code>core/hdc.py</code>, real 1024-dim VSA.</li>
+  </ul>
+  <p>This does not decide anything — provisioning cost and ongoing maintenance remain exactly
+  the founder's call, and "retire it honestly" is still a legitimate answer. It changes what is
+  on the scale: this decision is not only about whether a Python host is worth the upkeep, it
+  is about whether the hive's most distinctive built-and-paid-for capabilities ever run at all.</p>
+  <p><strong>A related, smaller finding from the same audit</strong>, recorded here because it
+  is more evidence that the dead half already reasoned about things the live half has not:
+  the live Worker's semantic memory has <strong>no recency weighting whatsoever</strong>.
+  <code>remember()</code> (<code>worker/src/index.js:1160</code>) stores a real <code>ts</code>
+  in every row's metadata; <code>recall()</code> (<code>:1171</code>) is pure cosine
+  <code>topK</code> and never reads it, so a day-one fact outranks today's whenever it embeds
+  closer. The field needed to fix it is already stored and a decay constant already exists in
+  the repo — it is a re-rank over data already present, and now testable, since
+  <code>worker/test/</code> exists (task 15). Deliberately not opened as a new task.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-12">
@@ -1540,7 +1617,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   happen, not just code that compiles.</p>
 </div>
 
-<div class="task" data-status="in-progress" data-batchable="true" id="task-15">
+<div class="task" data-status="done" data-batchable="true" id="task-15">
   <h3>15. Worker test infrastructure (zero automated tests found)</h3>
   <p class="meta">Found 2026-08-02 during task 3's scoping pass. Real gap, build-worthy —
   routed here per the protocol's Findings rule. Est. cost: large.</p>
@@ -1587,13 +1664,41 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   source restored byte-identically afterwards (verified with <code>diff</code>). Removing
   the rule that real health outranks a job's provider preference failed 5 tests; changing a
   failing provider from deprioritised to skipped-entirely failed 7. Restored: 35/35.</p>
-  <p><strong>Still missing — the reason this stays in-progress:</strong> this task asked
-  for coverage of <code>/venture/plan</code>, <code>/legal/research</code>, and the
-  rate-limit + token gating. None of those are covered. What exists covers the provider
-  layer (<code>providerOrder()</code> and <code>generate()</code>) because that is what the
-  rescued tests were about. The <code>fetch</code> handler itself is still entirely
-  untested, and testing it needs stubs for D1, ASSETS, and Vectorize that do not exist
-  yet.</p>
+  <p><strong>~~Still missing — the reason this stays in-progress~~ — CLOSED 2026-08-08.</strong>
+  The gap named here was real: <code>/venture/plan</code>, <code>/legal/research</code> and the
+  rate-limit + token gating had no coverage, and the <code>fetch</code> handler was entirely
+  untested because the stubs did not exist. Built now.</p>
+  <p><strong>What shipped (2026-08-08):</strong> <code>worker/test/helpers/env.js</code> — the
+  stubs that were the actual blocker (D1 with the three shapes the Worker really uses, a KV
+  counter that genuinely increments so the 30/min boundary is drivable, plus ASSETS/Vectorize/
+  Queues/AI as presence-togglable bindings) — and <code>worker/test/routes.test.js</code>,
+  which drives the <strong>real</strong> <code>fetch</code> handler through
+  <code>worker.fetch(request, env, ctx)</code> rather than any reconstruction of it.
+  <strong>35 tests → 58, all green</strong> via <code>npm test --prefix worker</code>. No new
+  dependencies; the existing thin-stub style from <code>generate.test.js</code> was extended
+  rather than a second pattern invented.</p>
+  <p><strong>A real blocker found by running it, not by reading it:</strong>
+  <code>cachedJson()</code> (<code>src/index.js:62</code>) reads <code>caches.default</code>,
+  a Workers global that is <code>undefined</code> in Node — every cached route throws before
+  reaching an assertion without a stub for it. That is why <code>installCaches()</code> exists;
+  it is not decoration.</p>
+  <p><strong>The gates are the point, and they have three different failure defaults</strong>
+  — <code>rateLimitOk</code> fails OPEN (anti-spam, not a boundary), <code>tokenOk</code> fails
+  OPEN with no <code>WORKER_ADMIN_KEY</code> (dev mode), <code>founderAuthOk</code> fails
+  <em>CLOSED</em> with no <code>FOUNDER_KEY</code> (approving a proposal is high-stakes).
+  Getting one backwards would be a real security bug that reads like a typo, so each is now
+  asserted in both directions.</p>
+  <p><strong>Proven able to fail, per this task's own precedent</strong> — three deliberate
+  mutations, source restored byte-identically afterwards (<code>diff -q</code>: IDENTICAL):
+  making <code>founderAuthOk</code> fail open failed <strong>1</strong> test; moving the
+  rate-limit boundary from <code>&gt;= 30</code> to <code>&gt; 30</code> failed
+  <strong>1</strong>; making <code>tokenOk</code> fail closed failed <strong>13</strong>. Each
+  count matches exactly what that mutation logically predicts, which is itself evidence the
+  assertions are precise rather than accidentally broad.</p>
+  <p><strong>Honest scope note:</strong> this closes what task 15's acceptance actually named.
+  It does <em>not</em> mean the Worker is comprehensively tested — <code>/command_text</code>,
+  the proposals lifecycle, the Arena routes and the work cycle remain uncovered. Naming that
+  rather than letting "task 15 done" imply more than it does.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-16">
@@ -1813,5 +1918,10 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
 2026-08-06 — Task 50 done: the founder was right and I was wrong. I reported the proposals as updated; the database and Kai El's context were, but ProposalsPanel.tsx never declared actioned_at/alignment_score/decided_by/elder_note, so the panel silently dropped all four fields the API had been returning and split purely on status. The screen the founder actually looks at was the one blind layer. All four now render — emerald "work done" vs amber "not started" badges on approved rows, rejected rows correctly get neither, plus who decided it, the Queen's alignment score, and any Elder veto reason. 15 render assertions all PASS; one initial failure was a real bug ("Decided by founder" vs "Decided by the founder"), fixed, the other was my own test not decoding React entity escaping.
 2026-08-06 — Tasks 40/41 corrected from pending to blocked: both bodies already stated they need a founder scoping round before any code, so "pending" misrepresented them as workable. Protocol's own rule applied.
 2026-08-06 — Task 13 done: ProposalsPanel's Approve/Reject pair is now the first real consumer of components/common. Real finding the swap surfaced — the shared component had ZERO consumers, so every Button variant was an unvalidated guess never rendered on a screen, while the panel's hand-written styling had actually shipped; where they disagreed the panel's won (danger moved from solid bg-red-900 to the bordered treatment really in use), safe because nothing else consumed it. Added success + size xs to match the real buttons, and fixed a real latent bug: the loading spinner was hardcoded text-white, invisible on the transparent bordered variants, now inherits currentColor. Genuine upgrade not just a refactor — both buttons gain a real in-flight spinner they never had (a click previously just dimmed with no sign anything was happening). Verified: build 243/243 unchanged, zero errors in touched files, and 12 render assertions run against the real component via react-dom/server (borders, text colours, xs sizing, spinner only when loading, spinner colour inheritance, auto-disable while loading, disable without founder key) — all 12 PASS.
+2026-08-08 — FIRING START (founder-directed, interactive, not the Routine). Ceiling check ran first as required: 1 dated entry today, 0 TOKENS: lines logged for 2026-08-08, so count=1/sum=0 — under the 4-firing/3M ceiling, proceeded. Automation audit: the "2 AM automation" resolved to TWO different triggers, not one drifted one — trig_013BTxUthvLX3C4nLs7MypVC fired 09:00Z = 2 AM PT and was DELETED 2026-08-01; its 2026-08-04 replacement trig_01CJsVYwDs4pHMoFEC5JFi7V fires 0 4 * * * UTC = 9 PM PT. Founder's memory is of the deleted one. None of the 9 scheduled GitHub workflows fire at 2 AM PT either (closest: colony-health.yml 0 6 * * * = 2 AM Eastern). The surviving Routine's live state stays UNVERIFIED — list_triggers needs interactive approval and was denied 3 times (1x 08-07, 2x 08-08); nothing was fired.
+2026-08-08 — Task 51 DECIDED by the founder and shipped same session: count real input+output only. session-usage.sh's total is now total_in+total_out; cache creation still reported on the same line, labelled "NOT counted", deliberately kept off the summable TOKENS: figure (task 39's lesson about two meanings sharing one label). Task 39's checkpoint/delta logic untouched. Three measurements agree on the shape: 96.0% cache (08-07), 94.7% (08-08), 89.7% (this session) — real reasoning was under the 3M limit every time. Caught a real bug mid-change by RUNNING the script rather than reading it: a backtick in an added comment sat inside the python3 -c "..." string and became live command substitution. Verified on a known-value fixture: cumulative 160 (100+50+7+3) with 1.7M cache excluded-but-reported; re-run with no new entries returns 0 not a re-sum; +1 entry returns 15 not 175. bash -n clean.
+2026-08-08 — HIVE_PULSE.md corrected — it had claimed "ALL Routines deleted, nothing fires automatically" for four days AFTER the 2026-08-04 replacement was wired, so the one file every firing reads first was the file misinforming it. Fixed four stale claims (the 2AM/9PM two-trigger resolution, the surviving Routine's honest unverified state, "Open PRs: #143 only" when there are ZERO — #155-#159 all merged, and two later bullets still describing deleted crons as live), kept the 2026-08-01 incident history deliberately since it is why the rule exists, and added the 9 scheduled workflows that genuinely do run. Root cause named in-file: "do not recreate any Routine without approval" was read as "assume none exist."
+2026-08-08 — Task 15 DONE — the fetch-handler coverage this task actually asked for, closing a gap it had honestly carried since 2026-08-02. Built worker/test/helpers/env.js (the stubs WERE the blocker: D1 in the three shapes the Worker really uses, a KV counter that genuinely increments so the 30/min boundary is drivable, ASSETS/Vectorize/Queues/AI presence-togglable) and worker/test/routes.test.js, driving the REAL handler via worker.fetch(request, env, ctx), not a reconstruction. 35 -> 58 tests, all green, zero new dependencies, extending generate.test.js's existing thin-stub style rather than inventing a second pattern. Real blocker found by running not reading: cachedJson() reads caches.default, a Workers global that is undefined in Node — every cached route throws without a stub for it. Covered /venture/plan, /legal/research, and all three gates in BOTH directions, because they have three different failure defaults on purpose (rateLimitOk open, tokenOk open without WORKER_ADMIN_KEY, founderAuthOk CLOSED without FOUNDER_KEY) and flipping one would be a security bug that reads like a typo. Proven able to fail via 3 deliberate mutations, source restored byte-identically (diff -q IDENTICAL): founderAuthOk fail-open -> 1 failure, rate-limit >=30 to >30 -> 1, tokenOk fail-closed -> 13 — each count matching what that mutation logically predicts. Honest scope note recorded in the task: /command_text, proposals lifecycle, Arena and the work cycle remain uncovered; "task 15 done" must not imply more than it does.
+2026-08-08 — FIRING COMPLETE. PR #160 opened (https://github.com/TehutiRaEl/THEHIVE/pull/160), 4 commits, CI checked ONCE per protocol, never merged. Two checks most relevant to this firing's changes already green at check time: "Test (Worker, Node 22)" success (the 58 new/existing tests pass in CI, not just locally) and "Extract CAMPAIGN.html task queue and post it to the hive" success (independent production confirmation that the task-digest parser still reads this edited file correctly — the local re-run was not the only evidence). Others still queued/in-progress at the single check; not re-polled. Also observed live during this firing, as a real instance of task 46 rather than a claim about it: "Workers Builds: thehive" started building from this branch the moment it was pushed — pushing a branch in this repo is a production deploy, still founder-blocked. Task 5 of the audit lenses produced VISION/2026-08-08-vision-arithmancer-thermodynamics-audit-010.md + HIVE_UPDATES/2026-08-08-directive-arithmancer-pdf-048.md; nothing from the founder's PDF was built or merged, by explicit instruction. ONE ITEM STILL OWED, not claimable: list_triggers was denied a 3rd time, so trig_01CJsVYwDs4pHMoFEC5JFi7V's live state stays UNVERIFIED per wired-or-not — one founder approval closes it. Nothing was fired. This is the first firing under task 51's new measure; the number below is real input+output only. TOKENS: 96746 (delta since 2026-08-08T06:42:39.553Z, 96 usage-bearing entries; cache-creation 120552 reported separately, NOT counted)
 </body>
 </html>
