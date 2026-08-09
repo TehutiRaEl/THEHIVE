@@ -81,4 +81,25 @@
       "secret_name": "FOUNDER_KEY"
     }
   ]
+  // Cloudflare Access — a second, key-free way for the founder's own browser to
+  // authenticate (2026-08-09), additive alongside FOUNDER_KEY above (which stays
+  // exactly as-is for CI and as a browser fallback). Same flip-the-switch pattern
+  // as Vectorize/R2/Queues above: with these three vars unset, verifyAccessJWT()
+  // in worker/src/index.js fails closed on every request, so the new
+  // /v11/founder/* routes simply 401 (falling back to the FOUNDER_KEY UI) until
+  // the founder finishes Step 0 (FLIP_THE_SWITCHES.md) — creating the Access
+  // Application in the Zero Trust dashboard, protecting the /v11/founder/* path
+  // — and fills these in from what that step produces:
+  //   ACCESS_TEAM_DOMAIN — "<your-team-name>.cloudflareaccess.com"
+  //   ACCESS_AUD         — the Access Application's Audience (AUD) tag
+  //   FOUNDER_EMAIL      — the one email allow-listed in the Access policy
+  // None of these three are secret (an audience tag and an email address aren't
+  // sensitive the way a password is), so they're plain vars, not a secret store.
+  // Once Step 0 is done: add a "," after the "]" that closes
+  // secrets_store_secrets above, then uncomment and fill in this block —
+  // "vars": {
+  //   "ACCESS_TEAM_DOMAIN": "<your-team-name>.cloudflareaccess.com",
+  //   "ACCESS_AUD": "<the Access Application's Audience tag>",
+  //   "FOUNDER_EMAIL": "<the founder's own allow-listed email>"
+  // }
 }

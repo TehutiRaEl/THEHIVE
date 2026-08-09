@@ -59,10 +59,43 @@ export default function ProposalsPanel() {
     localStorage.setItem(KEY_STORAGE, v);
   };
 
+  // 2026-08-09: tries the Cloudflare Access route first. No Authorization header
+  // needed here at all — a founder with an active Access session automatically
+  // carries the CF_Authorization cookie on this same-origin fetch, so a matching
+  // request just succeeds with zero key handling. A 401 from THIS route means "no
+  // Access session yet" (or Access isn't provisioned), not a real error, so it
+  // falls through silently to the original FOUNDER_KEY path below rather than
+  // surfacing anything — that path's own errors are still shown normally.
   const decide = async (id: number, decision: 'approved' | 'rejected') => {
     setBusy(id);
     setError(null);
     try {
+      try {
+        const accessRes = await fetch(`${V11}/founder/proposals/${id}/decide`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ decision }),
+        });
+        if (accessRes.ok) {
+          await load();
+          return;
+        }
+        if (accessRes.status !== 401) {
+          const d = await accessRes.json().catch(() => ({}));
+          setError(d.detail || `HTTP ${accessRes.status}`);
+          return;
+        }
+      } catch {
+        // Network/CORS trouble on the Access route — fall through to FOUNDER_KEY
+        // too, same as a 401, rather than surfacing a confusing error for the
+        // happy path (most visitors won't have Access set up at all yet).
+      }
+
+      if (!key) {
+        setError('Not signed in with Cloudflare Access, and no FOUNDER_KEY entered — use "Sign in as founder" above or paste a key.');
+        return;
+      }
+
       const r = await fetch(`${V11}/proposals/${id}/decide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
@@ -102,6 +135,20 @@ export default function ProposalsPanel() {
             strong value), then paste that same value below.</div>
         </div>
       )}
+
+      {/* 2026-08-09: a plain top-level link, not a fetch — visiting it is what
+          actually triggers Cloudflare Access's login flow (redirect → email PIN
+          → redirect back). Once signed in, Approve/Reject above never touches
+          the key field again; this is here so a founder who hasn't set up
+          Access yet has an obvious way to start, rather than only discovering
+          it via a silent background retry. Optional: the key field below still
+          works on its own if Access isn't configured. */}
+      <a
+        href={`${V11}/founder/login`}
+        className="inline-block text-xs text-cyan-glow hover:underline"
+      >
+        Sign in as founder (Cloudflare Access) →
+      </a>
 
       <div className="flex items-center gap-2">
         <input
