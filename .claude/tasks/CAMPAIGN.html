@@ -1664,41 +1664,49 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   source restored byte-identically afterwards (verified with <code>diff</code>). Removing
   the rule that real health outranks a job's provider preference failed 5 tests; changing a
   failing provider from deprioritised to skipped-entirely failed 7. Restored: 35/35.</p>
-  <p><strong>~~Still missing — the reason this stays in-progress~~ — CLOSED 2026-08-08.</strong>
-  The gap named here was real: <code>/venture/plan</code>, <code>/legal/research</code> and the
-  rate-limit + token gating had no coverage, and the <code>fetch</code> handler was entirely
-  untested because the stubs did not exist. Built now.</p>
-  <p><strong>What shipped (2026-08-08):</strong> <code>worker/test/helpers/env.js</code> — the
-  stubs that were the actual blocker (D1 with the three shapes the Worker really uses, a KV
-  counter that genuinely increments so the 30/min boundary is drivable, plus ASSETS/Vectorize/
-  Queues/AI as presence-togglable bindings) — and <code>worker/test/routes.test.js</code>,
-  which drives the <strong>real</strong> <code>fetch</code> handler through
-  <code>worker.fetch(request, env, ctx)</code> rather than any reconstruction of it.
-  <strong>35 tests → 58, all green</strong> via <code>npm test --prefix worker</code>. No new
-  dependencies; the existing thin-stub style from <code>generate.test.js</code> was extended
-  rather than a second pattern invented.</p>
-  <p><strong>A real blocker found by running it, not by reading it:</strong>
-  <code>cachedJson()</code> (<code>src/index.js:62</code>) reads <code>caches.default</code>,
-  a Workers global that is <code>undefined</code> in Node — every cached route throws before
-  reaching an assertion without a stub for it. That is why <code>installCaches()</code> exists;
-  it is not decoration.</p>
-  <p><strong>The gates are the point, and they have three different failure defaults</strong>
-  — <code>rateLimitOk</code> fails OPEN (anti-spam, not a boundary), <code>tokenOk</code> fails
-  OPEN with no <code>WORKER_ADMIN_KEY</code> (dev mode), <code>founderAuthOk</code> fails
-  <em>CLOSED</em> with no <code>FOUNDER_KEY</code> (approving a proposal is high-stakes).
-  Getting one backwards would be a real security bug that reads like a typo, so each is now
-  asserted in both directions.</p>
-  <p><strong>Proven able to fail, per this task's own precedent</strong> — three deliberate
-  mutations, source restored byte-identically afterwards (<code>diff -q</code>: IDENTICAL):
-  making <code>founderAuthOk</code> fail open failed <strong>1</strong> test; moving the
-  rate-limit boundary from <code>&gt;= 30</code> to <code>&gt; 30</code> failed
-  <strong>1</strong>; making <code>tokenOk</code> fail closed failed <strong>13</strong>. Each
-  count matches exactly what that mutation logically predicts, which is itself evidence the
-  assertions are precise rather than accidentally broad.</p>
-  <p><strong>Honest scope note:</strong> this closes what task 15's acceptance actually named.
-  It does <em>not</em> mean the Worker is comprehensively tested — <code>/command_text</code>,
-  the proposals lifecycle, the Arena routes and the work cycle remain uncovered. Naming that
-  rather than letting "task 15 done" imply more than it does.</p>
+  <p><strong>Acceptance MET — closed independently, twice, by two parallel sessions
+  (2026-08-08 and 2026-08-09) that did not know about each other, discovered at merge
+  time rather than assumed away.</strong> Recorded honestly rather than picking one
+  account and discarding the other, since both are real and both landed:</p>
+  <p><strong>Session A (2026-08-08):</strong> shipped <code>worker/test/helpers/env.js</code>
+  (D1 with the three shapes the Worker really uses, a KV counter that genuinely increments
+  so the 30/min boundary is drivable, plus ASSETS/Vectorize/Queues/AI as presence-togglable
+  bindings) and <code>worker/test/routes.test.js</code>, driving the <strong>real</strong>
+  <code>fetch</code> handler through <code>worker.fetch(request, env, ctx)</code>. 35 → 58
+  tests. Found that <code>cachedJson()</code> reads <code>caches.default</code>, undefined in
+  Node, requiring <code>installCaches()</code>. Asserted all three gates'
+  (<code>rateLimitOk</code> open, <code>tokenOk</code> open, <code>founderAuthOk</code>
+  <em>closed</em>) failure defaults in both directions. Mutation-tested: founderAuthOk fail-open
+  failed 1 test, rate-limit boundary off-by-one failed 1, tokenOk fail-closed failed 13.
+  Restored byte-identically.</p>
+  <p><strong>Session B (2026-08-09):</strong> shipped <code>worker/test/fetch-handler.test.js</code>
+  independently — 28 tests, its own inline D1 stub (not sharing Session A's helpers, since
+  neither session could see the other's in-flight work). Covers the same three named targets
+  plus deeper <code>/venture/plan</code>/<code>/legal/research</code> edge cases (malformed
+  JSON, wrong-typed shapes, the <code>async:true</code> Queues path and its sync fallback).
+  <strong>Found and fixed a real production bug independently of Session A:</strong> three
+  routes (<code>/agents</code>, <code>/roadmap</code>, <code>/llm/status</code>) used
+  <code>return cachedJson(...)</code> with no <code>await</code> — inside an <code>async</code>
+  function this lets a D1-failure rejection escape the local <code>catch</code> instead of
+  producing the handler's clean 500. Confirmed with a standalone repro, fixed at all three
+  call sites, <code>node --check</code> clean. Also caught and fixed its own test bug (CORS
+  origin-echo assertion was checking the wrong direction). Mutation-tested separately:
+  rate-limit gate removal failed 2, CORS origin-echo failed 1, missing-await bug
+  reintroduced failed 1. Restored byte-identically.</p>
+  <p><strong>Merged 2026-08-09 — both suites coexist, no functional conflict.</strong> Neither
+  session's test file imports the other's helpers, so nothing collided beyond this narrative
+  text. Combined worker suite: <strong>108 tests, all green</strong> via
+  <code>npm test --prefix worker</code> (includes a third, later addition — Secrets Store
+  binding-shape coverage for <code>FOUNDER_KEY</code>, unrelated to task 15 — see the
+  Secrets Store work in Campaign Log). The redundancy between the two sessions' coverage of
+  the same three acceptance targets is real and left as-is rather than deleted, since both
+  represent independently-verified passes and de-duplicating risks losing one session's
+  mutation-testing evidence.</p>
+  <p><strong>Status: still <code>in-progress</code>, deliberately.</strong> The three named
+  acceptance targets are met twice over, but the task's broader goal — the <em>whole</em>
+  Worker under test — is not. Roughly 40+ other routes remain uncovered. Level:
+  <code>tested</code>, not <code>verified-live</code> (<code>wired-or-not</code>) — these run
+  in CI, they do not prove production behaviour.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-16">
@@ -1924,4 +1932,5 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
 2026-08-08 — Task 15 DONE — the fetch-handler coverage this task actually asked for, closing a gap it had honestly carried since 2026-08-02. Built worker/test/helpers/env.js (the stubs WERE the blocker: D1 in the three shapes the Worker really uses, a KV counter that genuinely increments so the 30/min boundary is drivable, ASSETS/Vectorize/Queues/AI presence-togglable) and worker/test/routes.test.js, driving the REAL handler via worker.fetch(request, env, ctx), not a reconstruction. 35 -> 58 tests, all green, zero new dependencies, extending generate.test.js's existing thin-stub style rather than inventing a second pattern. Real blocker found by running not reading: cachedJson() reads caches.default, a Workers global that is undefined in Node — every cached route throws without a stub for it. Covered /venture/plan, /legal/research, and all three gates in BOTH directions, because they have three different failure defaults on purpose (rateLimitOk open, tokenOk open without WORKER_ADMIN_KEY, founderAuthOk CLOSED without FOUNDER_KEY) and flipping one would be a security bug that reads like a typo. Proven able to fail via 3 deliberate mutations, source restored byte-identically (diff -q IDENTICAL): founderAuthOk fail-open -> 1 failure, rate-limit >=30 to >30 -> 1, tokenOk fail-closed -> 13 — each count matching what that mutation logically predicts. Honest scope note recorded in the task: /command_text, proposals lifecycle, Arena and the work cycle remain uncovered; "task 15 done" must not imply more than it does.
 2026-08-08 — FIRING COMPLETE. PR #160 opened (https://github.com/TehutiRaEl/THEHIVE/pull/160), 4 commits, CI checked ONCE per protocol, never merged. Two checks most relevant to this firing's changes already green at check time: "Test (Worker, Node 22)" success (the 58 new/existing tests pass in CI, not just locally) and "Extract CAMPAIGN.html task queue and post it to the hive" success (independent production confirmation that the task-digest parser still reads this edited file correctly — the local re-run was not the only evidence). Others still queued/in-progress at the single check; not re-polled. Also observed live during this firing, as a real instance of task 46 rather than a claim about it: "Workers Builds: thehive" started building from this branch the moment it was pushed — pushing a branch in this repo is a production deploy, still founder-blocked. Task 5 of the audit lenses produced VISION/2026-08-08-vision-arithmancer-thermodynamics-audit-010.md + HIVE_UPDATES/2026-08-08-directive-arithmancer-pdf-048.md; nothing from the founder's PDF was built or merged, by explicit instruction. ONE ITEM STILL OWED, not claimable: list_triggers was denied a 3rd time, so trig_01CJsVYwDs4pHMoFEC5JFi7V's live state stays UNVERIFIED per wired-or-not — one founder approval closes it. Nothing was fired. This is the first firing under task 51's new measure; the number below is real input+output only. TOKENS: 96746 (delta since 2026-08-08T06:42:39.553Z, 96 usage-bearing entries; cache-creation 120552 reported separately, NOT counted)
 </body>
-</html>
+</html>2026-08-09 — Task 15 continued (fetch-handler coverage). Ceiling gate PASSED at start: zero log entries dated today, so count=0 and sum=0 — a real correction, the previous two stops read the live script instead of the protocol's actual rule (today's logged entries). checks-and-balances pass clean: 5 founder-gated / 11 rate-limited / 10 token-gated routes, only Nanuet NULL reports_to. Resumed #15 (in-progress, batchable) rather than starting #14 (batchable=false, needs fresh context — this one is not). New worker/test/fetch-handler.test.js: 28 tests, suite 35 → 63 green, covering the three named acceptance targets (/venture/plan, /legal/research, rate-limit + token gating) with a real D1 stub. FOUND AND FIXED A PRODUCTION BUG: /agents, /roadmap and /llm/status used `return cachedJson(...)` with no await, so a D1 rejection escaped the handler's try/catch entirely instead of becoming a clean 500 — confirmed with a standalone repro before claiming it, fixed at all three sites. Also corrected one of my own tests that was wrong about CORS (the Worker was right: Allow-Origin is echoed only for allowlisted origins; both directions now asserted). Mutation-tested 3 ways, source restored byte-identical each time. Task 15 stays in-progress: ~40+ routes still uncovered, ASSETS/Vectorize stubs still unbuilt. Level: tested, not verified-live. 5 approved-unactioned proposals (#1/#5/#6/#7/#8) checked — all founder-only, none actioned. list_triggers approval denied again, so the 2 AM Routine remains UNVERIFIED and is not claimed to work. PR opened, not merged. TOKENS: 2272368
+
