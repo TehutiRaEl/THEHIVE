@@ -11,6 +11,24 @@ const STATUS_STYLE: Record<string, string> = {
   backlog: 'border-white/15 text-slate-400 bg-white/5',
 };
 
+interface RoadmapPanelProps {
+  onOpenCampaign?: () => void
+  onOpenFullPlan?: () => void
+}
+
+function OpenDocLink({ label, onClick }: { label: string; onClick?: () => void }) {
+  if (!onClick) return null;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-xs text-cyan-glow hover:text-cyan-glow/80 hover:underline"
+    >
+      {label} →
+    </button>
+  );
+}
+
 function StatusPill({ status, label }: { status: string; label: string }) {
   return (
     <span className={`shrink-0 text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${STATUS_STYLE[status] ?? STATUS_STYLE.backlog}`}>
@@ -40,16 +58,19 @@ function StatTile({ value, label, color }: { value: number; label: string; color
   );
 }
 
-function SectionHead({ title, sub }: { title: string; sub: string }) {
+function SectionHead({ title, sub, action }: { title: string; sub: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-baseline gap-2 mb-3 pb-2 border-b border-white/10">
-      <h3 className="text-gold font-display text-[13px] tracking-wide">{title}</h3>
-      <span className="text-[11px] text-slate-500">{sub}</span>
+    <div className="flex items-baseline justify-between gap-2 mb-3 pb-2 border-b border-white/10">
+      <div className="flex items-baseline gap-2">
+        <h3 className="text-gold font-display text-[13px] tracking-wide">{title}</h3>
+        <span className="text-[11px] text-slate-500">{sub}</span>
+      </div>
+      {action}
     </div>
   );
 }
 
-export default function RoadmapPanel() {
+export default function RoadmapPanel({ onOpenCampaign, onOpenFullPlan }: RoadmapPanelProps) {
   const [openPhase, setOpenPhase] = useState<number | null>(0);
   const hive = useHiveData();
   const dev = hive.developmentRoadmap;
@@ -85,6 +106,19 @@ export default function RoadmapPanel() {
           {dev?.founderActions.length
             ? dev.founderActions.map((c) => <Card key={c.title} card={c} />)
             : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'unavailable — edge unreachable'}</p>}
+        </div>
+      </section>
+
+      <section>
+        <SectionHead
+          title="Project Ledger (P0–P7)"
+          sub="from FULL_PLAN.html, refreshed every 6h"
+          action={<OpenDocLink label="Open full project plan" onClick={onOpenFullPlan} />}
+        />
+        <div className="space-y-2">
+          {dev?.projects.length
+            ? dev.projects.map((c) => <Card key={c.title} card={c} />)
+            : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'not yet synced — see .claude/tasks/FULL_PLAN.html directly'}</p>}
         </div>
       </section>
 
@@ -147,6 +181,19 @@ export default function RoadmapPanel() {
           {dev?.backlog.length
             ? dev.backlog.map((c) => <Card key={c.title} card={c} />)
             : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'backlog empty'}</p>}
+        </div>
+      </section>
+
+      <section>
+        <SectionHead
+          title="Live Task Queue"
+          sub="from CAMPAIGN.html, refreshed every 6h"
+          action={<OpenDocLink label="Open full task queue" onClick={onOpenCampaign} />}
+        />
+        <div className="space-y-2">
+          {dev?.campaign.length
+            ? dev.campaign.map((c) => <Card key={c.title} card={c} />)
+            : <p className="text-xs text-slate-500">{hive.loading ? 'loading…' : 'not yet synced — see .claude/tasks/CAMPAIGN.html directly'}</p>}
         </div>
       </section>
 

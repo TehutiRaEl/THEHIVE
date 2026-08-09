@@ -13,28 +13,54 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-08-01, ~all automation PAUSED — read this section first)
+## Right now (updated 2026-08-08 — read this section first)
 
-- **ALL Routines deleted by the founder 2026-08-01 after a real incident — nothing fires
-  automatically right now, on purpose.** Root cause (confirmed from trigger history, not
-  guessed): every recurring Routine — the hourly PR-heartbeat cron AND the nightly 2am
-  arc AND an earlier `send_later` chain — used `persist_session:true` pointed at one
-  long-lived session, so 24+ resumes/day all snowballed ONE conversation's context
-  instead of firing clean; a literal 6+-firing identical-message chain from 2026-07-31
-  compounded it. **Do not recreate any Routine until the founder approves a redesign.**
-  Founder's design brief (2026-08-01, verbatim intent): fresh session per firing, never
-  this one; replace polling with `subscribe_pr_activity` (event-driven, zero-cost when
-  idle) for PR/CI watching; each unit of background work lives in its own file/directory
-  with its own prompt + a README stating what's next and what "done right" means, and the
-  trigger's own stored prompt becomes tiny — "go there, do it, update it, stop"; a
-  session should only open its PR once its task is fully done, check CI, then — if
-  context budget allows — move to the next queued task rather than stopping or
-  cramming. Redesign not yet built (founder chose "hold off" on timing, then continued
-  brainstorming — check this session's own transcript or `Fable_memory.md` for whether
-  a build decision has landed since this line was written).
-- **Open PRs: #143 only**, last confirmed `mergeable_state: clean`, CI green — **not
-  re-checked since Routines were deleted**, no heartbeat has run. Re-verify before
-  trusting this line.
+- **⚠️ This section was wrong from 2026-08-04 to 2026-08-08 and said so with confidence.**
+  It claimed "ALL Routines deleted, nothing fires automatically" for four days *after* a
+  replacement Routine had been wired on 2026-08-04. The one file every autonomous firing
+  reads first was the file misinforming it. Corrected here; the incident history below is
+  kept deliberately, because it is why the standing rule exists.
+- **The "2 AM automation" is two different triggers, and only one of them ever fired at
+  2 AM.** This confused the founder and the record for days — resolved 2026-08-08 from
+  repo evidence (founder's commits carry `-0700`, so PT = UTC−7 in August):
+  | Trigger | Cron | In PT | State |
+  |---|---|---|---|
+  | `trig_013BTxUthvLX3C4nLs7MypVC` — the "autonomous arc" | fired `09:00Z` | **02:00 = 2 AM PT** | **DELETED 2026-08-01** in the incident below |
+  | `trig_01CJsVYwDs4pHMoFEC5JFi7V` — daily campaign Routine | `0 4 * * *` UTC | 21:00 = **9 PM PT** | Created 2026-08-04 (`CAMPAIGN.html` ~line 27) — see next bullet |
+  The 2 AM arc the founder remembers is the **deleted** one. Its replacement fires at
+  **9 PM PT**, not 2 AM. No repo workflow fires at 2 AM PT either — of the nine scheduled
+  workflows, the closest is `colony-health.yml` (`0 6 * * *` UTC), which is 2 AM *Eastern*.
+  Do not "fix" the 9 PM cron to 2 AM without the founder saying that is what they want.
+- **`trig_01CJsVYwDs4pHMoFEC5JFi7V`'s live state is `unverified` — do not claim it works.**
+  `list_triggers` requires an interactive approval and was denied three times (once
+  2026-08-07, twice 2026-08-08). Nothing in this container can see whether that Routine
+  still exists, is enabled, or when it next fires. Per `wired-or-not`, the honest level is
+  `unverified`, not "wired". **Ask the founder to approve `list_triggers` once**, then
+  record the real `next_run_at` / `ended_reason` / `suspension_reason` here. Never call
+  `fire_trigger`.
+- **The 2026-08-01 incident — kept, because it is why the rule exists.** Every recurring
+  Routine then — the hourly PR-heartbeat cron AND the nightly 2 AM arc AND an earlier
+  `send_later` chain — used `persist_session:true` pointed at one long-lived session, so
+  24+ resumes/day snowballed ONE conversation's context instead of firing clean; a literal
+  6+-firing identical-message chain from 2026-07-31 compounded it, and it cost real money.
+  Founder's design brief from that day still stands: fresh session per firing, never this
+  one; `subscribe_pr_activity` (event-driven, zero-cost when idle) instead of polling; each
+  unit of background work in its own file/directory with its own prompt and a README
+  stating what's next and what "done right" means, so the trigger's stored prompt stays
+  tiny — "go there, do it, update it, stop". **Still do not create any NEW Routine without
+  the founder's approval.** (That rule is about creating new ones; it never meant "assume
+  none exist" — which is exactly how this section went stale.)
+- **Open PRs: ZERO.** Corrected 2026-08-08 — this line previously said "#143 only" and had
+  been stale for weeks. #155, #156, #157, #158 and #159 are all merged (verified via
+  `pull_request_read`: #159 `merged: true`, `merged_at 2026-08-08T02:45:02Z`).
+  `origin/main` is at `1fb37dd`.
+- **Task 51 is DECIDED (2026-08-08) — the token ceiling now counts real input + output
+  only.** It had stopped two consecutive firings before either did any work; three
+  measurements agree that ~90-96% of what it used to count was cache creation, which
+  scales with how long this persistent conversation has grown rather than with how much
+  work a firing does. `session-usage.sh` changed accordingly; cache creation is still
+  reported, labelled, and deliberately non-summable. A firing's ceiling check is
+  meaningful again — run it, don't skip it.
 - **Dead-code 19-question round: answered by founder 2026-08-01, mostly executed.**
   Deleted for real (verified zero-importer, full suite re-run, 375 passed):
   `arena_guild.py`, `constitutional_guild.py`, `dream_guild.py`, `frequency_guild.py`,
@@ -72,13 +98,22 @@ that's the discipline this file exists to model, not just describe.
   Don't let a future firing re-conflate the two.
 - **Grok bridge activation (L2):** founder said "not sure yet" — tracked as **undecided**,
   not open, not dropped. Don't nag about it; don't drop it either.
-- **Autonomous arc: uncapped, nightly 2 AM PT.** `trig_013BTxUthvLX3C4nLs7MypVC` — no
-  more "Session N/6" framing (removed 2026-07-31, backlog outgrew 6 sessions). Next
-  fire `2026-08-01T09:00:00Z`. Maximize each firing's own window rather than cramming;
-  read that trigger's own prompt (`list_triggers`) for the full current priority order.
-- **PR-heartbeat: native hourly cron only** — `trig_01Dd9ysNpDiCcfVVEKzM54DX`
-  (`58 * * * *`). Don't start a new `send_later` chain for the next PR; this cron
-  already checks whatever this file lists as open.
+- **~~Autonomous arc: uncapped, nightly 2 AM PT~~ — DELETED 2026-08-01.**
+  `trig_013BTxUthvLX3C4nLs7MypVC` fired at `09:00Z` = 2 AM PT. This is the trigger the
+  founder remembers as "the 2 AM automation"; it no longer exists. Struck through rather
+  than removed, because its identity is what resolves the 2 AM/9 PM confusion above.
+- **~~PR-heartbeat: native hourly cron~~ — DELETED 2026-08-01.**
+  `trig_01Dd9ysNpDiCcfVVEKzM54DX` (`58 * * * *`). Replaced in principle by
+  `subscribe_pr_activity` (event-driven, zero-cost when idle) per the founder's own design
+  brief — but note that is a *principle*, not a running subscription: nothing is currently
+  watching any PR. Do not start a `send_later` chain to substitute for it.
+- **Scheduled GitHub workflows — nine, and these DO run** (unlike the Routines above;
+  inventoried 2026-08-08, none at 2 AM PT / `09:00Z`): `colony-health.yml` `0 6 * * *` ·
+  `d1-backup.yml` `0 3 * * 0` · `edge-health-probe.yml` `17 */6 * * *` ·
+  `federation-issue-triage.yml` `41 */3 * * *` · `federation-pr-review.yml` `23 */6 * * *` ·
+  `kai-el-bridge.yml` `11 */2 * * *` · `roadmap-digest.yml` `25 */6 * * *` ·
+  `task-digest.yml` `5 */4 * * *` · `ui-live-probe.yml` `37 */6 * * *`.
+  `edge-health-probe.yml` remains the hive's only real eyes on production.
 - **Kai El bridge: live, verified real round trip** (issue #137, `hive_updates`/
   `hive_proposals` D1 tables, `.github/workflows/kai-el-bridge.yml`). Harness→Kai-El
   direction (`directive_text` dispatch) still genuinely untested. Calibration flag:
@@ -186,15 +221,18 @@ Full reasoning → `.claude/skills/wired-or-not/SKILL.md`. Findings →
 does fire the real cron against the real D1 — 17 `agent-work` rows, exactly hourly, 7
 agents rotating, ~900 tokens/turn. `edge-health-probe.yml` now asserts this every run.
 
-## The loop — four triggers, nothing auto-loads (2026-08-07)
+## The loop — five triggers, nothing auto-loads (updated 2026-08-08)
 
-Pointer only, deliberately: the full skills load **on trigger**, not at session start, because
-task 51's token ceiling is still unresolved.
+Pointer only, deliberately: the full skills load **on trigger**, not at session start. (This
+line previously said "because task 51's token ceiling is still unresolved" — **task 51 was
+decided 2026-08-08**, count-real-work-only; the pointer-only discipline stays regardless, on
+its own merits, not because of an unresolved ceiling.)
 
 | When | Run |
 |---|---|
 | Founder sends new info **mid-work** | `founder-input-intake` — triage INVALIDATES / CHANGES / CONFIRMS / EXTENDS *before* the next action, write the result into the plan. Then `founder-directive-capture` for the verbatim archive. |
-| An **architectural decision** is on the table | `dual-lens` — devils-advocate **then** childlike-wonder. One lens = `single-lens, incomplete`. |
+| An **architectural decision** is on the table | `dual-lens` — devils-advocate **then** childlike-wonder. One lens = `single-lens, incomplete`. When the subject is source material (a document, external research) rather than the hive's own design, `dual-lens` runs `fabrication-mining` as a conditional third stage on whatever Stage 1 found false. |
+| A claim was just judged **false or fabricated** | `fabrication-mining` — don't just discard it; ask what it was reaching for. Five verdicts, including the load-bearing null result `NO-SIGNAL`. Never for confirmed security threats — those go to `anomaly-triage` tier 3. |
 | **Batching** several tasks | `hive-conductor` Phase 0.6 — amplify in phase, cancel out of phase. Sequence the out-of-phase. |
 | About to say something **works** | `wired-or-not` — name the level, bring evidence. |
 

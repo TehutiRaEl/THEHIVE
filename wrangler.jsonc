@@ -64,5 +64,21 @@
       "database_name": "thehive-queen",
       "database_id": "70212689-5633-4c09-9e1d-ae6294ce19eb"
     }
+  ],
+  // FOUNDER_KEY moved to Cloudflare's Secrets Store (an account-wide vault,
+  // distinct from a classic per-Worker secret set via `wrangler secret put`)
+  // 2026-08-08 at the founder's choice — "secrets store was easier to find
+  // and less of a ache moving forward." A secrets_store_secrets binding
+  // resolves at runtime to an object with an async .get() method, NOT a
+  // plain string like a classic secret, so every read site in
+  // worker/src/index.js goes through resolveSecret()/founderKeyBound()
+  // rather than a bare truthy/equality check. store_id is the founder's own
+  // Secrets Store, confirmed from their Cloudflare dashboard.
+  "secrets_store_secrets": [
+    {
+      "binding": "FOUNDER_KEY",
+      "store_id": "88799ba02bfb497b830a1bf0e337467a",
+      "secret_name": "FOUNDER_KEY"
+    }
   ]
 }
