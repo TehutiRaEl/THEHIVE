@@ -23,8 +23,9 @@ import assert from 'node:assert/strict';
 import worker from '../src/index.js';
 import {
   stubDB, stubKV, installCaches, stubCtx, makeEnv, req,
-  stubOutboundFetch, providerRes, openaiReply,
+  stubOutboundFetch, providerRes, openaiReply, stubSecretsStoreSecret,
 } from './helpers/env.js';
+import { resolveSecret, founderKeyBound } from '../src/index.js';
 
 let restoreCaches;
 before(() => { restoreCaches = installCaches(); });
@@ -262,6 +263,91 @@ describe('the founder gate (founderAuthOk) — fails CLOSED by design', () => {
     }), env);
 
     assert.equal(r.status, 401);
+  });
+});
+
+// FOUNDER_KEY moved to Cloudflare's Secrets Store 2026-08-08 — a binding shaped
+// as { get: async () => value } rather than a plain string. Every test above
+// this point uses the classic string shape; these prove the new object shape
+// works identically, since resolveSecret() is what makes both shapes equivalent
+// everywhere this file reads env.FOUNDER_KEY.
+describe('resolveSecret() — classic string secret vs. Secrets Store object binding', () => {
+  test('a plain string secret resolves to itself', async () => {
+    assert.equal(await resolveSecret('real-key'), 'real-key');
+  });
+
+  test('a Secrets Store binding resolves via its async .get()', async () => {
+    assert.equal(await resolveSecret(stubSecretsStoreSecret('real-key')), 'real-key');
+  });
+
+  test('an empty string secret resolves to null', async () => {
+    assert.equal(await resolveSecret(''), null);
+  });
+
+  test('a Secrets Store binding whose .get() resolves empty resolves to null', async () => {
+    assert.equal(await resolveSecret(stubSecretsStoreSecret('')), null);
+  });
+
+  test('a missing binding resolves to null', async () => {
+    assert.equal(await resolveSecret(undefined), null);
+  });
+
+  test('a Secrets Store binding whose .get() throws resolves to null, not a crash', async () => {
+    const bad = { get: async () => { throw new Error('store unreachable'); } };
+    assert.equal(await resolveSecret(bad), null);
+  });
+
+  test('founderKeyBound() is true for a bound Secrets Store binding', async () => {
+    assert.equal(await founderKeyBound({ FOUNDER_KEY: stubSecretsStoreSecret('real-key') }), true);
+  });
+
+  test('founderKeyBound() is false when the Secrets Store binding is absent', async () => {
+    assert.equal(await founderKeyBound({}), false);
+  });
+});
+
+describe('the founder gate under a Secrets Store FOUNDER_KEY binding', () => {
+  test('the right key, via a Secrets Store binding, is accepted', async () => {
+    const env = makeEnv({
+      FOUNDER_KEY: stubSecretsStoreSecret('real-key'),
+      DB: stubDB({ 'SELECT kind, body FROM hive_proposals': { kind: 'suggestion', body: '{}' } }),
+    });
+
+    const r = await call(req('/proposals/1/decide', {
+      method: 'POST', body: { decision: 'approved' }, headers: { Authorization: 'Bearer real-key' },
+    }), env);
+
+    assert.notEqual(r.status, 401,
+      'a Secrets Store binding must authenticate exactly like a classic string secret');
+  });
+
+  test('a wrong key, via a Secrets Store binding, is still refused', async () => {
+    const env = makeEnv({ FOUNDER_KEY: stubSecretsStoreSecret('real-key') });
+
+    const r = await call(req('/proposals/1/decide', {
+      method: 'POST', body: { decision: 'approved' }, headers: { Authorization: 'Bearer wrong-key' },
+    }), env);
+
+    assert.equal(r.status, 401);
+  });
+
+  test('/debug/env reports FOUNDER_KEY present when bound via Secrets Store', async () => {
+    const env = makeEnv({ FOUNDER_KEY: stubSecretsStoreSecret('real-key') });
+
+    const r = await call(req('/debug/env'), env);
+    const b = await r.json();
+
+    assert.ok(b.secrets_present.includes('FOUNDER_KEY'),
+      'a Secrets Store binding must not silently regress to permanently-absent (the task 35 class of bug)');
+  });
+
+  test('/debug/env does not report FOUNDER_KEY present when its Secrets Store .get() resolves empty', async () => {
+    const env = makeEnv({ FOUNDER_KEY: stubSecretsStoreSecret('') });
+
+    const r = await call(req('/debug/env'), env);
+    const b = await r.json();
+
+    assert.ok(!b.secrets_present.includes('FOUNDER_KEY'));
   });
 });
 

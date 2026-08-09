@@ -107,7 +107,7 @@ jobs:
 
       - name: Post it to the Command Center
         env:
-          FOUNDER_KEY: ${{ secrets.FOUNDERS_KEY }}
+          FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
         run: |
           if [ -z "$FOUNDER_KEY" ]; then
             echo "::warning::FOUNDER_KEY secret not set — /v11/roadmap/development is founder-gated (it writes what the founder sees, so an anonymous caller must not be able to rewrite the roadmap). Digest above was still built correctly; skipping the post."

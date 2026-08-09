@@ -187,6 +187,26 @@ async function tokenOk(DB, request, env) {
   } catch { return true; }
 }
 
+// FOUNDER_KEY moved from a classic per-Worker secret (wrangler secret put) to
+// Cloudflare's Secrets Store 2026-08-08 at the founder's choice. A Secrets
+// Store binding is an OBJECT with an async .get() method, not a plain
+// string — resolveSecret() normalizes either shape to the real string value
+// (or null), so this file never has to know which kind of binding it got.
+// GROK_BRIDGE_KEY/CLOUDFLARE_API_TOKEN stay classic secrets for now; passing
+// a plain string through unchanged means resolveSecret() is safe to use on
+// all three uniformly (see /debug/env below).
+async function resolveSecret(value) {
+  if (!value) return null;
+  if (typeof value === 'object' && typeof value.get === 'function') {
+    try { return (await value.get()) || null; } catch { return null; }
+  }
+  return typeof value === 'string' && value ? value : null;
+}
+
+async function founderKeyBound(env) {
+  return !!(await resolveSecret(env.FOUNDER_KEY));
+}
+
 // Founder-only gate for deciding hive proposals — deliberately the OPPOSITE
 // default of tokenOk above. tokenOk fails OPEN when no admin key is set
 // (fine for anti-spam on a chat message). Approving a hive-evolution
@@ -194,11 +214,12 @@ async function tokenOk(DB, request, env) {
 // verifiably true, so this fails CLOSED: with no FOUNDER_KEY secret bound,
 // nothing can be approved or rejected at all, by anyone, rather than
 // silently letting any visitor decide. See FLIP_THE_SWITCHES.md.
-function founderAuthOk(request, env) {
-  if (!env.FOUNDER_KEY) return false;
+async function founderAuthOk(request, env) {
+  const secret = await resolveSecret(env.FOUNDER_KEY);
+  if (!secret) return false;
   const auth = request.headers.get('Authorization') || '';
   const key = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-  return !!key && key === env.FOUNDER_KEY;
+  return !!key && key === secret;
 }
 
 // ── Kai El "action-request" proposals (task 7, 2026-08-02) ───────────────
@@ -436,12 +457,12 @@ async function ensureTables(DB) {
 // Worker can simply LOOK: each one is a real binding or secret whose presence is
 // already checked elsewhere in this file (see /debug/env). Derived fresh on every
 // request — it cannot go stale, by construction.
-function roadmapFounderActions(env) {
+async function roadmapFounderActions(env) {
   const items = [
     {
-      key: 'FOUNDER_KEY', bound: !!env.FOUNDER_KEY,
+      key: 'FOUNDER_KEY', bound: await founderKeyBound(env),
       title: 'Set FOUNDER_KEY so Proposals approve/reject actually works',
-      todo: 'The code fails closed on purpose — no key bound, no approvals move. Run `npx wrangler secret put FOUNDER_KEY` with a password only you know, wait ~10 min for redeploy, then paste that same value into this panel.',
+      todo: 'The code fails closed on purpose — no key bound, no approvals move. FOUNDER_KEY now lives in Cloudflare\'s Secrets Store (Workers & Pages → Secrets Store) rather than a classic per-Worker secret — set/rotate it there, bind it to this Worker, wait ~10 min for redeploy, then paste that same value into this panel.',
       done: 'Bound. Proposal approve/reject is live, and the Queen’s own auto-approval (switch 9) still cannot skip it for action-requests.',
     },
     {
@@ -1453,9 +1474,10 @@ export default {
       await seedProposalOnce(DB, {
         kind: 'flip-switch',
         title: 'Bind a founder key so proposals can actually be decided',
-        body: 'wrangler secret put FOUNDER_KEY (any strong random value you choose). Until this '
-          + 'is set, no proposal — including this one — can be approved or rejected by anyone, '
-          + 'by design (fail-closed). This is the one flip-switch this channel needs to function.',
+        body: 'Set FOUNDER_KEY in Cloudflare\'s Secrets Store and bind it to this Worker (any '
+          + 'strong random value you choose). Until this is set, no proposal — including this '
+          + 'one — can be approved or rejected by anyone, by design (fail-closed). This is the '
+          + 'one flip-switch this channel needs to function.',
       });
       await seedProposalOnce(DB, {
         kind: 'new-capability',
@@ -1613,7 +1635,7 @@ export default {
         } catch { /* table not ready — live-derived half below still answers */ }
         const bySection = (s) => stored.filter((x) => x.section === s)
           .map(({ title, status, statusLabel, body }) => ({ title, status, statusLabel, body }));
-        const founderActions = roadmapFounderActions(env);
+        const founderActions = await roadmapFounderActions(env);
         const decisions = bySection('decisions');
         const backlog = bySection('backlog');
         // 'projects' (roadmap-digest.yml, the P0-P7 ledger from FULL_PLAN.html) and
@@ -1650,9 +1672,9 @@ export default {
       // rewrite it would be exactly the kind of fabrication surface this work exists to
       // remove. Upsert by (section, title); pass status:'delete' to remove a row.
       if (p === '/roadmap/development' && method === 'POST') {
-        if (!founderAuthOk(request, env)) {
+        if (!(await founderAuthOk(request, env))) {
           return json({
-            detail: env.FOUNDER_KEY
+            detail: (await founderKeyBound(env))
               ? 'invalid or missing founder key'
               : 'no FOUNDER_KEY bound yet — see FLIP_THE_SWITCHES.md',
           }, 401);
@@ -1777,8 +1799,8 @@ export default {
           const { results } = await DB.prepare(
             `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note FROM hive_proposals
              ORDER BY (status='pending') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
-          return json({ proposals: results, founder_auth_bound: !!env.FOUNDER_KEY, queen_auto_approval_bound: !!env.QUEEN_AUTONOMOUS_APPROVAL, limit, offset });
-        } catch { return json({ proposals: [], founder_auth_bound: !!env.FOUNDER_KEY }); }
+          return json({ proposals: results, founder_auth_bound: await founderKeyBound(env), queen_auto_approval_bound: !!env.QUEEN_AUTONOMOUS_APPROVAL, limit, offset });
+        } catch { return json({ proposals: [], founder_auth_bound: await founderKeyBound(env) }); }
       }
       if (p === '/proposals' && method === 'POST') {
         // Anti-spam only (same permissive-if-unbound tokenOk as other public
@@ -1829,9 +1851,9 @@ export default {
       }
       const decideMatch = p.match(/^\/proposals\/(\d+)\/decide$/);
       if (decideMatch && method === 'POST') {
-        if (!founderAuthOk(request, env)) {
+        if (!(await founderAuthOk(request, env))) {
           return json({
-            detail: env.FOUNDER_KEY
+            detail: (await founderKeyBound(env))
               ? 'invalid or missing founder key'
               : 'no FOUNDER_KEY bound yet — nothing can be decided until the founder sets one (see FLIP_THE_SWITCHES.md)',
           }, 401);
@@ -2462,8 +2484,16 @@ export default {
         // was permanently false and the meter permanently undercounted by one hive-wide
         // switch whenever FOUNDER_KEY was actually bound. Presence-only, same as the
         // other two (F-001: names/booleans, never values).
+        // FOUNDER_KEY moved to Secrets Store 2026-08-08 — a plain `typeof === 'string'`
+        // check would silently regress to permanently-absent again (Secrets Store
+        // bindings are objects), the exact same class of bug this comment already
+        // describes. resolveSecret() normalizes both binding shapes to a real string
+        // or null, so it's used uniformly for all three expected secrets.
         const expectedSecrets = ['GROK_BRIDGE_KEY', 'CLOUDFLARE_API_TOKEN', 'FOUNDER_KEY'];
-        const secrets_present = expectedSecrets.filter((k) => typeof env[k] === 'string' && env[k].length > 0);
+        const secrets_present = [];
+        for (const k of expectedSecrets) {
+          if (await resolveSecret(env[k])) secrets_present.push(k);
+        }
         return json({ bindings, secrets_present, note: 'names and presence only — values are never exposed (F-001 data sovereignty)' });
       }
 
@@ -2516,8 +2546,8 @@ export default {
       // (task 48). Founder-key gated: this is what the autonomous agents reason over, so
       // an anonymous caller must not be able to feed them a fabricated task list.
       if (p === '/hive/task-digest' && method === 'POST') {
-        if (!founderAuthOk(request, env)) {
-          return json({ detail: env.FOUNDER_KEY ? 'invalid or missing founder key' : 'no FOUNDER_KEY bound yet' }, 401);
+        if (!(await founderAuthOk(request, env))) {
+          return json({ detail: (await founderKeyBound(env)) ? 'invalid or missing founder key' : 'no FOUNDER_KEY bound yet' }, 401);
         }
         const dBody = await request.json().catch(() => ({}));
         const digest = (dBody.body || '').toString().trim().slice(0, 4000);
@@ -2759,4 +2789,6 @@ export {
   providerRoster,
   generate,
   AGENT_WORK,
+  resolveSecret,
+  founderKeyBound,
 };

@@ -44,6 +44,23 @@ rather than defaulting to "anyone can." `FOUNDER_KEY` is now bound.
 once the same key value is pasted into the Proposals panel's key field (stored only in your
 browser's localStorage, never sent anywhere except the `Authorization` header on decide calls).
 
+**Moved 2026-08-08:** `FOUNDER_KEY` now lives in Cloudflare's **Secrets Store** (an
+account-wide vault under Workers & Pages → Secrets Store) rather than a classic
+per-Worker secret — the founder's own call: "secrets store was easier to find and less
+of a ache moving forward." Set/rotate it there and bind it to this Worker; the binding
+name stays `FOUNDER_KEY` either way, and `worker/src/index.js` reads either shape
+transparently via `resolveSecret()`. To set it:
+```bash
+npx wrangler secrets-store secret create <store_id> --name FOUNDER_KEY --scopes workers
+npx wrangler secrets-store secret update <store_id> --secret-name FOUNDER_KEY  # to rotate
+```
+(or use the Cloudflare dashboard's Secrets Store UI directly — that's how the founder
+set this one). `compiles`-level only as of this edit — this session cannot reach
+`*.workers.dev` to confirm the binding syntax deploys clean or that the bound value
+matches what the founder entered; verify via `GET /v11/roadmap/development` →
+`founderActions` showing the FOUNDER_KEY item as `done`, or `GET /v11/debug/env` →
+`secrets_present` including `FOUNDER_KEY`.
+
 ## 5 · Rate-limit counters (KV) → anti-spam moves off D1 — ✅ FLIPPED 2026-07-23
 
 Flipped at the founder's "go for phase 8": namespace `RATE_LIMIT_KV`
