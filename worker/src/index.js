@@ -1582,7 +1582,7 @@ export default {
       }
 
       if (p === '/agents') {
-        return cachedJson(request, ctx, corsHeaders, 60, async () => {
+        return await cachedJson(request, ctx, corsHeaders, 60, async () => {
           const { results } = await DB.prepare("SELECT name, reports_to FROM agents WHERE status='active'").all();
           return { agents: results };
         });
@@ -1670,7 +1670,7 @@ export default {
         return json({ ok: true, created: true });
       }
       if (p === '/roadmap') {
-        return cachedJson(request, ctx, corsHeaders, 60, async () => {
+        return await cachedJson(request, ctx, corsHeaders, 60, async () => {
           const { results } = await DB.prepare(
             "SELECT name, soul, elo FROM agents WHERE status='active' ORDER BY soul DESC").all();
           const agents = results.map(a => ({ agent: a.name, elo: a.elo, ...computeRoadmap(a.soul) }));
@@ -1954,7 +1954,7 @@ export default {
         // endpoint used to verify a just-bound secret actually took effect
         // (see .dev.vars.example) — a long-lived stale cache here would
         // directly undermine the one thing this route exists to answer.
-        return cachedJson(request, ctx, corsHeaders, 20, async () => {
+        return await cachedJson(request, ctx, corsHeaders, 20, async () => {
           const roster = providerRoster(env);
           // Task 45: this used to report the first BOUND provider, which is why it
           // said "claude" for days while Claude answered zero real requests. Now it

@@ -1594,6 +1594,48 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   rescued tests were about. The <code>fetch</code> handler itself is still entirely
   untested, and testing it needs stubs for D1, ASSETS, and Vectorize that do not exist
   yet.</p>
+  <p><strong>Acceptance MET 2026-08-09 — the three named targets are now covered.</strong>
+  New <code>worker/test/fetch-handler.test.js</code>: <strong>28 tests, suite total 35 → 63,
+  all green</strong> via <code>npm test --prefix worker</code>. Covers
+  <code>/venture/plan</code> (empty brief, no provider bound → 503 with nothing fabricated,
+  valid plan, markdown-fenced JSON, malformed output → 502 showing raw text, wrong-typed
+  shape rejected, the <code>async:true</code> Queues path enqueueing without inline
+  inference, and its fall-back to sync when <code>LLM_QUEUE</code> is unbound),
+  <code>/legal/research</code> (empty question, 503 with no fabricated legal answer, real
+  answer with provider named, and that it is gated on the same terms rather than being an
+  unguarded back door), <strong>rate limiting</strong> (429 at the cap <em>before</em> any
+  paid provider call, KV preferred over D1 when bound, and a KV outage failing OPEN so infra
+  trouble never blocks the hive), and <strong>token gating</strong> (fails open with no
+  <code>WORKER_ADMIN_KEY</code>, closed with one; missing/unknown/valid token each asserted).
+  The D1 stub was the real work, as predicted — it matches queries by SQL substring and
+  records every <code>bind()</code>, so tests assert what was actually written rather than
+  just a status code, and it unlocks all future route testing.</p>
+  <p><strong>A real production bug was found by writing these tests — the point of the
+  exercise.</strong> Three routes (<code>/agents</code>, <code>/roadmap</code>,
+  <code>/llm/status</code>) used <code>return cachedJson(...)</code> with <strong>no
+  <code>await</code></strong>. Inside an <code>async</code> function, <code>return
+  somePromise()</code> in a <code>try</code> block does <em>not</em> route a rejection to
+  the local <code>catch</code> — the try completes synchronously and the rejection escapes
+  to the caller. So a D1 failure on any of those three routes produced an unhandled
+  rejection instead of the handler's clean 500. Confirmed with a standalone minimal repro
+  before claiming it, not inferred from a failing test alone. Fixed by adding the missing
+  <code>await</code> at all three call sites; <code>node --check</code> clean.</p>
+  <p><strong>Also corrected: one of my own tests was wrong, not the code.</strong> A first
+  draft asserted <code>Access-Control-Allow-Origin</code> is always present on a preflight.
+  It is not — <code>corsHeadersFor()</code> echoes it <em>only</em> for an origin on
+  <code>ALLOWED_ORIGINS</code>, which is correct and deliberate. Both directions are now
+  asserted (allowlisted origin echoed, unknown origin not), so a future change that starts
+  echoing arbitrary origins fails loudly instead of silently widening access.</p>
+  <p><strong>Proven to catch regressions, not pass vacuously:</strong> three mutations, each
+  reverted byte-identically afterwards (verified with <code>diff</code>) — removing
+  <code>/venture/plan</code>'s rate-limit gate failed 2 tests; echoing any origin in CORS
+  failed 1; re-introducing the missing-<code>await</code> bug failed 1. Restored: 63/63.</p>
+  <p><strong>Status: still <code>in-progress</code>, deliberately.</strong> The three named
+  acceptance targets are met, but the task's broader goal — the <em>whole</em> Worker under
+  test — is not. Roughly 40+ other routes remain uncovered, and ASSETS/Vectorize stubs were
+  never needed for these three so they still do not exist. Level: <code>tested</code>, not
+  <code>verified-live</code> (<code>wired-or-not</code>) — these run in CI, they do not
+  prove production behaviour.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-16">
@@ -1814,4 +1856,5 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
 2026-08-06 — Tasks 40/41 corrected from pending to blocked: both bodies already stated they need a founder scoping round before any code, so "pending" misrepresented them as workable. Protocol's own rule applied.
 2026-08-06 — Task 13 done: ProposalsPanel's Approve/Reject pair is now the first real consumer of components/common. Real finding the swap surfaced — the shared component had ZERO consumers, so every Button variant was an unvalidated guess never rendered on a screen, while the panel's hand-written styling had actually shipped; where they disagreed the panel's won (danger moved from solid bg-red-900 to the bordered treatment really in use), safe because nothing else consumed it. Added success + size xs to match the real buttons, and fixed a real latent bug: the loading spinner was hardcoded text-white, invisible on the transparent bordered variants, now inherits currentColor. Genuine upgrade not just a refactor — both buttons gain a real in-flight spinner they never had (a click previously just dimmed with no sign anything was happening). Verified: build 243/243 unchanged, zero errors in touched files, and 12 render assertions run against the real component via react-dom/server (borders, text colours, xs sizing, spinner only when loading, spinner colour inheritance, auto-disable while loading, disable without founder key) — all 12 PASS.
 </body>
-</html>
+</html>2026-08-09 — Task 15 continued (fetch-handler coverage). Ceiling gate PASSED at start: zero log entries dated today, so count=0 and sum=0 — a real correction, the previous two stops read the live script instead of the protocol's actual rule (today's logged entries). checks-and-balances pass clean: 5 founder-gated / 11 rate-limited / 10 token-gated routes, only Nanuet NULL reports_to. Resumed #15 (in-progress, batchable) rather than starting #14 (batchable=false, needs fresh context — this one is not). New worker/test/fetch-handler.test.js: 28 tests, suite 35 → 63 green, covering the three named acceptance targets (/venture/plan, /legal/research, rate-limit + token gating) with a real D1 stub. FOUND AND FIXED A PRODUCTION BUG: /agents, /roadmap and /llm/status used `return cachedJson(...)` with no await, so a D1 rejection escaped the handler's try/catch entirely instead of becoming a clean 500 — confirmed with a standalone repro before claiming it, fixed at all three sites. Also corrected one of my own tests that was wrong about CORS (the Worker was right: Allow-Origin is echoed only for allowlisted origins; both directions now asserted). Mutation-tested 3 ways, source restored byte-identical each time. Task 15 stays in-progress: ~40+ routes still uncovered, ASSETS/Vectorize stubs still unbuilt. Level: tested, not verified-live. 5 approved-unactioned proposals (#1/#5/#6/#7/#8) checked — all founder-only, none actioned. list_triggers approval denied again, so the 2 AM Routine remains UNVERIFIED and is not claimed to work. PR opened, not merged. TOKENS: 2272368
+

@@ -31,9 +31,21 @@ EVIDENCE = [
 # number. "We ran the probe" is not checkable — nobody can go look at it. A run ID is.
 # This distinction is the entire point of the skill, so the checker has to hold it too.
 
+# A task block runs until the next task OR the Campaign Log, whichever comes first.
+# Without the log boundary the LAST task in the file swallows the entire log — which
+# really happened 2026-08-09: a log entry mentioning "not verified-live" was attributed
+# to task 26 and failed the build. Found by this script running against real content.
 TASK = re.compile(
-    r'<div class="task"[^>]*id="task-([0-9a-z]+)"[^>]*>(.*?)(?=<div class="task"|\Z)',
+    r'<div class="task"[^>]*id="task-([0-9a-z]+)"[^>]*>(.*?)'
+    r'(?=<div class="task"|<h2>Campaign Log|\Z)',
     re.S)
+
+# "not verified-live" is the OPPOSITE of a claim — it is exactly the honest hedging this
+# whole discipline asks for, and flagging it punished the correct behaviour. A checker
+# that cries wolf on honest text is one people learn to ignore, which its own docstring
+# warns against. Matches the negation immediately before the phrase, allowing markup/
+# punctuation that survives tag-stripping (e.g. "tested, not `verified-live`").
+NEGATED = re.compile(r"\b(?:not|never|isn'?t|aren'?t|rather than|instead of)\b[\s`'\"(,*_-]*$", re.I)
 
 
 def check(path):
@@ -46,7 +58,10 @@ def check(path):
     bad, checked = [], 0
     for tid, body in TASK.findall(html):
         text = ' '.join(re.sub(r'<[^>]+>', ' ', body).split())
-        if not re.search(r'\bverified-live\b', text, re.I):
+        # Only real, non-negated assertions count as claims to be checked.
+        claims = [m for m in re.finditer(r'\bverified-live\b', text, re.I)
+                  if not NEGATED.search(text[max(0, m.start() - 40):m.start()])]
+        if not claims:
             continue
         checked += 1
         # Scope the search to a window around the claim, so a SHA elsewhere in a long task
@@ -56,7 +71,7 @@ def check(path):
         # contains periods — "worker/test/generate.test.js" is exactly the kind of proof
         # this checker wants to accept, and sentence-splitting cut it in half. Caught by
         # this script's own test case rather than in review.
-        for m in re.finditer(r'\bverified-live\b', text, re.I):
+        for m in claims:
             claim = text[max(0, m.start() - 220):m.end() + 220]
             if not any(pat.search(claim) for pat, _ in EVIDENCE):
                 bad.append((tid, text[max(0, m.start() - 80):m.end() + 80].strip()[:160]))
