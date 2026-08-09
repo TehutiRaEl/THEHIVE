@@ -97,15 +97,7 @@ jobs:
       - name: Post it to the Command Center
         env:
           FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
-        run: |
-          if [ -z "$FOUNDER_KEY" ]; then
-            echo "::warning::FOUNDER_KEY not set — /v11/roadmap/development is founder-gated (it writes what the founder sees, so an anonymous caller must not be able to rewrite the roadmap). Digest above was still built correctly; skipping the post."
-            exit 0
-          fi
-          code=$(curl -sS -m 25 -o /tmp/resp.json -w '%{http_code}' \
-              -X POST "https://thehive.sovereignhive.workers.dev/v11/roadmap/development" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $FOUNDER_KEY" \
-              --data-binary @/tmp/roadmap.json)
-          echo "status=$code"; cat /tmp/resp.json; echo
-          [ "$code" = "200" ] || { echo "::error::roadmap post failed ($code)"; exit 1; }
+        # Shared implementation (scripts/post-founder-gated.sh) — see that file's
+        # header for why: one place for this logic instead of three independently
+        # drifting copies, and it's what closes the trailing-newline curl failure.
+        run: scripts/post-founder-gated.sh "https://thehive.sovereignhive.workers.dev/v11/roadmap/development" /tmp/roadmap.json

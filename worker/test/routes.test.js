@@ -304,6 +304,34 @@ describe('resolveSecret() — classic string secret vs. Secrets Store object bin
   test('founderKeyBound() is false when the Secrets Store binding is absent', async () => {
     assert.equal(await founderKeyBound({}), false);
   });
+
+  // 2026-08-09: real incident — the founder pasted a rotated FOUNDER_KEY that
+  // carried a trailing newline into the GitHub secret, which corrupted the CI
+  // curl request enough to fail before it was even sent, and separately into
+  // this panel's key field, which produced a confusing "invalid or missing
+  // founder key". Both were the same root cause: invisible whitespace. These
+  // prove it can never again be the difference between a matching and
+  // non-matching key.
+  test('a plain string secret with a trailing newline is trimmed', async () => {
+    assert.equal(await resolveSecret('real-key\n'), 'real-key');
+  });
+
+  test('a Secrets Store binding whose value has a trailing newline is trimmed', async () => {
+    assert.equal(await resolveSecret(stubSecretsStoreSecret('real-key\n')), 'real-key');
+  });
+
+  test('a secret that is whitespace-only resolves to null, not an empty-string match', async () => {
+    assert.equal(await resolveSecret('   \n'), null);
+  });
+
+  test('founderAuthOk accepts a Bearer token when the stored secret has trailing whitespace', async () => {
+    const env = makeEnv({ FOUNDER_KEY: 'real-key\r\n' });
+    const r = await call(req('/proposals/1/decide', {
+      method: 'POST', body: { decision: 'approved' }, headers: { Authorization: 'Bearer real-key' },
+    }), env);
+    assert.notEqual(r.status, 401,
+      'a trailing newline on the stored secret must not make an otherwise-correct key fail');
+  });
 });
 
 describe('the founder gate under a Secrets Store FOUNDER_KEY binding', () => {

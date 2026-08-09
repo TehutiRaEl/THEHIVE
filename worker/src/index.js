@@ -195,12 +195,24 @@ async function tokenOk(DB, request, env) {
 // GROK_BRIDGE_KEY/CLOUDFLARE_API_TOKEN stay classic secrets for now; passing
 // a plain string through unchanged means resolveSecret() is safe to use on
 // all three uniformly (see /debug/env below).
+//
+// 2026-08-09: trims the resolved value. A real incident — the founder pasted
+// a rotated FOUNDER_KEY that carried a trailing newline into both the GitHub
+// secret and (separately) this panel's key field — turned "wrong password"
+// into two confusing, differently-shaped failures (a curl header error on
+// the CI side, "invalid or missing founder key" here) that were actually the
+// same root cause. Trimming here means invisible whitespace can never again
+// be the difference between a matching and non-matching key, on any path
+// that reads this binding.
 async function resolveSecret(value) {
   if (!value) return null;
   if (typeof value === 'object' && typeof value.get === 'function') {
-    try { return (await value.get()) || null; } catch { return null; }
+    try {
+      const v = await value.get();
+      return v ? v.trim() || null : null;
+    } catch { return null; }
   }
-  return typeof value === 'string' && value ? value : null;
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
 async function founderKeyBound(env) {
