@@ -113,6 +113,16 @@ export function makeEnv(overrides = {}) {
   return { DB: stubDB(), ...overrides };
 }
 
+/**
+ * A Cloudflare Secrets Store binding stub — an object with an async .get(),
+ * NOT a plain string like a classic `wrangler secret put` secret. FOUNDER_KEY
+ * moved to this shape 2026-08-08; resolveSecret() in src/index.js must accept
+ * both shapes, so tests need to be able to produce this one specifically.
+ */
+export function stubSecretsStoreSecret(value) {
+  return { get: async () => value };
+}
+
 /** A Request against the live route shape (/v11 prefix, CF-Connecting-IP). */
 export function req(path, { method = 'GET', body, headers = {}, ip = '1.2.3.4' } = {}) {
   const h = { 'CF-Connecting-IP': ip, ...headers };
