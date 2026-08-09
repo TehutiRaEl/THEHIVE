@@ -193,8 +193,48 @@ both add-only and both founder-reviewed. No agent can approve, merge, execute, o
 Ptah's turn may draft a `PROPOSAL:`, which runs through the same Queen scoring and
 Elders' Council veto as every other proposal, and still waits for you.
 
+## 11 · Cloudflare Access → sign in as founder, no more pasting FOUNDER_KEY
+
+**Optional and purely additive** — switch 4 (`FOUNDER_KEY`) keeps working exactly as-is
+for the three CI digest workflows and as a browser fallback; this only adds a second,
+better way for *your own browser* to prove identity. The founder asked for this
+explicitly (2026-08-09) after a real incident: a rotated `FOUNDER_KEY` pasted with a
+trailing newline broke both the CI and browser paths in two confusing ways. Rather than
+ask for more careful copy-pasting, this is a real login — Cloudflare Access, already the
+platform this Worker runs on — so the founder's browser is simply authenticated
+automatically, on every request, once.
+
+**Step 0 — done in the Cloudflare dashboard, not with a code deploy:**
+1. Zero Trust → Access → Applications → **Create application** → **Self-hosted**.
+2. Check whether `thehive.sovereignhive.workers.dev` is selectable with a **path**
+   restriction (domain `thehive.sovereignhive.workers.dev`, path `/v11/founder/*`) —
+   Access must protect that specific path, never the whole hostname (which would also
+   lock out the public Command Center and public `/v11/*` routes).
+   - **If path-scoping isn't offered there:** add a custom domain to this Worker first
+     (Workers dashboard → this Worker → **Settings** → **Domains & Routes** → **Add** →
+     **Custom Domain** — any domain/subdomain you own; Cloudflare provisions DNS + cert
+     automatically), then create the Access Application against that domain instead,
+     same `/v11/founder/*` path.
+3. Identity provider: Cloudflare's built-in **One-Time PIN** (emails a 6-digit code) —
+   no external account/SSO setup needed.
+4. Policy: one **Allow** rule, **Emails** → your own email address only.
+5. Save, note the Application's **Audience (AUD) tag** (Overview page) and the **team
+   domain** (`<team-name>.cloudflareaccess.com`).
+
+**Then, in `wrangler.jsonc`** (see the commented block already there): uncomment the
+`vars` entry and fill in `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`, `FOUNDER_EMAIL` from what
+Step 0 produced, add the `,` after `secrets_store_secrets`'s closing `]`, redeploy.
+None of these three are secret (an audience tag and an email address aren't sensitive
+the way a password is), so they're plain vars, not a Secrets Store entry.
+
+**Proof it worked:** `GET /v11/debug/env` → `bindings.ACCESS_CONFIGURED: true`; visiting
+`/v11/founder/login` unauthenticated redirects to Access's login page; after signing in,
+the Proposals panel's Approve/Reject buttons work with **no key field touched**, and the
+decided proposal's `decided_by` shows your real email instead of `null` — real
+attribution the `FOUNDER_KEY` path never had.
+
 ---
 
 *2026-07-17 — written alongside the audit-driven Command Center update. Switches 5-6 added
-2026-07-21 (Phase 8 professionalization pass). When you flip one, tell the hive and it will
-re-probe and confirm from the live surface, not assume.*
+2026-07-21 (Phase 8 professionalization pass). Switch 11 added 2026-08-09. When you flip
+one, tell the hive and it will re-probe and confirm from the live surface, not assume.*

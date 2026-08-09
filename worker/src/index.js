@@ -234,6 +234,112 @@ async function founderAuthOk(request, env) {
   return !!key && key === secret;
 }
 
+// ── Cloudflare Access — a second, key-free way for the founder's own browser to
+// authenticate (2026-08-09) ────────────────────────────────────────────────
+// FOUNDER_KEY (above) stays exactly as-is for CI (the three digest workflows) and
+// as a browser fallback. This is purely additive: a founder who has logged into
+// Cloudflare Access gets a signed JWT attached to every request automatically
+// (the Cf-Access-Jwt-Assertion header), so their browser never has to carry or
+// paste a shared secret again. See the /v11/founder/* routes for where this is
+// used (that's the real, public path Access must protect — internally, route
+// matching strips the /v11 prefix first, so this file's own `p === '/founder/...'`
+// checks below look shorter than the URL a browser or Access policy sees), and
+// the Access Application setup itself (Zero Trust dashboard) for how the founder
+// provisions this — not something this Worker can configure on its own.
+//
+// atob() is a Workers global (also present in Node's test runner), used here
+// rather than Buffer to keep this file portable between the two runtimes, same
+// reasoning as this file's existing zero-dependency discipline.
+function base64UrlToBytes(b64url) {
+  const pad = (4 - (b64url.length % 4)) % 4;
+  const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad);
+  const raw = atob(b64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  return bytes;
+}
+
+// Access's signing keys rotate rarely — cached the same way cachedJson() caches
+// everything else in this file (Workers Cache API), just keyed by the JWKS URL
+// itself rather than an incoming request, since this fetch has nothing to do
+// with any one caller.
+const ACCESS_JWKS_CACHE_SECONDS = 3600;
+async function fetchAccessJWKS(env, ctx) {
+  const teamDomain = (env.ACCESS_TEAM_DOMAIN || '').toString().trim();
+  if (!teamDomain) return null;
+  const jwksUrl = `https://${teamDomain}/cdn-cgi/access/certs`;
+  const cache = caches.default;
+  const cacheKey = new Request(jwksUrl, { method: 'GET' });
+  try {
+    const hit = await cache.match(cacheKey);
+    if (hit) return await hit.json();
+  } catch { /* cache unavailable — fall through to a live fetch, never fatal */ }
+  let r;
+  try {
+    r = await fetch(jwksUrl, { signal: AbortSignal.timeout(10000) });
+  } catch { return null; }
+  if (!r.ok) return null;
+  const data = await r.json();
+  const stored = new Response(JSON.stringify(data), {
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ACCESS_JWKS_CACHE_SECONDS}` },
+  });
+  ctx?.waitUntil?.(cache.put(cacheKey, stored).catch(() => {}));
+  return data;
+}
+
+// Verifies a Cloudflare Access JWT end to end: signature against Access's own
+// published keys, audience matches this specific Access Application, not
+// expired, and the email claim matches the one allow-listed founder email.
+// Every failure path returns null — fails CLOSED, identical philosophy to
+// founderAuthOk() above, deliberately: a login system that guesses "probably
+// fine" on a malformed or unprovisioned token would be strictly worse than the
+// shared-secret model it's meant to improve on.
+async function verifyAccessJWT(request, env, ctx) {
+  try {
+    const token = request.headers.get('Cf-Access-Jwt-Assertion');
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const [headerB64, payloadB64, sigB64] = parts;
+    const header = JSON.parse(new TextDecoder().decode(base64UrlToBytes(headerB64)));
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlToBytes(payloadB64)));
+
+    // Not provisioned yet (ACCESS_AUD/FOUNDER_EMAIL unset) — fail closed rather
+    // than accept any token, same as founderAuthOk() with no FOUNDER_KEY bound.
+    const expectedAud = (env.ACCESS_AUD || '').toString().trim();
+    const expectedEmail = (env.FOUNDER_EMAIL || '').toString().trim().toLowerCase();
+    if (!expectedAud || !expectedEmail) return null;
+
+    const aud = Array.isArray(payload.aud) ? payload.aud[0] : payload.aud;
+    if (aud !== expectedAud) return null;
+
+    if (typeof payload.exp !== 'number' || Date.now() / 1000 >= payload.exp) return null;
+
+    const jwks = await fetchAccessJWKS(env, ctx);
+    if (!jwks || !Array.isArray(jwks.keys)) return null;
+    const jwk = jwks.keys.find((k) => k.kid === header.kid);
+    if (!jwk) return null;
+
+    const key = await crypto.subtle.importKey(
+      'jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify'],
+    );
+    const signedData = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+    const signature = base64UrlToBytes(sigB64);
+    const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, signature, signedData);
+    if (!valid) return null;
+
+    // Trimmed/lower-cased on both sides — the same whitespace lesson resolveSecret()
+    // learned the hard way applies here too; an email claim is no more immune to a
+    // trailing-newline mismatch than a pasted secret was.
+    const email = (payload.email || '').toString().trim().toLowerCase();
+    if (!email || email !== expectedEmail) return null;
+
+    return email;
+  } catch {
+    return null;
+  }
+}
+
 // ── Kai El "action-request" proposals (task 7, 2026-08-02) ───────────────
 // Extends hive_proposals with a kind that can eventually cause a real,
 // bounded side effect — never an arbitrary command, never raw terminal/file
@@ -338,6 +444,50 @@ async function executeApprovedAction(env, action, params) {
   } catch (e) {
     return { executed: false, reason: 'GitHub API call failed: ' + String(e) };
   }
+}
+
+// Shared by both POST /proposals/:id/decide (FOUNDER_KEY-gated) and
+// POST /founder/proposals/:id/decide (Cloudflare Access-gated, 2026-08-09) — the
+// exact same decide logic, reachable through either auth path, extracted once so
+// the two gates can never quietly drift into different behavior (and so a real
+// improvement — decidedByLabel — benefits both without duplicating the rest).
+// decidedByLabel is null for the FOUNDER_KEY path (today's existing behavior,
+// unchanged) or the founder's real, Access-verified email for the new path —
+// hive_proposals.decided_by previously only ever recorded 'queen' or null; this
+// is the first time it can record a real human identity.
+async function decideProposal(env, ctx, id, decision, note, decidedByLabel) {
+  const DB = env.DB;
+  // Fetch kind+body BEFORE the state-changing UPDATE, since only an
+  // 'action-request' proposal that is being APPROVED ever executes
+  // anything — approval alone on every other kind still just records a
+  // decision, same as before this task.
+  const existing = await DB.prepare('SELECT kind, body FROM hive_proposals WHERE id=? AND status=\'pending\'').bind(id).first();
+  if (!existing) return { status: 404, body: { detail: `proposal ${id} not found or already decided` } };
+  let execResult = null;
+  let finalNote = note;
+  if (decision === 'approved' && existing.kind === 'action-request') {
+    try {
+      const { action, params } = JSON.parse(existing.body || '{}');
+      execResult = await executeApprovedAction(env, action, params);
+      finalNote = (finalNote ? finalNote + ' | ' : '') + (execResult.executed ? `executed: ${execResult.detail}` : `NOT executed: ${execResult.reason}`);
+    } catch (e) {
+      execResult = { executed: false, reason: 'could not parse stored action body: ' + String(e) };
+      finalNote = (finalNote ? finalNote + ' | ' : '') + `NOT executed: ${execResult.reason}`;
+    }
+  }
+  const result = await DB.prepare(
+    "UPDATE hive_proposals SET status=?, decided_at=?, founder_note=?, decided_by=? WHERE id=? AND status='pending'"
+  ).bind(decision, new Date().toISOString(), finalNote, decidedByLabel, id).run();
+  if (!result.meta?.changes) {
+    return { status: 404, body: { detail: `proposal ${id} not found or already decided` } };
+  }
+  // Visible in Updates (task 49) — a decision is the single most consequential
+  // event in this system and previously left no trace in the founder-facing feed.
+  ctx?.waitUntil?.(postUpdate(DB, {
+    kind: 'proposal-decided', title: `Proposal #${id} ${decision}`,
+    body: finalNote || `The founder ${decision} this proposal.`,
+  }));
+  return { status: 200, body: { ok: true, id, decision, ...(execResult ? { execution: execResult } : {}) } };
 }
 
 // D1 table initialisation — called once per heartbeat to ensure all tables exist.
@@ -495,6 +645,12 @@ async function roadmapFounderActions(env) {
       todo: 'No MCP tool exists to create a Cloudflare Queue, so this is founder-only regardless. Run `npx wrangler queues create hive-llm-jobs`, then tell Claude — the producer/consumer code is already written and activation-ready.',
       done: 'Bound. The opt-in {"async": true} path on /v11/venture/plan and /v11/legal/research can run through it.',
     },
+    {
+      key: 'ACCESS_CONFIGURED', bound: !!(env.FOUNDER_EMAIL && env.ACCESS_AUD),
+      title: 'Set up Cloudflare Access — sign in as founder, no more pasting FOUNDER_KEY',
+      todo: 'Optional, additive — FOUNDER_KEY keeps working either way. Zero Trust → Access → Applications → create a self-hosted app protecting /v11/founder/* on this Worker (or a custom domain pointed at it, if the workers.dev address doesn\'t offer path-scoping — check the dashboard), One-Time-PIN login, one Allow policy for your email only. Then set ACCESS_TEAM_DOMAIN/ACCESS_AUD/FOUNDER_EMAIL in wrangler.jsonc (see the commented block there) and redeploy. See FLIP_THE_SWITCHES.md.',
+      done: 'Bound. Proposals approve/reject now works from a logged-in browser with no key field touched, and decisions record your real email instead of null.',
+    },
   ];
   return items.map((it, i) => ({
     title: it.title,
@@ -557,6 +713,86 @@ async function seedProposalOnce(DB, { kind, title, body }) {
         .bind(new Date().toISOString(), kind, title, body).run();
     }
   } catch { /* D1 not ready */ }
+}
+
+// Shared by both POST /roadmap/development (FOUNDER_KEY-gated) and
+// POST /founder/roadmap/development (Cloudflare Access-gated, 2026-08-09) — the
+// exact same upsert logic, reachable through either auth path, extracted once so
+// the two gates can never quietly drift into different behavior. Returns a plain
+// {status, body} pair rather than calling json() itself, since only the caller
+// knows which route (and therefore which response helper context) it's in.
+async function upsertRoadmapItems(DB, rb) {
+  const section = (rb.section || '').toString().trim();
+  // 'projects' (roadmap-digest.yml) and 'campaign' (campaign-roadmap-digest.yml)
+  // added 2026-08-08 — both workflows had been building correct digests and
+  // POSTing them on schedule since they were created, but this whitelist rejected
+  // both sections with a 400 every single time (confirmed live: their own repo
+  // secret was ALSO never set, so the POST never even fired — this whitelist gap
+  // would have surfaced as a second, separate failure the moment it was).
+  const validSections = ['decisions', 'in_progress', 'backlog', 'projects', 'campaign'];
+  if (!validSections.includes(section)) {
+    return { status: 400, body: { detail: `section must be one of: ${validSections.join(', ')} (founderActions are derived live and cannot be edited; completed phases are an append-only historical record)` } };
+  }
+
+  // Batch upsert — the shape roadmap-digest.yml/campaign-roadmap-digest.yml
+  // actually send: {section, items:[{title,status,statusLabel,body,sortOrder}]}.
+  // Full-replace semantics per section: every item in the batch is upserted, and
+  // any existing row in this section NOT present in the batch is deleted — a
+  // digest should always reflect its source document's CURRENT state, never
+  // accumulate rows the source no longer has (a real, named D1-space concern
+  // elsewhere in this repo; this prevents exactly that kind of unbounded growth).
+  if (Array.isArray(rb.items)) {
+    const items = rb.items.slice(0, 50); // sane cap, not a real limit anyone should hit
+    const now = new Date().toISOString();
+    const keepTitles = [];
+    for (const [i, it] of items.entries()) {
+      const t = (it.title || '').toString().trim().slice(0, 200);
+      if (!t) continue;
+      keepTitles.push(t);
+      const status = (it.status || 'backlog').toString().slice(0, 20);
+      const statusLabel = (it.statusLabel || '').toString().slice(0, 40);
+      const body = (it.body || '').toString().slice(0, 2000);
+      const rawSort = it.sortOrder ?? it.sort_order;
+      const sortOrder = Number.isFinite(+rawSort) ? +rawSort : i;
+      const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, t).first();
+      if (existing) {
+        await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
+          .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
+      } else {
+        await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
+          .bind(section, t, status, statusLabel, body, sortOrder, now).run();
+      }
+    }
+    if (keepTitles.length) {
+      const placeholders = keepTitles.map(() => '?').join(',');
+      await DB.prepare(`DELETE FROM roadmap_items WHERE section=? AND title NOT IN (${placeholders})`)
+        .bind(section, ...keepTitles).run();
+    }
+    return { status: 200, body: { ok: true, section, upserted: keepTitles.length } };
+  }
+
+  // Single-item upsert/delete — the founder's own manual edits (panel or curl),
+  // unchanged from the original design.
+  const title = (rb.title || '').toString().trim().slice(0, 200);
+  if (!title) return { status: 400, body: { detail: 'title required' } };
+  if (rb.status === 'delete') {
+    const del = await DB.prepare('DELETE FROM roadmap_items WHERE section=? AND title=?').bind(section, title).run();
+    return { status: 200, body: { ok: true, deleted: del.meta?.changes || 0 } };
+  }
+  const status = (rb.status || 'backlog').toString().slice(0, 20);
+  const statusLabel = (rb.statusLabel || '').toString().slice(0, 40);
+  const body = (rb.body || '').toString().slice(0, 2000);
+  const sortOrder = Number.isFinite(+rb.sortOrder) ? +rb.sortOrder : 0;
+  const now = new Date().toISOString();
+  const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, title).first();
+  if (existing) {
+    await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
+      .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
+    return { status: 200, body: { ok: true, updated: true } };
+  }
+  await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
+    .bind(section, title, status, statusLabel, body, sortOrder, now).run();
+  return { status: 200, body: { ok: true, created: true } };
 }
 
 // Append a founder-facing update (add-only; never edits law/vision). Keeps the
@@ -1692,77 +1928,38 @@ export default {
           }, 401);
         }
         const rb = await request.json().catch(() => ({}));
-        const section = (rb.section || '').toString().trim();
-        // 'projects' (roadmap-digest.yml) and 'campaign' (campaign-roadmap-digest.yml)
-        // added 2026-08-08 — both workflows had been building correct digests and
-        // POSTing them on schedule since they were created, but this whitelist rejected
-        // both sections with a 400 every single time (confirmed live: their own repo
-        // secret was ALSO never set, so the POST never even fired — this whitelist gap
-        // would have surfaced as a second, separate failure the moment it was).
-        const validSections = ['decisions', 'in_progress', 'backlog', 'projects', 'campaign'];
-        if (!validSections.includes(section)) {
-          return json({ detail: `section must be one of: ${validSections.join(', ')} (founderActions are derived live and cannot be edited; completed phases are an append-only historical record)` }, 400);
+        const result = await upsertRoadmapItems(DB, rb);
+        return json(result.body, result.status);
+      }
+      // Same upsert, reached via a Cloudflare Access identity instead of FOUNDER_KEY —
+      // see verifyAccessJWT() and its own comment for why this exists as a separate
+      // path rather than changing the route above (this path is edge-gated by Access
+      // policy, so a plain 401 here just means "no Access session on this browser
+      // yet," not "Access is broken").
+      if (p === '/founder/roadmap/development' && method === 'POST') {
+        const accessEmail = await verifyAccessJWT(request, env, ctx);
+        if (!accessEmail) {
+          return json({ detail: 'no Cloudflare Access session — sign in, or use the FOUNDER_KEY field as a fallback' }, 401);
         }
-
-        // Batch upsert — the shape roadmap-digest.yml/campaign-roadmap-digest.yml
-        // actually send: {section, items:[{title,status,statusLabel,body,sortOrder}]}.
-        // Full-replace semantics per section: every item in the batch is upserted, and
-        // any existing row in this section NOT present in the batch is deleted — a
-        // digest should always reflect its source document's CURRENT state, never
-        // accumulate rows the source no longer has (a real, named D1-space concern
-        // elsewhere in this repo; this prevents exactly that kind of unbounded growth).
-        if (Array.isArray(rb.items)) {
-          const items = rb.items.slice(0, 50); // sane cap, not a real limit anyone should hit
-          const now = new Date().toISOString();
-          const keepTitles = [];
-          for (const [i, it] of items.entries()) {
-            const t = (it.title || '').toString().trim().slice(0, 200);
-            if (!t) continue;
-            keepTitles.push(t);
-            const status = (it.status || 'backlog').toString().slice(0, 20);
-            const statusLabel = (it.statusLabel || '').toString().slice(0, 40);
-            const body = (it.body || '').toString().slice(0, 2000);
-            const rawSort = it.sortOrder ?? it.sort_order;
-            const sortOrder = Number.isFinite(+rawSort) ? +rawSort : i;
-            const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, t).first();
-            if (existing) {
-              await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
-                .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
-            } else {
-              await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
-                .bind(section, t, status, statusLabel, body, sortOrder, now).run();
-            }
-          }
-          if (keepTitles.length) {
-            const placeholders = keepTitles.map(() => '?').join(',');
-            await DB.prepare(`DELETE FROM roadmap_items WHERE section=? AND title NOT IN (${placeholders})`)
-              .bind(section, ...keepTitles).run();
-          }
-          return json({ ok: true, section, upserted: keepTitles.length });
-        }
-
-        // Single-item upsert/delete — the founder's own manual edits (panel or curl),
-        // unchanged from the original design.
-        const title = (rb.title || '').toString().trim().slice(0, 200);
-        if (!title) return json({ detail: 'title required' }, 400);
-        if (rb.status === 'delete') {
-          const del = await DB.prepare('DELETE FROM roadmap_items WHERE section=? AND title=?').bind(section, title).run();
-          return json({ ok: true, deleted: del.meta?.changes || 0 });
-        }
-        const status = (rb.status || 'backlog').toString().slice(0, 20);
-        const statusLabel = (rb.statusLabel || '').toString().slice(0, 40);
-        const body = (rb.body || '').toString().slice(0, 2000);
-        const sortOrder = Number.isFinite(+rb.sortOrder) ? +rb.sortOrder : 0;
-        const now = new Date().toISOString();
-        const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, title).first();
-        if (existing) {
-          await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
-            .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
-          return json({ ok: true, updated: true });
-        }
-        await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
-          .bind(section, title, status, statusLabel, body, sortOrder, now).run();
-        return json({ ok: true, created: true });
+        const rb = await request.json().catch(() => ({}));
+        const result = await upsertRoadmapItems(DB, rb);
+        return json(result.body, result.status);
+      }
+      // A plain top-level navigation target for the Proposals panel's "Sign in as
+      // founder" link — Access gates the whole /v11/founder/* prefix at the edge,
+      // so simply visiting this page (any /v11/founder/* page) is what triggers
+      // Access's real login flow (redirect → email PIN → redirect back here). By the time
+      // this handler runs, the request has already been let through by Access, so
+      // verifyAccessJWT() succeeding here is the expected case, not a coincidence —
+      // it only fails if Access is misconfigured (wrong AUD/domain wired up) or the
+      // vars in wrangler.jsonc are still unset, both worth surfacing plainly rather
+      // than a bare redirect back into the app.
+      if (p === '/founder/login' && method === 'GET') {
+        const accessEmail = await verifyAccessJWT(request, env, ctx);
+        const html = accessEmail
+          ? `<!doctype html><meta charset="utf-8"><title>Signed in</title><body style="font:16px system-ui;background:#0a0a0f;color:#e5e5f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center"><p>Signed in as <strong>${accessEmail.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))}</strong>.</p><p>You can close this tab and return to the Command Center.</p></div></body>`
+          : `<!doctype html><meta charset="utf-8"><title>Not configured</title><body style="font:16px system-ui;background:#0a0a0f;color:#e5e5f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center;max-width:32rem"><p>Cloudflare Access let this request through, but this Worker doesn't recognize it yet.</p><p>Check that ACCESS_TEAM_DOMAIN/ACCESS_AUD/FOUNDER_EMAIL are set in wrangler.jsonc and match this Access Application — see FLIP_THE_SWITCHES.md.</p></div></body>`;
+        return new Response(html, { status: accessEmail ? 200 : 500, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
       }
       if (p === '/roadmap') {
         return await cachedJson(request, ctx, corsHeaders, 60, async () => {
@@ -1874,37 +2071,29 @@ export default {
         const body = await request.json().catch(() => ({}));
         const decision = body.decision === 'approved' ? 'approved' : body.decision === 'rejected' ? 'rejected' : null;
         if (!decision) return json({ detail: "decision must be 'approved' or 'rejected'" }, 400);
-        let note = (body.note || '').toString().slice(0, 2000);
-        // Fetch kind+body BEFORE the state-changing UPDATE, since only an
-        // 'action-request' proposal that is being APPROVED ever executes
-        // anything — approval alone on every other kind still just records a
-        // decision, same as before this task.
-        const existing = await DB.prepare('SELECT kind, body FROM hive_proposals WHERE id=? AND status=\'pending\'').bind(id).first();
-        if (!existing) return json({ detail: `proposal ${id} not found or already decided` }, 404);
-        let execResult = null;
-        if (decision === 'approved' && existing.kind === 'action-request') {
-          try {
-            const { action, params } = JSON.parse(existing.body || '{}');
-            execResult = await executeApprovedAction(env, action, params);
-            note = (note ? note + ' | ' : '') + (execResult.executed ? `executed: ${execResult.detail}` : `NOT executed: ${execResult.reason}`);
-          } catch (e) {
-            execResult = { executed: false, reason: 'could not parse stored action body: ' + String(e) };
-            note = (note ? note + ' | ' : '') + `NOT executed: ${execResult.reason}`;
-          }
+        const note = (body.note || '').toString().slice(0, 2000);
+        const result = await decideProposal(env, ctx, id, decision, note, null);
+        return json(result.body, result.status);
+      }
+      // Same decision path, reached via a Cloudflare Access identity instead of
+      // FOUNDER_KEY — see verifyAccessJWT() for why this is a separate route rather
+      // than a change to the one above. Real improvement over the FOUNDER_KEY path:
+      // decidedByLabel carries the founder's actual verified email instead of always
+      // being null, so hive_proposals.decided_by finally records who, not just that
+      // "someone with the key" decided.
+      const decideMatchAccess = p.match(/^\/founder\/proposals\/(\d+)\/decide$/);
+      if (decideMatchAccess && method === 'POST') {
+        const accessEmail = await verifyAccessJWT(request, env, ctx);
+        if (!accessEmail) {
+          return json({ detail: 'no Cloudflare Access session — sign in, or use the FOUNDER_KEY field as a fallback' }, 401);
         }
-        const result = await DB.prepare(
-          "UPDATE hive_proposals SET status=?, decided_at=?, founder_note=? WHERE id=? AND status='pending'"
-        ).bind(decision, new Date().toISOString(), note, id).run();
-        if (!result.meta?.changes) {
-          return json({ detail: `proposal ${id} not found or already decided` }, 404);
-        }
-        // Visible in Updates (task 49) — a decision is the single most consequential
-        // event in this system and previously left no trace in the founder-facing feed.
-        ctx?.waitUntil?.(postUpdate(DB, {
-          kind: 'proposal-decided', title: `Proposal #${id} ${decision}`,
-          body: note || `The founder ${decision} this proposal.`,
-        }));
-        return json({ ok: true, id, decision, ...(execResult ? { execution: execResult } : {}) });
+        const id = Number(decideMatchAccess[1]);
+        const body = await request.json().catch(() => ({}));
+        const decision = body.decision === 'approved' ? 'approved' : body.decision === 'rejected' ? 'rejected' : null;
+        if (!decision) return json({ detail: "decision must be 'approved' or 'rejected'" }, 400);
+        const note = (body.note || '').toString().slice(0, 2000);
+        const result = await decideProposal(env, ctx, id, decision, note, accessEmail);
+        return json(result.body, result.status);
       }
       // The real bridge (2026-08-04, task 32): an approved proposal used to just sit
       // there, nothing ever picking it up. A daily automated firing marks one actioned
@@ -2489,6 +2678,12 @@ export default {
       if (p === '/debug/env') {
         const known = ['DB', 'AI', 'VECTORIZE', 'ASSETS', 'FILES', 'RATE_LIMIT_KV', 'LLM_QUEUE'];
         const bindings = {}; for (const k of known) bindings[k] = !!env[k];
+        // Cloudflare Access (2026-08-09) — presence-only, same discipline as every
+        // other row here (F-001: names/booleans, never values). ACCESS_AUD/
+        // FOUNDER_EMAIL are plain vars, not secrets, but still reported this way
+        // for consistency and because it's what roadmapFounderActions() below reads
+        // to derive the founder-actions row for this switch.
+        bindings.ACCESS_CONFIGURED = !!(env.FOUNDER_EMAIL && env.ACCESS_AUD);
         // report which expected secrets are set, by presence only
         // FOUNDER_KEY added 2026-08-06 (task 35 investigation) — frontend/src/utils/
         // readiness.ts:48 has always checked secrets_present.includes('FOUNDER_KEY') for
@@ -2803,4 +2998,5 @@ export {
   AGENT_WORK,
   resolveSecret,
   founderKeyBound,
+  verifyAccessJWT,
 };
