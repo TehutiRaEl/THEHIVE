@@ -134,6 +134,55 @@ vector store or structured D1 lookup) instead of relying solely on the current c
 window — is a legitimate next question, directly connected to item 8, but is explicitly
 **not scoped or decided yet.** Recorded here so it isn't lost, not as a decision.
 
+## 10. Kai El capability scoping — finalized, addendum same day
+
+Follow-up scoping round on item 8. Grounded first against real code rather than treated as
+a blank slate: Kai El already has a real, live semantic memory system —
+`remember()`/`recall()` (`worker/src/index.js:1431`/`:1442`), backed by a provisioned
+Cloudflare Vectorize index + Workers AI embeddings, already firing on every chat message
+(`:2454` reads 3 relevant memories into his prompt before replying, `:2522` stores the
+exchange after). Confirmed via `git grep`, not assumed. One known real gap already on
+record from task 53's audit: `recall()` does pure cosine similarity and never reads the
+`ts` it stores, so an old memory can outrank a fresher one purely on wording.
+
+**Founder's finalized answers, three rounds:**
+
+- **Memory scope:** not "extend the shared memory to more tabs" — the founder wants
+  **Kai El to have his own dedicated memory database**, plus a connected **decision/outcome
+  log ("training database" + "training logs")**, and **the same for Nanuet later**, when
+  work on the Queen resumes (not this pass).
+- **"Training database" clarified:** NOT real model fine-tuning today — no GPU/training
+  infrastructure exists (same open dependency as task 53's Oracle box). Founder's answer:
+  **"log now, real fine-tuning later."** Build the decision/outcome log now on what already
+  exists (D1 + Vectorize); treat actual weight-level fine-tuning as a distinct future task
+  gated on the same hosting decision as task 53.
+- **Tab pickup — all three modes, risk-tiered, not a single choice:** autonomous-within-
+  limits for low-risk work, draft-then-founder-approves for normal work, and
+  **explicit-invoke-only for high-risk items — where Kai El must write out why it's
+  high-risk and how to handle it**, not just flag it.
+- **Brainstorm mode — both entry points:** an explicit trigger AND automatic detection when
+  a task is underspecified, both routing to the same underlying deep-reasoning pass.
+
+**Phased build plan (not yet started, proposed breakdown for the founder's sign-off):**
+
+1. **Phase A — foundation (backend only, smallest, no new infra decisions).** Give Kai El
+   his own memory partition (tag/namespace within Vectorize rather than a second index,
+   pending a real reason to split infrastructure) separate from the generic chat memory;
+   add a new D1 decision/outcome log table populated wherever Kai El currently acts
+   (chat replies, work-cycle turns); fix the known recency-weighting gap in `recall()`
+   while already touching this code.
+2. **Phase B — tab pickup + risk tiering.** Needs a concrete default risk classification
+   (proposed starting list: anything touching money/wallet, deletions, deploys/merges, or
+   external communications = high-risk by default) plus frontend wiring across the
+   Roadmap/Venture Planner/Project tabs — bigger, touches `frontend/`/`docs/app/`, not
+   worker-only.
+3. **Phase C — brainstorm/deep-think mode.** New route/function for the longer reasoning
+   pass; output written as a real `hive_proposals`/`roadmap_items` row (not just a chat
+   reply) so it's actually actionable, not decoration.
+
+Not started this pass — proposed as the next concrete step, phase order suggested but not
+finalized by the founder.
+
 ## Explicitly not done in this pass
 
 - Task 47's roster is not being built out to 13 today — sequenced behind Kai El's own
