@@ -596,13 +596,17 @@ async function ensureTables(DB) {
   // column's shape. If the live schema really does require more, this insert no-ops
   // safely and the next heartbeat retries — same degrade-quietly discipline as every
   // other D1 write here, though the whole point of task 45's fix was to stop degrading
-  // THIS quietly, so: if the Orchestrator never appears in GET /v11/agents, that is the
+  // THIS quietly, so: if Akosha never appears in GET /v11/agents, that is the
   // signal this insert is failing and needs a real look, not silent acceptance.
+  // Named 'Akosha' by the founder, 2026-08-10 — was 'Orchestrator' as a working label
+  // until then (see AGENT_JOBS/AGENT_WORK below). Renamed via UPDATE too, not just a
+  // fresh INSERT, so a live row seeded under the old name doesn't fork into a duplicate.
   try {
-    const exists = await DB.prepare("SELECT 1 FROM agents WHERE name='Orchestrator'").first();
+    await DB.prepare("UPDATE agents SET name='Akosha' WHERE name='Orchestrator'").run();
+    const exists = await DB.prepare("SELECT 1 FROM agents WHERE name='Akosha'").first();
     if (!exists) {
       await DB.prepare(
-        "INSERT INTO agents (name, elo, soul, reports_to, status) VALUES ('Orchestrator', 1200, 0, 'Kai El', 'active')"
+        "INSERT INTO agents (name, elo, soul, reports_to, status) VALUES ('Akosha', 1200, 0, 'Kai El', 'active')"
       ).run();
     }
   } catch { /* agents table shape differs from assumed, or D1 not ready */ }
@@ -934,13 +938,12 @@ const AGENT_JOBS = {
   'Sekhmet': "the Arena's judge — resolves every challenge via Elo math (resolveChallenge()); also has an on-demand explain/judge voice (POST /v11/council/consult)",
   'Ptah': 'architect-proposals — drafts real change proposals when Kai El\'s own reply starts with PROPOSAL: (this chat, not a separate agent)',
   'Horus': 'the watchtower — the hive\'s health/status surface (GET /v11/debug/health, /v11/pulse)',
-  // 'Orchestrator' (2026-08-07) is a functional working name, not hive mythology — the
-  // founder asked for this role directly ("an upgraded secretary... directly under Kai,"
-  // "the queen is supposed to delegate and expand on" it) but no name in THE_CODEX.md or
-  // SPORE_ROSTER.md fits it, and inventing one here would cross the Codex boundary
-  // FABLE_DNA.md Chromosome V reserves for the founder. Reports to Kai El, same as every
-  // other Elder — does not replace the council or its own reports_to chain.
-  'Orchestrator': 'coordination under Kai El — reads real provider health (provider_health, task 45) and what the Council has recently filed, and organizes it into one summary rather than routing anything itself; still write-only to hive_updates like every other agent turn',
+  // 'Akosha' (working name 'Orchestrator' 2026-08-07 to 2026-08-10, founder named the
+  // role directly on 2026-08-10) — the founder asked for this role directly ("an
+  // upgraded secretary... directly under Kai," "the queen is supposed to delegate and
+  // expand on" it). Reports to Kai El, same as every other Elder — does not replace the
+  // council or its own reports_to chain.
+  'Akosha': 'coordination under Kai El — reads real provider health (provider_health, task 45) and what the Council has recently filed, and organizes it into one summary rather than routing anything itself; still write-only to hive_updates like every other agent turn',
 };
 
 // The genome's own chapter titles (2026-08-04, task 33) — Kai El previously had zero
@@ -1044,16 +1047,15 @@ const AGENT_WORK = [
     // supposed to delegate and expand on." Full build, confirmed directly with the
     // founder rather than assumed. Reuses this exact AGENT_WORK shape — same
     // generate() call, same postUpdate() reporting, same round-robin turn — so it
-    // costs about what one more Elder's turn costs, not a new architecture. Its own
-    // real name is an open founder decision (see AGENT_JOBS above); 'Orchestrator' is
-    // a working label only.
-    agent: 'Orchestrator',
+    // costs about what one more Elder's turn costs, not a new architecture. Real name
+    // 'Akosha' given by the founder 2026-08-10 (see AGENT_JOBS above); 'Orchestrator'
+    // was the working label until then.
+    agent: 'Akosha',
     focus: 'coordination',
     prefer: 'speed', // summarising material already gathered in the snapshot
     system:
-      'You are the Orchestrator, a coordination role reporting to Kai El (a working name ' +
-      "only — the founder has not yet named this role; never invent hive mythology for " +
-      'yourself). The snapshot below includes real provider health (which of Claude/Groq/' +
+      'You are Akosha, a coordination role reporting to Kai El. The snapshot below ' +
+      'includes real provider health (which of Claude/Groq/' +
       'Mistral/Workers AI is actually answering right now, not just bound), the routing ' +
       'each agent job asks for, and what the Council has recently filed. Routing is real ' +
       'and automatic: each job declares a preferred provider role, and a provider that ' +
@@ -1109,7 +1111,7 @@ async function hiveSnapshot(env, DB) {
       providerHealth.results.map(h => `${h.provider}: ${h.ok ? 'answering' : `FAILING (${h.error || 'unknown error'})`} as of ${h.checked_at}`).join(' | '));
   }
   // The real routing table (task 52) — which provider role each job asks for, and what
-  // each role maps to. Included so the Orchestrator's turn reports on routing that
+  // each role maps to. Included so Akosha's turn reports on routing that
   // actually exists rather than describing a preference nothing enforces, which is
   // precisely what its first version did.
   lines.push('PROVIDER ROLES: ' + PROVIDERS.map(p => `${p.id}=${p.role}`).join(', ') +
@@ -1493,7 +1495,7 @@ async function queenReview(env, requestUrl, { title, body }) {
       "founder's real, written vision below. Score how aligned the proposal is, 0-100. " +
       'Be strict: default low. Only score 98 or above when the proposal clearly, concretely ' +
       'serves the vision with no real risk or ambiguity. If, and only if, this proposal is ' +
-      'about coordination, provider routing, or the Orchestrator role you delegate work to ' +
+      'about coordination, provider routing, or the Akosha role you delegate work to ' +
       '(reports to Kai El), let your REASON line briefly note what you are delegating or ' +
       'expanding — that is real, part of your own responsibilities, not a new gate. Reply ' +
       'with EXACTLY two lines: a line "SCORE: <0-100>" and a line "REASON: <one short ' +
