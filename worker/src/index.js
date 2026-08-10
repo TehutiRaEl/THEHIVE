@@ -1457,6 +1457,208 @@ async function recall(env, query, topK = 5) {
   } catch (e) { return { available: false, matches: [], error: String(e) }; }
 }
 
+// ── Kai El's own brain (kai-el-brain D1, 2026-08-10) ─────────────────────
+// The founder's second brain (Nanuet, the Queen, is the first and gets the
+// same treatment later). Deliberately a SEPARATE D1 database, not more tables
+// in thehive-queen — the founder was shown the slot-cost tradeoff and chose
+// separation for Kai El specifically. Schema: worker/schema/kai-el-brain.sql.
+//
+// Every function here degrades to exactly today's behaviour when KAI_BRAIN is
+// unbound or the write switch is off. Nothing in Kai El's existing chat path
+// depends on the brain succeeding.
+
+// Staged autonomy. Read from deploy-time env vars ONLY — never from the
+// database Kai El himself writes to. autonomy_registry (in kai-el-brain)
+// documents these switches and deliberately has no `enabled` column, because
+// an agent that can write its own permissions has none: automaton's review
+// found exactly that bug upstream ("the agent able to edit its own
+// financial/authority rule files") and closing it was one of the five gaps
+// that rebuild exists to fix. Same reasoning, same shape, applied here.
+const KAI_SWITCHES = [
+  'KAI_BRAIN_WRITE',
+  'KAI_BRAINSTORM_EXPLICIT',
+  'KAI_TAB_DRAFT',
+  'KAI_BRAINSTORM_AUTO',
+  'KAI_4DBRAIN_BRIDGE',
+  'KAI_TAB_AUTONOMOUS_LOW',
+  'KAI_FINANCIAL_AUTONOMY',
+];
+
+// A switch is on only for an explicit affirmative value. Anything else —
+// unset, empty, 'off', 'false', a typo — is off. Fail-closed by construction:
+// a misspelled value must never read as a granted capability.
+function switchOn(env, key) {
+  const v = env?.[key];
+  if (v === true) return true;
+  const s = String(v ?? '').trim().toLowerCase();
+  return s === 'on' || s === 'true' || s === '1' || s === 'yes';
+}
+
+// KAI_FINANCIAL_AUTONOMY is listed in KAI_SWITCHES and reported by
+// /v11/kai/autonomy so the ladder's destination is visible, but NOTHING in this
+// file reads it to authorise a payment — the capability is not built. It is
+// documented, not wired. If a future change makes it load-bearing, that change
+// owns building the spending cap, the per-transaction record, and the rule that
+// Kai El cannot raise his own ceiling. Those are not optional extras.
+function autonomyState(env) {
+  const out = {};
+  for (const k of KAI_SWITCHES) out[k] = switchOn(env, k);
+  return out;
+}
+
+function kaiBrainOk(env) { return !!env?.KAI_BRAIN; }
+
+// Write one memory to Kai El's own brain: the FULL text in D1 (Vectorize
+// metadata truncates to 512 chars, so the complete text has always been thrown
+// away at write time) plus the embedding in Vectorize for semantic search.
+// The two halves are independent on purpose — either can fail without the
+// other, and a half-write is better than a lost memory.
+async function kaiRemember(env, { id, kind, text, summary, source, importance, agent }) {
+  if (!kaiBrainOk(env) || !switchOn(env, 'KAI_BRAIN_WRITE')) return { stored: false, reason: 'brain write off or unbound' };
+  const ts = new Date().toISOString();
+  const memId = String(id || `${kind || 'note'}-${Date.now()}`);
+  let vectorOk = false;
+  try { vectorOk = await remember(env, memId, text, { kind: kind || 'note', ts, agent: agent || 'Kai El' }); } catch { /* vector half is optional */ }
+  try {
+    await env.KAI_BRAIN.prepare(
+      `INSERT OR REPLACE INTO memories (id, agent, kind, text, summary, source, ts, importance, vector_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      memId, agent || 'Kai El', kind || 'note', String(text ?? ''),
+      summary ?? null, source ?? null, ts,
+      typeof importance === 'number' ? importance : 0.5,
+      vectorOk ? memId : null
+    ).run();
+    return { stored: true, id: memId, vector: vectorOk };
+  } catch (e) { return { stored: false, vector: vectorOk, error: String(e) }; }
+}
+
+// Recency-weighted recall — the fix for a real, already-documented gap:
+// recall() stores a `ts` on every memory and never reads it, so a day-one fact
+// outranks today's whenever it happens to embed closer (noted in task 53's
+// audit against worker/src/index.js remember()/recall()).
+//
+// Similarity is DISCOUNTED by age, never replaced by it. An old memory keeps at
+// least RECENCY_FLOOR of its score, so a highly-relevant old fact still beats a
+// fresh irrelevant one — ranking purely by recency would be exactly as broken as
+// ranking purely by similarity, just in the other direction.
+const RECENCY_HALF_LIFE_DAYS = 14;  // a memory's age-weight halves every 2 weeks
+const RECENCY_FLOOR = 0.5;          // the oldest memory still keeps half its similarity
+
+function recencyWeight(ts, nowMs) {
+  const t = Date.parse(ts || '');
+  if (!Number.isFinite(t)) return 1;                       // no/unparseable ts → no penalty
+  const ageDays = Math.max(0, (nowMs - t) / 86400000);     // future timestamps → treated as now
+  const decay = Math.pow(0.5, ageDays / RECENCY_HALF_LIFE_DAYS);
+  return RECENCY_FLOOR + (1 - RECENCY_FLOOR) * decay;
+}
+
+async function kaiRecall(env, query, topK = 5) {
+  // Over-fetch, then re-rank: the top-K by raw similarity is not the top-K once
+  // age is applied, so asking Vectorize for exactly K would discard the very
+  // rows re-ranking exists to promote.
+  const base = await recall(env, query, Math.max(topK * 3, topK));
+  if (!base.available) return { ...base, reranked: false };
+  const now = Date.now();
+  const matches = base.matches
+    .map(m => {
+      const weight = recencyWeight(m.ts, now);
+      return { ...m, similarity: m.score, recency_weight: +weight.toFixed(4), score: +(m.score * weight).toFixed(4) };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK);
+  return { available: true, reranked: true, matches };
+}
+
+// The decision/outcome record — the honest half of what the founder called a
+// "training database". Real weight-level fine-tuning needs infrastructure that
+// does not exist yet (same dependency as task 53); the founder's own framing was
+// "log now, real fine-tuning later", so this logs.
+//
+// risk_reason/risk_handling are required in practice for high-risk rows because
+// the founder asked for exactly that: for high-risk items Kai El must state WHY
+// it is high-risk and HOW to handle it, not merely flag it. Enforced here rather
+// than trusted to a prompt — a prompt-only rule is one bad generation away from
+// a high-risk row with no explanation attached.
+async function logDecision(env, d) {
+  if (!kaiBrainOk(env) || !switchOn(env, 'KAI_BRAIN_WRITE')) return { logged: false };
+  const tier = ['low', 'normal', 'high'].includes(d?.risk_tier) ? d.risk_tier : 'normal';
+  if (tier === 'high' && (!d?.risk_reason || !d?.risk_handling)) {
+    return { logged: false, error: 'high-risk decisions require risk_reason and risk_handling' };
+  }
+  try {
+    const r = await env.KAI_BRAIN.prepare(
+      `INSERT INTO decision_log (agent, ts, surface, request, reasoning, action, risk_tier,
+        risk_reason, risk_handling, autonomy_mode, provider, tokens_in, tokens_out)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      d.agent || 'Kai El', new Date().toISOString(), d.surface || 'chat',
+      String(d.request ?? ''), d.reasoning ?? null, d.action ?? null, tier,
+      d.risk_reason ?? null, d.risk_handling ?? null,
+      d.autonomy_mode || 'draft-approve', d.provider ?? null,
+      Number.isFinite(d.tokens_in) ? d.tokens_in : null,
+      Number.isFinite(d.tokens_out) ? d.tokens_out : null
+    ).run();
+    return { logged: true, id: r?.meta?.last_row_id ?? null };
+  } catch (e) { return { logged: false, error: String(e) }; }
+}
+
+// Accumulate a future fine-tuning pair. `eligible` stays 0 by schema default —
+// a logged exchange is NOT automatically training data. Promoting a sample is a
+// separate, deliberate act; defaulting it to 1 would mean every conversation
+// silently became training material, which is precisely the kind of quiet scope
+// expansion this repo's own audits keep catching after the fact.
+async function logTrainingSample(env, t) {
+  if (!kaiBrainOk(env) || !switchOn(env, 'KAI_BRAIN_WRITE')) return { logged: false };
+  try {
+    await env.KAI_BRAIN.prepare(
+      `INSERT INTO training_samples (agent, ts, system_prompt, user_input, assistant_output, source_decision_id)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(
+      t.agent || 'Kai El', new Date().toISOString(), t.system_prompt ?? null,
+      String(t.user_input ?? ''), String(t.assistant_output ?? ''),
+      Number.isFinite(t.source_decision_id) ? t.source_decision_id : null
+    ).run();
+    return { logged: true };
+  } catch (e) { return { logged: false, error: String(e) }; }
+}
+
+// ── The 4DBRAIN bridge ───────────────────────────────────────────────────
+// 4DBRAIN owns the real tesseract/hypercomplex math (tesseract_math/, canonically
+// moved there 2026-07-22). That code is Python under FastAPI; this Worker is
+// JavaScript on Cloudflare's edge. A Worker cannot import Python, so the only
+// honest connection between them is a network call — which is what this is.
+//
+// INERT BY DEFAULT, and for a real reason rather than caution: 4DBRAIN is not
+// deployed anywhere. Its own .queen/hive.yml entry has base_url empty, and its
+// Railway/Render configs have never been provisioned. Until FOURDBRAIN_URL points
+// at something real, every call here returns {available:false} with the reason
+// stated — it does not pretend, retry, or fabricate a result.
+async function fourDBrain(env, path, body, timeoutMs = 8000) {
+  if (!switchOn(env, 'KAI_4DBRAIN_BRIDGE')) return { available: false, reason: 'KAI_4DBRAIN_BRIDGE is off' };
+  const base = String(env?.FOURDBRAIN_URL ?? '').trim().replace(/\/+$/, '');
+  if (!base) return { available: false, reason: 'FOURDBRAIN_URL unset — 4DBRAIN is not deployed anywhere yet' };
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${base}${path}`, {
+      method: body ? 'POST' : 'GET',
+      headers: { 'content-type': 'application/json', 'user-agent': 'THEHIVE-worker/kai-brain' },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ctrl.signal,
+    });
+    const text = await res.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch { data = { raw: text.slice(0, 2000) }; }
+    // A non-2xx is reported as a real failure with its real status, not smoothed
+    // into available:false — "the colony answered 500" and "there is no colony"
+    // are different facts and collapsing them is task 45's bug in a new place.
+    return { available: res.ok, status: res.status, data };
+  } catch (e) {
+    return { available: false, reason: String(e?.name === 'AbortError' ? `timeout after ${timeoutMs}ms` : e) };
+  } finally { clearTimeout(timer); }
+}
+
 // Real grounding for constitution questions — reads the CURRENT docs/GOVERNANCE.md
 // (same file the Constitution UI panel renders, same file the founder edits) via
 // the ASSETS binding, so Kai El answers from what's actually committed instead of
@@ -2449,11 +2651,15 @@ export default {
           ctxLines.push('Your own genome (FABLE_DNA.md chromosomes): ' +
             GENOME_CHROMOSOMES.map(([n, title, gist]) => `${n} (${title}) — ${gist}`).join(' | '));
         } catch {}
-        // retrieval-augmented: pull relevant memories when the index exists
+        // retrieval-augmented: pull relevant memories when the index exists.
+        // kaiRecall (2026-08-10) re-ranks by age before truncating to 3 — the
+        // plain recall() below it stores a ts on every memory and never reads it,
+        // so a day-one fact could outrank today's purely on wording. Falls back to
+        // the raw ordering automatically when the index is absent.
         try {
-          const mem = await recall(env, cmd, 3);
+          const mem = await kaiRecall(env, cmd, 3);
           if (mem.available && mem.matches.length)
-            ctxLines.push('Recalled memory: ' + mem.matches.map(m => m.text).join(' | '));
+            ctxLines.push('Recalled memory (most recent first where relevance ties): ' + mem.matches.map(m => m.text).join(' | '));
         } catch {}
         // real constitution grounding — only the actual committed articles,
         // never a paraphrase invented on the fly (this is what fixed the
@@ -2520,6 +2726,31 @@ export default {
           // remember the exchange so the hive's memory grows from conversation too
           // (ctx.waitUntil now that fetch carries ctx — was a latent ReferenceError)
           ctx?.waitUntil?.(remember(env, 'chat-' + Date.now(), `Kai El on "${cmd.slice(0, 80)}": ${gen.text.slice(0, 200)}`, { kind: 'chat', ts: new Date().toISOString() }));
+          // ...and into Kai El's own brain (2026-08-10): the FULL exchange, not the
+          // 200-char slice the line above stores, plus a decision row and a future
+          // fine-tuning pair. All three no-op unless KAI_BRAIN is bound AND
+          // KAI_BRAIN_WRITE is on, so this changes nothing until stage 1 is flipped.
+          // waitUntil, not await: Kai El's reply must never wait on his own
+          // bookkeeping, and a brain write failing must never fail a chat reply.
+          if (kaiBrainOk(env) && switchOn(env, 'KAI_BRAIN_WRITE')) {
+            const brainWork = (async () => {
+              const d = await logDecision(env, {
+                surface: 'chat', request: cmd, action: gen.text,
+                autonomy_mode: 'explicit-invoke', provider: gen.provider,
+                tokens_in: gen.usage?.input_tokens, tokens_out: gen.usage?.output_tokens,
+              });
+              await kaiRemember(env, {
+                id: 'kai-chat-' + Date.now(), kind: 'chat', source: 'command_text',
+                text: `Founder asked: ${cmd}\n\nKai El answered: ${gen.text}`,
+                summary: gen.text.slice(0, 200),
+              });
+              await logTrainingSample(env, {
+                user_input: cmd, assistant_output: gen.text,
+                source_decision_id: d.id ?? undefined,
+              });
+            })();
+            ctx?.waitUntil?.(brainWork);
+          }
           // The bridge: Kai El -> founder (via the harness). A CONCERN/PROPOSAL
           // marker on the reply's first line is durably logged so it survives past
           // this one stateless exchange — hive_updates (kind='concern') and
@@ -2650,6 +2881,63 @@ export default {
       }
       if (p === '/memory/status')
         return json({ vectorize_bound: !!env.VECTORIZE, ai_bound: !!env.AI, model: EMBED_MODEL });
+
+      // ── Kai El's brain (2026-08-10) ───────────────────────────────────
+      // Read-only, unauthenticated status — same posture as /memory/status and
+      // /debug/*: real state, no secret values, and honest about what is off.
+      if (p === '/kai/brain') {
+        const st = { bound: kaiBrainOk(env), write_enabled: switchOn(env, 'KAI_BRAIN_WRITE'), counts: null };
+        if (st.bound) {
+          try {
+            const r = await env.KAI_BRAIN.prepare(
+              `SELECT (SELECT COUNT(*) FROM memories) AS memories,
+                      (SELECT COUNT(*) FROM decision_log) AS decisions,
+                      (SELECT COUNT(*) FROM training_samples) AS training_samples,
+                      (SELECT COUNT(*) FROM training_samples WHERE eligible=1) AS training_eligible`
+            ).first();
+            st.counts = r || null;
+          } catch (e) { st.error = String(e); }
+        }
+        return json({
+          ...st,
+          recency: { half_life_days: RECENCY_HALF_LIFE_DAYS, floor: RECENCY_FLOOR },
+          fourdbrain: {
+            switch_on: switchOn(env, 'KAI_4DBRAIN_BRIDGE'),
+            url_set: !!String(env?.FOURDBRAIN_URL ?? '').trim(),
+            note: String(env?.FOURDBRAIN_URL ?? '').trim()
+              ? 'configured'
+              : '4DBRAIN is not deployed anywhere yet — its hive.yml base_url is empty and its Railway/Render configs were never provisioned',
+          },
+        });
+      }
+      // The staged-autonomy ladder: what Kai El can do, what he cannot yet, and
+      // exactly what the founder does to grant each next stage. Live env state is
+      // joined onto the registry's documentation — the registry never stores
+      // enablement, precisely so writing to it cannot grant anything.
+      if (p === '/kai/autonomy') {
+        const state = autonomyState(env);
+        let rows = [];
+        if (kaiBrainOk(env)) {
+          try {
+            const r = await env.KAI_BRAIN.prepare(
+              'SELECT key, stage, title, description, turn_on_steps, risk_note, requires FROM autonomy_registry ORDER BY stage'
+            ).all();
+            rows = r?.results || [];
+          } catch { rows = []; }
+        }
+        const ladder = rows.map(row => ({
+          ...row,
+          enabled: !!state[row.key],
+          blocked_by: row.requires && !state[row.requires] ? row.requires : null,
+        }));
+        return json({
+          agent: 'Kai El',
+          ladder,
+          enabled_now: Object.entries(state).filter(([, v]) => v).map(([k]) => k),
+          next_stage: ladder.find(l => !l.enabled) ?? null,
+          note: 'Enablement is read from deploy-time environment variables only, never from this database — an agent that can write its own permissions has none.',
+        });
+      }
       if (p === '/tier3/status')
         return json({ arena_renderer: { available: true, status: 'Loaded — edge voxel simulation' } });
 
@@ -2820,6 +3108,7 @@ export default {
             'POST /proposals/{id}/actioned (rate-limited)',
             "POST /council/consult (rate-limited; agent: maat|solomon|sekhmet)",
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
+            'GET /kai/brain', 'GET /kai/autonomy',
             'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
             'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',
             'POST /arena/project/{id} (token+rate-limited)', 'POST /auth/token',
@@ -3001,4 +3290,18 @@ export {
   resolveSecret,
   founderKeyBound,
   verifyAccessJWT,
+  // Kai El's brain (2026-08-10) — exported so worker/test/kai-brain.test.js drives
+  // the real functions rather than a reimplementation of them.
+  KAI_SWITCHES,
+  switchOn,
+  autonomyState,
+  kaiBrainOk,
+  kaiRemember,
+  kaiRecall,
+  recencyWeight,
+  RECENCY_HALF_LIFE_DAYS,
+  RECENCY_FLOOR,
+  logDecision,
+  logTrainingSample,
+  fourDBrain,
 };

@@ -180,8 +180,46 @@ record from task 53's audit: `recall()` does pure cosine similarity and never re
    pass; output written as a real `hive_proposals`/`roadmap_items` row (not just a chat
    reply) so it's actually actionable, not decoration.
 
-Not started this pass — proposed as the next concrete step, phase order suggested but not
-finalized by the founder.
+**PHASE A SHIPPED, same session.** The founder said proceed, and made two further
+decisions when shown the tradeoffs:
+
+- **A physically separate database**, not more tables in `thehive-queen` — chosen after
+  being shown that a separate DB costs one of the account's 10 D1 slots and does not
+  scale to 13 agents (13 x 2 databases = 26, well past the ceiling). Chosen for Kai El
+  specifically, as the hive's second brain; Nanuet, the first brain, gets the same
+  treatment later.
+- **Staged autonomy, explicitly**: *"he's given more autonomous behaviors instead of all
+  at once"*, and each stage must tell the founder exactly what to do to turn it on.
+
+Two things the founder asked for were **not** built as asked, with the reason given at
+the time rather than silently substituted:
+
+1. **"Kai El pays for his own upgrades"** — a real financial-autonomy capability, not a
+   rider on a database task. It is documented as stage 7 of the ladder with its gate
+   spelled out (code-enforced cap, per-transaction record, and the rule that Kai El can
+   never raise his own ceiling) and is deliberately NOT reachable by a variable flip.
+   `automaton/FLIP_THE_SWITCHES.md`'s `AUTOMATON_FINANCIAL_AUTONOMY` is the existing
+   precedent in this repo and defaults off for exactly these reasons.
+2. **"Use Cloudflare for now" to host 4DBRAIN** — structurally not possible. 4DBRAIN's
+   `tesseract_math` is Python under FastAPI; Cloudflare Workers run JavaScript, and
+   Python Workers do not support arbitrary scientific Python packages. The Worker-side
+   bridge is built and tested, inert until a real `FOURDBRAIN_URL` exists. Where 4DBRAIN
+   actually runs remains open, same class of decision as task 53.
+
+Real infrastructure created (not declared): D1 database `kai-el-brain`
+(`7c62dea9-64ba-4d38-a5bf-234d5a504f19`), 4 tables + 9 indexes applied live, bound as
+`KAI_BRAIN`, schema committed at `worker/schema/kai-el-brain.sql`. Full detail in
+`CAMPAIGN.html`'s 2026-08-10 log entry. Level: **tested**, not verified-live — 189/189
+suite green (57 new tests), mutation-tested three ways with every mutation caught.
+Live confirmation owed post-merge via `GET /v11/kai/brain` and `GET /v11/kai/autonomy`.
+
+Phases B (tab pickup + risk tiering) and C (brainstorm mode) remain unbuilt — B needs a
+concrete risk-classification list agreed with the founder before any code, and both touch
+the frontend rather than the Worker alone.
+
+**Incidental finding, flagged not actioned:** the D1 database `sovereign-hive-app` is
+completely empty (0 tables, 12 KB, created 2026-07-25) and is occupying one of the ten
+account slots for nothing.
 
 ## Explicitly not done in this pass
 
