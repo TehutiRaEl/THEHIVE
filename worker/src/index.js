@@ -1659,6 +1659,54 @@ async function fourDBrain(env, path, body, timeoutMs = 8000) {
   } finally { clearTimeout(timer); }
 }
 
+// ── Real repo file content, for architect proposals (2026-08-10) ─────────
+// Kai El runs at the edge with no filesystem and no git — ASSETS only serves
+// docs/, so he cannot see the current content of most of the repo. Without real
+// content he'd be drafting a diff from guesswork, producing something that looks
+// plausible but doesn't apply. This fetches the CURRENT file from GitHub's public
+// raw content API (unauthenticated read — same class of URL .queen/hive.yml
+// already uses for other federation sources) so any diff he drafts is grounded in
+// real, current text. Same honest-failure shape as fourDBrain(): never throws,
+// never fabricates content on failure.
+async function fetchRepoFile(env, path, ref = 'main', timeoutMs = 8000) {
+  const clean = String(path || '').replace(/^\/+/, '');
+  if (!clean) return { available: false, reason: 'no path given' };
+  const url = `https://raw.githubusercontent.com/TehutiRaEl/THEHIVE/${encodeURIComponent(ref)}/${clean}`;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { headers: { 'user-agent': 'THEHIVE-worker/architect-proposal' }, signal: ctrl.signal });
+    if (res.status === 404) return { available: false, reason: `no such file at ${ref}: ${clean}` };
+    if (!res.ok) return { available: false, reason: `GitHub raw returned ${res.status}`, status: res.status };
+    const text = await res.text();
+    return { available: true, path: clean, ref, text };
+  } catch (e) {
+    return { available: false, reason: String(e?.name === 'AbortError' ? `timeout after ${timeoutMs}ms` : e) };
+  } finally { clearTimeout(timer); }
+}
+
+// Pulls a fenced ```diff block out of a reply, plus the file paths it touches.
+// Returns null when no diff block is present — the normal case, since most
+// PROPOSAL: replies stay prose-only. Deliberately tolerant: a missing/malformed
+// block degrades to "no diff" rather than throwing, so a bad generation never
+// breaks the underlying prose proposal it's attached to.
+function extractDiffBlock(text) {
+  const m = String(text || '').match(/```diff\r?\n([\s\S]*?)```/);
+  if (!m) return null;
+  const diff = m[1].trim();
+  if (!diff) return null;
+  const files = new Set();
+  for (const line of diff.split('\n')) {
+    const gitLine = line.match(/^diff --git a\/(.+?) b\/(.+)$/);
+    if (gitLine) { files.add(gitLine[1]); files.add(gitLine[2]); continue; }
+    const plus = line.match(/^\+\+\+ b\/(.+)$/);
+    if (plus) files.add(plus[1]);
+    const minus = line.match(/^--- a\/(.+)$/);
+    if (minus) files.add(minus[1]); // real git diffs use bare "--- /dev/null" for new files, which never matches this "--- a/" pattern
+  }
+  return { diff, files: [...files] };
+}
+
 // Real grounding for constitution questions — reads the CURRENT docs/GOVERNANCE.md
 // (same file the Constitution UI panel renders, same file the founder edits) via
 // the ASSETS binding, so Kai El answers from what's actually committed instead of
@@ -2209,8 +2257,12 @@ export default {
       if (p === '/proposals' && method === 'GET') {
         try {
           const { limit, offset } = pageParams(url, 50, 200);
+          // diff/diff_files/diff_check (2026-08-10) are nullable and only ever
+          // populated on architect-proposal rows carrying a real code change —
+          // every other kind/row simply returns null for all three, unchanged
+          // from before these columns existed.
           const { results } = await DB.prepare(
-            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note FROM hive_proposals
+            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note, diff, diff_files, diff_check FROM hive_proposals
              ORDER BY (status='pending') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
           return json({ proposals: results, founder_auth_bound: await founderKeyBound(env), queen_auto_approval_bound: !!env.QUEEN_AUTONOMOUS_APPROVAL, limit, offset });
         } catch { return json({ proposals: [], founder_auth_bound: await founderKeyBound(env) }); }
@@ -2321,6 +2373,30 @@ export default {
           body: 'An approved proposal was marked as genuinely actioned, so no later firing re-does it.',
         }));
         return json({ ok: true, id });
+      }
+      // Real dry-run-apply result for an architect proposal's diff (2026-08-10),
+      // written by .github/workflows/architect-proposal-check.yml — the only place
+      // that actually has git and a real checkout, since this Worker has neither.
+      // FOUNDER_KEY-gated the same way task-digest.yml's POST already is (the
+      // workflow carries the same secret as a repo secret) — this route writes
+      // ONLY diff_check, on purpose: a compromised or buggy workflow run can at
+      // worst report a wrong validity string, never touch status, title, body, or
+      // anything Queen/Elder review already decided.
+      const diffCheckMatch = p.match(/^\/proposals\/(\d+)\/diff-check$/);
+      if (diffCheckMatch && method === 'POST') {
+        if (!(await founderAuthOk(request, env))) {
+          return json({ detail: 'invalid or missing founder key' }, 401);
+        }
+        const id = Number(diffCheckMatch[1]);
+        const body = await request.json().catch(() => ({}));
+        const result = (body.result || '').toString().trim();
+        const valid = result === 'applies_clean' || /^failed: /.test(result);
+        if (!valid) return json({ detail: "result must be 'applies_clean' or 'failed: <reason>'" }, 400);
+        const existing = await DB.prepare('SELECT id, diff FROM hive_proposals WHERE id=?').bind(id).first();
+        if (!existing) return json({ detail: `proposal ${id} not found` }, 404);
+        if (!existing.diff) return json({ detail: `proposal ${id} has no diff to check` }, 400);
+        await DB.prepare('UPDATE hive_proposals SET diff_check=? WHERE id=?').bind(result.slice(0, 500), id).run();
+        return json({ ok: true, id, diff_check: result.slice(0, 500) });
       }
       // Sub-Architect's first workflow (TEAM_CHARTERS.md, 2026-07-18): decompose a
       // founder-initiated venture brief into a structured CEO->departments->tasks
@@ -2701,6 +2777,44 @@ export default {
           "start your reply's first line with exactly 'CONCERN: <short title>' or 'PROPOSAL: <short title>', then " +
           "a blank line, then your normal answer. Use this rarely — most exchanges warrant neither marker; forcing " +
           "one when nothing genuine is there defeats the point of having it at all.";
+        // Architect proposals with a real diff (2026-08-10, Kai El's first evolution
+        // into an architect agent) — stage 3 (KAI_TAB_DRAFT) made real, per the
+        // founder's own scoping. Explicit v1 scope: the founder names the target file
+        // (body.target_file), Kai El never self-selects one — self-directed repo-wide
+        // discovery is a materially bigger capability and out of scope here. When the
+        // switch is off or no file is named, this changes nothing: same SYSTEM, same
+        // prose-only PROPOSAL: path that has always existed.
+        let architectFile = null;
+        const targetFile = (body.target_file || '').toString().trim();
+        let ARCHITECT_SYSTEM_ADDENDUM = '';
+        let ARCHITECT_PROMPT_ADDENDUM = '';
+        if (targetFile && switchOn(env, 'KAI_TAB_DRAFT')) {
+          architectFile = await fetchRepoFile(env, targetFile);
+          if (architectFile.available) {
+            ARCHITECT_SYSTEM_ADDENDUM =
+              " The sovereign has asked you to architect a change to a real file, whose CURRENT " +
+              "content (fetched fresh from the repo, not from memory) follows below. If — and only " +
+              "if — a genuine, concrete code change is warranted, reply with 'PROPOSAL: <short " +
+              "title>', a blank line, your normal explanation, then a fenced ```diff block containing " +
+              "a real unified diff against the exact content shown (correct file paths, correct " +
+              "context lines — a diff that does not apply is worse than no diff, since it wastes the " +
+              "founder's review time on something unusable). You draft the diff; you never apply it " +
+              "yourself — a human always reviews and applies it. If no real change is warranted, say " +
+              "so plainly instead of forcing a diff that doesn't need to exist.";
+            ARCHITECT_PROMPT_ADDENDUM =
+              `\n\nCURRENT CONTENT of ${architectFile.path} (ref: ${architectFile.ref}):\n` +
+              '```\n' + architectFile.text.slice(0, 12000) + '\n```\n';
+          } else {
+            // Honest failure, not silent: the sovereign asked to target a file that
+            // could not be fetched. Kai El is told so explicitly rather than silently
+            // falling back to a normal chat reply with no explanation of why no diff
+            // appeared.
+            ARCHITECT_PROMPT_ADDENDUM =
+              `\n\n(The sovereign asked you to architect a change to ${targetFile}, but its current ` +
+              `content could not be fetched: ${architectFile.reason}. Say so plainly rather than ` +
+              `guessing at the file's content or drafting a diff you cannot ground in anything real.)\n`;
+          }
+        }
         // Route through the provider waterfall (Claude → Groq → Mistral →
         // Workers AI): Kai delegates automatically, and whichever key the
         // founder has bound answers. Workers AI keeps the proven prompt-string
@@ -2708,7 +2822,7 @@ export default {
         const userPrompt =
           (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') +
           (historyLines.length ? 'RECENT CONVERSATION:\n' + historyLines.join('\n') + '\n\n' : '') +
-          'SOVEREIGN: ' + cmd + '\n\nKAI EL:';
+          'SOVEREIGN: ' + cmd + ARCHITECT_PROMPT_ADDENDUM + '\n\nKAI EL:';
         // Optional {"provider":"claude"|"groq"|"mistral"|"workers-ai"} pins this one call
         // to a single key (task 44) so each bound provider can actually be exercised and
         // proven, instead of Claude silently answering everything forever. Unknown names
@@ -2718,7 +2832,14 @@ export default {
         if (wantProvider && !PROVIDERS.some((pr) => pr.id === wantProvider)) {
           return json({ detail: `unknown provider '${wantProvider}' — valid: ${PROVIDERS.map((pr) => pr.id).join(', ')}` }, 400);
         }
-        const gen = await generate(env, { system: SYSTEM, prompt: userPrompt, maxTokens: 400, only: wantProvider });
+        // A diff-drafting reply needs real room — 400 tokens is enough for prose alone
+        // but would truncate a real diff mid-hunk, which is worse than no diff at all.
+        const gen = await generate(env, {
+          system: SYSTEM + ARCHITECT_SYSTEM_ADDENDUM,
+          prompt: userPrompt,
+          maxTokens: ARCHITECT_SYSTEM_ADDENDUM ? 1200 : 400,
+          only: wantProvider,
+        });
         if (!gen && wantProvider) {
           return json({ detail: `provider '${wantProvider}' is bound-but-unreachable or returned nothing; not falling back to another provider, since that would misreport which key answered`, provider_requested: wantProvider }, 502);
         }
@@ -2770,11 +2891,43 @@ export default {
               // Ptah's real job: this is the hive's one architect-proposal path — the
               // place a concrete build/change idea actually gets drafted and queued.
               // Runs through the Queen's real approval power (switch 9) AND the Elders'
-              // Council check (queenDecide()) same as every other proposal path.
+              // Council check (queenDecide()) same as every other proposal path — a
+              // diff-carrying proposal goes through EXACTLY the same governance chain
+              // as a prose one, unchanged, per the founder's own explicit choice.
+              //
+              // A diff block (2026-08-10) is optional and additive: extracted here if
+              // present, stored alongside the same prose body, never routes around
+              // queenDecide(). ACTION_ALLOWLIST/executeApprovedAction() are untouched —
+              // this proposal, diff or not, still never executes anything itself. A
+              // human (the founder, or a Claude Code session) applies it.
+              const diffBlock = extractDiffBlock(gen.text);
               ctx?.waitUntil?.((async () => {
                 const { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote } = await queenDecide(env, request.url, { title, body: gen.text });
-                await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note) VALUES (?,?,?,?,?,?,?,?,?)')
-                  .bind(new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote).run();
+                const r = await DB.prepare(
+                  'INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note, diff, diff_files, diff_check) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+                ).bind(
+                  new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote,
+                  diffBlock?.diff ?? null,
+                  diffBlock ? JSON.stringify(diffBlock.files) : null,
+                  diffBlock ? 'pending' : null
+                ).run();
+                // Close the loop with Kai El's own brain (Phase A) — proposing a real
+                // code change is exactly the case the high-risk enforcement in
+                // logDecision() exists for: it refuses to log without both a reason
+                // and a handling plan, so this cannot become a silent, unexplained
+                // high-risk entry.
+                if (diffBlock && kaiBrainOk(env) && switchOn(env, 'KAI_BRAIN_WRITE')) {
+                  await logDecision(env, {
+                    surface: 'chat', request: `architect: ${targetFile}`, action: title,
+                    risk_tier: 'high',
+                    risk_reason: `Proposes a real code change to ${diffBlock.files.join(', ') || targetFile}; an untested or ` +
+                      'unapplied diff can silently diverge from what founder review believes was proposed.',
+                    risk_handling: 'Diff is stored unapplied and dry-run checked by a separate GitHub Action ' +
+                      '(git apply --check) before the founder decides; nothing executes it — a human always applies it.',
+                    autonomy_mode: 'draft-approve', provider: gen.provider,
+                    tokens_in: gen.usage?.input_tokens, tokens_out: gen.usage?.output_tokens,
+                  });
+                }
               })());
             }
           }
@@ -3304,4 +3457,6 @@ export {
   logDecision,
   logTrainingSample,
   fourDBrain,
+  fetchRepoFile,
+  extractDiffBlock,
 };
