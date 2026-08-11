@@ -1124,6 +1124,17 @@ async function hiveSnapshot(env, DB) {
 // Round-robin: one agent per tick, so the roster cycles instead of every agent firing
 // at once. Which agent is next is derived from how many work-cycle updates already
 // exist, so it survives restarts without needing its own state column.
+// Pure, independently testable: given the most recent agent-work row's title
+// (or null/undefined/malformed for "no real prior turn"), return the index into
+// AGENT_WORK that should go next. Extracted specifically so this logic can be
+// unit-tested without standing up a fake D1/generate() for all of runWorkCycle().
+function nextWorkTurnIndex(lastAgentWorkTitle) {
+  const jobIndex = new Map(AGENT_WORK.map((j, i) => [j.agent, i]));
+  const lastAgent = String(lastAgentWorkTitle || '').split('—')[0].trim();
+  const lastIndex = jobIndex.has(lastAgent) ? jobIndex.get(lastAgent) : -1;
+  return (lastIndex + 1) % AGENT_WORK.length; // -1 (no/unrecognised prior row) -> 0
+}
+
 async function runWorkCycle(env, ctx) {
   const DB = env.DB;
   if (!DB) return null;
@@ -1139,10 +1150,29 @@ async function runWorkCycle(env, ctx) {
     if (last?.ts && (Date.now() - Date.parse(last.ts)) < 55 * 60 * 1000) return null;
   } catch { /* table not ready — fall through and let the first turn run */ }
 
+  // Real production bug found and fixed 2026-08-11: turn selection used to be
+  // `SELECT COUNT(*) WHERE kind='agent-work'` then `count % AGENT_WORK.length`.
+  // That looks like a monotonic cursor but isn't one — postUpdate() prunes
+  // hive_updates to the last 100 rows ACROSS EVERY KIND on every write (heartbeat
+  // fires every 30min, agent-work ~hourly, plus concern/proposal-actioned rows all
+  // share the same 100-row cap). So the agent-work count within that shrinking,
+  // mixed-kind window isn't "total turns ever" — it fluctuates with pruning
+  // dynamics and can sit at the same value (mod AGENT_WORK.length) indefinitely.
+  // Confirmed live: an edge-health-probe dispatch found 32 consecutive agent-work
+  // rows in production, every single one Ma'at (index 0) — the work cycle had
+  // been firing hourly for 7+ hours without ever rotating.
+  //
+  // Fixed by nextWorkTurnIndex() deriving the next turn from the single most
+  // recent agent-work row's actual agent, not a count. Immune to the pruning
+  // entirely as long as that one newest row survives, which it always does —
+  // pruning only ever removes the OLDEST rows, never the newest.
   let turn = 0;
   try {
-    const c = await DB.prepare("SELECT COUNT(*) AS n FROM hive_updates WHERE kind='agent-work'").first();
-    turn = Number(c?.n || 0);
+    const last = await DB.prepare(
+      "SELECT title FROM hive_updates WHERE kind='agent-work' ORDER BY id DESC LIMIT 1"
+    ).first();
+    // title is `${job.agent} — ${job.focus}` (postUpdate() call below).
+    turn = nextWorkTurnIndex(last?.title);
   } catch {}
   const job = AGENT_WORK[turn % AGENT_WORK.length];
 
@@ -3459,4 +3489,6 @@ export {
   fourDBrain,
   fetchRepoFile,
   extractDiffBlock,
+  nextWorkTurnIndex,
+  runWorkCycle,
 };
