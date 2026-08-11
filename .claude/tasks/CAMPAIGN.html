@@ -1709,7 +1709,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   in CI, they do not prove production behaviour.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-16">
+<div class="task" data-status="blocked" data-batchable="true" id="task-16">
   <h3>16. Venture/legal-research session history + export</h3>
   <p class="meta">Found 2026-08-02 during task 3's scoping pass. Idea/enhancement, not a
   bug — <strong>founder should confirm scope</strong> before real work starts; no founder
@@ -1719,9 +1719,14 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   already used elsewhere) and add a download/export action in the UI.</p>
   <p><strong>Acceptance:</strong> Founder confirms this is wanted before implementation
   begins; if confirmed, real persistence + a real UI affordance, verified live.</p>
+  <p><strong>2026-08-11 — moved to blocked.</strong> Re-read this task's own Acceptance
+  text: it names a founder confirmation as the gate before any implementation, and no
+  founder ask is on record for this specifically (still true today). It was showing as
+  <code>pending</code>, which overstates how actionable it is — correcting the status to
+  match its own stated acceptance criteria rather than starting work with no real go-ahead.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-17">
+<div class="task" data-status="blocked" data-batchable="true" id="task-17">
   <h3>17. Legal-research citation verification</h3>
   <p class="meta">Found 2026-08-02 during task 3's scoping pass. Idea/enhancement —
   <strong>founder should confirm scope</strong>; the system prompt already instructs the
@@ -1734,6 +1739,10 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   <p><strong>Acceptance:</strong> Founder confirms this is wanted and picks/approves a real
   verification source before implementation; degrade honestly (flag unverifiable citations,
   never silently drop or silently trust them) if built.</p>
+  <p><strong>2026-08-11 — moved to blocked.</strong> Same correction as task 16: this
+  task's own Acceptance text requires a founder-approved verification source before any
+  implementation starts, and none is on record. Status corrected from <code>pending</code>
+  to match.</p>
 </div>
 
 <div class="task" data-status="blocked" data-batchable="true" id="task-18">
@@ -1752,7 +1761,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   a build task — not queued here.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-19">
+<div class="task" data-status="done" data-batchable="true" id="task-19">
   <h3>19. Real privacy self-audit — what THEHIVE actually observes/logs</h3>
   <p class="meta">Distilled from task 18's real kernel. Est. cost: medium.</p>
   <p><strong>Prompt:</strong> Audit what the live Worker and any backend code actually
@@ -1760,6 +1769,42 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   against F-001's real data-minimization principle.</p>
   <p><strong>Acceptance:</strong> A real, evidence-cited findings list (what's logged,
   where, why, whether it's minimized) — not a philosophical essay.</p>
+  <p><strong>2026-08-11 — done, level: tested (static trace of committed code, not a
+  production log inspection).</strong> Findings, each cited against the live
+  <code>worker/src/index.js</code>:</p>
+  <p>1. <strong>What captures visitor IP:</strong> 10 routes read
+  <code>request.headers.get('CF-Connecting-IP')</code> — lines 1822, 1843, 1898, 2027,
+  2357, 2438, 2488, 2573, 2584, 2595. All 10 use it only to key <code>rate_limits</code>
+  rows (`rateLimitOk`/`tokenOk`); none write it to any other table, log, or third party.</p>
+  <p>2. <strong>The two visitor-data tables</strong> (of 11 total D1 tables, via
+  <code>ensureTables</code>): <code>rate_limits (ip, ts)</code> — raw IP + timestamp, no
+  other visitor field. <code>visitor_tokens (token, issued_at, expires_at)</code> — an
+  opaque token, no IP stored alongside it.</p>
+  <p>3. <strong>Zero <code>console.log/error/warn</code> calls anywhere in the file</strong>
+  (grep count: 0) — nothing leaves a visitor trail in runtime logs. No User-Agent,
+  Referer, or <code>cf.*</code> geo field is ever read (the file's one
+  <code>User-Agent</code> string is the Worker's own outbound header when it calls
+  providers, not visitor capture).</p>
+  <p>4. <strong>Retention — corrected from an earlier, wrong assumption:</strong> pruning
+  is NOT scoped to "only the requesting IP, only on its next request" as previously
+  believed. <code>scheduled()</code> (line 1399), the Worker's cron handler — real
+  trigger <code>*/30 * * * *</code> per <code>wrangler.jsonc:14</code>, i.e. every 30
+  minutes, not hourly — runs an unconditional global sweep at lines 1487-1490:
+  <code>DELETE FROM visitor_tokens WHERE expires_at&lt;?</code> and
+  <code>DELETE FROM rate_limits WHERE ts&lt;?</code> (1-hour cutoff), independent of
+  whether that IP or token is ever seen again. `rateLimitOk()` (~line 154) additionally
+  self-prunes its own IP's rows on each request as a second, redundant layer. Net effect:
+  no IP or token row can persist longer than ~90 minutes (30-min cron cadence + 1-hour
+  cutoff window) even for a visitor who never returns.</p>
+  <p><strong>Against F-001</strong> (<code>soul.md:8-11</code>, data sovereignty +
+  minimization): the pattern matches the law's intent — data collected is the minimum
+  needed for its stated purpose (rate limiting), it is not fanned out to logs or other
+  tables, and it self-expires on a real, verified schedule rather than accumulating
+  indefinitely. F-001's explicit 5-minute/10-per-hour user-initiated delete right is not
+  separately implemented for these two tables, but neither table is user-identifiable
+  data a person would need to delete on demand — it is operational rate-limit/session
+  bookkeeping, not personal data in F-001's sense. No violation found; no gap found beyond
+  what's stated here.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-20">
@@ -1770,7 +1815,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   <code>backend/guilds/treasury_guild.py</code>'s own comment and this file's history.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-21">
+<div class="task" data-status="done" data-batchable="true" id="task-21">
   <h3>21. [ROLE: Governance Kernel] Reconcile the real `soul` score against the exact EVW formula</h3>
   <p class="meta">Atom-level finding 2026-08-02 from the founder's dissertation pass.
   F-002's EVW formula is real law (soul.md), and a real wealth score (`soul`) already
@@ -1783,6 +1828,26 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   <p><strong>Acceptance:</strong> A cited trace of the real increment logic, plus either a
   real reconciliation or an honest "these are currently different things" disclosure —
   never asserted without checking.</p>
+  <p><strong>2026-08-11 — done, level: tested (static trace of committed code).</strong>
+  Grep-confirmed: there is exactly <strong>one</strong> place `soul` is ever written —
+  <code>worker/src/index.js:607</code>, inside `resolveChallenge()`:
+  <code>UPDATE agents SET elo=elo+16, soul=soul+25 WHERE name=?</code>, run once per
+  resolved Arena challenge for the winner only. No other file, route, or table touches
+  `soul`.</p>
+  <p><strong>F-002</strong> (<code>soul.md:13-16</code>) defines wealth method 2 as "sum
+  of earned value weight (EVW) of each utilized contribution," with the weighted terms
+  (Hours_Saved×0.4 + Adoption_Count×0.3 + Novelty_Score×0.2 + Dispute_Resilience×0.1)
+  held in the mutable appendix, and total wealth as the **geometric mean** of method 1
+  (time wealth) and method 2 (EVW).</p>
+  <p><strong>Honest verdict (the disclosure this task's acceptance explicitly permits):
+  these are currently different things.</strong> A flat +25-per-Arena-win counter
+  approximates none of EVW's four weighted terms (no hours-saved figure, no adoption
+  count, no novelty score, no dispute-resilience input feeds it), and no geometric mean
+  of any kind is computed anywhere in the Worker — `soul` is the entire wealth figure as
+  it stands, not one of two combined methods. Not building an EVW implementation here:
+  the appendix's weighted values are mutable law (soul.md's own 2/3-guild-vote + 30-day
+  amendment process), and inventing weights would be founder/guild territory, not this
+  firing's call.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-22">
@@ -1934,3 +1999,5 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
 </body>
 </html>2026-08-09 — Task 15 continued (fetch-handler coverage). Ceiling gate PASSED at start: zero log entries dated today, so count=0 and sum=0 — a real correction, the previous two stops read the live script instead of the protocol's actual rule (today's logged entries). checks-and-balances pass clean: 5 founder-gated / 11 rate-limited / 10 token-gated routes, only Nanuet NULL reports_to. Resumed #15 (in-progress, batchable) rather than starting #14 (batchable=false, needs fresh context — this one is not). New worker/test/fetch-handler.test.js: 28 tests, suite 35 → 63 green, covering the three named acceptance targets (/venture/plan, /legal/research, rate-limit + token gating) with a real D1 stub. FOUND AND FIXED A PRODUCTION BUG: /agents, /roadmap and /llm/status used `return cachedJson(...)` with no await, so a D1 rejection escaped the handler's try/catch entirely instead of becoming a clean 500 — confirmed with a standalone repro before claiming it, fixed at all three sites. Also corrected one of my own tests that was wrong about CORS (the Worker was right: Allow-Origin is echoed only for allowlisted origins; both directions now asserted). Mutation-tested 3 ways, source restored byte-identical each time. Task 15 stays in-progress: ~40+ routes still uncovered, ASSETS/Vectorize stubs still unbuilt. Level: tested, not verified-live. 5 approved-unactioned proposals (#1/#5/#6/#7/#8) checked — all founder-only, none actioned. list_triggers approval denied again, so the 2 AM Routine remains UNVERIFIED and is not claimed to work. PR opened, not merged. TOKENS: 2272368
 
+
+2026-08-11 — DAILY FIRING: ceiling gate PASSED at start (zero log entries dated 2026-08-11, count=0/4, sum=0/3,000,000 — new UTC day, clean budget). checks-and-balances clean: 60 task divs, div-delta 1 (known pre-existing baseline), zero merge_pull_request call sites in the Worker. Queue hygiene: tasks 16 and 17 corrected from pending to blocked — both name a founder confirmation as their own Acceptance gate and none is on record; showing as pending overstated how actionable they were. Skipped #14 (batchable=false, needs a genuinely fresh context, not this long-running one). Worked #19 and #21, both batchable and neither founder-gated. Task 19 (privacy self-audit): 10 CF-Connecting-IP capture sites (all rate-limit-only), 2 visitor-data tables (rate_limits, visitor_tokens), zero console.log/error/warn in the Worker, and a real correction to an earlier assumption — retention pruning is a GLOBAL sweep inside scheduled() (cron */30 * * * * per wrangler.jsonc:14), not a per-IP-only prune; no row survives past ~90 minutes even for a visitor who never returns. No F-001 violation found. Task 21 (soul vs EVW): confirmed exactly one soul-increment site (worker/src/index.js:607, flat +25 per Arena win) against F-002's real weighted EVW formula (soul.md:13-16) — honest verdict per the task's own permitted disclosure: these are currently different things, no EVW term or geometric mean is computed; not building one here since the appendix weights are mutable law, founder/guild territory. Both tasks marked done, level: tested (static trace of committed code, not a production log inspection). 5 approved-unactioned proposals (#1/#5/#6/#7/#8) checked again — still all founder-only, none actioned. Not claiming anything about the 2 AM Routine — list_triggers approval still not granted this firing. npm test --prefix worker stays 63/63; python3 scripts/check-claims.py passes; task count stays 60, div-delta stays 1. Real PR to follow, never merged. TOKENS: 2625074
