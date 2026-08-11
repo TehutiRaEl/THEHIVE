@@ -63,6 +63,27 @@
       "binding": "DB",
       "database_name": "thehive-queen",
       "database_id": "70212689-5633-4c09-9e1d-ae6294ce19eb"
+    },
+    // Kai El's own brain (2026-08-10, founder-directed). A physically separate
+    // database rather than more tables in thehive-queen — the founder was shown
+    // the tradeoff (a separate DB costs one of the account's 10 D1 slots, and the
+    // pattern does not scale to 13 agents x 2 databases) and chose it anyway,
+    // specifically for Kai El as the hive's second brain. Nanuet, the first brain,
+    // gets the same treatment later when work on the Queen resumes.
+    //
+    // Schema: worker/schema/kai-el-brain.sql (memories, decision_log,
+    // training_samples, autonomy_registry). Created and applied for real via the
+    // Cloudflare connector on 2026-08-10, not just declared here.
+    //
+    // UNLIKE Vectorize/R2/Queues above, this binding is NOT commented out: the
+    // database genuinely exists, so binding it cannot fail the deploy. Every read
+    // and write still goes through kaiBrainOk()/env.KAI_BRAIN guards in
+    // worker/src/index.js, so an unbound or unreachable brain degrades to the
+    // exact behaviour Kai El has today rather than breaking him.
+    {
+      "binding": "KAI_BRAIN",
+      "database_name": "kai-el-brain",
+      "database_id": "7c62dea9-64ba-4d38-a5bf-234d5a504f19"
     }
   ],
   // FOUNDER_KEY moved to Cloudflare's Secrets Store (an account-wide vault,

@@ -20,10 +20,65 @@ interface Proposal {
   alignment_score?: number | null;
   decided_by?: string | null;
   elder_note?: string | null;
+  // Kai El's first evolution into an architect agent (2026-08-10): an
+  // 'architect-proposal' can now carry a real, reviewable code diff instead of
+  // only prose describing one. All three are null on every other proposal kind
+  // and on architect-proposals with no diff — nothing here changes what those
+  // look like. diff_check is written only by .github/workflows/
+  // architect-proposal-check.yml, the one place that actually has git.
+  diff?: string | null;
+  diff_files?: string | null; // JSON array of touched paths, as stored
+  diff_check?: string | null; // null | 'pending' | 'applies_clean' | 'failed: <reason>'
 }
 
 const V11 = `${API_BASE_URL}/v11`;
 const KEY_STORAGE = 'hive_founder_key';
+
+// A real, reviewable diff — collapsed by default so a founder scanning many
+// proposals isn't forced past raw diff text to see the title/body. The
+// diff_check badge reports the ONE thing that matters before deciding: does
+// this actually apply, or would approving it approve something unusable.
+function DiffBlock({ p }: { p: Proposal }) {
+  if (!p.diff) return null;
+  let files: string[] = [];
+  try { files = JSON.parse(p.diff_files || '[]'); } catch { /* malformed stored JSON — show no file list rather than crash the panel */ }
+
+  const check = p.diff_check || 'pending';
+  const badge =
+    check === 'applies_clean'
+      ? { text: 'applies cleanly', cls: 'border-emerald-400/40 text-emerald-300' }
+      : check.startsWith('failed')
+        ? { text: 'does NOT apply', cls: 'border-red-400/40 text-red-300' }
+        : { text: 'checking…', cls: 'border-amber-400/40 text-amber-300' };
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span
+          title={check.startsWith('failed') ? check : undefined}
+          className={`shrink-0 text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${badge.cls}`}
+        >
+          {badge.text}
+        </span>
+        {files.length > 0 && (
+          <span className="text-[10px] text-slate-500">{files.join(', ')}</span>
+        )}
+      </div>
+      {check.startsWith('failed') && (
+        <div className="text-[10px] text-red-300/80">{check}</div>
+      )}
+      <details className="text-xs">
+        <summary className="cursor-pointer text-cyan-glow/80 select-none">View diff</summary>
+        <pre className="mt-1 max-h-64 overflow-auto rounded bg-black/40 p-2 text-[10px] text-slate-300 whitespace-pre-wrap">
+          {p.diff}
+        </pre>
+      </details>
+      <p className="text-[10px] text-slate-600">
+        Drafted by Kai El, never applied automatically — review, then apply it yourself.
+      </p>
+    </div>
+  );
+}
 
 // The hive's standing suggestion box: new implementations, goals, and
 // changes it thinks are worth doing — surfaced here, never applied on their
@@ -175,6 +230,7 @@ export default function ProposalsPanel() {
               <span className="text-sm text-slate-100">{p.title}</span>
             </div>
             {p.body && <p className="text-xs text-slate-400 leading-relaxed">{p.body}</p>}
+            <DiffBlock p={p} />
             <div className="flex items-center gap-2 pt-1">
               {/* First real consumer of components/common (task 13, 2026-08-06). The
                   shared Button also gives these two a real in-flight spinner via
@@ -258,6 +314,7 @@ export default function ProposalsPanel() {
                 </div>
               )}
               {p.founder_note && <div className="text-slate-500">"{p.founder_note}"</div>}
+              <DiffBlock p={p} />
             </div>
           ))}
         </div>

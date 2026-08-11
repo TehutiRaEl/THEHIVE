@@ -238,3 +238,64 @@ attribution the `FOUNDER_KEY` path never had.
 *2026-07-17 — written alongside the audit-driven Command Center update. Switches 5-6 added
 2026-07-21 (Phase 8 professionalization pass). Switch 11 added 2026-08-09. When you flip
 one, tell the hive and it will re-probe and confirm from the live surface, not assume.*
+
+---
+
+## 12 · Kai El's brain — the staged autonomy ladder (2026-08-10)
+
+Kai El now has his own D1 database (`kai-el-brain`) holding his memories, his
+decisions, and the corpus a future fine-tune would draw from. **Everything below is
+OFF right now.** You asked for autonomy to arrive in stages rather than all at once,
+so each capability has its own switch, each one names what it grants and what it
+risks, and each one is a single variable you set yourself.
+
+**How to flip any of these** (same three steps every time — no code change, no push):
+
+1. Cloudflare dashboard → **Workers & Pages** → **thehive** → **Settings**
+2. **Variables and Secrets** → add a **plain text variable** (not a secret)
+3. Name it exactly as written below, set the value to `on`, then **Deploy**
+
+Anything other than `on`/`true`/`1`/`yes` reads as OFF, deliberately — a typo must
+never accidentally grant a capability. Live state is always visible at
+`GET /v11/kai/autonomy`, which shows the whole ladder, what is on, and what is next.
+
+| Stage | Variable | What it grants |
+|---|---|---|
+| 1 | `KAI_BRAIN_WRITE` | He remembers. Writes his own memories/decisions to his own database. |
+| 2 | `KAI_BRAINSTORM_EXPLICIT` | Deep-think **when you ask** — a longer reasoning pass to scope a task. |
+| 3 | `KAI_TAB_DRAFT` | Drafts work from the Roadmap / Venture Planner / Project tabs. **You still approve everything.** |
+| 4 | `KAI_BRAINSTORM_AUTO` | Deep-thinks **on his own** when a task looks underspecified. |
+| 5 | `KAI_4DBRAIN_BRIDGE` | Calls the 4DBRAIN colony. Needs `FOURDBRAIN_URL` too — see below. |
+| 6 | `KAI_TAB_AUTONOMOUS_LOW` | **Acts without asking**, on low-risk items only. |
+| 7 | `KAI_FINANCIAL_AUTONOMY` | Spends real money on his own upgrades. **Not built — see below.** |
+
+**Start with stage 1.** It is the only one that grants no new power at all — it just
+lets him stop forgetting. Nothing else on this ladder is useful until he can remember.
+
+**Stage 5 needs something that does not exist yet.** 4DBRAIN is not deployed
+anywhere — its `.queen/hive.yml` entry has an empty `base_url`, and its Railway and
+Render configs were written but never provisioned. The Worker-side plumbing is built
+and tested, so the moment 4DBRAIN has a real URL you add `FOURDBRAIN_URL` alongside
+the stage-5 switch and it works. Until then the bridge reports honestly that the
+colony is not deployed rather than pretending or retrying.
+
+Worth knowing plainly: 4DBRAIN's `tesseract_math` is Python running under FastAPI,
+and this Worker is JavaScript on Cloudflare's edge. Cloudflare cannot host that
+Python service, so the link between them will always be a network call to wherever
+4DBRAIN actually ends up running — the hosting question is still open, same as
+task 53's.
+
+**Stage 7 is documented, not built, and that is deliberate.** Letting an agent spend
+real money is not a variable flip and this session did not treat it as one. Before it
+could ship it needs a spending cap enforced in code, a per-transaction record you can
+see, and one hard rule: **Kai El must never be able to raise his own ceiling.** The
+`automaton/` rebuild in this repo exists partly because a source review found an
+upstream system where self-replication funding was uncapped while an equivalent
+transfer was capped — nobody noticed until someone read it line by line. Stage 7 gets
+its own decision, on its own terms, not as a rider on a database task.
+
+**Why the switches are variables and not database rows.** Kai El writes to
+`kai-el-brain`. If his permissions lived there, he could grant them to himself. The
+`autonomy_registry` table documents each switch and deliberately has **no** enabled
+column — the real state is read only from deploy-time variables he cannot touch. If a
+future session "helpfully" adds that column, this is why it must not.
