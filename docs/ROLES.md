@@ -10,7 +10,10 @@ may use which role tag; it is a documentation aid for readability and review
 triage, not a permissions model.
 
 101 roles are organized into 10 tiers, scoped either to a single colony
-(repository) or across the whole federation ("All repos").
+(repository) or across the whole federation ("All repos"). A later addition, the
+"Federation AI Session Roles" table below, adds 10 more (102-111) for autonomous
+AI session work — 111 roles total across both tables (header text corrected
+2026-08-14, task 25; the count itself was never wrong, only this sentence).
 
 | Tier | # | Role Title | Primary Repo(s) | Responsibility |
 |---|---|---|---|---|

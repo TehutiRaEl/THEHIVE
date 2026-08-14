@@ -1956,13 +1956,44 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   found here.</p>
 </div>
 
-<div class="task" data-status="in-progress" data-batchable="true" id="task-25">
+<div class="task" data-status="done" data-batchable="true" id="task-25">
   <h3>25. [ROLE: Knowledge Steward] Reconcile the pasted "101 roles" against SPORE_ROSTER.md's 189</h3>
   <p class="meta">Check for genuinely new roles not yet covered by the existing
   reconciliation (CANVAS.md's 78 + docs/ROLES.md's 111 = 189, done 2026-07-31/08-01) rather
   than assuming full overlap. Est. cost: small.</p>
   <p><strong>Acceptance:</strong> A real diff — which of the pasted 101 are genuinely new,
   which are already covered, cited against the real SPORE_ROSTER.md.</p>
+  <p><strong>2026-08-14 — done, level: tested (a real, cited comparison against source
+  text; not code).</strong> Found the full, individually-named "101 roles" list at
+  <code>Project_file/Founders Visonary Folder/Visionary-Conversation-logs/Log(5).md:24468-24497</code>
+  — a generic corporate/enterprise hierarchy (Level 1 "The Fiduciary Apex": Board of
+  Trustees, Chairperson... down to Level 10 "The Foundational Bedrock": Facilities
+  Maintenance Lead, Janitorial Staff, Mailroom/Courier Clerk), tier sizes
+  6/12/11/11/8/16/17/9/6/5 = 101.</p>
+  <p><strong>The real finding:</strong> those exact tier sizes
+  (6/12/11/11/8/16/17/9/6/5=101) are <strong>identical</strong> to <code>docs/ROLES.md</code>'s
+  own first 10 tiers (Governance Kernel 6, Executive 12, Domain Leads 11, Directors 11,
+  Middle Management 8, Senior Architects/Staff 16, Mid-level Engineers 17,
+  Apprentices/Validators 9, Frontline Support 6, Janitorial/Ops 5) — already reconciled
+  into <code>SPORE_ROSTER.md</code> Part 2 (111 from docs/ROLES.md, of the 189 total).
+  Confirmed the common origin directly in the founder's own material: a separate planning
+  entry in the same conversation log
+  (<code>Log(3).md:23674-23719</code>) states the explicit design decision — *"No
+  mystical/cosmological branding in any committed file... plain professional engineering
+  language instead"* — for this exact same 10-tier, 101-count skeleton, then builds it as
+  <code>docs/ROLES.md</code> using real hive/engineering titles (e.g. "Constitution
+  Steward") in place of the generic corporate ones (e.g. "Board of Trustees") at the same
+  tier position. This is a documented, deliberate rename, not an oversight.</p>
+  <p><strong>Verdict: zero genuinely new roles.</strong> Every one of the pasted 101's
+  tier-slots is already covered by <code>docs/ROLES.md</code>'s already-reconciled first
+  101 rows; the pasted list's specific generic corporate titles were knowingly not
+  adopted verbatim, for the reason stated above, not missed. In passing, found and fixed
+  a small, real, separate doc-accuracy gap while re-reading <code>docs/ROLES.md</code> for
+  this comparison: its own header text still said "101 roles" even though the file
+  actually has 111 rows (101 base + 10 "Federation AI Session Roles" added later,
+  102-111) — the count itself was never wrong anywhere it's used, only that one sentence;
+  corrected in the same commit as this task, since it's directly the subject of this
+  reconciliation rather than a separate finding to route elsewhere.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="false" id="task-26">
