@@ -1854,7 +1854,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   firing's call.</p>
 </div>
 
-<div class="task" data-status="in-progress" data-batchable="true" id="task-22">
+<div class="task" data-status="done" data-batchable="true" id="task-22">
   <h3>22. [ROLE: Frontend Architect] Add a real "modify/counter-propose" option to ProposalsPanel</h3>
   <p class="meta">Atom-level finding: the pasted <code>acceptance.py</code>'s one genuinely
   new idea beyond what's already live — the real <code>ProposalsPanel.tsx</code> only
@@ -1864,6 +1864,43 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   still fail-closed, extending the real system rather than duplicating it.</p>
   <p><strong>Acceptance:</strong> Real working modify path, verified against the live build,
   same founder-key gating as approve/reject.</p>
+  <p><strong>2026-08-14 — done, level: tested (not verified-live — this container cannot
+  reach production; the acceptance's literal "verified against the live build" needs the
+  founder's own deploy).</strong> Real implementation, not a stub:</p>
+  <p><code>worker/src/index.js</code>'s <code>/proposals/:id/decide</code> now accepts
+  <code>decision:'modified'</code> alongside the existing approved/rejected, gated by the
+  exact same <code>founderAuthOk()</code> check (fails closed identically — no new gate
+  invented). A modify: requires a non-empty <code>modified_body</code> (400 otherwise),
+  closes the original proposal as <code>status='modified'</code>, and INSERTs a brand-new
+  <code>pending</code> proposal carrying the edited text with a new <code>modifies_id</code>
+  column pointing back at the original — a real counter-proposal, not a same-row edit, so
+  the original decision stays in the audit trail. Never calls
+  <code>executeApprovedAction</code> (only `approved` on an `action-request` kind does) —
+  confirmed by a dedicated test, since silently executing on a modify would be a real
+  security regression. Schema: one new <code>ALTER TABLE hive_proposals ADD COLUMN
+  modifies_id INTEGER</code>, same additive-migration pattern already used for
+  <code>alignment_score</code>/<code>decided_by</code>/<code>actioned_at</code>/<code>elder_note</code>.</p>
+  <p><code>ProposalsPanel.tsx</code> gained a real "✎ Modify" button next to Approve/Reject
+  on each pending proposal, opening an inline textarea (pre-filled with the original body)
+  and a "Submit counter-proposal" action; the Decided section now renders a distinct icon/
+  color for `modified` rows and a "Counter-proposes #N" lineage line when
+  <code>modifies_id</code> is present. <code>npx tsc --noEmit</code> confirms this file adds
+  zero new type errors (the pre-existing, unrelated <code>src/worlds/</code>/<code>src/xp/</code>
+  build breakage documented in <code>HIVE_PULSE.md</code> is untouched, still there, still not
+  this task's to fix).</p>
+  <p><strong>Real tests, not assertions of intent:</strong> 5 new cases in
+  <code>worker/test/routes.test.js</code> (fails-closed with no key; empty
+  <code>modified_body</code> → 400; a real modify → 200 with the INSERT and UPDATE both
+  verified via the DB stub's recorded query args, including the derived vs. explicit
+  title; the no-execution guarantee). Required extending <code>worker/test/helpers/
+  env.js</code>'s <code>stubDB</code> — its <code>run()</code> previously always returned a
+  bare <code>{success:true}</code> and ignored the matched route value entirely, making
+  <code>meta.changes</code>/<code>meta.last_row_id</code> (both real D1 fields this route
+  reads) untestable; now a matched value shaped like <code>{meta:{...}}</code> passes
+  through. Suite: 108 → 113, all green. <strong>Mutation-tested twice</strong> (removed the
+  empty-body validation → 1 test failed as expected; swapped the title/body bind order →
+  2 tests failed as expected), source restored byte-identical both times
+  (<code>diff</code> confirmed) before committing.</p>
 </div>
 
 <div class="task" data-status="pending" data-batchable="true" id="task-23">

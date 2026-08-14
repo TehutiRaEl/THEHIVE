@@ -44,13 +44,21 @@ export function stubDB(routes = {}) {
         queries.push({ sql, args });
         return match(sql);
       };
+      // A matched value shaped like { meta: {...} } (optionally alongside
+      // `success`) is real D1's own run() result shape (INSERT/UPDATE/DELETE
+      // report meta.changes / meta.last_row_id) — pass it through so a test
+      // can assert on a row actually being written/changed, e.g. task 22's
+      // modify/counter-propose flow, which reads inserted.meta.last_row_id
+      // and result.meta.changes for real. Anything else defaults to the
+      // bare { success: true } every prior caller already relied on.
+      const runResult = (v) => (v && typeof v === 'object' && 'meta' in v) ? v : { success: true };
       return {
         bind: (...args) => ({
-          run: async () => { exec(args); return { success: true }; },
+          run: async () => runResult(exec(args)),
           first: async () => { const v = exec(args); return v === undefined ? null : v; },
           all: async () => { const v = exec(args); return { results: v ?? [] }; },
         }),
-        run: async () => { exec([]); return { success: true }; },
+        run: async () => runResult(exec([])),
         first: async () => { const v = exec([]); return v === undefined ? null : v; },
         all: async () => { const v = exec([]); return { results: v ?? [] }; },
       };

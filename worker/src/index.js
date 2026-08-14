@@ -350,6 +350,13 @@ async function ensureTables(DB) {
     // null when both clear it; set to the objecting Elder's reason when either vetoes
     // (which downgrades the proposal back to pending — see elderCouncilVeto()).
     'ALTER TABLE hive_proposals ADD COLUMN elder_note TEXT',
+    // Modify/counter-propose (task 22, 2026-08-14): when the founder wants
+    // changes rather than a flat approve/reject, /decide with
+    // decision='modified' closes the original (status='modified') and files
+    // a brand-new pending proposal carrying the edited text. modifies_id on
+    // the new row points back to what it counter-proposes, so the panel can
+    // show real lineage instead of two unrelated-looking rows.
+    'ALTER TABLE hive_proposals ADD COLUMN modifies_id INTEGER',
   ]) {
     try { await DB.prepare(stmt).run(); } catch {}
   }
@@ -1797,7 +1804,7 @@ export default {
         try {
           const { limit, offset } = pageParams(url, 50, 200);
           const { results } = await DB.prepare(
-            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note FROM hive_proposals
+            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note, modifies_id FROM hive_proposals
              ORDER BY (status='pending') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
           return json({ proposals: results, founder_auth_bound: await founderKeyBound(env), queen_auto_approval_bound: !!env.QUEEN_AUTONOMOUS_APPROVAL, limit, offset });
         } catch { return json({ proposals: [], founder_auth_bound: await founderKeyBound(env) }); }
@@ -1860,15 +1867,40 @@ export default {
         }
         const id = Number(decideMatch[1]);
         const body = await request.json().catch(() => ({}));
-        const decision = body.decision === 'approved' ? 'approved' : body.decision === 'rejected' ? 'rejected' : null;
-        if (!decision) return json({ detail: "decision must be 'approved' or 'rejected'" }, 400);
+        const decision = body.decision === 'approved' ? 'approved'
+          : body.decision === 'rejected' ? 'rejected'
+          : body.decision === 'modified' ? 'modified'
+          : null;
+        if (!decision) return json({ detail: "decision must be 'approved', 'rejected', or 'modified'" }, 400);
         let note = (body.note || '').toString().slice(0, 2000);
-        // Fetch kind+body BEFORE the state-changing UPDATE, since only an
+        // Fetch kind+title+body BEFORE the state-changing UPDATE, since only an
         // 'action-request' proposal that is being APPROVED ever executes
         // anything — approval alone on every other kind still just records a
-        // decision, same as before this task.
-        const existing = await DB.prepare('SELECT kind, body FROM hive_proposals WHERE id=? AND status=\'pending\'').bind(id).first();
+        // decision, same as before this task. title is needed too now: a
+        // 'modified' decision derives the counter-proposal's title from it.
+        const existing = await DB.prepare('SELECT kind, title, body FROM hive_proposals WHERE id=? AND status=\'pending\'').bind(id).first();
         if (!existing) return json({ detail: `proposal ${id} not found or already decided` }, 404);
+        if (decision === 'modified') {
+          const modifiedBody = (body.modified_body || '').toString().trim().slice(0, 4000);
+          if (!modifiedBody) return json({ detail: 'modified decision requires a non-empty modified_body' }, 400);
+          const modifiedTitle = (body.modified_title || '').toString().trim().slice(0, 200)
+            || `Modified: ${existing.title}`.slice(0, 200);
+          const nowIso = new Date().toISOString();
+          const inserted = await DB.prepare(
+            'INSERT INTO hive_proposals (ts, kind, title, body, status, modifies_id) VALUES (?,?,?,?,\'pending\',?)'
+          ).bind(nowIso, existing.kind, modifiedTitle, modifiedBody, id).run();
+          const newId = inserted.meta?.last_row_id;
+          const closeNote = (note ? note + ' | ' : '') + `counter-proposed as #${newId}`;
+          const result = await DB.prepare(
+            "UPDATE hive_proposals SET status='modified', decided_at=?, founder_note=? WHERE id=? AND status='pending'"
+          ).bind(nowIso, closeNote, id).run();
+          if (!result.meta?.changes) return json({ detail: `proposal ${id} not found or already decided` }, 404);
+          ctx?.waitUntil?.(postUpdate(DB, {
+            kind: 'proposal-decided', title: `Proposal #${id} modified`,
+            body: `${closeNote} — new proposal #${newId} is pending your decision.`,
+          }));
+          return json({ ok: true, id, decision: 'modified', new_proposal_id: newId });
+        }
         let execResult = null;
         if (decision === 'approved' && existing.kind === 'action-request') {
           try {

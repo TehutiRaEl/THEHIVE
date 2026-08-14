@@ -8,7 +8,7 @@ interface Proposal {
   kind: string;
   title: string;
   body?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'modified';
   decided_at?: string;
   founder_note?: string;
   // These four were already returned by GET /v11/proposals and already stored in D1,
@@ -20,6 +20,10 @@ interface Proposal {
   alignment_score?: number | null;
   decided_by?: string | null;
   elder_note?: string | null;
+  // modifies_id (task 22, 2026-08-14): set only on a counter-proposal row —
+  // points back at the original pending proposal it replaced, so the panel
+  // can show real lineage instead of two unrelated-looking rows.
+  modifies_id?: number | null;
 }
 
 const V11 = `${API_BASE_URL}/v11`;
@@ -38,6 +42,11 @@ export default function ProposalsPanel() {
   const [key, setKey] = useState(() => localStorage.getItem(KEY_STORAGE) || '');
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Which pending proposal has its modify/counter-propose textarea open, and
+  // the draft text typed into it — kept separate per-id so opening one
+  // doesn't clobber a draft in progress on another.
+  const [modifyOpenId, setModifyOpenId] = useState<number | null>(null);
+  const [modifyDraft, setModifyDraft] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -59,23 +68,30 @@ export default function ProposalsPanel() {
     localStorage.setItem(KEY_STORAGE, v);
   };
 
-  const decide = async (id: number, decision: 'approved' | 'rejected') => {
+  const decide = async (id: number, decision: 'approved' | 'rejected' | 'modified', extra?: { modified_body: string }) => {
     setBusy(id);
     setError(null);
     try {
       const r = await fetch(`${V11}/proposals/${id}/decide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-        body: JSON.stringify({ decision }),
+        body: JSON.stringify({ decision, ...extra }),
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) { setError(d.detail || `HTTP ${r.status}`); return; }
+      if (decision === 'modified') { setModifyOpenId(null); setModifyDraft(''); }
       await load();
     } catch (e) {
       setError(String(e));
     } finally {
       setBusy(null);
     }
+  };
+
+  const submitModify = (id: number) => {
+    const text = modifyDraft.trim();
+    if (!text) return;
+    decide(id, 'modified', { modified_body: text });
   };
 
   if (loading) return <p className="text-slate-500 text-sm">Reading the suggestion box…</p>;
@@ -151,7 +167,42 @@ export default function ProposalsPanel() {
               >
                 ✕ Reject
               </Button>
+              {/* Modify/counter-propose (task 22, 2026-08-14): the panel only ever
+                  supported a binary decision. This opens an inline draft instead of
+                  a third same-weight button, since the action needs real text first. */}
+              <Button
+                variant="secondary"
+                size="xs"
+                onClick={() => {
+                  if (modifyOpenId === p.id) { setModifyOpenId(null); return; }
+                  setModifyOpenId(p.id);
+                  setModifyDraft(p.body || '');
+                }}
+                disabled={!key}
+              >
+                ✎ Modify
+              </Button>
             </div>
+            {modifyOpenId === p.id && (
+              <div className="space-y-1.5 pt-1">
+                <textarea
+                  value={modifyDraft}
+                  onChange={(e) => setModifyDraft(e.target.value)}
+                  rows={3}
+                  placeholder="Counter-proposal text — files as a new pending proposal; this one closes as 'modified'."
+                  className="w-full bg-void-800 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-glow/50"
+                />
+                <Button
+                  variant="secondary"
+                  size="xs"
+                  onClick={() => submitModify(p.id)}
+                  disabled={!key || !modifyDraft.trim()}
+                  isLoading={busy === p.id}
+                >
+                  Submit counter-proposal
+                </Button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -162,8 +213,12 @@ export default function ProposalsPanel() {
           {decided.map((p) => (
             <div key={p.id} className="rounded-lg border border-white/5 bg-void-800/30 p-2.5 text-xs space-y-1">
               <div className="flex items-start justify-between gap-2">
-                <span className={p.status === 'approved' ? 'text-emerald-400' : 'text-red-400'}>
-                  {p.status === 'approved' ? '✓' : '✕'} {p.title}
+                <span className={
+                  p.status === 'approved' ? 'text-emerald-400'
+                    : p.status === 'modified' ? 'text-cyan-glow'
+                    : 'text-red-400'
+                }>
+                  {p.status === 'approved' ? '✓' : p.status === 'modified' ? '✎' : '✕'} {p.title}
                 </span>
                 {/* The distinction the founder could not see before: "approved" and
                     "approved AND the work actually happened" are different states, and
@@ -211,6 +266,11 @@ export default function ProposalsPanel() {
                 </div>
               )}
               {p.founder_note && <div className="text-slate-500">"{p.founder_note}"</div>}
+              {/* modifies_id is only ever set on the NEW row a modify/counter-propose
+                  created — points back at the original it replaced (task 22, 2026-08-14). */}
+              {typeof p.modifies_id === 'number' && (
+                <div className="text-cyan-glow/80">Counter-proposes #{p.modifies_id}</div>
+              )}
             </div>
           ))}
         </div>
