@@ -1070,6 +1070,50 @@ branch) does the work → a PR.</li>
   <code>main</code> or to accept branch deploys knowingly. Nothing here changes that — it
   removes the uncertainty about <em>whether</em> it is happening, not the decision about what
   to do.</p>
+  <p><strong>2026-08-15 — fresh live evidence, same class of problem, real investigation
+  done, no code shipped.</strong> Dispatched <code>edge-health-probe</code> (run
+  <code>31867590926</code>) at firing start: the work cycle's round-robin (fixed 2026-08-11,
+  commit <code>759775b</code> on <code>main</code>, merged via PR #170) is stuck again — the
+  8 most recent <code>agent-work</code> rows in production, spanning
+  <code>2026-08-14T22:30Z</code> through <code>2026-08-15T05:30Z</code> (7 real hourly
+  ticks, distinct token costs each time, not a duplicated/cached row), are <strong>every
+  single one "Ma'at — balance"</strong> — the exact symptom the 2026-08-11 fix targeted.</p>
+  <p><strong>Ruled out before writing this up</strong> (probe-before-claim,
+  <code>fable-debugger</code> discipline): (1) <strong>Not a stale GET cache</strong> —
+  <code>GET /v11/updates</code> queries D1 directly on every call
+  (<code>worker/src/index.js</code>'s <code>/updates</code> handler has no
+  <code>cachedJson</code> wrapper, confirmed by reading the route). (2) <strong>Not a
+  regression in the fix's own logic</strong> — no commit has touched
+  <code>runWorkCycle</code>/<code>nextWorkTurnIndex</code>/<code>AGENT_WORK</code> on
+  <code>main</code> since <code>759775b</code> (checked directly:
+  <code>git log origin/main -- worker/src/index.js</code>). (3) <strong>Not a logic bug
+  triggered by the real data</strong> — ran <code>nextWorkTurnIndex()</code> from
+  <code>origin/main</code>'s actual source directly in Node against the exact real
+  production title string <code>"Ma'at — balance"</code>: it correctly returns
+  <code>1</code> (Solomon), not <code>0</code>. Given the true last title, the fixed
+  function does not reproduce the bug in isolation.</p>
+  <p><strong>What's confirmed instead:</strong> the fix genuinely worked for a real window —
+  the prior firing's probe (2026-08-14, run <code>31768946490</code>) showed full, correct
+  8-agent rotation from <code>2026-08-13T20:31Z</code> through <code>2026-08-14T03:31Z</code>.
+  Something caused it to re-stick sometime between then and <code>2026-08-14T22:30Z</code>,
+  despite the deployed logic being provably correct against the real data it should be
+  reading. <strong>That gap is exactly this task's own open question</strong> — this task
+  already proved once (2026-08-07) that production can run code that does not match
+  <code>origin/main</code>'s HEAD (unmerged branch code reaching production). A correct fix
+  merged to <code>main</code> that later stops taking effect, with no code-side regression
+  found, is consistent with the same underlying deploy-identity problem, not a new one — but
+  this container has no way to confirm that without the Cloudflare dashboard access this
+  task has always been blocked on.</p>
+  <p><strong>Deliberately not shipped this firing:</strong> more logic changes to
+  <code>runWorkCycle</code> without a reproduction — the code is provably correct against
+  the one real data point available; changing it further would be guessing, not fixing, and
+  this is the same paid, safety/cost-relevant work-cycle code this file already treats with
+  extra scrutiny (own firing, tasks 26/48/51's standing). One concrete, low-risk idea for a
+  future firing to actually build (not implemented here): have
+  <code>runWorkCycle</code> record the raw <code>last?.title</code> it read and the
+  <code>turn</code> it computed into the agent-work row's own <code>needs</code> field, so
+  the next time this happens there is direct forensic evidence of what production actually
+  read, instead of having to infer it externally the way this entry had to.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-48">
