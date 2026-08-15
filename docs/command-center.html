@@ -592,6 +592,26 @@ const COLONY_BASE_URLS = {
 };
 function colonyConsoleUrl(id){const c=COLONY_BASE_URLS[id];return c?c.url+c.path:null;}
 
+// Real, founder-run businesses — a distinct concept from the colony network above.
+// Colonies = federated AI sub-repos (THEHIVE, NAR2, LocalAGI, automatisch, 4DBRAIN,
+// Kimi-K2, aether): a technical/architectural grouping. Ventures = real external
+// businesses/products the founder actually operates; TheCopy is the first one.
+// One array, one loop below — add the next venture as one more entry here, nothing
+// else in this file needs to change.
+const VENTURES = [
+  {
+    name: "TheCopy",
+    kind: "solo business",
+    icon: "🖋",
+    color: "#FFD700",
+    desc: "Solo copywriting / marketing-arbitrage business — Pipeline 369 (9 Mom & Pop → 6 small biz → 3 enterprise).",
+    repoUrl: "https://github.com/TehutiRaEl/TheCopy",
+    status: "unverified",
+    statusColor: "#888",
+    note: "Lead/client counts live only in TheCopy's own browser-local CRM (console/index.html, localStorage) — not fetchable from here, so shown as unverified rather than guessed.",
+  },
+];
+
 async function loadColonyURLs() {
   if (!window.BACKEND_BASE || window.HIVE_DEMO) return;
   try {
@@ -1027,6 +1047,7 @@ function HUD() {
     {id:"freq",label:"Ψ FREQ"},{id:"soul",label:"💎 SOUL"},
     {id:"tasks",label:`🏛 TASKS(${tasks.filter(t=>t.status==="open").length})`},
     {id:"gov",label:"⚖ GOVERN"},{id:"llm",label:"🤖 LLM"},{id:"hive",label:"🐝 HIVE"},
+    {id:"ventures",label:"🖋 VENTURES"},
     {id:"graph",label:"🕸 GRAPH"},{id:"memory",label:"🧠 MEMORY"},{id:"debug",label:"🔧 DEBUG"},
   ];
 
@@ -1280,6 +1301,27 @@ function HUD() {
                 </div>
                 <div style={{fontSize:"8px",color:"#446",marginTop:"3px"}}>{col.desc}</div>
                 <button onClick={()=>setZoomColony(col.name)} style={{marginTop:"5px",fontSize:"8px",padding:"2px 8px",background:"rgba(0,200,100,.08)",border:"1px solid rgba(0,200,100,.25)",borderRadius:"4px",color:"#00ff88",cursor:"pointer",fontFamily:"Courier New"}}>⬡ zoom in</button>
+              </div>;
+            })}
+          </div>}
+
+          {/* VENTURES */}
+          {tab==="ventures"&&<div>
+            <div style={{fontSize:"11px",fontWeight:"bold",color:"#FFD700",marginBottom:"4px"}}>🖋 FOUNDER VENTURES — PORTFOLIO</div>
+            <div style={{fontSize:"8px",color:"#446",marginBottom:"10px"}}>Real businesses the founder runs, tracked separately from the colony network above.</div>
+            {VENTURES.map((v,i)=>{
+              return<div key={i} style={{padding:"8px 10px",marginBottom:"5px",borderRadius:"8px",background:"rgba(0,10,25,.6)",border:`1px solid ${v.color}22`}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:"6px"}}>
+                    <span style={{fontSize:"14px"}}>{v.icon}</span>
+                    <span style={{fontWeight:"bold",color:v.color,fontSize:"10px"}}>{v.name}</span>
+                    <span style={{fontSize:"8px",color:"#446",padding:"1px 4px",border:"1px solid #223",borderRadius:"3px"}}>{v.kind}</span>
+                  </div>
+                  <span style={{fontSize:"9px",color:v.statusColor,fontWeight:"bold"}}>{v.status}</span>
+                </div>
+                <div style={{fontSize:"8px",color:"#446",marginTop:"3px"}}>{v.desc}</div>
+                {v.note&&<div style={{fontSize:"7px",color:"#665",marginTop:"2px",fontStyle:"italic"}}>{v.note}</div>}
+                <a href={v.repoUrl} target="_blank" rel="noopener noreferrer" style={{marginTop:"5px",display:"inline-block",fontSize:"8px",padding:"2px 8px",background:"rgba(0,200,100,.08)",border:"1px solid rgba(0,200,100,.25)",borderRadius:"4px",color:"#00ff88",cursor:"pointer",fontFamily:"Courier New",textDecoration:"none"}}>⬡ open repo</a>
               </div>;
             })}
           </div>}
