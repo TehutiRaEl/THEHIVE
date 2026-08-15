@@ -13,31 +13,36 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-08-08 — read this section first)
+## Right now (updated 2026-08-15 — read this section first)
 
-- **⚠️ This section was wrong from 2026-08-04 to 2026-08-08 and said so with confidence.**
-  It claimed "ALL Routines deleted, nothing fires automatically" for four days *after* a
-  replacement Routine had been wired on 2026-08-04. The one file every autonomous firing
-  reads first was the file misinforming it. Corrected here; the incident history below is
-  kept deliberately, because it is why the standing rule exists.
+- **This section was stale from 2026-08-08 to 2026-08-15** (7 days, 3 real firings —
+  08-09/08-11/08-14 — none updated it despite the standing instruction at the top of this
+  file). Nothing in it was actively wrong the way the 08-04→08-08 incident was, just
+  behind: task 15 finished, tasks 19/21/22/24/25 done, tasks 16/17/20/23 corrected to
+  `blocked`, PR #171 open covering all of it. Compressed and refreshed here rather than
+  left to compound further — this is exactly the discipline this file's own opening asks
+  for and the exact failure mode its own second bullet used to warn about.
 - **The "2 AM automation" is two different triggers, and only one of them ever fired at
-  2 AM.** This confused the founder and the record for days — resolved 2026-08-08 from
-  repo evidence (founder's commits carry `-0700`, so PT = UTC−7 in August):
-  | Trigger | Cron | In PT | State |
-  |---|---|---|---|
-  | `trig_013BTxUthvLX3C4nLs7MypVC` — the "autonomous arc" | fired `09:00Z` | **02:00 = 2 AM PT** | **DELETED 2026-08-01** in the incident below |
-  | `trig_01CJsVYwDs4pHMoFEC5JFi7V` — daily campaign Routine | `0 4 * * *` UTC | 21:00 = **9 PM PT** | Created 2026-08-04 (`CAMPAIGN.html` ~line 27) — see next bullet |
-  The 2 AM arc the founder remembers is the **deleted** one. Its replacement fires at
-  **9 PM PT**, not 2 AM. No repo workflow fires at 2 AM PT either — of the nine scheduled
-  workflows, the closest is `colony-health.yml` (`0 6 * * *` UTC), which is 2 AM *Eastern*.
-  Do not "fix" the 9 PM cron to 2 AM without the founder saying that is what they want.
-- **`trig_01CJsVYwDs4pHMoFEC5JFi7V`'s live state is `unverified` — do not claim it works.**
-  `list_triggers` requires an interactive approval and was denied three times (once
-  2026-08-07, twice 2026-08-08). Nothing in this container can see whether that Routine
-  still exists, is enabled, or when it next fires. Per `wired-or-not`, the honest level is
-  `unverified`, not "wired". **Ask the founder to approve `list_triggers` once**, then
-  record the real `next_run_at` / `ended_reason` / `suspension_reason` here. Never call
-  `fire_trigger`.
+  2 AM** (resolved 2026-08-08, still true): the deleted `trig_013BTxUthvLX3C4nLs7MypVC`
+  fired `09:00Z` = 2 AM PT; its replacement `trig_01CJsVYwDs4pHMoFEC5JFi7V` fires
+  `0 4 * * *` UTC = 9 PM PT, not 2 AM. Do not "fix" the 9 PM cron to 2 AM without the
+  founder saying that is what they want.
+- **`trig_01CJsVYwDs4pHMoFEC5JFi7V`'s live state is STILL `unverified`.** `list_triggers`
+  approval has never been granted across at least 5 separate asks now (2026-08-07,
+  2026-08-08 ×2, and implicitly skipped in the 08-09/08-11/08-14/08-15 firings since none
+  re-requested it). Per `wired-or-not`, the honest level stays `unverified`, not "wired".
+  This firing did not re-ask either — flagging that skip explicitly rather than silently
+  repeating it forever. Never call `fire_trigger`.
+- **Open PRs: #171 only**, on this branch, covering the 08-11 and 08-14 firings (task
+  15/19/21/22/23/24/25 work). Unmerged, per the standing never-self-merge rule.
+- **Task 46 (branch-deploy reliability) has a live, unresolved recurrence (2026-08-15):**
+  the work-cycle round-robin fix (759775b, merged 08-11) worked for a real, confirmed
+  window (08-13→08-14) and then got stuck on Ma'at again for 8+ hours straight as of
+  08-15, with no code-side regression found — the fixed logic tests correct in isolation
+  against the real production title string. Full investigation in `CAMPAIGN.html` task 46.
+  This is now the second time this task has caught a real gap between what `origin/main`
+  says and what production actually does. Still blocked on the founder checking the
+  Cloudflare Workers Builds dashboard directly — nothing in this repo can resolve it.
 - **The 2026-08-01 incident — kept, because it is why the rule exists.** Every recurring
   Routine then — the hourly PR-heartbeat cron AND the nightly 2 AM arc AND an earlier
   `send_later` chain — used `persist_session:true` pointed at one long-lived session, so
@@ -50,10 +55,6 @@ that's the discipline this file exists to model, not just describe.
   tiny — "go there, do it, update it, stop". **Still do not create any NEW Routine without
   the founder's approval.** (That rule is about creating new ones; it never meant "assume
   none exist" — which is exactly how this section went stale.)
-- **Open PRs: ZERO.** Corrected 2026-08-08 — this line previously said "#143 only" and had
-  been stale for weeks. #155, #156, #157, #158 and #159 are all merged (verified via
-  `pull_request_read`: #159 `merged: true`, `merged_at 2026-08-08T02:45:02Z`).
-  `origin/main` is at `1fb37dd`.
 - **Task 51 is DECIDED (2026-08-08) — the token ceiling now counts real input + output
   only.** It had stopped two consecutive firings before either did any work; three
   measurements agree that ~90-96% of what it used to count was cache creation, which
