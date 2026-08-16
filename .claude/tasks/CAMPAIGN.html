@@ -1114,6 +1114,19 @@ branch) does the work → a PR.</li>
   <code>turn</code> it computed into the agent-work row's own <code>needs</code> field, so
   the next time this happens there is direct forensic evidence of what production actually
   read, instead of having to infer it externally the way this entry had to.</p>
+  <p><strong>2026-08-16 — the regression self-resolved, real evidence.</strong> Dispatched
+  edge-health-probe again (run <code>31925783332</code>): the 8 most recent
+  <code>agent-work</code> rows now show full, correct rotation —
+  <code>2026-08-15T20:30Z</code> through <code>2026-08-16T03:30Z</code>, one distinct agent
+  per hour (Akosha, Kai El, Ma'at, Solomon, Horus, Thoth, Sekhmet, Ptah), no repeats. Not
+  claiming this as proof of a code fix — none was shipped, per the entry above — only as an
+  honest close-out of yesterday's specific open question: whatever caused the 8-hour stuck
+  window is no longer reproducing, whether it was transient D1 read timing, a rolling
+  redeploy settling, or something else this container still cannot see directly. The
+  broader task-46 question (does production reliably run what <code>origin/main</code>
+  says it should) stays exactly as blocked on the founder as before — one clean probe
+  afterward doesn't answer that, it only closes the specific symptom that was live
+  yesterday.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-48">
