@@ -13,8 +13,18 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-08-16 — read this section first)
+## Right now (updated 2026-08-16, 2nd firing — read this section first)
 
+- **Task 26 (hive_mesh.dispatch()'s HITL approval dead end) is FIXED, done, level
+  `tested`.** Approving a held cross-colony dispatch used to only flip a DB row's
+  status — the event never actually re-fired (AUDIT_LEDGER.md 2026-08-02). Now
+  `/hitl/resolve` calls `hive_mesh.redispatch_approved()` when the resolved request's
+  `action_type` starts with `hive_mesh.dispatch:` and `approved=True`. New
+  `tests/integration/test_hitl_redispatch.py` proves the round trip, mutation-tested.
+  This is System A (`backend/`) code — not live in production per the section below,
+  so real-world blast radius is zero today, but the mechanism is now correct before any
+  future deploy decision. **Only task 14 remains pending** (Durable Objects real-time
+  Command Center updates — large, own-firing, needs a genuinely fresh context).
 - **The "2 AM automation" is two different triggers, and only one of them ever fired at
   2 AM** (resolved 2026-08-08, still true): the deleted `trig_013BTxUthvLX3C4nLs7MypVC`
   fired `09:00Z` = 2 AM PT; its replacement `trig_01CJsVYwDs4pHMoFEC5JFi7V` fires
@@ -34,11 +44,11 @@ that's the discipline this file exists to model, not just describe.
   twice now caught a real gap between what `origin/main` says and what production
   actually does, and that question stays exactly as founder-blocked as before —
   Cloudflare Workers Builds dashboard access this repo doesn't have.
-- **Queue: exhausted of batchable work as of 2026-08-14, still true 08-15/08-16.** Only
-  tasks 14 and 26 remain `pending`, both `data-batchable="false"` (own-firing, need a
-  fresh context this long-running conversation isn't). Three consecutive firings have
-  confirmed the same state — worth a fresh-context firing picking up task 14 or 26
-  directly rather than another queue re-scan finding the same thing a fourth time.
+- **Queue: task 26 done (see above). Only task 14 remains `pending`**
+  (`data-batchable="false"`, Durable Objects real-time Command Center updates — large
+  new Worker-side infra, own-firing, needs a genuinely fresh context). No other
+  batchable work exists — a future firing should either pick up task 14 with a fresh
+  context, or (if not fresh) log "queue empty of startable work" and stop, per protocol.
 - **The 2026-08-01 incident — kept, because it is why the rule exists.** Every recurring
   Routine then — the hourly PR-heartbeat cron AND the nightly 2 AM arc AND an earlier
   `send_later` chain — used `persist_session:true` pointed at one long-lived session, so
