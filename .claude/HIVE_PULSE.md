@@ -13,36 +13,32 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-08-15 — read this section first)
+## Right now (updated 2026-08-16 — read this section first)
 
-- **This section was stale from 2026-08-08 to 2026-08-15** (7 days, 3 real firings —
-  08-09/08-11/08-14 — none updated it despite the standing instruction at the top of this
-  file). Nothing in it was actively wrong the way the 08-04→08-08 incident was, just
-  behind: task 15 finished, tasks 19/21/22/24/25 done, tasks 16/17/20/23 corrected to
-  `blocked`, PR #171 open covering all of it. Compressed and refreshed here rather than
-  left to compound further — this is exactly the discipline this file's own opening asks
-  for and the exact failure mode its own second bullet used to warn about.
 - **The "2 AM automation" is two different triggers, and only one of them ever fired at
   2 AM** (resolved 2026-08-08, still true): the deleted `trig_013BTxUthvLX3C4nLs7MypVC`
   fired `09:00Z` = 2 AM PT; its replacement `trig_01CJsVYwDs4pHMoFEC5JFi7V` fires
   `0 4 * * *` UTC = 9 PM PT, not 2 AM. Do not "fix" the 9 PM cron to 2 AM without the
   founder saying that is what they want.
 - **`trig_01CJsVYwDs4pHMoFEC5JFi7V`'s live state is STILL `unverified`.** `list_triggers`
-  approval has never been granted across at least 5 separate asks now (2026-08-07,
-  2026-08-08 ×2, and implicitly skipped in the 08-09/08-11/08-14/08-15 firings since none
-  re-requested it). Per `wired-or-not`, the honest level stays `unverified`, not "wired".
-  This firing did not re-ask either — flagging that skip explicitly rather than silently
-  repeating it forever. Never call `fire_trigger`.
-- **Open PRs: #171 only**, on this branch, covering the 08-11 and 08-14 firings (task
-  15/19/21/22/23/24/25 work). Unmerged, per the standing never-self-merge rule.
-- **Task 46 (branch-deploy reliability) has a live, unresolved recurrence (2026-08-15):**
-  the work-cycle round-robin fix (759775b, merged 08-11) worked for a real, confirmed
-  window (08-13→08-14) and then got stuck on Ma'at again for 8+ hours straight as of
-  08-15, with no code-side regression found — the fixed logic tests correct in isolation
-  against the real production title string. Full investigation in `CAMPAIGN.html` task 46.
-  This is now the second time this task has caught a real gap between what `origin/main`
-  says and what production actually does. Still blocked on the founder checking the
-  Cloudflare Workers Builds dashboard directly — nothing in this repo can resolve it.
+  approval has never been granted (5+ asks across 2026-08-07/08, all implicitly skipped
+  since — no firing has re-requested it, this one included). Per `wired-or-not`, the
+  honest level stays `unverified`, not "wired". Never call `fire_trigger`.
+- **Open PRs: #171 only**, on this branch, covering the 08-11/08-14/08-15/08-16 firings
+  (task 15/19/21/22/23/24/25 work + task-46 live evidence). Unmerged, per the standing
+  never-self-merge rule.
+- **Task 46 (branch-deploy reliability): the 2026-08-15 round-robin regression
+  self-resolved.** Full 8-agent rotation confirmed again 2026-08-16 (edge-health-probe run
+  `31925783332`) — the stuck-on-Ma'at symptom from 08-15 is gone, no code fix was shipped
+  for it. This closes that specific symptom, not the underlying question: task 46 has
+  twice now caught a real gap between what `origin/main` says and what production
+  actually does, and that question stays exactly as founder-blocked as before —
+  Cloudflare Workers Builds dashboard access this repo doesn't have.
+- **Queue: exhausted of batchable work as of 2026-08-14, still true 08-15/08-16.** Only
+  tasks 14 and 26 remain `pending`, both `data-batchable="false"` (own-firing, need a
+  fresh context this long-running conversation isn't). Three consecutive firings have
+  confirmed the same state — worth a fresh-context firing picking up task 14 or 26
+  directly rather than another queue re-scan finding the same thing a fourth time.
 - **The 2026-08-01 incident — kept, because it is why the rule exists.** Every recurring
   Routine then — the hourly PR-heartbeat cron AND the nightly 2 AM arc AND an earlier
   `send_later` chain — used `persist_session:true` pointed at one long-lived session, so
