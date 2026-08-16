@@ -110,6 +110,15 @@ class HiveMesh:
             )
             return {cid: "held_for_review" for cid in target_ids}
 
+        return await self._fire(event_type, payload, target_ids)
+
+    async def _fire(
+        self, event_type: str, payload: Dict[str, Any], target_ids: List[str]
+    ) -> Dict[str, str]:
+        """Actually send `event_type` to every colony in `target_ids`. No tier
+        check, no HITL gate — callers (dispatch() for Tier-1-safe events,
+        redispatch_approved() for a founder-approved held event) have already
+        decided this is allowed to fire."""
         results: Dict[str, str] = {}
 
         _timeout = httpx.Timeout(connect=3.0, read=8.0, write=5.0, pool=5.0)
@@ -132,6 +141,30 @@ class HiveMesh:
         hive_protocol.publish_sync(
             "hive.dispatch",
             {"event_type": event_type, "targets": list(results.keys()), "results": results},
+        )
+        return results
+
+    async def redispatch_approved(
+        self,
+        event_type: str,
+        payload: Dict[str, Any],
+        targets: Optional[List[str]] = None,
+    ) -> Dict[str, str]:
+        """Replay a HITL-approved hive_mesh.dispatch: request through the real
+        send path. Called from the /hitl/resolve handler once a request whose
+        action_type starts with 'hive_mesh.dispatch:' is approved — never from
+        dispatch() itself, so an already-approved event can't loop back through
+        the Tier gate and get held a second time. Staleness: resolve_request()
+        already refuses to approve anything whose status isn't still 'pending'
+        (hitl.py's own auto-expire flips it to 'expired' after
+        settings.hitl_timeout_seconds), so a request that sat too long is
+        rejected by the approval step itself, before it ever reaches here —
+        there is no separate freshness window to enforce in this method."""
+        target_ids = targets if targets else list(_COLONY_URLS.keys())
+        results = await self._fire(event_type, payload, target_ids)
+        hive_protocol.publish_sync(
+            "hive.dispatch.redispatched",
+            {"event_type": event_type, "targets": target_ids, "results": results},
         )
         return results
 

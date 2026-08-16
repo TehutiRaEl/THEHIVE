@@ -770,6 +770,14 @@ async def hitl_resolve(req: HITLResolveRequest, auth: Dict = Depends(verify_auth
     if auth["role"] != "admin":
         raise HTTPException(403, "Only admins can resolve HITL requests")
     result = await hitl.resolve_request(req.request_id, req.approved, req.resolved_by)
+    if req.approved:
+        request_data = hitl.get_request_data(req.request_id)
+        action_type = str((request_data or {}).get("action_type", ""))
+        if request_data and action_type.startswith("hive_mesh.dispatch:"):
+            params = request_data.get("params", {})
+            result["redispatched"] = await hive_mesh.redispatch_approved(
+                params.get("event_type"), params.get("payload", {}), params.get("targets")
+            )
     await ws_manager.broadcast({"type": "hitl_resolved", "request_id": req.request_id, "approved": req.approved})
     return result
 

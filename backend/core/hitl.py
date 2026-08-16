@@ -148,6 +148,13 @@ class HumanInTheLoop:
         conn.close()
         return dict(row) if row else None
 
+    def get_request_data(self, request_id: str) -> Optional[Dict]:
+        """Get the in-memory record for a request — unlike get_request(), `params`
+        here is the real dict a caller passed to request_approval(), not the JSON
+        string stored in the DB row. Callers that need to replay the original
+        action_type/params (e.g. hive_mesh's post-approval re-dispatch) use this."""
+        return self.pending_requests.get(request_id)
+
     def is_pending(self, request_id: str) -> bool:
         """Check if a request is still pending."""
         return self.pending_requests.get(request_id, {}).get("status") == "pending"

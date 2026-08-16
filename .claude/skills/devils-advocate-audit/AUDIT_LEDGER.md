@@ -413,6 +413,25 @@ so the real-world blast radius today is zero — this is a correctness bug in co
 isn't yet serving traffic, not an active incident. Still worth fixing before any future
 decision to deploy System A, which is exactly why it's escalated rather than shelved.
 
+**UPDATE 2026-08-16 — FIXED, task 26 done (level: tested, not yet verified-live since
+System A still isn't deployed anywhere).** Went with the first of the three options this
+entry named: a synchronous re-dispatch from the `/hitl/resolve` handler.
+`hive_mesh.dispatch()`'s network-firing body was split into `_fire()`; a new
+`redispatch_approved()` calls `_fire()` directly, bypassing the Tier gate so an
+already-approved event can't loop back through HITL a second time. `hitl.py` gained
+`get_request_data()` to recover the real (non-JSON-string) `params` dict.
+`routes.py`'s `/hitl/resolve` handler calls `redispatch_approved()` when the resolved
+request's `action_type` starts with `hive_mesh.dispatch:` and `approved=True`. On the
+freshness question: no separate staleness window was built — `resolve_request()` already
+refuses anything not still `pending` (`_auto_expire()` flips it to `expired` after
+`hitl_timeout_seconds`), so a stale request is rejected at the approval step itself,
+before redispatch code ever runs. New test `tests/integration/test_hitl_redispatch.py`
+reproduces this exact ledger entry's own repro (mocked `_send_to_colony`, no network)
+and proves `mock_send.called` is now `True` after approval — the inverse of what this
+entry found. Mutation-tested: removing the wiring made the test fail as expected, restored
+byte-identical. Full suite 397 passed. See `.claude/tasks/CAMPAIGN.html` task 26 for the
+complete writeup.
+
 ## 2026-08-04 — checks-and-balances: first real run, live authority-distribution audit
 
 **What was checked:** the entire live `agents.reports_to` hierarchy and

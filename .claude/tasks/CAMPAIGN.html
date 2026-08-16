@@ -2058,7 +2058,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   reconciliation rather than a separate finding to route elsewhere.</p>
 </div>
 
-<div class="task" data-status="in-progress" data-batchable="false" id="task-26">
+<div class="task" data-status="done" data-batchable="false" id="task-26">
   <h3>26. Fix hive_mesh.dispatch()'s HITL approval dead end</h3>
   <p class="meta">Found 2026-08-02 during task 10's devils-advocate-audit sweep
   (<code>AUDIT_LEDGER.md</code>'s 2026-08-02 <code>backend/core/hitl.py</code> entry,
@@ -2086,6 +2086,44 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   this bug was found with. Full existing test suite still passes. Given this gates
   cross-colony action approval, this PR must not self-merge under any circumstance —
   founder review required regardless of CI color, same standing as tasks 7/12.</p>
+  <p><strong>Done, level: tested.</strong> Fixed exactly the shape the Prompt named — a
+  synchronous re-dispatch from the <code>/hitl/resolve</code> handler. <code>hive_mesh.py</code>:
+  split <code>dispatch()</code>'s network-firing body into a new private <code>_fire()</code>,
+  added a public <code>redispatch_approved(event_type, payload, targets)</code> that calls
+  <code>_fire()</code> directly — bypassing the Tier gate/HITL hold entirely, so an
+  already-approved event can never loop back and get held a second time.
+  <code>hitl.py</code>: added <code>get_request_data(request_id)</code> — returns the
+  in-memory record with the real <code>params</code> dict (not the DB row's JSON string),
+  which is what <code>action_type</code>/<code>event_type</code>/<code>payload</code>/
+  <code>targets</code> get recovered from. <code>routes.py</code>'s <code>/hitl/resolve</code>
+  handler: after <code>hitl.resolve_request()</code>, if <code>approved</code> and the
+  resolved request's <code>action_type</code> starts with <code>hive_mesh.dispatch:</code>,
+  calls <code>hive_mesh.redispatch_approved()</code> with the stored
+  <code>event_type</code>/<code>payload</code>/<code>targets</code> and folds the result into
+  the response under <code>redispatched</code>. <strong>Staleness, per the Prompt's own
+  question:</strong> no separate freshness window was built — <code>resolve_request()</code>
+  already refuses to approve anything whose status isn't still <code>pending</code>
+  (<code>_auto_expire()</code> flips it to <code>expired</code> after
+  <code>settings.hitl_timeout_seconds</code>, 300s default), so a request that sat too long is
+  rejected by the approval step itself before it ever reaches the redispatch code — documented
+  as a comment on <code>redispatch_approved()</code> rather than a second mechanism.
+  <strong>New test</strong> <code>tests/integration/test_hitl_redispatch.py</code> (3 tests,
+  real <code>TestClient</code> hitting the real <code>/v11/hive/dispatch</code> →
+  <code>/v11/hitl/resolve</code> route path, only <code>_send_to_colony</code> mocked so no
+  real network call is required — same discipline <code>test_hive_mesh.py</code> already uses):
+  proves held→approved actually re-fires with the original event_type/payload
+  (<code>mock_send.assert_awaited_once()</code>, args checked); proves a rejected request never
+  redispatches; proves an unrelated (non <code>hive_mesh.dispatch:</code>) HITL approval never
+  touches <code>hive_mesh</code> at all. <strong>Mutation-tested</strong>: removed the
+  <code>/hitl/resolve</code> wiring, re-ran the new suite — the redispatch test failed exactly
+  as expected (2 passed, 1 failed); restored byte-identical
+  (<code>git diff --stat</code> confirmed clean before/after). Full suite:
+  <code>pytest tests/</code> 397 passed (was 375 at the audit's own last full-suite citation —
+  growth is the rest of this session's other work, not this change). <code>node --check</code>
+  clean on the touched worker-adjacent files (none — this task is entirely System A/Python;
+  <code>npm test --prefix worker</code> confirmed unaffected, still 113/113).
+  <code>check-claims.py</code> passes. Not self-merged — same standing as tasks 7/12, founder
+  review required regardless of CI color.</p>
 </div>
 
 <h2>Campaign Log</h2>
