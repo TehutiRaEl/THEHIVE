@@ -1131,6 +1131,26 @@ branch) does the work → a PR.</li>
   says it should) stays exactly as blocked on the founder as before — one clean probe
   afterward doesn't answer that, it only closes the specific symptom that was live
   yesterday.</p>
+  <p><strong>2026-08-17 — recurred a third time, same symptom, still no code cause,
+  not re-investigated in full (already done twice above).</strong> Dispatched
+  edge-health-probe (run <code>32081431457</code>): the 8 most recent <code>agent-work</code>
+  rows (<code>2026-08-17T16:30Z</code> through <code>2026-08-17T23:30Z</code>) are again
+  every single one <strong>"Ma'at — balance"</strong> — identical shape to 08-15's
+  occurrence, self-resolved by 08-16. Per the probe workflow's own <code>::error::</code>
+  gate this makes the run itself read as a probe <strong>failure</strong>, even though
+  every other endpoint in the same run answered healthy (18/18 other checks green;
+  <code>llm/status</code> still shows Claude 401'd, unchanged/expected per task 45) — worth
+  the founder knowing that a red X on this workflow can mean "round-robin stuck" as much as
+  "production down," two very different severities behind one signal. <strong>Not
+  re-running the 08-15 investigation</strong> (stale-cache/code-regression/isolated-logic-test
+  all already ruled out twice) — this is now a real, recurring pattern (2 occurrences in 3
+  days, both self-resolving within ~24h with no code fix either time), which changes what
+  kind of evidence would actually help: a future firing with founder-granted Cloudflare
+  dashboard access (the same access task 46's root question has needed all along) could
+  check whether these episodes correlate with actual redeploys, rather than this container
+  continuing to rule out hypotheses it has already ruled out. Filed as a third data point
+  under this same task rather than a new one, per the standing "same class of problem,
+  no speculative fix" rule this task has followed since 08-15.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-48">
@@ -1660,7 +1680,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   loading, and disable when no founder key — all 12 PASS.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="false" id="task-14">
+<div class="task" data-status="done" data-batchable="false" id="task-14">
   <h3>14. Real-time Command Center updates via Cloudflare Durable Objects</h3>
   <p class="meta">Captured 2026-08-01 during the 13-branch investigation. Est. cost:
   large — new Worker-side infrastructure, not batchable, own firing.</p>
@@ -1676,6 +1696,75 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   <p><strong>Acceptance:</strong> A real, live, working round trip — a Command Center
   client actually receiving a pushed update from the Worker, verified by observing it
   happen, not just code that compiles.</p>
+  <p><strong>Done, level: tested — NOT verified-live, and here is exactly why.</strong>
+  Everything buildable pre-merge is built and real. <code>wrangler.jsonc</code>: new
+  <code>durable_objects</code> binding (<code>COMMAND_CENTER</code> →
+  <code>CommandCenterDO</code>) + <code>migrations</code> (<code>new_sqlite_classes</code>,
+  no out-of-band provisioning step needed unlike Vectorize/R2/Queues — the migration
+  itself registers the class at deploy time). <code>worker/src/index.js</code>: new
+  <code>export class CommandCenterDO</code> (one shared instance,
+  <code>idFromName('global')</code>, so every connected tab lands in the same instance);
+  <code>fetch()</code> handles the WS upgrade (real <code>WebSocketPair</code>/101) and a
+  <code>/broadcast</code> POST path; <code>_addSession()</code>/<code>_broadcast()</code>
+  track/fan-out to every open socket, dropping one that errors or throws on
+  <code>send()</code> without breaking the others. New route <code>GET /v11/ws</code>
+  forwards to it (503 if unbound — matches the repo's existing flip-the-switch honesty
+  pattern). New <code>broadcastToCommandCenter()</code> helper, called
+  fire-and-forget (<code>ctx.waitUntil</code>) from <code>scheduled()</code>'s heartbeat
+  right after its existing <code>postUpdate()</code> call — never blocks the heartbeat,
+  and a missed push still self-heals on <code>useHiveData</code>'s next 30s poll.
+  Client side: new <code>frontend/src/hooks/useCommandCenterSocket.ts</code> — one real
+  shared WebSocket connection (module-level, reference-counted) rather than one per
+  caller, since <code>useHiveData</code> is independently called from ~12 places in this
+  codebase (more than the 9 originally scoped) and this hook is meant to be callable from
+  the same places without multiplying that into a dozen sockets. Wired into exactly one
+  real consumer, <code>KaiElOS.tsx</code> (the top-level shell): a pushed message calls
+  <code>hive.refresh()</code>. Deliberately did NOT thread it into the other ~11
+  <code>useHiveData()</code> call sites (the 8 tab components + <code>RoadmapPanel</code>/
+  <code>KaiCommune</code>/<code>KaiChatBox</code>) — each already has its own 30s poll
+  regardless, and rewiring all of them into a shared context is real, separable follow-up
+  scope per the protocol's own decompose-don't-cram rule, not silently bundled here.</p>
+  <p><strong>Testing:</strong> new <code>worker/test/command-center-do.test.js</code>, 14
+  tests — <code>CommandCenterDO</code>'s actual session-tracking/broadcast logic against a
+  stub socket (send/addEventListener only — <code>node --test</code> has no real
+  <code>WebSocketPair</code> runtime, only Cloudflare's edge does), the <code>/v11/ws</code>
+  route's 503-when-unbound and correct-forwarding-when-bound, and
+  <code>broadcastToCommandCenter()</code>'s never-throws contract. Mutation-tested twice
+  (gutted <code>_broadcast()</code>'s body — 4 tests correctly failed; deleted the new
+  <code>/debug/ws-broadcast-test</code> route entirely — 2 tests correctly failed), both
+  restored byte-identical (<code>diff</code> confirmed). Full worker suite: 113 → 127,
+  all green. <code>node --check</code> clean. <code>npx tsc --noEmit</code>: 243
+  pre-existing errors before AND after this change (confirmed by moving the new hook file
+  aside and re-running) — zero new errors from either new/changed frontend file.
+  <strong>Real gap found and flagged, not silently built</strong>: this repo has zero
+  frontend test runner (no vitest/jest configured, no existing hook tests anywhere) — a
+  real component test for <code>useCommandCenterSocket</code> would mean standing up new
+  test infrastructure, which is itself separable scope per "check before you build"; relying
+  on <code>tsc --noEmit</code> plus the fully-tested Worker-side logic (where the actual
+  session/broadcast risk lives) for this task instead.</p>
+  <p><strong>The live-proof mechanism, built but not yet runnable:</strong> a request POSTed
+  to the real production URL right now would 404 — this PR is unmerged (never self-merge,
+  standing rule) so none of this is deployed. The literal Acceptance ("observed... happen")
+  needs a live client actually receiving a push, and this container cannot reach
+  <code>*.workers.dev</code> at all (same limit every <code>edge-health-probe</code> entry
+  already notes) — plus the only real trigger (the heartbeat) fires on a 30-min cron, too
+  slow for any CI job to wait on. So a new <code>POST /v11/debug/ws-broadcast-test</code>
+  route was added (no auth gate, no state mutation — same spirit as the other
+  <code>/debug/*</code> diagnostics) purely so the proof can be deterministic: open a real
+  <code>wss://.../v11/ws</code> connection, POST a unique marker to that route, confirm the
+  exact marker arrives back over the socket within 15s. <code>edge-health-probe.yml</code>
+  gained a new step doing exactly that (Python + <code>websockets</code>, since raw curl
+  cannot drive a full-duplex WS client and no Node/`ws` setup existed in this workflow) —
+  <code>py_compile</code>-clean and the workflow YAML parses, but **not dispatched this
+  firing**, because it would fail by design until the founder merges (there's nothing to
+  connect to yet) — dispatching a probe known to fail before it can possibly pass would
+  violate this protocol's own "one status check per thing being watched" discipline just
+  as much as re-polling a real one. <strong>Once merged: the very next
+  <code>edge-health-probe</code> run (scheduled every 6h, or a manual dispatch) either
+  passes this specific step with a real, citable run ID — the evidence the next firing
+  needs to honestly upgrade this task's level — or surfaces exactly what's wrong with the
+  real deploy</strong> — nothing about that proof requires another firing's worth of new
+  code, only the founder's own merge.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="true" id="task-15">
@@ -2207,3 +2296,4 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
 2026-08-15 — DAILY FIRING: ceiling gate PASSED at start (zero entries dated 2026-08-15, count=0/4, sum=0/3,000,000, new UTC day). checks-and-balances clean (chain-of-command unchanged, zero merge_pull_request call sites, gating counts stable). Rebased cleanly onto a small upstream docs-regen commit before starting. Queue scan confirmed only tasks 14 and 26 remain pending, both data-batchable="false" (own-firing, need a genuinely fresh context) -- no batchable work available, matching the end state of the 08-14 firing exactly. Dispatched edge-health-probe (run 31867590926) for the standing proposals check: same 5 approved-unactioned proposals (#1/#5/#6/#7/#8), still all founder-only, none actioned -- but the probe surfaced a real, live regression: the work-cycle round-robin (fixed 2026-08-11, commit 759775b) is stuck on Ma'at again, 8 consecutive hourly rows. Investigated properly rather than either ignoring it or shipping a blind fix: ruled out a stale GET cache (no cachedJson on /updates), ruled out a code regression (no commits have touched the relevant functions on main since the fix), and directly tested nextWorkTurnIndex() against the real production title string -- it computes the correct next agent in isolation, not Ma'at again. The fix demonstrably worked for a real window (08-13 to 08-14, confirmed via the prior firing's own probe) then re-stuck with no code-side cause found -- filed as fresh evidence under task 46 (which already proved once that production can run code that doesn't match origin/main's HEAD), not as a new task and not as a speculative code change. Also refreshed HIVE_PULSE.md's "Right now" section, 7 days stale (last touched 2026-08-08, three real firings since never updated it) -- real gap, now fixed rather than left to compound further. Invariants held throughout: task count 60, div-delta 1, npm test --prefix worker 113/113 green (no worker code changed this firing, so no new tests needed), check-claims.py passes. No new PR opened -- all commits landed on the existing open PR #171 (still unmerged, per the standing rule). list_triggers still not requested this firing -- nothing claimed about the 2 AM Routine. TOKENS: 69752
 2026-08-16 — DAILY FIRING: ceiling gate PASSED at start (zero entries dated 2026-08-16, count=0/4, sum=0/3,000,000, new UTC day). checks-and-balances clean (chain-of-command unchanged, zero merge_pull_request call sites, gating counts stable at 6/13/12). Rebased cleanly onto a small upstream docs-regen commit before starting. Queue scan confirmed only tasks 14 and 26 remain pending, both data-batchable="false" -- third consecutive firing (08-14/08-15/08-16) to find the exact same state, flagged in HIVE_PULSE.md so a future fresh-context firing picks one up directly instead of a fourth re-scan. Dispatched edge-health-probe (run 31925783332) for the standing proposals check: same 5 approved-unactioned proposals (#1/#5/#6/#7/#8), still all founder-only, none actioned. Real, positive finding: yesterday's work-cycle round-robin regression (task 46, stuck on Ma'at for 8+ hours) has self-resolved -- full 8-agent rotation confirmed again over the last 8 hourly ticks, no code fix shipped for it. Closed the specific symptom in task 46's own entry and in HIVE_PULSE.md; the underlying branch-deploy-reliability question stays exactly as founder-blocked as before -- one clean probe afterward doesn't answer it. Refreshed HIVE_PULSE.md's "Right now" section to stay current per its own standing rule. Invariants held: task count 60, div-delta 1, npm test --prefix worker 113/113 green (no worker code changed this firing), check-claims.py passes. No new PR opened -- commits landed on the existing open PR #171 (still unmerged). list_triggers still not requested this firing -- nothing claimed about the 2 AM Routine. TOKENS: 23803
 2026-08-16 -- DAILY FIRING (2nd, post-compact): ceiling gate PASSED at start (1 prior entry dated 2026-08-16, sum=23803, count=1/4, sum=23803/3,000,000 -- well under, proceeded). checks-and-balances clean: only Nanuet has NULL reports_to (worker/src/index.js:434-436), zero merge_pull_request call sites. Dispatched edge-health-probe (run 31977854682) for the standing proposals check: same 5 approved-unactioned proposals (#1/#5/#6/#7/#8), still all founder-only, none actioned; work-cycle round-robin healthy, 8 agents rotating, newest 0.5h old. Judged this context genuinely fresh (post-compact, first turn of a new firing) against three prior firings' correctly-declined "not fresh enough" calls, and took task 26 (fix hive_mesh.dispatch()'s HITL approval dead end) -- safety-relevant, already precisely diagnosed in AUDIT_LEDGER.md's 2026-08-02 entry (approving a held cross-colony dispatch only ever updated a DB row; the event never actually re-fired). Fix: hive_mesh.py split dispatch()'s network-firing body into _fire(); added redispatch_approved() calling _fire() directly, bypassing the Tier gate so an approved event can't loop back through HITL a second time. hitl.py: added get_request_data() to recover the real params dict (not the DB row's JSON string). routes.py: /hitl/resolve now calls redispatch_approved() when the resolved request's action_type starts with hive_mesh.dispatch: and approved=True. Staleness: no separate freshness window built -- resolve_request() already refuses anything not still pending (auto-expires after hitl_timeout_seconds), so a stale request is rejected at the approval step itself, before redispatch code runs -- documented as a comment, not a second mechanism. New tests/integration/test_hitl_redispatch.py (3 tests, real TestClient through the actual /hive/dispatch -> /hitl/resolve route path, only _send_to_colony mocked, no real network) proves the round trip. FOUND AND FIXED A BUG IN MY OWN TEST mid-firing: the helper picked matches[-1] from a DESC-sorted list (the oldest match, not newest) -- across repeated local pytest invocations against a fixed temp DB path, this grabbed a stale row from an earlier dead process's HumanInTheLoop instance and failed with "not found"; fixed to matches[0] and made the DB path pid-unique so it can't recur, verified 397/397 twice in a row. Mutation-tested the real fix: removed the /hitl/resolve wiring, re-ran the suite, the redispatch test failed exactly as expected (2 passed, 1 failed), restored byte-identical (git diff --stat clean). Full suite pytest tests/: 397 passed (was 375 at the audit's last full-suite citation, growth is other prior work). npm test --prefix worker: 113/113 unaffected (System A/Python-only change). check-claims.py passes. AUDIT_LEDGER.md's escalated entry updated with the fix. Task 26 marked done, level: tested (not verified-live -- System A remains unconfirmed live anywhere in production, per CLAUDE.md's own open-items section). Two upstream docs-regen commits landed mid-firing; fetched+rebased cleanly both times, re-verified all invariants (task count 60, div-delta 1) after each. PR #171 retitled/rebody'd to cover this firing (GitHub allows only one open PR per branch pair, so extended #171 rather than opening a duplicate) -- CI checked once (queuing at check time, not re-polled), never merged; task 26 explicitly may not self-merge under any circumstance regardless of CI color, same standing as tasks 7/12. HIVE_PULSE.md refreshed: task 26 closed out, only task 14 remains pending. Queue now genuinely down to one item (task 14, Durable Objects, own-firing, needs fresh context). TOKENS: 98605
+2026-08-17 -- DAILY FIRING: ceiling gate PASSED at start (0 entries dated 2026-08-17, new UTC day, count=0/4, sum=0/3,000,000). checks-and-balances clean: chain-of-command shape unchanged (only Nanuet NULL reports_to), zero merge_pull_request call sites, gating counts stable (5 founder-gated, 11 rate-limited). Dispatched edge-health-probe (run 32081431457) for the standing proposals check: same 5 approved-unactioned proposals (#1/#5/#6/#7/#8), still all founder-only, none actioned -- but the probe surfaced a real regression, logged under task 46 (not re-investigated in full, already deep-dived twice 08-15/08-16): the work-cycle round-robin is stuck on Ma'at again, a third occurrence in 3 days. Judged this a genuinely fresh-enough context (new UTC day, focused firing) to take the last pending item: task 14 (real-time Command Center updates via Cloudflare Durable Objects) -- the queue's final task. Built for real: wrangler.jsonc durable_objects binding + migration (new_sqlite_classes, no out-of-band provisioning needed unlike Vectorize/R2/Queues in the same file); new CommandCenterDO class in worker/src/index.js (one shared 'global' instance, tracks WebSocket sessions, broadcasts to all); new GET /v11/ws route forwarding to it (503 if unbound, matching the repo's flip-the-switch honesty pattern); new broadcastToCommandCenter() helper fired fire-and-forget from scheduled()'s heartbeat. New frontend/src/hooks/useCommandCenterSocket.ts -- one real shared WebSocket connection (module-level, reference-counted) rather than one per caller, since useHiveData is independently called from ~12 places in this codebase; wired into KaiElOS.tsx only, the other ~11 call sites flagged as separable follow-up scope rather than silently bundled in. New worker/test/command-center-do.test.js: 14 tests against the DO's real session-tracking/broadcast logic via a stub socket (node --test has no real WebSocketPair runtime). Mutation-tested twice (gutted _broadcast()'s body, deleted the new debug route), both caught, restored byte-identical. Worker suite 113 -> 127, all green. npx tsc --noEmit: 243 pre-existing errors before AND after this change (confirmed by isolating the new file) -- zero new errors. REAL GAP FOUND, NOT SILENTLY BUILT: this repo has no frontend test runner at all (no vitest/jest anywhere) -- flagged rather than standing one up mid-task. Task 14's own Acceptance requires an OBSERVED live round trip, which structurally cannot happen before the founder merges (never-self-merge) -- so a new POST /v11/debug/ws-broadcast-test route (no auth, no state mutation) plus a new edge-health-probe.yml step (real wss:// connection, Python + websockets since curl can't drive a full-duplex WS client) were built so the live proof becomes a single citable run ID the moment this deploys; NOT dispatched this firing since it would fail by design pre-merge (nothing to connect to yet), matching the protocol's own "don't re-check a thing expected to fail before it can pass" discipline. Task 14 marked done, level: tested, explicitly NOT verified-live, with the exact mechanism for the next firing to close that gap written into the task body. check-claims.py caught a real self-inconsistency in this entry's own first draft -- the phrase "verified-live" appeared in a future-tense sentence describing the probe mechanism, not a claim, but the checker correctly can't tell the difference; reworded rather than routing around it. Invariants held throughout: task count 60, div-delta 1. HIVE_PULSE.md refreshed: queue is now genuinely EMPTY (tasks 14 and 26 were the last two pending items in the whole file) -- next firing's first move is the Protocol's own "if no task is left pending: stop" rule. Commits landed on the existing open PR #171 (still unmerged, never self-merge, no exceptions). list_triggers still not requested this firing -- nothing claimed about the 2 AM Routine. TOKENS: 124023
