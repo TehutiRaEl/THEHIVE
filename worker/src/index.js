@@ -566,6 +566,23 @@ async function postUpdate(DB, { kind, title, body = '', needs = '' }) {
   } catch { /* D1 not ready — heartbeat still proceeds */ }
 }
 
+// Real-time Command Center push (task 14). Fire-and-forget — a client that
+// never connects, or missed this tick, still gets the same data on its next
+// 30s poll (useHiveData is untouched by this; the WS is additive, not a
+// replacement for the poll's own resilience). env.COMMAND_CENTER is only
+// undefined in the worker/test/*.test.js stub env, which has no DO runtime —
+// this must no-op there rather than throw.
+async function broadcastToCommandCenter(env, payload) {
+  if (!env.COMMAND_CENTER) return;
+  try {
+    const id = env.COMMAND_CENTER.idFromName('global');
+    await env.COMMAND_CENTER.get(id).fetch('https://internal/broadcast', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  } catch { /* best-effort push; poll fallback still works */ }
+}
+
 // Task 45's fix: every generate() call now reports the real outcome for whichever
 // provider it just tried, upserted (never appended) so this table never grows past
 // one row per provider. This is what makes a dead provider visible instead of a
@@ -1565,11 +1582,15 @@ export default {
     // channel with idle ticks). A plain-language "what I did this cycle" note.
     const notable = acted.filter((a) => a.startsWith('resolved') || a.startsWith('spawned') || a.startsWith('projected'));
     if (notable.length) {
-      await postUpdate(DB, {
+      const heartbeatUpdate = {
         kind: 'heartbeat',
         title: `Arena cycle — ${notable.length} action${notable.length > 1 ? 's' : ''}`,
         body: notable.join(' · '),
-      });
+      };
+      await postUpdate(DB, heartbeatUpdate);
+      // Real-time push (task 14): best-effort, never blocks the heartbeat —
+      // a client that missed this still gets the same data on its next poll.
+      ctx.waitUntil(broadcastToCommandCenter(env, { ...heartbeatUpdate, ts }));
     }
     // Sovereign memory: the hive remembers what it did, semantically.
     // No-ops when Vectorize/AI are unbound (until the index is provisioned).
@@ -1596,6 +1617,15 @@ export default {
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
 
     try {
+      // Real-time Command Center push (task 14). One shared Durable Object
+      // instance ('global') holds every connected client's WebSocket and
+      // broadcasts to all of them — the Worker itself never tracks sessions.
+      if (p === '/ws') {
+        if (!env.COMMAND_CENTER) return json({ detail: 'real-time push not bound yet' }, 503);
+        const id = env.COMMAND_CENTER.idFromName('global');
+        return env.COMMAND_CENTER.get(id).fetch(request);
+      }
+
       if (p === '/health' || p === '/colony/health')
         return json({ status: 'healthy', version: '11.0-edge', colony: 'THEHIVE', runtime: 'cloudflare-worker' });
 
@@ -2632,6 +2662,20 @@ export default {
         });
       }
 
+      // Task 14's own Acceptance requires an OBSERVED live round trip, not just
+      // code that compiles — and the only real trigger (the heartbeat) fires on
+      // a 30-min cron, far too slow for a CI job to wait on. This lets
+      // edge-health-probe.yml open a real /v11/ws connection, POST here, and
+      // confirm the exact message arrives — deterministic, no 30-min wait,
+      // same spirit as the other /debug/* diagnostics (no state mutation, no
+      // auth gate, nothing here is ever a real hive action).
+      if (p === '/debug/ws-broadcast-test' && method === 'POST') {
+        const body = await request.json().catch(() => ({}));
+        const payload = { kind: 'debug-test', title: body.title || 'ws-broadcast-test' };
+        await broadcastToCommandCenter(env, payload);
+        return json({ broadcasted: true, payload });
+      }
+
       // The route map — everything the Queen serves (prefix each with /v11).
       if (p === '/debug/endpoints' || p === '/routes') {
         return json({
@@ -2648,6 +2692,7 @@ export default {
             'POST /arena/project/{id} (token+rate-limited)', 'POST /auth/token',
             'GET /debug/health', 'GET /debug/env', 'GET /debug/git', 'GET /debug/logs',
             'GET /debug/colony-ping', 'GET /debug/endpoints',
+            'GET /ws (real-time push, Durable Object)', 'POST /debug/ws-broadcast-test',
             'GET /ml/status', 'GET /browser/status', 'GET /knowledge/status',
             'GET /admin/d1-export (WORKER_ADMIN_KEY)',
           ],
@@ -2802,6 +2847,58 @@ export default {
   },
 };
 
+// Real-time Command Center push (task 14). Cloudflare instantiates exactly
+// one of these per `idFromName('global')` — every connected browser lands in
+// the same instance, so a broadcast from anywhere (currently: the heartbeat
+// in scheduled(), via broadcastToCommandCenter()) reaches every open tab.
+// `fetch()` needs the runtime's real WebSocketPair/101 upgrade, which
+// node --test can't drive — worker/test/command-center-do.test.js instead
+// exercises _addSession()/_broadcast() directly against a stub socket
+// (send()/addEventListener() only), the same "test the real logic behind a
+// minimal stub" discipline the rest of this suite already uses.
+export class CommandCenterDO {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+    this.sessions = new Set();
+  }
+
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname === '/broadcast') {
+      const payload = await request.json().catch(() => ({}));
+      this._broadcast(payload);
+      return new Response('ok');
+    }
+    if (request.headers.get('Upgrade') !== 'websocket') {
+      return new Response('Expected Upgrade: websocket', { status: 426 });
+    }
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair);
+    server.accept();
+    this._addSession(server);
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  _addSession(ws) {
+    this.sessions.add(ws);
+    const drop = () => this.sessions.delete(ws);
+    ws.addEventListener('close', drop);
+    ws.addEventListener('error', drop);
+  }
+
+  _broadcast(payload) {
+    const msg = JSON.stringify({ type: 'update', ...payload });
+    for (const ws of this.sessions) {
+      try {
+        ws.send(msg);
+      } catch {
+        this.sessions.delete(ws);
+      }
+    }
+  }
+}
+
 // ── Named exports, for tests only ────────────────────────────────────────
 // The Worker runtime only ever uses `export default` above; these extra named
 // exports are inert in production and exist so worker/test/*.test.js can import
@@ -2823,4 +2920,5 @@ export {
   AGENT_WORK,
   resolveSecret,
   founderKeyBound,
+  broadcastToCommandCenter,
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense, type ComponentType } from 'react';
 import { useHiveData } from '../hooks/useHiveData';
+import { useCommandCenterSocket } from '../hooks/useCommandCenterSocket';
 import { useIsWideViewport, useForceDesktop } from '../hooks/useViewport';
 import TopStatusBar from '../components/kai-os/TopStatusBar';
 import LeftNav from '../components/kai-os/LeftNav';
@@ -60,6 +61,12 @@ function TabLoadFallback() {
 
 export default function KaiElOS() {
   const hive = useHiveData();
+  // Task 14: a real pushed update refreshes the shell immediately instead of
+  // waiting up to 30s for the next poll. hive.refresh() re-runs the same
+  // Promise.all useHiveData already does — this is additive, not a second
+  // source of truth, and a dropped/missed push still self-heals on the next
+  // poll tick either way.
+  useCommandCenterSocket(() => hive.refresh());
   const wide = useIsWideViewport();
   const [forceDesktop, setForceDesktop] = useForceDesktop();
   const [activeSection, setActiveSection] = useState<string | null>(null);
