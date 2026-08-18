@@ -54,3 +54,9 @@ node_modules/
 # the real file, only .dev.vars.example
 .dev.vars
 .coverage
+
+# Isolated worktree checkouts for background subagents (Agent tool,
+# isolation: "worktree") — live, in-progress working directories, not real
+# repo content. Each agent commits/pushes its own real output on its own
+# branch when it's actually done; this is just its scratch checkout.
+.claude/worktrees/
