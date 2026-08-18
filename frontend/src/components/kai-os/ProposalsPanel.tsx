@@ -94,6 +94,14 @@ export default function ProposalsPanel() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [authBound, setAuthBound] = useState(false);
+  // 2026-08-18: the real fix for FLIP_THE_SWITCHES.md section 11's own stated
+  // "proof it worked" bar — "the Proposals panel's Approve/Reject buttons work
+  // with no key field touched." They didn't, before this: every button below
+  // was disabled={!key} regardless of Access session state, so a founder
+  // genuinely signed in via Access still couldn't click anything without also
+  // pasting FOUNDER_KEY. null = not checked yet / not signed in; a string =
+  // the real, Access-verified email.
+  const [accessEmail, setAccessEmail] = useState<string | null>(null);
   const [key, setKey] = useState(() => localStorage.getItem(KEY_STORAGE) || '');
   const [busy, setBusy] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +124,26 @@ export default function ProposalsPanel() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // Silent, read-only, never surfaced as an error — {email: null} (not signed
+  // in with Access, or Access isn't configured yet) is a real, expected,
+  // common answer, same posture as decide()'s own Access-first fallback below.
+  const checkAccess = useCallback(async () => {
+    try {
+      const r = await fetch(`${V11}/founder/whoami`, { signal: AbortSignal.timeout(8000) });
+      const d = await r.json();
+      setAccessEmail(d.email ?? null);
+    } catch {
+      setAccessEmail(null);
+    }
+  }, []);
+
+  useEffect(() => { load(); checkAccess(); }, [load, checkAccess]);
+
+  // Either a real Access session OR a pasted key is enough — decide()'s own
+  // Access-first-then-key-fallback logic already handles both; this only
+  // controls whether a button is even clickable, so it must agree with what
+  // decide() can actually do, not be stricter than it.
+  const canDecide = !!key || !!accessEmail;
 
   const saveKey = (v: string) => {
     setKey(v);
@@ -195,41 +222,58 @@ export default function ProposalsPanel() {
         approve or reject.
       </p>
 
-      {!authBound && (
+      {/* 2026-08-18: authBound reflects FOUNDER_KEY only — it says nothing about
+          Access, which is a fully independent auth path. Showing "nothing can be
+          decided" while a founder is genuinely signed in via Access would be a
+          real lie, so this banner is gated on BOTH being unavailable. */}
+      {!authBound && !accessEmail && (
         <div className="rounded-lg border border-amber-400/20 bg-void-800/60 p-3 text-xs text-slate-400 space-y-1">
           <div className="text-amber-300/90 uppercase tracking-widest text-[10px] mb-1">
             Founder — nothing can be decided yet
           </div>
-          <div>No <code className="text-cyan-glow">FOUNDER_KEY</code> is bound, so approve/reject is
-            locked for everyone, including you, on purpose — fails closed, not open.</div>
-          <div><code className="text-cyan-glow">npx wrangler secret put FOUNDER_KEY</code> (pick any
-            strong value), then paste that same value below.</div>
+          <div>No <code className="text-cyan-glow">FOUNDER_KEY</code> is bound and no Cloudflare
+            Access session is active, so approve/reject is locked for everyone, including you, on
+            purpose — fails closed, not open.</div>
+          <div>Sign in with Access below, or
+            <code className="text-cyan-glow"> npx wrangler secret put FOUNDER_KEY</code> (pick any
+            strong value) and paste that same value into the field below.</div>
         </div>
       )}
 
-      {/* 2026-08-09: a plain top-level link, not a fetch — visiting it is what
-          actually triggers Cloudflare Access's login flow (redirect → email PIN
-          → redirect back). Once signed in, Approve/Reject above never touches
-          the key field again; this is here so a founder who hasn't set up
-          Access yet has an obvious way to start, rather than only discovering
-          it via a silent background retry. Optional: the key field below still
-          works on its own if Access isn't configured. */}
-      <a
-        href={`${V11}/founder/login`}
-        className="inline-block text-xs text-cyan-glow hover:underline"
-      >
-        Sign in as founder (Cloudflare Access) →
-      </a>
+      {accessEmail ? (
+        // The actual security feature (2026-08-18): once Access is live, the raw
+        // key is never asked for again in the browser — it only matters for CI
+        // now. No key field rendered at all in this state.
+        <div className="text-xs text-emerald-300/90">
+          Signed in as <strong>{accessEmail}</strong> (Cloudflare Access) — no key needed.
+        </div>
+      ) : (
+        <>
+          {/* 2026-08-09: a plain top-level link, not a fetch — visiting it is what
+              actually triggers Cloudflare Access's login flow (redirect → email PIN
+              → redirect back). Once signed in, Approve/Reject above never touches
+              the key field again; this is here so a founder who hasn't set up
+              Access yet has an obvious way to start, rather than only discovering
+              it via a silent background retry. Optional: the key field below still
+              works on its own if Access isn't configured. */}
+          <a
+            href={`${V11}/founder/login`}
+            className="inline-block text-xs text-cyan-glow hover:underline"
+          >
+            Sign in as founder (Cloudflare Access) →
+          </a>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="password"
-          value={key}
-          onChange={(e) => saveKey(e.target.value)}
-          placeholder="Founder key (stored only in this browser)"
-          className="flex-1 bg-void-800 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-glow/50"
-        />
-      </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="password"
+              value={key}
+              onChange={(e) => saveKey(e.target.value)}
+              placeholder="Founder key (stored only in this browser)"
+              className="flex-1 bg-void-800 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-glow/50"
+            />
+          </div>
+        </>
+      )}
 
       {error && <p className="text-xs text-amber-300">{error}</p>}
 
@@ -242,7 +286,17 @@ export default function ProposalsPanel() {
         ) : pending.map((p) => (
           <div key={p.id} className="rounded-lg border border-cyan-glow/20 bg-void-800/60 p-3 space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border border-white/10 text-slate-500">{p.kind}</span>
+              {/* Phase 2 (2026-08-18): 'revenue-proposal'/'agent-proposal' are real,
+                  sanctioned kind values Kai El can already use via plain POST
+                  /proposals — visually distinct here so they don't blend into the
+                  generic suggestion pile. Everything else keeps the plain badge. */}
+              <span className={
+                p.kind === 'revenue-proposal'
+                  ? 'text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border border-emerald-400/40 text-emerald-300'
+                  : p.kind === 'agent-proposal'
+                    ? 'text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border border-cyan-glow/40 text-cyan-glow'
+                    : 'text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded border border-white/10 text-slate-500'
+              }>{p.kind}</span>
               <span className="text-sm text-slate-100">{p.title}</span>
             </div>
             {p.body && <p className="text-xs text-slate-400 leading-relaxed">{p.body}</p>}
@@ -256,7 +310,7 @@ export default function ProposalsPanel() {
                 variant="success"
                 size="xs"
                 onClick={() => decide(p.id, 'approved')}
-                disabled={!key}
+                disabled={!canDecide}
                 isLoading={busy === p.id}
               >
                 ✓ Approve
@@ -265,7 +319,7 @@ export default function ProposalsPanel() {
                 variant="danger"
                 size="xs"
                 onClick={() => decide(p.id, 'rejected')}
-                disabled={!key}
+                disabled={!canDecide}
                 isLoading={busy === p.id}
               >
                 ✕ Reject
@@ -281,7 +335,7 @@ export default function ProposalsPanel() {
                   setModifyOpenId(p.id);
                   setModifyDraft(p.body || '');
                 }}
-                disabled={!key}
+                disabled={!canDecide}
               >
                 ✎ Modify
               </Button>
@@ -299,7 +353,7 @@ export default function ProposalsPanel() {
                   variant="secondary"
                   size="xs"
                   onClick={() => submitModify(p.id)}
-                  disabled={!key || !modifyDraft.trim()}
+                  disabled={!canDecide || !modifyDraft.trim()}
                   isLoading={busy === p.id}
                 >
                   Submit counter-proposal

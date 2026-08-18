@@ -551,6 +551,12 @@ async function ensureTables(DB) {
     // the new row points back to what it counter-proposes, so the panel can
     // show real lineage instead of two unrelated-looking rows.
     'ALTER TABLE hive_proposals ADD COLUMN modifies_id INTEGER',
+    // Phase 2 usage visibility (2026-08-18): running totals on the existing
+    // bounded provider_health row, not a new growing log table — see that
+    // table's own CREATE TABLE comment below for the full reasoning.
+    'ALTER TABLE provider_health ADD COLUMN total_calls INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE provider_health ADD COLUMN total_tokens_in INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE provider_health ADD COLUMN total_tokens_out INTEGER NOT NULL DEFAULT 0',
   ]) {
     try { await DB.prepare(stmt).run(); } catch {}
   }
@@ -620,8 +626,15 @@ async function ensureTables(DB) {
     // in place (never appended) — deliberately bounded to exactly 4 rows forever,
     // regardless of call volume, since the founder named live D1 space as a real
     // constraint and this fix does not need a growing log to work.
+    // total_calls/total_tokens_in/total_tokens_out (2026-08-18, Phase 2 usage
+    // visibility) are running totals accumulated in place by recordProviderHealth()
+    // — the same bounded-row-count table, not a new growing log. DEFAULT 0 here
+    // covers a fresh table; the ALTER loop above covers a table that already
+    // existed before these three columns did.
     DB.prepare(`CREATE TABLE IF NOT EXISTS provider_health
-      (provider TEXT PRIMARY KEY, ok INTEGER NOT NULL, error TEXT, checked_at TEXT NOT NULL)`),
+      (provider TEXT PRIMARY KEY, ok INTEGER NOT NULL, error TEXT, checked_at TEXT NOT NULL,
+       total_calls INTEGER NOT NULL DEFAULT 0, total_tokens_in INTEGER NOT NULL DEFAULT 0,
+       total_tokens_out INTEGER NOT NULL DEFAULT 0)`),
     // Venture capability-gap queue (2026-08-18): "I don't have capability X, which I
     // need for Y, and considered Z as an alternative" — Kai El's sanctioned channel
     // for asking for more access/tooling while working a venture repo, instead of
@@ -899,13 +912,30 @@ async function broadcastToCommandCenter(env, payload) {
 // provider it just tried, upserted (never appended) so this table never grows past
 // one row per provider. This is what makes a dead provider visible instead of a
 // silent try/catch fallthrough — llm/status and hiveSnapshot() both read it below.
-async function recordProviderHealth(DB, provider, ok, error) {
+//
+// 2026-08-18 (Phase 2, usage visibility): also accumulates real running totals
+// in place on the SAME bounded row — total_calls/total_tokens_in/total_tokens_out
+// — rather than a growing per-call log table. This is the deliberate choice this
+// table already made once (task 45's own comment: "deliberately bounded to
+// exactly N rows forever, regardless of call volume, since the founder named
+// live D1 space as a real constraint") — usage visibility reuses that same
+// discipline instead of reintroducing the unbounded-growth shape it was built to
+// avoid. total_calls counts every real attempt (success or failure); the token
+// counters only increment on a real, measured usage object — Workers AI returns
+// none (see 'workers-ai' attempt above), so its counters legitimately stay 0
+// rather than an invented estimate.
+async function recordProviderHealth(DB, provider, ok, error, usage = null) {
   if (!DB) return;
   try {
     await DB.prepare(
-      'INSERT INTO provider_health (provider, ok, error, checked_at) VALUES (?,?,?,?) ' +
-      'ON CONFLICT(provider) DO UPDATE SET ok=excluded.ok, error=excluded.error, checked_at=excluded.checked_at'
-    ).bind(provider, ok ? 1 : 0, error ? String(error).slice(0, 300) : null, new Date().toISOString()).run();
+      'INSERT INTO provider_health (provider, ok, error, checked_at, total_calls, total_tokens_in, total_tokens_out) ' +
+      'VALUES (?,?,?,?,1,?,?) ' +
+      'ON CONFLICT(provider) DO UPDATE SET ok=excluded.ok, error=excluded.error, checked_at=excluded.checked_at, ' +
+      'total_calls=total_calls+1, total_tokens_in=total_tokens_in+excluded.total_tokens_in, total_tokens_out=total_tokens_out+excluded.total_tokens_out'
+    ).bind(
+      provider, ok ? 1 : 0, error ? String(error).slice(0, 300) : null, new Date().toISOString(),
+      Number.isFinite(usage?.in) ? usage.in : 0, Number.isFinite(usage?.out) ? usage.out : 0
+    ).run();
   } catch { /* D1 not ready — generate() still returns normally */ }
 }
 
@@ -1573,7 +1603,7 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
     try {
       const got = await attempt();
       if (got === null) continue; // provider not bound — not a failure, nothing to record
-      await recordProviderHealth(DB, id, true, null);
+      await recordProviderHealth(DB, id, true, null, got.usage);
       return { text: got.text, provider: id, usage: got.usage, order };
     } catch (e) {
       await recordProviderHealth(DB, id, false, String(e?.message || e));
@@ -2395,6 +2425,19 @@ export default {
       // it only fails if Access is misconfigured (wrong AUD/domain wired up) or the
       // vars in wrangler.jsonc are still unset, both worth surfacing plainly rather
       // than a bare redirect back into the app.
+      // GET /founder/whoami (2026-08-18) — the real fix for FLIP_THE_SWITCHES.md
+      // section 11's own stated "proof it worked": the Proposals panel's Approve/
+      // Reject buttons were still gated on `!key` even for a founder genuinely
+      // signed in via Access, because nothing in the frontend ever checked Access
+      // session state before this route existed. JSON, not HTML, and read-only —
+      // meant to be called silently on page load, not navigated to. Same
+      // verifyAccessJWT() call /founder/login already makes; a 401/no-session
+      // reads as {email: null}, never an error, since "not signed in with Access
+      // yet" is an expected, common state, not a failure.
+      if (p === '/founder/whoami' && method === 'GET') {
+        const accessEmail = await verifyAccessJWT(request, env, ctx);
+        return json({ email: accessEmail || null });
+      }
       if (p === '/founder/login' && method === 'GET') {
         const accessEmail = await verifyAccessJWT(request, env, ctx);
         const html = accessEmail
@@ -2462,6 +2505,19 @@ export default {
         // itself changes anything. Deciding it is the gated action.
         if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
+        // 'kind' is freely-typed on purpose (Phase 2, 2026-08-18) — no allow-list
+        // here, unlike 'action-request' below. Two sanctioned conventions Kai El
+        // should use, both already work today with zero extra code:
+        //   'revenue-proposal' — a real revenue-generating idea for a venture.
+        //   'agent-proposal'   — proposing a NEW agent (name/role/reports_to/
+        //     rationale in body). This is a PROPOSAL ONLY — no code anywhere
+        //     reads an 'agent-proposal' row and inserts into `agents` on
+        //     approval; that execution step is real, separate, higher-stakes
+        //     work, deliberately not built here. See the ALTER-loop comment
+        //     near 'reports_to' above: agent-creation code does not exist yet,
+        //     and autonomy_registry is read-only by the same design principle
+        //     — Kai El proposing a new agent must never be one step away from
+        //     Kai El creating one.
         const kind = (body.kind || 'suggestion').toString().slice(0, 40);
         // 'action-request' is deliberately NOT creatable through this general,
         // freely-typed endpoint — it can only reach the queue via
@@ -2856,16 +2912,27 @@ export default {
           let health = [];
           try {
             const { results } = await DB.prepare(
-              'SELECT provider, ok, error, checked_at FROM provider_health'
+              'SELECT provider, ok, error, checked_at, total_calls, total_tokens_in, total_tokens_out FROM provider_health'
             ).all();
             health = results || [];
           } catch { /* table not ready — health stays empty, roster still honest */ }
           const healthById = Object.fromEntries(health.map((h) => [h.provider, h]));
+          // usage (Phase 2, 2026-08-18): real running totals, not per-call — see
+          // recordProviderHealth()'s comment for why this reuses the same bounded
+          // row instead of a growing log. 0s for a provider that's never answered,
+          // never an invented estimate.
           const merged = roster.map((r) => ({
             ...r,
             health: healthById[r.id]
               ? { ok: !!healthById[r.id].ok, error: healthById[r.id].error, checked_at: healthById[r.id].checked_at }
               : { ok: null, error: null, checked_at: null }, // never actually tried yet
+            usage: healthById[r.id]
+              ? {
+                  calls: healthById[r.id].total_calls ?? 0,
+                  tokens_in: healthById[r.id].total_tokens_in ?? 0,
+                  tokens_out: healthById[r.id].total_tokens_out ?? 0,
+                }
+              : { calls: 0, tokens_in: 0, tokens_out: 0 },
           }));
           const lastHealthy = merged
             .filter((r) => r.bound && r.health.ok === true)
@@ -2978,7 +3045,9 @@ export default {
           // recorded outcome per provider instead of assuming code order equals reality.
           let providerHealthById = {};
           try {
-            const { results } = await DB.prepare('SELECT provider, ok, error, checked_at FROM provider_health').all();
+            const { results } = await DB.prepare(
+              'SELECT provider, ok, error, checked_at, total_calls, total_tokens_in, total_tokens_out FROM provider_health'
+            ).all();
             providerHealthById = Object.fromEntries((results || []).map((h) => [h.provider, h]));
           } catch { /* table not ready */ }
           ctxLines.push('Your own providers (name — role — bound? — REAL last outcome, not assumed): ' +
@@ -2997,6 +3066,18 @@ export default {
             'four keys now work as a routed team rather than a fixed fallback chain where only ' +
             'the first one was ever used. Trust the REAL outcome listed above; never assume ' +
             'first-in-order means active. Your own replies are capped at 400 tokens.');
+          // Phase 2 usage visibility (2026-08-18): real running totals, not
+          // Cloudflare-only — every provider you actually draw on, so a real
+          // capability gap ("I'm rate-limited on X") can be stated with a real
+          // number behind it instead of guessed at.
+          ctxLines.push('Your own real usage since these counters last reset (calls / tokens in / tokens out, one bound provider per entry): ' +
+            roster.filter((r) => r.bound).map((r) => {
+              const h = providerHealthById[r.id];
+              return `${r.label}: ${h?.total_calls ?? 0} calls, ${h?.total_tokens_in ?? 0} in, ${h?.total_tokens_out ?? 0} out`;
+            }).join('; ') +
+            '. These are real accumulated totals (provider_health, upserted on every real call), not an estimate — ' +
+            'if you genuinely need more of a provider than these numbers show is realistic, that is exactly what a ' +
+            'venture_capability_gaps request is for, not something to work around silently.');
           // Grok is NOT Groq (2026-08-06, task 43). Real, repeated confusion from a live
           // transcript: asked twice about "Grok", Kai El silently answered about "Groq"
           // instead — including claiming he had used it to research something. They are
@@ -3856,4 +3937,5 @@ export {
   extractDiffBlock,
   nextWorkTurnIndex,
   runWorkCycle,
+  recordProviderHealth,
 };
