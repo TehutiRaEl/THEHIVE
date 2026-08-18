@@ -1,0 +1,85 @@
+name: Venture Gap Mirror
+
+# Mirrors open venture_capability_gaps rows (2026-08-18) into real GitHub Issues on
+# the `venture` repo, so the founder sees Kai El's capability requests in normal
+# GitHub notifications, not only in the Command Center. Same poll-act-post-back shape
+# as architect-proposal-check.yml: curl the Worker's list endpoint, act per-item,
+# POST the result back via scripts/post-founder-gated.sh. Cross-repo issue creation
+# needs a real PAT (the default GITHUB_TOKEN is THEHIVE-scoped only) — same guard-
+# and-degrade-to-honest-no-op convention as federation-issue-triage.yml, reusing
+# HIVE_FEDERATION_TOKEN.
+#
+# Idempotency lives in the Worker, not here: POST .../issue-linked returns 409 for a
+# gap that already has a github_issue_url, so a duplicate run can never double-create
+# an issue — this workflow just skips anything the Worker already reports as linked.
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '*/15 * * * *'
+
+jobs:
+  mirror:
+    name: Mirror open capability gaps into venture repo Issues
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.HIVE_FEDERATION_TOKEN }}
+      FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard — honest no-op if the federation token isn't bound yet
+        id: guard
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "No HIVE_FEDERATION_TOKEN bound (or it doesn't cover TehutiRaEl/venture yet)."
+            echo "This run genuinely does nothing, on purpose, rather than faking a mirror pass."
+            echo "bound=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "bound=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch open, unmirrored gaps
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          set -euo pipefail
+          curl -sS -m 25 "https://thehive.sovereignhive.workers.dev/v11/ventures/gaps?limit=200" \
+            -o /tmp/gaps.json || echo '{"gaps":[]}' > /tmp/gaps.json
+          python3 - <<'PYEOF'
+          import json
+          data = json.load(open('/tmp/gaps.json'))
+          pending = [g for g in data.get('gaps', []) if g.get('status') == 'open' and not g.get('github_issue_url')]
+          print(f"::notice::{len(pending)} open, unmirrored capability gap(s)")
+          json.dump(pending, open('/tmp/pending.json', 'w'))
+          PYEOF
+
+      - name: Create one Issue per gap, then link it back
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          set -euo pipefail
+          count=$(python3 -c "import json; print(len(json.load(open('/tmp/pending.json'))))")
+          for i in $(seq 0 $((count - 1))); do
+            id=$(python3 -c "import json; print(json.load(open('/tmp/pending.json'))[$i]['id'])")
+            python3 - "$i" > /tmp/issue_body.md <<'PYEOF'
+          import json, sys
+          g = json.load(open('/tmp/pending.json'))[int(sys.argv[1])]
+          print(f"**Venture:** {g['venture']}")
+          print()
+          print(f"**Capability needed:** {g['capability_needed']}")
+          print()
+          print(f"**Needed for:** {g['needed_for']}")
+          if g.get('alternatives'):
+              print()
+              print(f"**Alternatives considered:** {g['alternatives']}")
+          print()
+          print("_Filed by Kai El via POST /v11/ventures/gaps — decide with_")
+          print("_POST /v11/ventures/gaps/:id/decide (founder-key-gated)._")
+          PYEOF
+            title=$(python3 -c "import json; print(json.load(open('/tmp/pending.json'))[$i]['title'])")
+            issue_url=$(gh issue create --repo TehutiRaEl/venture --title "$title" --body-file /tmp/issue_body.md)
+            echo "::notice::gap #$id -> $issue_url"
+            echo "{\"issue_url\": \"$issue_url\"}" > /tmp/link-payload.json
+            scripts/post-founder-gated.sh \
+              "https://thehive.sovereignhive.workers.dev/v11/ventures/gaps/$id/issue-linked" \
+              /tmp/link-payload.json
+          done
