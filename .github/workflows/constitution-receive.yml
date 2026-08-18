@@ -1,0 +1,101 @@
+name: Constitution Receive
+
+# Builds the sync .queen/CLAUDE.md always said should exist: ".queen/soul.md is the
+# machine-readable canonical [constitution]. The root soul.md is for human reading and
+# is synced via the constitution-receive.yml GitHub Actions workflow." That workflow was
+# designed and never built — this closes the gap for real (2026-08-18).
+#
+# Direction is one-way: .queen/soul.md -> root soul.md. Never the reverse. When
+# .queen/soul.md changes on main, this job regenerates root soul.md's Preamble / Fixed
+# Laws / Cardinal Laws / Mutable Laws sections FROM it (root's other narrative sections —
+# Recursive Cycle, 14-Layer Architecture, etc. — have no counterpart in the canonical
+# source yet and are preserved verbatim, not deleted), then records .queen/soul.md's new
+# hash in .queen/hive.yml's soul_md_hash field.
+#
+# Safety requirement (named explicitly in this task, found by a devil's-advocate pass on
+# this exact plan): a malformed .queen/soul.md must be REJECTED, not silently synced.
+# scripts/constitution_receive.py enforces this and scripts/test_constitution_receive.py
+# proves it (15 tests: good-sync-succeeds, bad-sync-rejected-root-untouched, empty-file-
+# rejected, missing-section-rejected, ...). Both run as real steps below, not asserted.
+#
+# KNOWN, UNRESOLVED OVERLAP — read before assuming this is the only constitution workflow:
+# .github/workflows/constitution-sync.yml already exists, already runs, and does the
+# OPPOSITE thing: it treats root soul.md as canonical and pushes it OUT to colonies, then
+# ALSO writes .queen/hive.yml's soul_md_hash field (from root soul.md's hash, not
+# .queen/soul.md's). Both workflows write the same YAML field from different files in
+# different directions. This was real, pre-existing drift discovered while building this
+# workflow, not introduced by it — see the PR body for the honest account. Reconciling the
+# two is open work; this workflow does not attempt to silently resolve it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .queen/soul.md
+  # workflow_dispatch lets this be run manually to prove it out — but dispatch 404s
+  # for a workflow that isn't registered on main yet (same limitation edge-health-probe.yml
+  # documents), so this workflow's *test* job is what actually runs pre-merge, via
+  # a normal push-triggered run below scoped to this file's own path.
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Run constitution-receive test suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run tests (stdlib-only, no install step)
+        run: python3 -m unittest scripts.test_constitution_receive -v
+
+  receive:
+    name: Sync .queen/soul.md -> root soul.md
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Sync (rejects a malformed source, leaves root soul.md untouched)
+        id: sync
+        run: |
+          set -e
+          if new_hash=$(python3 scripts/constitution_receive.py sync .queen/soul.md soul.md); then
+            echo "sha=$new_hash" >> "$GITHUB_OUTPUT"
+            echo "status=synced" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=rejected" >> "$GITHUB_OUTPUT"
+            echo "## Constitution receive: REJECTED" >> "$GITHUB_STEP_SUMMARY"
+            echo ".queen/soul.md failed validation — root soul.md was left untouched. See job log above for the reason." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Record .queen/soul.md hash in .queen/hive.yml
+        if: steps.sync.outputs.status == 'synced'
+        run: |
+          sed -i "s/soul_md_hash: .*/soul_md_hash: \"${{ steps.sync.outputs.sha }}\"/" .queen/hive.yml
+          echo "## Constitution receive: synced" >> "$GITHUB_STEP_SUMMARY"
+          echo ".queen/soul.md hash: \`${{ steps.sync.outputs.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit regenerated soul.md + hash
+        if: steps.sync.outputs.status == 'synced'
+        run: |
+          git config user.name "Sovereign Hive Bot"
+          git config user.email "bot@sovereignhive.io"
+          git add soul.md .queen/hive.yml
+          git diff --staged --quiet && echo "no changes to commit" || \
+            git commit -m "chore: sync root soul.md from .queen/soul.md (${{ steps.sync.outputs.sha }})"
+          git push
+        continue-on-error: true
