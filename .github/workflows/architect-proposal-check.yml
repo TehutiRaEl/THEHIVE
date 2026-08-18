@@ -1,0 +1,89 @@
+name: Architect Proposal — dry-run diff check
+
+# Kai El's first evolution into an architect agent (2026-08-10): PROPOSAL: replies
+# can now carry a real diff (worker/src/index.js's extractDiffBlock()), stored
+# unapplied on the hive_proposals row. This is the ONLY place that check can
+# honestly happen — the Worker runs at the Cloudflare edge with no filesystem and
+# no git (wrangler.jsonc), so it cannot itself run `git apply --check`. This
+# workflow has a real checkout, applies each pending diff in dry-run mode, and
+# posts the real result back so the founder sees "applies cleanly" or the real
+# error BEFORE deciding, instead of approving on trust in the LLM's diff syntax.
+#
+# Same shape as task-digest.yml: fetch the list, do the real work here (where git
+# exists), POST a small result back via the shared scripts/post-founder-gated.sh.
+# This workflow only ever writes diff_check (worker/src/index.js's
+# POST /v11/proposals/:id/diff-check route enforces that) — it cannot approve,
+# reject, or execute a proposal. Nothing here opens a PR or applies anything for
+# real; "dry-run" means exactly that.
+
+on:
+  workflow_dispatch: {}
+  # Every 10 minutes — real review latency matters here more than for the 4-hourly
+  # task digest, since a founder waiting to decide a proposal is waiting on this.
+  schedule:
+    - cron: '*/10 * * * *'
+
+jobs:
+  diff-check:
+    name: Dry-run apply pending architect-proposal diffs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find pending diffs and dry-run apply each one
+        id: check
+        run: |
+          set -euo pipefail
+          curl -sS -m 25 "https://thehive.sovereignhive.workers.dev/v11/proposals?limit=200" \
+            -o /tmp/proposals.json || echo '{"proposals":[]}' > /tmp/proposals.json
+
+          python3 - <<'PYEOF'
+          import json
+          data = json.load(open('/tmp/proposals.json'))
+          pending = [p for p in data.get('proposals', []) if p.get('diff_check') == 'pending' and p.get('diff')]
+          print(f"::notice::{len(pending)} proposal(s) with a pending diff check")
+          out = []
+          for p in pending:
+              out.append({'id': p['id'], 'diff': p['diff']})
+          json.dump(out, open('/tmp/pending.json', 'w'))
+          PYEOF
+
+          # bash reads the small pending list and drives git apply --check per item —
+          # kept in bash rather than python so `git apply` runs as a real subprocess
+          # against the real checkout, not reimplemented.
+          count=$(python3 -c "import json; print(len(json.load(open('/tmp/pending.json'))))")
+          echo "pending_count=$count" >> "$GITHUB_OUTPUT"
+          for i in $(seq 0 $((count - 1))); do
+            id=$(python3 -c "import json; print(json.load(open('/tmp/pending.json'))[$i]['id'])")
+            python3 -c "import json; print(json.load(open('/tmp/pending.json'))[$i]['diff'])" > "/tmp/diff-$id.patch"
+            if git apply --check "/tmp/diff-$id.patch" 2>"/tmp/diff-$id.err"; then
+              echo "$id applies_clean" >> /tmp/results.txt
+              echo "::notice::proposal #$id — applies cleanly"
+            else
+              # Real error, truncated for storage — never smoothed into a generic
+              # "failed" with no reason, since that would make the founder re-derive
+              # what the workflow already knows.
+              err=$(tr '\n' ' ' < "/tmp/diff-$id.err" | cut -c1-400)
+              echo "$id failed: $err" >> /tmp/results.txt
+              echo "::warning::proposal #$id — does not apply cleanly: $err"
+            fi
+          done
+          touch /tmp/results.txt
+
+      - name: Post each real result back
+        env:
+          FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
+        run: |
+          set -euo pipefail
+          [ -s /tmp/results.txt ] || { echo "::notice::nothing to report"; exit 0; }
+          while IFS= read -r line; do
+            id="${line%% *}"
+            result="${line#* }"
+            python3 -c "
+          import json, sys
+          print(json.dumps({'result': sys.argv[1]}))
+          " "$result" > "/tmp/result-$id.json"
+            scripts/post-founder-gated.sh \
+              "https://thehive.sovereignhive.workers.dev/v11/proposals/$id/diff-check" \
+              "/tmp/result-$id.json"
+          done < /tmp/results.txt

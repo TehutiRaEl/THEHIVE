@@ -24,6 +24,7 @@ import worker from '../src/index.js';
 import {
   stubDB, stubKV, installCaches, stubCtx, makeEnv, req,
   stubOutboundFetch, providerRes, openaiReply, stubSecretsStoreSecret,
+  generateAccessKeyPair, signAccessJWT,
 } from './helpers/env.js';
 import { resolveSecret, founderKeyBound } from '../src/index.js';
 
@@ -266,6 +267,99 @@ describe('the founder gate (founderAuthOk) — fails CLOSED by design', () => {
   });
 });
 
+// Cloudflare Access (2026-08-09) — a second, key-free founder gate, additive
+// alongside FOUNDER_KEY above (which the previous describe block already
+// proves is completely unaffected by any of this). verifyAccessJWT() itself has
+// its own dedicated, exhaustive suite in access-auth.test.js (every
+// signature/audience/expiry/email failure path, mutation-tested); this block's
+// job is narrower — proving the /v11/founder/* routes are wired to it
+// correctly end to end through the real fetch handler, including the one
+// genuine improvement over the FOUNDER_KEY path: decided_by gets stamped with
+// a real, verified email instead of staying null forever.
+describe('the founder gate via Cloudflare Access (/v11/founder/*)', () => {
+  const TEAM_DOMAIN = 'test-team.cloudflareaccess.com';
+  const AUD = 'test-application-audience-tag';
+  const FOUNDER_EMAIL = 'founder@example.com';
+  let privateKey, publicJwk, kid;
+
+  before(async () => {
+    ({ privateKey, publicJwk, kid } = await generateAccessKeyPair());
+  });
+
+  const accessEnv = (overrides = {}) => makeEnv({
+    ACCESS_TEAM_DOMAIN: TEAM_DOMAIN, ACCESS_AUD: AUD, FOUNDER_EMAIL, ...overrides,
+  });
+  const withAccessJWKS = () => {
+    const s = stubOutboundFetch(async (url) => (url === `https://${TEAM_DOMAIN}/cdn-cgi/access/certs`
+      ? providerRes({ keys: [publicJwk] })
+      : providerRes({}, { ok: false, status: 404 })));
+    restoreFetch = s.restore;
+  };
+  const sign = (overrides = {}) => signAccessJWT(privateKey, kid, { email: FOUNDER_EMAIL, aud: AUD, ...overrides });
+
+  test('a valid Access token decides a proposal and stamps decided_by with the real email', async () => {
+    withAccessJWKS();
+    const DB = stubDB({ 'SELECT kind, title, body FROM hive_proposals': { kind: 'suggestion', title: 'x', body: '{}' } });
+    const token = await sign();
+
+    const r = await call(req('/founder/proposals/1/decide', {
+      method: 'POST', body: { decision: 'approved' }, headers: { 'Cf-Access-Jwt-Assertion': token },
+    }), accessEnv({ DB }));
+
+    assert.equal(r.status, 200);
+    const updateCall = DB.queries.find((q) => q.sql.includes('UPDATE hive_proposals SET status=?, decided_at=?, founder_note=?, decided_by=?'));
+    assert.ok(updateCall, 'expected the decide UPDATE to have run');
+    assert.equal(updateCall.args[3], FOUNDER_EMAIL,
+      'decided_by must carry the real, Access-verified email — the whole point of this path over FOUNDER_KEY');
+  });
+
+  test('no Access session (no header at all) is refused, same fail-closed default as founderAuthOk', async () => {
+    withAccessJWKS();
+    const r = await call(req('/founder/proposals/1/decide', {
+      method: 'POST', body: { decision: 'approved' },
+    }), accessEnv());
+
+    assert.equal(r.status, 401);
+  });
+
+  test('an invalid/tampered Access token is refused', async () => {
+    withAccessJWKS();
+    const token = await sign();
+    const badToken = token.slice(0, -4) + (token.slice(-4) === 'AAAA' ? 'BBBB' : 'AAAA');
+
+    const r = await call(req('/founder/proposals/1/decide', {
+      method: 'POST', body: { decision: 'approved' }, headers: { 'Cf-Access-Jwt-Assertion': badToken },
+    }), accessEnv());
+
+    assert.equal(r.status, 401);
+  });
+
+  test('Access not provisioned (no ACCESS_AUD/FOUNDER_EMAIL) fails closed even with a well-formed token', async () => {
+    withAccessJWKS();
+    const token = await sign();
+
+    const r = await call(req('/founder/proposals/1/decide', {
+      method: 'POST', body: { decision: 'approved' },
+      headers: { 'Cf-Access-Jwt-Assertion': token },
+    }), makeEnv({ DB: stubDB() })); // no ACCESS_* vars at all
+
+    assert.equal(r.status, 401);
+  });
+
+  test('regression guard: the original FOUNDER_KEY route is completely unaffected by any of this', async () => {
+    const env = makeEnv({ FOUNDER_KEY: 'real-key', DB: stubDB({ 'SELECT kind, title, body FROM hive_proposals': { kind: 'suggestion', title: 'x', body: '{}' } }) });
+
+    const r = await call(req('/proposals/1/decide', {
+      method: 'POST', body: { decision: 'approved' }, headers: { Authorization: 'Bearer real-key' },
+    }), env);
+
+    assert.equal(r.status, 200);
+    const updateCall = env.DB.queries.find((q) => q.sql.includes('decided_by=?'));
+    assert.equal(updateCall.args[3], null,
+      'the FOUNDER_KEY path must keep decided_by null exactly as before — no attribution change on this path');
+  });
+});
+
 // FOUNDER_KEY moved to Cloudflare's Secrets Store 2026-08-08 — a binding shaped
 // as { get: async () => value } rather than a plain string. Every test above
 // this point uses the classic string shape; these prove the new object shape
@@ -303,6 +397,34 @@ describe('resolveSecret() — classic string secret vs. Secrets Store object bin
 
   test('founderKeyBound() is false when the Secrets Store binding is absent', async () => {
     assert.equal(await founderKeyBound({}), false);
+  });
+
+  // 2026-08-09: real incident — the founder pasted a rotated FOUNDER_KEY that
+  // carried a trailing newline into the GitHub secret, which corrupted the CI
+  // curl request enough to fail before it was even sent, and separately into
+  // this panel's key field, which produced a confusing "invalid or missing
+  // founder key". Both were the same root cause: invisible whitespace. These
+  // prove it can never again be the difference between a matching and
+  // non-matching key.
+  test('a plain string secret with a trailing newline is trimmed', async () => {
+    assert.equal(await resolveSecret('real-key\n'), 'real-key');
+  });
+
+  test('a Secrets Store binding whose value has a trailing newline is trimmed', async () => {
+    assert.equal(await resolveSecret(stubSecretsStoreSecret('real-key\n')), 'real-key');
+  });
+
+  test('a secret that is whitespace-only resolves to null, not an empty-string match', async () => {
+    assert.equal(await resolveSecret('   \n'), null);
+  });
+
+  test('founderAuthOk accepts a Bearer token when the stored secret has trailing whitespace', async () => {
+    const env = makeEnv({ FOUNDER_KEY: 'real-key\r\n' });
+    const r = await call(req('/proposals/1/decide', {
+      method: 'POST', body: { decision: 'approved' }, headers: { Authorization: 'Bearer real-key' },
+    }), env);
+    assert.notEqual(r.status, 401,
+      'a trailing newline on the stored secret must not make an otherwise-correct key fail');
   });
 });
 

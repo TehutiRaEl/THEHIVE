@@ -76,6 +76,27 @@
       "binding": "DB",
       "database_name": "thehive-queen",
       "database_id": "70212689-5633-4c09-9e1d-ae6294ce19eb"
+    },
+    // Kai El's own brain (2026-08-10, founder-directed). A physically separate
+    // database rather than more tables in thehive-queen — the founder was shown
+    // the tradeoff (a separate DB costs one of the account's 10 D1 slots, and the
+    // pattern does not scale to 13 agents x 2 databases) and chose it anyway,
+    // specifically for Kai El as the hive's second brain. Nanuet, the first brain,
+    // gets the same treatment later when work on the Queen resumes.
+    //
+    // Schema: worker/schema/kai-el-brain.sql (memories, decision_log,
+    // training_samples, autonomy_registry). Created and applied for real via the
+    // Cloudflare connector on 2026-08-10, not just declared here.
+    //
+    // UNLIKE Vectorize/R2/Queues above, this binding is NOT commented out: the
+    // database genuinely exists, so binding it cannot fail the deploy. Every read
+    // and write still goes through kaiBrainOk()/env.KAI_BRAIN guards in
+    // worker/src/index.js, so an unbound or unreachable brain degrades to the
+    // exact behaviour Kai El has today rather than breaking him.
+    {
+      "binding": "KAI_BRAIN",
+      "database_name": "kai-el-brain",
+      "database_id": "7c62dea9-64ba-4d38-a5bf-234d5a504f19"
     }
   ],
   // FOUNDER_KEY moved to Cloudflare's Secrets Store (an account-wide vault,
@@ -94,4 +115,25 @@
       "secret_name": "FOUNDER_KEY"
     }
   ]
+  // Cloudflare Access — a second, key-free way for the founder's own browser to
+  // authenticate (2026-08-09), additive alongside FOUNDER_KEY above (which stays
+  // exactly as-is for CI and as a browser fallback). Same flip-the-switch pattern
+  // as Vectorize/R2/Queues above: with these three vars unset, verifyAccessJWT()
+  // in worker/src/index.js fails closed on every request, so the new
+  // /v11/founder/* routes simply 401 (falling back to the FOUNDER_KEY UI) until
+  // the founder finishes Step 0 (FLIP_THE_SWITCHES.md) — creating the Access
+  // Application in the Zero Trust dashboard, protecting the /v11/founder/* path
+  // — and fills these in from what that step produces:
+  //   ACCESS_TEAM_DOMAIN — "<your-team-name>.cloudflareaccess.com"
+  //   ACCESS_AUD         — the Access Application's Audience (AUD) tag
+  //   FOUNDER_EMAIL      — the one email allow-listed in the Access policy
+  // None of these three are secret (an audience tag and an email address aren't
+  // sensitive the way a password is), so they're plain vars, not a secret store.
+  // Once Step 0 is done: add a "," after the "]" that closes
+  // secrets_store_secrets above, then uncomment and fill in this block —
+  // "vars": {
+  //   "ACCESS_TEAM_DOMAIN": "<your-team-name>.cloudflareaccess.com",
+  //   "ACCESS_AUD": "<the Access Application's Audience tag>",
+  //   "FOUNDER_EMAIL": "<the founder's own allow-listed email>"
+  // }
 }

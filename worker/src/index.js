@@ -195,12 +195,24 @@ async function tokenOk(DB, request, env) {
 // GROK_BRIDGE_KEY/CLOUDFLARE_API_TOKEN stay classic secrets for now; passing
 // a plain string through unchanged means resolveSecret() is safe to use on
 // all three uniformly (see /debug/env below).
+//
+// 2026-08-09: trims the resolved value. A real incident — the founder pasted
+// a rotated FOUNDER_KEY that carried a trailing newline into both the GitHub
+// secret and (separately) this panel's key field — turned "wrong password"
+// into two confusing, differently-shaped failures (a curl header error on
+// the CI side, "invalid or missing founder key" here) that were actually the
+// same root cause. Trimming here means invisible whitespace can never again
+// be the difference between a matching and non-matching key, on any path
+// that reads this binding.
 async function resolveSecret(value) {
   if (!value) return null;
   if (typeof value === 'object' && typeof value.get === 'function') {
-    try { return (await value.get()) || null; } catch { return null; }
+    try {
+      const v = await value.get();
+      return v ? v.trim() || null : null;
+    } catch { return null; }
   }
-  return typeof value === 'string' && value ? value : null;
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
 async function founderKeyBound(env) {
@@ -220,6 +232,112 @@ async function founderAuthOk(request, env) {
   const auth = request.headers.get('Authorization') || '';
   const key = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
   return !!key && key === secret;
+}
+
+// ── Cloudflare Access — a second, key-free way for the founder's own browser to
+// authenticate (2026-08-09) ────────────────────────────────────────────────
+// FOUNDER_KEY (above) stays exactly as-is for CI (the three digest workflows) and
+// as a browser fallback. This is purely additive: a founder who has logged into
+// Cloudflare Access gets a signed JWT attached to every request automatically
+// (the Cf-Access-Jwt-Assertion header), so their browser never has to carry or
+// paste a shared secret again. See the /v11/founder/* routes for where this is
+// used (that's the real, public path Access must protect — internally, route
+// matching strips the /v11 prefix first, so this file's own `p === '/founder/...'`
+// checks below look shorter than the URL a browser or Access policy sees), and
+// the Access Application setup itself (Zero Trust dashboard) for how the founder
+// provisions this — not something this Worker can configure on its own.
+//
+// atob() is a Workers global (also present in Node's test runner), used here
+// rather than Buffer to keep this file portable between the two runtimes, same
+// reasoning as this file's existing zero-dependency discipline.
+function base64UrlToBytes(b64url) {
+  const pad = (4 - (b64url.length % 4)) % 4;
+  const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad);
+  const raw = atob(b64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  return bytes;
+}
+
+// Access's signing keys rotate rarely — cached the same way cachedJson() caches
+// everything else in this file (Workers Cache API), just keyed by the JWKS URL
+// itself rather than an incoming request, since this fetch has nothing to do
+// with any one caller.
+const ACCESS_JWKS_CACHE_SECONDS = 3600;
+async function fetchAccessJWKS(env, ctx) {
+  const teamDomain = (env.ACCESS_TEAM_DOMAIN || '').toString().trim();
+  if (!teamDomain) return null;
+  const jwksUrl = `https://${teamDomain}/cdn-cgi/access/certs`;
+  const cache = caches.default;
+  const cacheKey = new Request(jwksUrl, { method: 'GET' });
+  try {
+    const hit = await cache.match(cacheKey);
+    if (hit) return await hit.json();
+  } catch { /* cache unavailable — fall through to a live fetch, never fatal */ }
+  let r;
+  try {
+    r = await fetch(jwksUrl, { signal: AbortSignal.timeout(10000) });
+  } catch { return null; }
+  if (!r.ok) return null;
+  const data = await r.json();
+  const stored = new Response(JSON.stringify(data), {
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ACCESS_JWKS_CACHE_SECONDS}` },
+  });
+  ctx?.waitUntil?.(cache.put(cacheKey, stored).catch(() => {}));
+  return data;
+}
+
+// Verifies a Cloudflare Access JWT end to end: signature against Access's own
+// published keys, audience matches this specific Access Application, not
+// expired, and the email claim matches the one allow-listed founder email.
+// Every failure path returns null — fails CLOSED, identical philosophy to
+// founderAuthOk() above, deliberately: a login system that guesses "probably
+// fine" on a malformed or unprovisioned token would be strictly worse than the
+// shared-secret model it's meant to improve on.
+async function verifyAccessJWT(request, env, ctx) {
+  try {
+    const token = request.headers.get('Cf-Access-Jwt-Assertion');
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const [headerB64, payloadB64, sigB64] = parts;
+    const header = JSON.parse(new TextDecoder().decode(base64UrlToBytes(headerB64)));
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlToBytes(payloadB64)));
+
+    // Not provisioned yet (ACCESS_AUD/FOUNDER_EMAIL unset) — fail closed rather
+    // than accept any token, same as founderAuthOk() with no FOUNDER_KEY bound.
+    const expectedAud = (env.ACCESS_AUD || '').toString().trim();
+    const expectedEmail = (env.FOUNDER_EMAIL || '').toString().trim().toLowerCase();
+    if (!expectedAud || !expectedEmail) return null;
+
+    const aud = Array.isArray(payload.aud) ? payload.aud[0] : payload.aud;
+    if (aud !== expectedAud) return null;
+
+    if (typeof payload.exp !== 'number' || Date.now() / 1000 >= payload.exp) return null;
+
+    const jwks = await fetchAccessJWKS(env, ctx);
+    if (!jwks || !Array.isArray(jwks.keys)) return null;
+    const jwk = jwks.keys.find((k) => k.kid === header.kid);
+    if (!jwk) return null;
+
+    const key = await crypto.subtle.importKey(
+      'jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify'],
+    );
+    const signedData = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+    const signature = base64UrlToBytes(sigB64);
+    const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, signature, signedData);
+    if (!valid) return null;
+
+    // Trimmed/lower-cased on both sides — the same whitespace lesson resolveSecret()
+    // learned the hard way applies here too; an email claim is no more immune to a
+    // trailing-newline mismatch than a pasted secret was.
+    const email = (payload.email || '').toString().trim().toLowerCase();
+    if (!email || email !== expectedEmail) return null;
+
+    return email;
+  } catch {
+    return null;
+  }
 }
 
 // ── Kai El "action-request" proposals (task 7, 2026-08-02) ───────────────
@@ -326,6 +444,82 @@ async function executeApprovedAction(env, action, params) {
   } catch (e) {
     return { executed: false, reason: 'GitHub API call failed: ' + String(e) };
   }
+}
+
+// Shared by both POST /proposals/:id/decide (FOUNDER_KEY-gated) and
+// POST /founder/proposals/:id/decide (Cloudflare Access-gated, 2026-08-09) — the
+// exact same decide logic, reachable through either auth path, extracted once so
+// the two gates can never quietly drift into different behavior (and so a real
+// improvement — decidedByLabel — benefits both without duplicating the rest).
+// decidedByLabel is null for the FOUNDER_KEY path (today's existing behavior,
+// unchanged) or the founder's real, Access-verified email for the new path —
+// hive_proposals.decided_by previously only ever recorded 'queen' or null; this
+// is the first time it can record a real human identity.
+async function decideProposal(env, ctx, id, decision, note, decidedByLabel, modifiedFields = null) {
+  const DB = env.DB;
+  // Fetch kind+title+body BEFORE the state-changing UPDATE, since only an
+  // 'action-request' proposal that is being APPROVED ever executes
+  // anything — approval alone on every other kind still just records a
+  // decision, same as before this task. title is needed too: a 'modified'
+  // decision derives the counter-proposal's title from it.
+  const existing = await DB.prepare('SELECT kind, title, body FROM hive_proposals WHERE id=? AND status=\'pending\'').bind(id).first();
+  if (!existing) return { status: 404, body: { detail: `proposal ${id} not found or already decided` } };
+
+  // Modify/counter-propose (task 22, 2026-08-14): closes the original
+  // (status='modified') and files a brand-new pending proposal carrying the
+  // edited text, linked back via modifies_id. Handled here, not per-route, so
+  // both /proposals/:id/decide (FOUNDER_KEY) and /founder/proposals/:id/decide
+  // (Cloudflare Access) support it identically rather than one silently
+  // lacking it.
+  if (decision === 'modified') {
+    const modifiedBody = (modifiedFields?.modified_body || '').toString().trim().slice(0, 4000);
+    if (!modifiedBody) return { status: 400, body: { detail: 'modified decision requires a non-empty modified_body' } };
+    const modifiedTitle = (modifiedFields?.modified_title || '').toString().trim().slice(0, 200)
+      || `Modified: ${existing.title}`.slice(0, 200);
+    const nowIso = new Date().toISOString();
+    const inserted = await DB.prepare(
+      'INSERT INTO hive_proposals (ts, kind, title, body, status, modifies_id) VALUES (?,?,?,?,\'pending\',?)'
+    ).bind(nowIso, existing.kind, modifiedTitle, modifiedBody, id).run();
+    const newId = inserted.meta?.last_row_id;
+    const closeNote = (note ? note + ' | ' : '') + `counter-proposed as #${newId}`;
+    const result = await DB.prepare(
+      "UPDATE hive_proposals SET status='modified', decided_at=?, founder_note=? WHERE id=? AND status='pending'"
+    ).bind(nowIso, closeNote, id).run();
+    if (!result.meta?.changes) {
+      return { status: 404, body: { detail: `proposal ${id} not found or already decided` } };
+    }
+    ctx?.waitUntil?.(postUpdate(DB, {
+      kind: 'proposal-decided', title: `Proposal #${id} modified`,
+      body: `${closeNote} — new proposal #${newId} is pending your decision.`,
+    }));
+    return { status: 200, body: { ok: true, id, decision: 'modified', new_proposal_id: newId } };
+  }
+
+  let execResult = null;
+  let finalNote = note;
+  if (decision === 'approved' && existing.kind === 'action-request') {
+    try {
+      const { action, params } = JSON.parse(existing.body || '{}');
+      execResult = await executeApprovedAction(env, action, params);
+      finalNote = (finalNote ? finalNote + ' | ' : '') + (execResult.executed ? `executed: ${execResult.detail}` : `NOT executed: ${execResult.reason}`);
+    } catch (e) {
+      execResult = { executed: false, reason: 'could not parse stored action body: ' + String(e) };
+      finalNote = (finalNote ? finalNote + ' | ' : '') + `NOT executed: ${execResult.reason}`;
+    }
+  }
+  const result = await DB.prepare(
+    "UPDATE hive_proposals SET status=?, decided_at=?, founder_note=?, decided_by=? WHERE id=? AND status='pending'"
+  ).bind(decision, new Date().toISOString(), finalNote, decidedByLabel, id).run();
+  if (!result.meta?.changes) {
+    return { status: 404, body: { detail: `proposal ${id} not found or already decided` } };
+  }
+  // Visible in Updates (task 49) — a decision is the single most consequential
+  // event in this system and previously left no trace in the founder-facing feed.
+  ctx?.waitUntil?.(postUpdate(DB, {
+    kind: 'proposal-decided', title: `Proposal #${id} ${decision}`,
+    body: finalNote || `The founder ${decision} this proposal.`,
+  }));
+  return { status: 200, body: { ok: true, id, decision, ...(execResult ? { execution: execResult } : {}) } };
 }
 
 // D1 table initialisation — called once per heartbeat to ensure all tables exist.
@@ -441,13 +635,17 @@ async function ensureTables(DB) {
   // column's shape. If the live schema really does require more, this insert no-ops
   // safely and the next heartbeat retries — same degrade-quietly discipline as every
   // other D1 write here, though the whole point of task 45's fix was to stop degrading
-  // THIS quietly, so: if the Orchestrator never appears in GET /v11/agents, that is the
+  // THIS quietly, so: if Akosha never appears in GET /v11/agents, that is the
   // signal this insert is failing and needs a real look, not silent acceptance.
+  // Named 'Akosha' by the founder, 2026-08-10 — was 'Orchestrator' as a working label
+  // until then (see AGENT_JOBS/AGENT_WORK below). Renamed via UPDATE too, not just a
+  // fresh INSERT, so a live row seeded under the old name doesn't fork into a duplicate.
   try {
-    const exists = await DB.prepare("SELECT 1 FROM agents WHERE name='Orchestrator'").first();
+    await DB.prepare("UPDATE agents SET name='Akosha' WHERE name='Orchestrator'").run();
+    const exists = await DB.prepare("SELECT 1 FROM agents WHERE name='Akosha'").first();
     if (!exists) {
       await DB.prepare(
-        "INSERT INTO agents (name, elo, soul, reports_to, status) VALUES ('Orchestrator', 1200, 0, 'Kai El', 'active')"
+        "INSERT INTO agents (name, elo, soul, reports_to, status) VALUES ('Akosha', 1200, 0, 'Kai El', 'active')"
       ).run();
     }
   } catch { /* agents table shape differs from assumed, or D1 not ready */ }
@@ -489,6 +687,12 @@ async function roadmapFounderActions(env) {
       title: 'Create the Queues consumer (async LLM jobs)',
       todo: 'No MCP tool exists to create a Cloudflare Queue, so this is founder-only regardless. Run `npx wrangler queues create hive-llm-jobs`, then tell Claude — the producer/consumer code is already written and activation-ready.',
       done: 'Bound. The opt-in {"async": true} path on /v11/venture/plan and /v11/legal/research can run through it.',
+    },
+    {
+      key: 'ACCESS_CONFIGURED', bound: !!(env.FOUNDER_EMAIL && env.ACCESS_AUD),
+      title: 'Set up Cloudflare Access — sign in as founder, no more pasting FOUNDER_KEY',
+      todo: 'Optional, additive — FOUNDER_KEY keeps working either way. Zero Trust → Access → Applications → create a self-hosted app protecting /v11/founder/* on this Worker (or a custom domain pointed at it, if the workers.dev address doesn\'t offer path-scoping — check the dashboard), One-Time-PIN login, one Allow policy for your email only. Then set ACCESS_TEAM_DOMAIN/ACCESS_AUD/FOUNDER_EMAIL in wrangler.jsonc (see the commented block there) and redeploy. See FLIP_THE_SWITCHES.md.',
+      done: 'Bound. Proposals approve/reject now works from a logged-in browser with no key field touched, and decisions record your real email instead of null.',
     },
   ];
   return items.map((it, i) => ({
@@ -552,6 +756,86 @@ async function seedProposalOnce(DB, { kind, title, body }) {
         .bind(new Date().toISOString(), kind, title, body).run();
     }
   } catch { /* D1 not ready */ }
+}
+
+// Shared by both POST /roadmap/development (FOUNDER_KEY-gated) and
+// POST /founder/roadmap/development (Cloudflare Access-gated, 2026-08-09) — the
+// exact same upsert logic, reachable through either auth path, extracted once so
+// the two gates can never quietly drift into different behavior. Returns a plain
+// {status, body} pair rather than calling json() itself, since only the caller
+// knows which route (and therefore which response helper context) it's in.
+async function upsertRoadmapItems(DB, rb) {
+  const section = (rb.section || '').toString().trim();
+  // 'projects' (roadmap-digest.yml) and 'campaign' (campaign-roadmap-digest.yml)
+  // added 2026-08-08 — both workflows had been building correct digests and
+  // POSTing them on schedule since they were created, but this whitelist rejected
+  // both sections with a 400 every single time (confirmed live: their own repo
+  // secret was ALSO never set, so the POST never even fired — this whitelist gap
+  // would have surfaced as a second, separate failure the moment it was).
+  const validSections = ['decisions', 'in_progress', 'backlog', 'projects', 'campaign'];
+  if (!validSections.includes(section)) {
+    return { status: 400, body: { detail: `section must be one of: ${validSections.join(', ')} (founderActions are derived live and cannot be edited; completed phases are an append-only historical record)` } };
+  }
+
+  // Batch upsert — the shape roadmap-digest.yml/campaign-roadmap-digest.yml
+  // actually send: {section, items:[{title,status,statusLabel,body,sortOrder}]}.
+  // Full-replace semantics per section: every item in the batch is upserted, and
+  // any existing row in this section NOT present in the batch is deleted — a
+  // digest should always reflect its source document's CURRENT state, never
+  // accumulate rows the source no longer has (a real, named D1-space concern
+  // elsewhere in this repo; this prevents exactly that kind of unbounded growth).
+  if (Array.isArray(rb.items)) {
+    const items = rb.items.slice(0, 50); // sane cap, not a real limit anyone should hit
+    const now = new Date().toISOString();
+    const keepTitles = [];
+    for (const [i, it] of items.entries()) {
+      const t = (it.title || '').toString().trim().slice(0, 200);
+      if (!t) continue;
+      keepTitles.push(t);
+      const status = (it.status || 'backlog').toString().slice(0, 20);
+      const statusLabel = (it.statusLabel || '').toString().slice(0, 40);
+      const body = (it.body || '').toString().slice(0, 2000);
+      const rawSort = it.sortOrder ?? it.sort_order;
+      const sortOrder = Number.isFinite(+rawSort) ? +rawSort : i;
+      const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, t).first();
+      if (existing) {
+        await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
+          .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
+      } else {
+        await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
+          .bind(section, t, status, statusLabel, body, sortOrder, now).run();
+      }
+    }
+    if (keepTitles.length) {
+      const placeholders = keepTitles.map(() => '?').join(',');
+      await DB.prepare(`DELETE FROM roadmap_items WHERE section=? AND title NOT IN (${placeholders})`)
+        .bind(section, ...keepTitles).run();
+    }
+    return { status: 200, body: { ok: true, section, upserted: keepTitles.length } };
+  }
+
+  // Single-item upsert/delete — the founder's own manual edits (panel or curl),
+  // unchanged from the original design.
+  const title = (rb.title || '').toString().trim().slice(0, 200);
+  if (!title) return { status: 400, body: { detail: 'title required' } };
+  if (rb.status === 'delete') {
+    const del = await DB.prepare('DELETE FROM roadmap_items WHERE section=? AND title=?').bind(section, title).run();
+    return { status: 200, body: { ok: true, deleted: del.meta?.changes || 0 } };
+  }
+  const status = (rb.status || 'backlog').toString().slice(0, 20);
+  const statusLabel = (rb.statusLabel || '').toString().slice(0, 40);
+  const body = (rb.body || '').toString().slice(0, 2000);
+  const sortOrder = Number.isFinite(+rb.sortOrder) ? +rb.sortOrder : 0;
+  const now = new Date().toISOString();
+  const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, title).first();
+  if (existing) {
+    await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
+      .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
+    return { status: 200, body: { ok: true, updated: true } };
+  }
+  await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
+    .bind(section, title, status, statusLabel, body, sortOrder, now).run();
+  return { status: 200, body: { ok: true, created: true } };
 }
 
 // Append a founder-facing update (add-only; never edits law/vision). Keeps the
@@ -710,13 +994,12 @@ const AGENT_JOBS = {
   'Sekhmet': "the Arena's judge — resolves every challenge via Elo math (resolveChallenge()); also has an on-demand explain/judge voice (POST /v11/council/consult)",
   'Ptah': 'architect-proposals — drafts real change proposals when Kai El\'s own reply starts with PROPOSAL: (this chat, not a separate agent)',
   'Horus': 'the watchtower — the hive\'s health/status surface (GET /v11/debug/health, /v11/pulse)',
-  // 'Orchestrator' (2026-08-07) is a functional working name, not hive mythology — the
-  // founder asked for this role directly ("an upgraded secretary... directly under Kai,"
-  // "the queen is supposed to delegate and expand on" it) but no name in THE_CODEX.md or
-  // SPORE_ROSTER.md fits it, and inventing one here would cross the Codex boundary
-  // FABLE_DNA.md Chromosome V reserves for the founder. Reports to Kai El, same as every
-  // other Elder — does not replace the council or its own reports_to chain.
-  'Orchestrator': 'coordination under Kai El — reads real provider health (provider_health, task 45) and what the Council has recently filed, and organizes it into one summary rather than routing anything itself; still write-only to hive_updates like every other agent turn',
+  // 'Akosha' (working name 'Orchestrator' 2026-08-07 to 2026-08-10, founder named the
+  // role directly on 2026-08-10) — the founder asked for this role directly ("an
+  // upgraded secretary... directly under Kai," "the queen is supposed to delegate and
+  // expand on" it). Reports to Kai El, same as every other Elder — does not replace the
+  // council or its own reports_to chain.
+  'Akosha': 'coordination under Kai El — reads real provider health (provider_health, task 45) and what the Council has recently filed, and organizes it into one summary rather than routing anything itself; still write-only to hive_updates like every other agent turn',
 };
 
 // The genome's own chapter titles (2026-08-04, task 33) — Kai El previously had zero
@@ -820,16 +1103,15 @@ const AGENT_WORK = [
     // supposed to delegate and expand on." Full build, confirmed directly with the
     // founder rather than assumed. Reuses this exact AGENT_WORK shape — same
     // generate() call, same postUpdate() reporting, same round-robin turn — so it
-    // costs about what one more Elder's turn costs, not a new architecture. Its own
-    // real name is an open founder decision (see AGENT_JOBS above); 'Orchestrator' is
-    // a working label only.
-    agent: 'Orchestrator',
+    // costs about what one more Elder's turn costs, not a new architecture. Real name
+    // 'Akosha' given by the founder 2026-08-10 (see AGENT_JOBS above); 'Orchestrator'
+    // was the working label until then.
+    agent: 'Akosha',
     focus: 'coordination',
     prefer: 'speed', // summarising material already gathered in the snapshot
     system:
-      'You are the Orchestrator, a coordination role reporting to Kai El (a working name ' +
-      "only — the founder has not yet named this role; never invent hive mythology for " +
-      'yourself). The snapshot below includes real provider health (which of Claude/Groq/' +
+      'You are Akosha, a coordination role reporting to Kai El. The snapshot below ' +
+      'includes real provider health (which of Claude/Groq/' +
       'Mistral/Workers AI is actually answering right now, not just bound), the routing ' +
       'each agent job asks for, and what the Council has recently filed. Routing is real ' +
       'and automatic: each job declares a preferred provider role, and a provider that ' +
@@ -885,7 +1167,7 @@ async function hiveSnapshot(env, DB) {
       providerHealth.results.map(h => `${h.provider}: ${h.ok ? 'answering' : `FAILING (${h.error || 'unknown error'})`} as of ${h.checked_at}`).join(' | '));
   }
   // The real routing table (task 52) — which provider role each job asks for, and what
-  // each role maps to. Included so the Orchestrator's turn reports on routing that
+  // each role maps to. Included so Akosha's turn reports on routing that
   // actually exists rather than describing a preference nothing enforces, which is
   // precisely what its first version did.
   lines.push('PROVIDER ROLES: ' + PROVIDERS.map(p => `${p.id}=${p.role}`).join(', ') +
@@ -898,6 +1180,17 @@ async function hiveSnapshot(env, DB) {
 // Round-robin: one agent per tick, so the roster cycles instead of every agent firing
 // at once. Which agent is next is derived from how many work-cycle updates already
 // exist, so it survives restarts without needing its own state column.
+// Pure, independently testable: given the most recent agent-work row's title
+// (or null/undefined/malformed for "no real prior turn"), return the index into
+// AGENT_WORK that should go next. Extracted specifically so this logic can be
+// unit-tested without standing up a fake D1/generate() for all of runWorkCycle().
+function nextWorkTurnIndex(lastAgentWorkTitle) {
+  const jobIndex = new Map(AGENT_WORK.map((j, i) => [j.agent, i]));
+  const lastAgent = String(lastAgentWorkTitle || '').split('—')[0].trim();
+  const lastIndex = jobIndex.has(lastAgent) ? jobIndex.get(lastAgent) : -1;
+  return (lastIndex + 1) % AGENT_WORK.length; // -1 (no/unrecognised prior row) -> 0
+}
+
 async function runWorkCycle(env, ctx) {
   const DB = env.DB;
   if (!DB) return null;
@@ -913,10 +1206,29 @@ async function runWorkCycle(env, ctx) {
     if (last?.ts && (Date.now() - Date.parse(last.ts)) < 55 * 60 * 1000) return null;
   } catch { /* table not ready — fall through and let the first turn run */ }
 
+  // Real production bug found and fixed 2026-08-11: turn selection used to be
+  // `SELECT COUNT(*) WHERE kind='agent-work'` then `count % AGENT_WORK.length`.
+  // That looks like a monotonic cursor but isn't one — postUpdate() prunes
+  // hive_updates to the last 100 rows ACROSS EVERY KIND on every write (heartbeat
+  // fires every 30min, agent-work ~hourly, plus concern/proposal-actioned rows all
+  // share the same 100-row cap). So the agent-work count within that shrinking,
+  // mixed-kind window isn't "total turns ever" — it fluctuates with pruning
+  // dynamics and can sit at the same value (mod AGENT_WORK.length) indefinitely.
+  // Confirmed live: an edge-health-probe dispatch found 32 consecutive agent-work
+  // rows in production, every single one Ma'at (index 0) — the work cycle had
+  // been firing hourly for 7+ hours without ever rotating.
+  //
+  // Fixed by nextWorkTurnIndex() deriving the next turn from the single most
+  // recent agent-work row's actual agent, not a count. Immune to the pruning
+  // entirely as long as that one newest row survives, which it always does —
+  // pruning only ever removes the OLDEST rows, never the newest.
   let turn = 0;
   try {
-    const c = await DB.prepare("SELECT COUNT(*) AS n FROM hive_updates WHERE kind='agent-work'").first();
-    turn = Number(c?.n || 0);
+    const last = await DB.prepare(
+      "SELECT title FROM hive_updates WHERE kind='agent-work' ORDER BY id DESC LIMIT 1"
+    ).first();
+    // title is `${job.agent} — ${job.focus}` (postUpdate() call below).
+    turn = nextWorkTurnIndex(last?.title);
   } catch {}
   const job = AGENT_WORK[turn % AGENT_WORK.length];
 
@@ -1231,6 +1543,256 @@ async function recall(env, query, topK = 5) {
   } catch (e) { return { available: false, matches: [], error: String(e) }; }
 }
 
+// ── Kai El's own brain (kai-el-brain D1, 2026-08-10) ─────────────────────
+// The founder's second brain (Nanuet, the Queen, is the first and gets the
+// same treatment later). Deliberately a SEPARATE D1 database, not more tables
+// in thehive-queen — the founder was shown the slot-cost tradeoff and chose
+// separation for Kai El specifically. Schema: worker/schema/kai-el-brain.sql.
+//
+// Every function here degrades to exactly today's behaviour when KAI_BRAIN is
+// unbound or the write switch is off. Nothing in Kai El's existing chat path
+// depends on the brain succeeding.
+
+// Staged autonomy. Read from deploy-time env vars ONLY — never from the
+// database Kai El himself writes to. autonomy_registry (in kai-el-brain)
+// documents these switches and deliberately has no `enabled` column, because
+// an agent that can write its own permissions has none: automaton's review
+// found exactly that bug upstream ("the agent able to edit its own
+// financial/authority rule files") and closing it was one of the five gaps
+// that rebuild exists to fix. Same reasoning, same shape, applied here.
+const KAI_SWITCHES = [
+  'KAI_BRAIN_WRITE',
+  'KAI_BRAINSTORM_EXPLICIT',
+  'KAI_TAB_DRAFT',
+  'KAI_BRAINSTORM_AUTO',
+  'KAI_4DBRAIN_BRIDGE',
+  'KAI_TAB_AUTONOMOUS_LOW',
+  'KAI_FINANCIAL_AUTONOMY',
+];
+
+// A switch is on only for an explicit affirmative value. Anything else —
+// unset, empty, 'off', 'false', a typo — is off. Fail-closed by construction:
+// a misspelled value must never read as a granted capability.
+function switchOn(env, key) {
+  const v = env?.[key];
+  if (v === true) return true;
+  const s = String(v ?? '').trim().toLowerCase();
+  return s === 'on' || s === 'true' || s === '1' || s === 'yes';
+}
+
+// KAI_FINANCIAL_AUTONOMY is listed in KAI_SWITCHES and reported by
+// /v11/kai/autonomy so the ladder's destination is visible, but NOTHING in this
+// file reads it to authorise a payment — the capability is not built. It is
+// documented, not wired. If a future change makes it load-bearing, that change
+// owns building the spending cap, the per-transaction record, and the rule that
+// Kai El cannot raise his own ceiling. Those are not optional extras.
+function autonomyState(env) {
+  const out = {};
+  for (const k of KAI_SWITCHES) out[k] = switchOn(env, k);
+  return out;
+}
+
+function kaiBrainOk(env) { return !!env?.KAI_BRAIN; }
+
+// Write one memory to Kai El's own brain: the FULL text in D1 (Vectorize
+// metadata truncates to 512 chars, so the complete text has always been thrown
+// away at write time) plus the embedding in Vectorize for semantic search.
+// The two halves are independent on purpose — either can fail without the
+// other, and a half-write is better than a lost memory.
+async function kaiRemember(env, { id, kind, text, summary, source, importance, agent }) {
+  if (!kaiBrainOk(env) || !switchOn(env, 'KAI_BRAIN_WRITE')) return { stored: false, reason: 'brain write off or unbound' };
+  const ts = new Date().toISOString();
+  const memId = String(id || `${kind || 'note'}-${Date.now()}`);
+  let vectorOk = false;
+  try { vectorOk = await remember(env, memId, text, { kind: kind || 'note', ts, agent: agent || 'Kai El' }); } catch { /* vector half is optional */ }
+  try {
+    await env.KAI_BRAIN.prepare(
+      `INSERT OR REPLACE INTO memories (id, agent, kind, text, summary, source, ts, importance, vector_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      memId, agent || 'Kai El', kind || 'note', String(text ?? ''),
+      summary ?? null, source ?? null, ts,
+      typeof importance === 'number' ? importance : 0.5,
+      vectorOk ? memId : null
+    ).run();
+    return { stored: true, id: memId, vector: vectorOk };
+  } catch (e) { return { stored: false, vector: vectorOk, error: String(e) }; }
+}
+
+// Recency-weighted recall — the fix for a real, already-documented gap:
+// recall() stores a `ts` on every memory and never reads it, so a day-one fact
+// outranks today's whenever it happens to embed closer (noted in task 53's
+// audit against worker/src/index.js remember()/recall()).
+//
+// Similarity is DISCOUNTED by age, never replaced by it. An old memory keeps at
+// least RECENCY_FLOOR of its score, so a highly-relevant old fact still beats a
+// fresh irrelevant one — ranking purely by recency would be exactly as broken as
+// ranking purely by similarity, just in the other direction.
+const RECENCY_HALF_LIFE_DAYS = 14;  // a memory's age-weight halves every 2 weeks
+const RECENCY_FLOOR = 0.5;          // the oldest memory still keeps half its similarity
+
+function recencyWeight(ts, nowMs) {
+  const t = Date.parse(ts || '');
+  if (!Number.isFinite(t)) return 1;                       // no/unparseable ts → no penalty
+  const ageDays = Math.max(0, (nowMs - t) / 86400000);     // future timestamps → treated as now
+  const decay = Math.pow(0.5, ageDays / RECENCY_HALF_LIFE_DAYS);
+  return RECENCY_FLOOR + (1 - RECENCY_FLOOR) * decay;
+}
+
+async function kaiRecall(env, query, topK = 5) {
+  // Over-fetch, then re-rank: the top-K by raw similarity is not the top-K once
+  // age is applied, so asking Vectorize for exactly K would discard the very
+  // rows re-ranking exists to promote.
+  const base = await recall(env, query, Math.max(topK * 3, topK));
+  if (!base.available) return { ...base, reranked: false };
+  const now = Date.now();
+  const matches = base.matches
+    .map(m => {
+      const weight = recencyWeight(m.ts, now);
+      return { ...m, similarity: m.score, recency_weight: +weight.toFixed(4), score: +(m.score * weight).toFixed(4) };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK);
+  return { available: true, reranked: true, matches };
+}
+
+// The decision/outcome record — the honest half of what the founder called a
+// "training database". Real weight-level fine-tuning needs infrastructure that
+// does not exist yet (same dependency as task 53); the founder's own framing was
+// "log now, real fine-tuning later", so this logs.
+//
+// risk_reason/risk_handling are required in practice for high-risk rows because
+// the founder asked for exactly that: for high-risk items Kai El must state WHY
+// it is high-risk and HOW to handle it, not merely flag it. Enforced here rather
+// than trusted to a prompt — a prompt-only rule is one bad generation away from
+// a high-risk row with no explanation attached.
+async function logDecision(env, d) {
+  if (!kaiBrainOk(env) || !switchOn(env, 'KAI_BRAIN_WRITE')) return { logged: false };
+  const tier = ['low', 'normal', 'high'].includes(d?.risk_tier) ? d.risk_tier : 'normal';
+  if (tier === 'high' && (!d?.risk_reason || !d?.risk_handling)) {
+    return { logged: false, error: 'high-risk decisions require risk_reason and risk_handling' };
+  }
+  try {
+    const r = await env.KAI_BRAIN.prepare(
+      `INSERT INTO decision_log (agent, ts, surface, request, reasoning, action, risk_tier,
+        risk_reason, risk_handling, autonomy_mode, provider, tokens_in, tokens_out)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      d.agent || 'Kai El', new Date().toISOString(), d.surface || 'chat',
+      String(d.request ?? ''), d.reasoning ?? null, d.action ?? null, tier,
+      d.risk_reason ?? null, d.risk_handling ?? null,
+      d.autonomy_mode || 'draft-approve', d.provider ?? null,
+      Number.isFinite(d.tokens_in) ? d.tokens_in : null,
+      Number.isFinite(d.tokens_out) ? d.tokens_out : null
+    ).run();
+    return { logged: true, id: r?.meta?.last_row_id ?? null };
+  } catch (e) { return { logged: false, error: String(e) }; }
+}
+
+// Accumulate a future fine-tuning pair. `eligible` stays 0 by schema default —
+// a logged exchange is NOT automatically training data. Promoting a sample is a
+// separate, deliberate act; defaulting it to 1 would mean every conversation
+// silently became training material, which is precisely the kind of quiet scope
+// expansion this repo's own audits keep catching after the fact.
+async function logTrainingSample(env, t) {
+  if (!kaiBrainOk(env) || !switchOn(env, 'KAI_BRAIN_WRITE')) return { logged: false };
+  try {
+    await env.KAI_BRAIN.prepare(
+      `INSERT INTO training_samples (agent, ts, system_prompt, user_input, assistant_output, source_decision_id)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(
+      t.agent || 'Kai El', new Date().toISOString(), t.system_prompt ?? null,
+      String(t.user_input ?? ''), String(t.assistant_output ?? ''),
+      Number.isFinite(t.source_decision_id) ? t.source_decision_id : null
+    ).run();
+    return { logged: true };
+  } catch (e) { return { logged: false, error: String(e) }; }
+}
+
+// ── The 4DBRAIN bridge ───────────────────────────────────────────────────
+// 4DBRAIN owns the real tesseract/hypercomplex math (tesseract_math/, canonically
+// moved there 2026-07-22). That code is Python under FastAPI; this Worker is
+// JavaScript on Cloudflare's edge. A Worker cannot import Python, so the only
+// honest connection between them is a network call — which is what this is.
+//
+// INERT BY DEFAULT, and for a real reason rather than caution: 4DBRAIN is not
+// deployed anywhere. Its own .queen/hive.yml entry has base_url empty, and its
+// Railway/Render configs have never been provisioned. Until FOURDBRAIN_URL points
+// at something real, every call here returns {available:false} with the reason
+// stated — it does not pretend, retry, or fabricate a result.
+async function fourDBrain(env, path, body, timeoutMs = 8000) {
+  if (!switchOn(env, 'KAI_4DBRAIN_BRIDGE')) return { available: false, reason: 'KAI_4DBRAIN_BRIDGE is off' };
+  const base = String(env?.FOURDBRAIN_URL ?? '').trim().replace(/\/+$/, '');
+  if (!base) return { available: false, reason: 'FOURDBRAIN_URL unset — 4DBRAIN is not deployed anywhere yet' };
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${base}${path}`, {
+      method: body ? 'POST' : 'GET',
+      headers: { 'content-type': 'application/json', 'user-agent': 'THEHIVE-worker/kai-brain' },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ctrl.signal,
+    });
+    const text = await res.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch { data = { raw: text.slice(0, 2000) }; }
+    // A non-2xx is reported as a real failure with its real status, not smoothed
+    // into available:false — "the colony answered 500" and "there is no colony"
+    // are different facts and collapsing them is task 45's bug in a new place.
+    return { available: res.ok, status: res.status, data };
+  } catch (e) {
+    return { available: false, reason: String(e?.name === 'AbortError' ? `timeout after ${timeoutMs}ms` : e) };
+  } finally { clearTimeout(timer); }
+}
+
+// ── Real repo file content, for architect proposals (2026-08-10) ─────────
+// Kai El runs at the edge with no filesystem and no git — ASSETS only serves
+// docs/, so he cannot see the current content of most of the repo. Without real
+// content he'd be drafting a diff from guesswork, producing something that looks
+// plausible but doesn't apply. This fetches the CURRENT file from GitHub's public
+// raw content API (unauthenticated read — same class of URL .queen/hive.yml
+// already uses for other federation sources) so any diff he drafts is grounded in
+// real, current text. Same honest-failure shape as fourDBrain(): never throws,
+// never fabricates content on failure.
+async function fetchRepoFile(env, path, ref = 'main', timeoutMs = 8000) {
+  const clean = String(path || '').replace(/^\/+/, '');
+  if (!clean) return { available: false, reason: 'no path given' };
+  const url = `https://raw.githubusercontent.com/TehutiRaEl/THEHIVE/${encodeURIComponent(ref)}/${clean}`;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { headers: { 'user-agent': 'THEHIVE-worker/architect-proposal' }, signal: ctrl.signal });
+    if (res.status === 404) return { available: false, reason: `no such file at ${ref}: ${clean}` };
+    if (!res.ok) return { available: false, reason: `GitHub raw returned ${res.status}`, status: res.status };
+    const text = await res.text();
+    return { available: true, path: clean, ref, text };
+  } catch (e) {
+    return { available: false, reason: String(e?.name === 'AbortError' ? `timeout after ${timeoutMs}ms` : e) };
+  } finally { clearTimeout(timer); }
+}
+
+// Pulls a fenced ```diff block out of a reply, plus the file paths it touches.
+// Returns null when no diff block is present — the normal case, since most
+// PROPOSAL: replies stay prose-only. Deliberately tolerant: a missing/malformed
+// block degrades to "no diff" rather than throwing, so a bad generation never
+// breaks the underlying prose proposal it's attached to.
+function extractDiffBlock(text) {
+  const m = String(text || '').match(/```diff\r?\n([\s\S]*?)```/);
+  if (!m) return null;
+  const diff = m[1].trim();
+  if (!diff) return null;
+  const files = new Set();
+  for (const line of diff.split('\n')) {
+    const gitLine = line.match(/^diff --git a\/(.+?) b\/(.+)$/);
+    if (gitLine) { files.add(gitLine[1]); files.add(gitLine[2]); continue; }
+    const plus = line.match(/^\+\+\+ b\/(.+)$/);
+    if (plus) files.add(plus[1]);
+    const minus = line.match(/^--- a\/(.+)$/);
+    if (minus) files.add(minus[1]); // real git diffs use bare "--- /dev/null" for new files, which never matches this "--- a/" pattern
+  }
+  return { diff, files: [...files] };
+}
+
 // Real grounding for constitution questions — reads the CURRENT docs/GOVERNANCE.md
 // (same file the Constitution UI panel renders, same file the founder edits) via
 // the ASSETS binding, so Kai El answers from what's actually committed instead of
@@ -1269,7 +1831,7 @@ async function queenReview(env, requestUrl, { title, body }) {
       "founder's real, written vision below. Score how aligned the proposal is, 0-100. " +
       'Be strict: default low. Only score 98 or above when the proposal clearly, concretely ' +
       'serves the vision with no real risk or ambiguity. If, and only if, this proposal is ' +
-      'about coordination, provider routing, or the Orchestrator role you delegate work to ' +
+      'about coordination, provider routing, or the Akosha role you delegate work to ' +
       '(reports to Kai El), let your REASON line briefly note what you are delegating or ' +
       'expanding — that is real, part of your own responsibilities, not a new gate. Reply ' +
       'with EXACTLY two lines: a line "SCORE: <0-100>" and a line "REASON: <one short ' +
@@ -1717,77 +2279,38 @@ export default {
           }, 401);
         }
         const rb = await request.json().catch(() => ({}));
-        const section = (rb.section || '').toString().trim();
-        // 'projects' (roadmap-digest.yml) and 'campaign' (campaign-roadmap-digest.yml)
-        // added 2026-08-08 — both workflows had been building correct digests and
-        // POSTing them on schedule since they were created, but this whitelist rejected
-        // both sections with a 400 every single time (confirmed live: their own repo
-        // secret was ALSO never set, so the POST never even fired — this whitelist gap
-        // would have surfaced as a second, separate failure the moment it was).
-        const validSections = ['decisions', 'in_progress', 'backlog', 'projects', 'campaign'];
-        if (!validSections.includes(section)) {
-          return json({ detail: `section must be one of: ${validSections.join(', ')} (founderActions are derived live and cannot be edited; completed phases are an append-only historical record)` }, 400);
+        const result = await upsertRoadmapItems(DB, rb);
+        return json(result.body, result.status);
+      }
+      // Same upsert, reached via a Cloudflare Access identity instead of FOUNDER_KEY —
+      // see verifyAccessJWT() and its own comment for why this exists as a separate
+      // path rather than changing the route above (this path is edge-gated by Access
+      // policy, so a plain 401 here just means "no Access session on this browser
+      // yet," not "Access is broken").
+      if (p === '/founder/roadmap/development' && method === 'POST') {
+        const accessEmail = await verifyAccessJWT(request, env, ctx);
+        if (!accessEmail) {
+          return json({ detail: 'no Cloudflare Access session — sign in, or use the FOUNDER_KEY field as a fallback' }, 401);
         }
-
-        // Batch upsert — the shape roadmap-digest.yml/campaign-roadmap-digest.yml
-        // actually send: {section, items:[{title,status,statusLabel,body,sortOrder}]}.
-        // Full-replace semantics per section: every item in the batch is upserted, and
-        // any existing row in this section NOT present in the batch is deleted — a
-        // digest should always reflect its source document's CURRENT state, never
-        // accumulate rows the source no longer has (a real, named D1-space concern
-        // elsewhere in this repo; this prevents exactly that kind of unbounded growth).
-        if (Array.isArray(rb.items)) {
-          const items = rb.items.slice(0, 50); // sane cap, not a real limit anyone should hit
-          const now = new Date().toISOString();
-          const keepTitles = [];
-          for (const [i, it] of items.entries()) {
-            const t = (it.title || '').toString().trim().slice(0, 200);
-            if (!t) continue;
-            keepTitles.push(t);
-            const status = (it.status || 'backlog').toString().slice(0, 20);
-            const statusLabel = (it.statusLabel || '').toString().slice(0, 40);
-            const body = (it.body || '').toString().slice(0, 2000);
-            const rawSort = it.sortOrder ?? it.sort_order;
-            const sortOrder = Number.isFinite(+rawSort) ? +rawSort : i;
-            const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, t).first();
-            if (existing) {
-              await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
-                .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
-            } else {
-              await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
-                .bind(section, t, status, statusLabel, body, sortOrder, now).run();
-            }
-          }
-          if (keepTitles.length) {
-            const placeholders = keepTitles.map(() => '?').join(',');
-            await DB.prepare(`DELETE FROM roadmap_items WHERE section=? AND title NOT IN (${placeholders})`)
-              .bind(section, ...keepTitles).run();
-          }
-          return json({ ok: true, section, upserted: keepTitles.length });
-        }
-
-        // Single-item upsert/delete — the founder's own manual edits (panel or curl),
-        // unchanged from the original design.
-        const title = (rb.title || '').toString().trim().slice(0, 200);
-        if (!title) return json({ detail: 'title required' }, 400);
-        if (rb.status === 'delete') {
-          const del = await DB.prepare('DELETE FROM roadmap_items WHERE section=? AND title=?').bind(section, title).run();
-          return json({ ok: true, deleted: del.meta?.changes || 0 });
-        }
-        const status = (rb.status || 'backlog').toString().slice(0, 20);
-        const statusLabel = (rb.statusLabel || '').toString().slice(0, 40);
-        const body = (rb.body || '').toString().slice(0, 2000);
-        const sortOrder = Number.isFinite(+rb.sortOrder) ? +rb.sortOrder : 0;
-        const now = new Date().toISOString();
-        const existing = await DB.prepare('SELECT id FROM roadmap_items WHERE section=? AND title=?').bind(section, title).first();
-        if (existing) {
-          await DB.prepare('UPDATE roadmap_items SET status=?, status_label=?, body=?, sort_order=?, updated_at=? WHERE id=?')
-            .bind(status, statusLabel, body, sortOrder, now, existing.id).run();
-          return json({ ok: true, updated: true });
-        }
-        await DB.prepare('INSERT INTO roadmap_items (section, title, status, status_label, body, sort_order, updated_at) VALUES (?,?,?,?,?,?,?)')
-          .bind(section, title, status, statusLabel, body, sortOrder, now).run();
-        return json({ ok: true, created: true });
+        const rb = await request.json().catch(() => ({}));
+        const result = await upsertRoadmapItems(DB, rb);
+        return json(result.body, result.status);
+      }
+      // A plain top-level navigation target for the Proposals panel's "Sign in as
+      // founder" link — Access gates the whole /v11/founder/* prefix at the edge,
+      // so simply visiting this page (any /v11/founder/* page) is what triggers
+      // Access's real login flow (redirect → email PIN → redirect back here). By the time
+      // this handler runs, the request has already been let through by Access, so
+      // verifyAccessJWT() succeeding here is the expected case, not a coincidence —
+      // it only fails if Access is misconfigured (wrong AUD/domain wired up) or the
+      // vars in wrangler.jsonc are still unset, both worth surfacing plainly rather
+      // than a bare redirect back into the app.
+      if (p === '/founder/login' && method === 'GET') {
+        const accessEmail = await verifyAccessJWT(request, env, ctx);
+        const html = accessEmail
+          ? `<!doctype html><meta charset="utf-8"><title>Signed in</title><body style="font:16px system-ui;background:#0a0a0f;color:#e5e5f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center"><p>Signed in as <strong>${accessEmail.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))}</strong>.</p><p>You can close this tab and return to the Command Center.</p></div></body>`
+          : `<!doctype html><meta charset="utf-8"><title>Not configured</title><body style="font:16px system-ui;background:#0a0a0f;color:#e5e5f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0"><div style="text-align:center;max-width:32rem"><p>Cloudflare Access let this request through, but this Worker doesn't recognize it yet.</p><p>Check that ACCESS_TEAM_DOMAIN/ACCESS_AUD/FOUNDER_EMAIL are set in wrangler.jsonc and match this Access Application — see FLIP_THE_SWITCHES.md.</p></div></body>`;
+        return new Response(html, { status: accessEmail ? 200 : 500, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
       }
       if (p === '/roadmap') {
         return await cachedJson(request, ctx, corsHeaders, 60, async () => {
@@ -1833,8 +2356,12 @@ export default {
       if (p === '/proposals' && method === 'GET') {
         try {
           const { limit, offset } = pageParams(url, 50, 200);
+          // diff/diff_files/diff_check (2026-08-10) are nullable and only ever
+          // populated on architect-proposal rows carrying a real code change —
+          // every other kind/row simply returns null for all three, unchanged
+          // from before these columns existed.
           const { results } = await DB.prepare(
-            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note, modifies_id FROM hive_proposals
+            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note, modifies_id, diff, diff_files, diff_check FROM hive_proposals
              ORDER BY (status='pending') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
           return json({ proposals: results, founder_auth_bound: await founderKeyBound(env), queen_auto_approval_bound: !!env.QUEEN_AUTONOMOUS_APPROVAL, limit, offset });
         } catch { return json({ proposals: [], founder_auth_bound: await founderKeyBound(env) }); }
@@ -1902,59 +2429,34 @@ export default {
           : body.decision === 'modified' ? 'modified'
           : null;
         if (!decision) return json({ detail: "decision must be 'approved', 'rejected', or 'modified'" }, 400);
-        let note = (body.note || '').toString().slice(0, 2000);
-        // Fetch kind+title+body BEFORE the state-changing UPDATE, since only an
-        // 'action-request' proposal that is being APPROVED ever executes
-        // anything — approval alone on every other kind still just records a
-        // decision, same as before this task. title is needed too now: a
-        // 'modified' decision derives the counter-proposal's title from it.
-        const existing = await DB.prepare('SELECT kind, title, body FROM hive_proposals WHERE id=? AND status=\'pending\'').bind(id).first();
-        if (!existing) return json({ detail: `proposal ${id} not found or already decided` }, 404);
-        if (decision === 'modified') {
-          const modifiedBody = (body.modified_body || '').toString().trim().slice(0, 4000);
-          if (!modifiedBody) return json({ detail: 'modified decision requires a non-empty modified_body' }, 400);
-          const modifiedTitle = (body.modified_title || '').toString().trim().slice(0, 200)
-            || `Modified: ${existing.title}`.slice(0, 200);
-          const nowIso = new Date().toISOString();
-          const inserted = await DB.prepare(
-            'INSERT INTO hive_proposals (ts, kind, title, body, status, modifies_id) VALUES (?,?,?,?,\'pending\',?)'
-          ).bind(nowIso, existing.kind, modifiedTitle, modifiedBody, id).run();
-          const newId = inserted.meta?.last_row_id;
-          const closeNote = (note ? note + ' | ' : '') + `counter-proposed as #${newId}`;
-          const result = await DB.prepare(
-            "UPDATE hive_proposals SET status='modified', decided_at=?, founder_note=? WHERE id=? AND status='pending'"
-          ).bind(nowIso, closeNote, id).run();
-          if (!result.meta?.changes) return json({ detail: `proposal ${id} not found or already decided` }, 404);
-          ctx?.waitUntil?.(postUpdate(DB, {
-            kind: 'proposal-decided', title: `Proposal #${id} modified`,
-            body: `${closeNote} — new proposal #${newId} is pending your decision.`,
-          }));
-          return json({ ok: true, id, decision: 'modified', new_proposal_id: newId });
+        const note = (body.note || '').toString().slice(0, 2000);
+        const result = await decideProposal(env, ctx, id, decision, note, null,
+          { modified_title: body.modified_title, modified_body: body.modified_body });
+        return json(result.body, result.status);
+      }
+      // Same decision path, reached via a Cloudflare Access identity instead of
+      // FOUNDER_KEY — see verifyAccessJWT() for why this is a separate route rather
+      // than a change to the one above. Real improvement over the FOUNDER_KEY path:
+      // decidedByLabel carries the founder's actual verified email instead of always
+      // being null, so hive_proposals.decided_by finally records who, not just that
+      // "someone with the key" decided.
+      const decideMatchAccess = p.match(/^\/founder\/proposals\/(\d+)\/decide$/);
+      if (decideMatchAccess && method === 'POST') {
+        const accessEmail = await verifyAccessJWT(request, env, ctx);
+        if (!accessEmail) {
+          return json({ detail: 'no Cloudflare Access session — sign in, or use the FOUNDER_KEY field as a fallback' }, 401);
         }
-        let execResult = null;
-        if (decision === 'approved' && existing.kind === 'action-request') {
-          try {
-            const { action, params } = JSON.parse(existing.body || '{}');
-            execResult = await executeApprovedAction(env, action, params);
-            note = (note ? note + ' | ' : '') + (execResult.executed ? `executed: ${execResult.detail}` : `NOT executed: ${execResult.reason}`);
-          } catch (e) {
-            execResult = { executed: false, reason: 'could not parse stored action body: ' + String(e) };
-            note = (note ? note + ' | ' : '') + `NOT executed: ${execResult.reason}`;
-          }
-        }
-        const result = await DB.prepare(
-          "UPDATE hive_proposals SET status=?, decided_at=?, founder_note=? WHERE id=? AND status='pending'"
-        ).bind(decision, new Date().toISOString(), note, id).run();
-        if (!result.meta?.changes) {
-          return json({ detail: `proposal ${id} not found or already decided` }, 404);
-        }
-        // Visible in Updates (task 49) — a decision is the single most consequential
-        // event in this system and previously left no trace in the founder-facing feed.
-        ctx?.waitUntil?.(postUpdate(DB, {
-          kind: 'proposal-decided', title: `Proposal #${id} ${decision}`,
-          body: note || `The founder ${decision} this proposal.`,
-        }));
-        return json({ ok: true, id, decision, ...(execResult ? { execution: execResult } : {}) });
+        const id = Number(decideMatchAccess[1]);
+        const body = await request.json().catch(() => ({}));
+        const decision = body.decision === 'approved' ? 'approved'
+          : body.decision === 'rejected' ? 'rejected'
+          : body.decision === 'modified' ? 'modified'
+          : null;
+        if (!decision) return json({ detail: "decision must be 'approved', 'rejected', or 'modified'" }, 400);
+        const note = (body.note || '').toString().slice(0, 2000);
+        const result = await decideProposal(env, ctx, id, decision, note, accessEmail,
+          { modified_title: body.modified_title, modified_body: body.modified_body });
+        return json(result.body, result.status);
       }
       // The real bridge (2026-08-04, task 32): an approved proposal used to just sit
       // there, nothing ever picking it up. A daily automated firing marks one actioned
@@ -1978,6 +2480,30 @@ export default {
           body: 'An approved proposal was marked as genuinely actioned, so no later firing re-does it.',
         }));
         return json({ ok: true, id });
+      }
+      // Real dry-run-apply result for an architect proposal's diff (2026-08-10),
+      // written by .github/workflows/architect-proposal-check.yml — the only place
+      // that actually has git and a real checkout, since this Worker has neither.
+      // FOUNDER_KEY-gated the same way task-digest.yml's POST already is (the
+      // workflow carries the same secret as a repo secret) — this route writes
+      // ONLY diff_check, on purpose: a compromised or buggy workflow run can at
+      // worst report a wrong validity string, never touch status, title, body, or
+      // anything Queen/Elder review already decided.
+      const diffCheckMatch = p.match(/^\/proposals\/(\d+)\/diff-check$/);
+      if (diffCheckMatch && method === 'POST') {
+        if (!(await founderAuthOk(request, env))) {
+          return json({ detail: 'invalid or missing founder key' }, 401);
+        }
+        const id = Number(diffCheckMatch[1]);
+        const body = await request.json().catch(() => ({}));
+        const result = (body.result || '').toString().trim();
+        const valid = result === 'applies_clean' || /^failed: /.test(result);
+        if (!valid) return json({ detail: "result must be 'applies_clean' or 'failed: <reason>'" }, 400);
+        const existing = await DB.prepare('SELECT id, diff FROM hive_proposals WHERE id=?').bind(id).first();
+        if (!existing) return json({ detail: `proposal ${id} not found` }, 404);
+        if (!existing.diff) return json({ detail: `proposal ${id} has no diff to check` }, 400);
+        await DB.prepare('UPDATE hive_proposals SET diff_check=? WHERE id=?').bind(result.slice(0, 500), id).run();
+        return json({ ok: true, id, diff_check: result.slice(0, 500) });
       }
       // Sub-Architect's first workflow (TEAM_CHARTERS.md, 2026-07-18): decompose a
       // founder-initiated venture brief into a structured CEO->departments->tasks
@@ -2308,11 +2834,15 @@ export default {
           ctxLines.push('Your own genome (FABLE_DNA.md chromosomes): ' +
             GENOME_CHROMOSOMES.map(([n, title, gist]) => `${n} (${title}) — ${gist}`).join(' | '));
         } catch {}
-        // retrieval-augmented: pull relevant memories when the index exists
+        // retrieval-augmented: pull relevant memories when the index exists.
+        // kaiRecall (2026-08-10) re-ranks by age before truncating to 3 — the
+        // plain recall() below it stores a ts on every memory and never reads it,
+        // so a day-one fact could outrank today's purely on wording. Falls back to
+        // the raw ordering automatically when the index is absent.
         try {
-          const mem = await recall(env, cmd, 3);
+          const mem = await kaiRecall(env, cmd, 3);
           if (mem.available && mem.matches.length)
-            ctxLines.push('Recalled memory: ' + mem.matches.map(m => m.text).join(' | '));
+            ctxLines.push('Recalled memory (most recent first where relevance ties): ' + mem.matches.map(m => m.text).join(' | '));
         } catch {}
         // real constitution grounding — only the actual committed articles,
         // never a paraphrase invented on the fly (this is what fixed the
@@ -2354,6 +2884,44 @@ export default {
           "start your reply's first line with exactly 'CONCERN: <short title>' or 'PROPOSAL: <short title>', then " +
           "a blank line, then your normal answer. Use this rarely — most exchanges warrant neither marker; forcing " +
           "one when nothing genuine is there defeats the point of having it at all.";
+        // Architect proposals with a real diff (2026-08-10, Kai El's first evolution
+        // into an architect agent) — stage 3 (KAI_TAB_DRAFT) made real, per the
+        // founder's own scoping. Explicit v1 scope: the founder names the target file
+        // (body.target_file), Kai El never self-selects one — self-directed repo-wide
+        // discovery is a materially bigger capability and out of scope here. When the
+        // switch is off or no file is named, this changes nothing: same SYSTEM, same
+        // prose-only PROPOSAL: path that has always existed.
+        let architectFile = null;
+        const targetFile = (body.target_file || '').toString().trim();
+        let ARCHITECT_SYSTEM_ADDENDUM = '';
+        let ARCHITECT_PROMPT_ADDENDUM = '';
+        if (targetFile && switchOn(env, 'KAI_TAB_DRAFT')) {
+          architectFile = await fetchRepoFile(env, targetFile);
+          if (architectFile.available) {
+            ARCHITECT_SYSTEM_ADDENDUM =
+              " The sovereign has asked you to architect a change to a real file, whose CURRENT " +
+              "content (fetched fresh from the repo, not from memory) follows below. If — and only " +
+              "if — a genuine, concrete code change is warranted, reply with 'PROPOSAL: <short " +
+              "title>', a blank line, your normal explanation, then a fenced ```diff block containing " +
+              "a real unified diff against the exact content shown (correct file paths, correct " +
+              "context lines — a diff that does not apply is worse than no diff, since it wastes the " +
+              "founder's review time on something unusable). You draft the diff; you never apply it " +
+              "yourself — a human always reviews and applies it. If no real change is warranted, say " +
+              "so plainly instead of forcing a diff that doesn't need to exist.";
+            ARCHITECT_PROMPT_ADDENDUM =
+              `\n\nCURRENT CONTENT of ${architectFile.path} (ref: ${architectFile.ref}):\n` +
+              '```\n' + architectFile.text.slice(0, 12000) + '\n```\n';
+          } else {
+            // Honest failure, not silent: the sovereign asked to target a file that
+            // could not be fetched. Kai El is told so explicitly rather than silently
+            // falling back to a normal chat reply with no explanation of why no diff
+            // appeared.
+            ARCHITECT_PROMPT_ADDENDUM =
+              `\n\n(The sovereign asked you to architect a change to ${targetFile}, but its current ` +
+              `content could not be fetched: ${architectFile.reason}. Say so plainly rather than ` +
+              `guessing at the file's content or drafting a diff you cannot ground in anything real.)\n`;
+          }
+        }
         // Route through the provider waterfall (Claude → Groq → Mistral →
         // Workers AI): Kai delegates automatically, and whichever key the
         // founder has bound answers. Workers AI keeps the proven prompt-string
@@ -2361,7 +2929,7 @@ export default {
         const userPrompt =
           (ctxLines.length ? 'HIVE CONTEXT:\n' + ctxLines.join('\n') + '\n\n' : '') +
           (historyLines.length ? 'RECENT CONVERSATION:\n' + historyLines.join('\n') + '\n\n' : '') +
-          'SOVEREIGN: ' + cmd + '\n\nKAI EL:';
+          'SOVEREIGN: ' + cmd + ARCHITECT_PROMPT_ADDENDUM + '\n\nKAI EL:';
         // Optional {"provider":"claude"|"groq"|"mistral"|"workers-ai"} pins this one call
         // to a single key (task 44) so each bound provider can actually be exercised and
         // proven, instead of Claude silently answering everything forever. Unknown names
@@ -2371,7 +2939,14 @@ export default {
         if (wantProvider && !PROVIDERS.some((pr) => pr.id === wantProvider)) {
           return json({ detail: `unknown provider '${wantProvider}' — valid: ${PROVIDERS.map((pr) => pr.id).join(', ')}` }, 400);
         }
-        const gen = await generate(env, { system: SYSTEM, prompt: userPrompt, maxTokens: 400, only: wantProvider });
+        // A diff-drafting reply needs real room — 400 tokens is enough for prose alone
+        // but would truncate a real diff mid-hunk, which is worse than no diff at all.
+        const gen = await generate(env, {
+          system: SYSTEM + ARCHITECT_SYSTEM_ADDENDUM,
+          prompt: userPrompt,
+          maxTokens: ARCHITECT_SYSTEM_ADDENDUM ? 1200 : 400,
+          only: wantProvider,
+        });
         if (!gen && wantProvider) {
           return json({ detail: `provider '${wantProvider}' is bound-but-unreachable or returned nothing; not falling back to another provider, since that would misreport which key answered`, provider_requested: wantProvider }, 502);
         }
@@ -2379,6 +2954,31 @@ export default {
           // remember the exchange so the hive's memory grows from conversation too
           // (ctx.waitUntil now that fetch carries ctx — was a latent ReferenceError)
           ctx?.waitUntil?.(remember(env, 'chat-' + Date.now(), `Kai El on "${cmd.slice(0, 80)}": ${gen.text.slice(0, 200)}`, { kind: 'chat', ts: new Date().toISOString() }));
+          // ...and into Kai El's own brain (2026-08-10): the FULL exchange, not the
+          // 200-char slice the line above stores, plus a decision row and a future
+          // fine-tuning pair. All three no-op unless KAI_BRAIN is bound AND
+          // KAI_BRAIN_WRITE is on, so this changes nothing until stage 1 is flipped.
+          // waitUntil, not await: Kai El's reply must never wait on his own
+          // bookkeeping, and a brain write failing must never fail a chat reply.
+          if (kaiBrainOk(env) && switchOn(env, 'KAI_BRAIN_WRITE')) {
+            const brainWork = (async () => {
+              const d = await logDecision(env, {
+                surface: 'chat', request: cmd, action: gen.text,
+                autonomy_mode: 'explicit-invoke', provider: gen.provider,
+                tokens_in: gen.usage?.input_tokens, tokens_out: gen.usage?.output_tokens,
+              });
+              await kaiRemember(env, {
+                id: 'kai-chat-' + Date.now(), kind: 'chat', source: 'command_text',
+                text: `Founder asked: ${cmd}\n\nKai El answered: ${gen.text}`,
+                summary: gen.text.slice(0, 200),
+              });
+              await logTrainingSample(env, {
+                user_input: cmd, assistant_output: gen.text,
+                source_decision_id: d.id ?? undefined,
+              });
+            })();
+            ctx?.waitUntil?.(brainWork);
+          }
           // The bridge: Kai El -> founder (via the harness). A CONCERN/PROPOSAL
           // marker on the reply's first line is durably logged so it survives past
           // this one stateless exchange — hive_updates (kind='concern') and
@@ -2398,11 +2998,43 @@ export default {
               // Ptah's real job: this is the hive's one architect-proposal path — the
               // place a concrete build/change idea actually gets drafted and queued.
               // Runs through the Queen's real approval power (switch 9) AND the Elders'
-              // Council check (queenDecide()) same as every other proposal path.
+              // Council check (queenDecide()) same as every other proposal path — a
+              // diff-carrying proposal goes through EXACTLY the same governance chain
+              // as a prose one, unchanged, per the founder's own explicit choice.
+              //
+              // A diff block (2026-08-10) is optional and additive: extracted here if
+              // present, stored alongside the same prose body, never routes around
+              // queenDecide(). ACTION_ALLOWLIST/executeApprovedAction() are untouched —
+              // this proposal, diff or not, still never executes anything itself. A
+              // human (the founder, or a Claude Code session) applies it.
+              const diffBlock = extractDiffBlock(gen.text);
               ctx?.waitUntil?.((async () => {
                 const { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote } = await queenDecide(env, request.url, { title, body: gen.text });
-                await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note) VALUES (?,?,?,?,?,?,?,?,?)')
-                  .bind(new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote).run();
+                const r = await DB.prepare(
+                  'INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note, diff, diff_files, diff_check) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+                ).bind(
+                  new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote,
+                  diffBlock?.diff ?? null,
+                  diffBlock ? JSON.stringify(diffBlock.files) : null,
+                  diffBlock ? 'pending' : null
+                ).run();
+                // Close the loop with Kai El's own brain (Phase A) — proposing a real
+                // code change is exactly the case the high-risk enforcement in
+                // logDecision() exists for: it refuses to log without both a reason
+                // and a handling plan, so this cannot become a silent, unexplained
+                // high-risk entry.
+                if (diffBlock && kaiBrainOk(env) && switchOn(env, 'KAI_BRAIN_WRITE')) {
+                  await logDecision(env, {
+                    surface: 'chat', request: `architect: ${targetFile}`, action: title,
+                    risk_tier: 'high',
+                    risk_reason: `Proposes a real code change to ${diffBlock.files.join(', ') || targetFile}; an untested or ` +
+                      'unapplied diff can silently diverge from what founder review believes was proposed.',
+                    risk_handling: 'Diff is stored unapplied and dry-run checked by a separate GitHub Action ' +
+                      '(git apply --check) before the founder decides; nothing executes it — a human always applies it.',
+                    autonomy_mode: 'draft-approve', provider: gen.provider,
+                    tokens_in: gen.usage?.input_tokens, tokens_out: gen.usage?.output_tokens,
+                  });
+                }
               })());
             }
           }
@@ -2509,6 +3141,63 @@ export default {
       }
       if (p === '/memory/status')
         return json({ vectorize_bound: !!env.VECTORIZE, ai_bound: !!env.AI, model: EMBED_MODEL });
+
+      // ── Kai El's brain (2026-08-10) ───────────────────────────────────
+      // Read-only, unauthenticated status — same posture as /memory/status and
+      // /debug/*: real state, no secret values, and honest about what is off.
+      if (p === '/kai/brain') {
+        const st = { bound: kaiBrainOk(env), write_enabled: switchOn(env, 'KAI_BRAIN_WRITE'), counts: null };
+        if (st.bound) {
+          try {
+            const r = await env.KAI_BRAIN.prepare(
+              `SELECT (SELECT COUNT(*) FROM memories) AS memories,
+                      (SELECT COUNT(*) FROM decision_log) AS decisions,
+                      (SELECT COUNT(*) FROM training_samples) AS training_samples,
+                      (SELECT COUNT(*) FROM training_samples WHERE eligible=1) AS training_eligible`
+            ).first();
+            st.counts = r || null;
+          } catch (e) { st.error = String(e); }
+        }
+        return json({
+          ...st,
+          recency: { half_life_days: RECENCY_HALF_LIFE_DAYS, floor: RECENCY_FLOOR },
+          fourdbrain: {
+            switch_on: switchOn(env, 'KAI_4DBRAIN_BRIDGE'),
+            url_set: !!String(env?.FOURDBRAIN_URL ?? '').trim(),
+            note: String(env?.FOURDBRAIN_URL ?? '').trim()
+              ? 'configured'
+              : '4DBRAIN is not deployed anywhere yet — its hive.yml base_url is empty and its Railway/Render configs were never provisioned',
+          },
+        });
+      }
+      // The staged-autonomy ladder: what Kai El can do, what he cannot yet, and
+      // exactly what the founder does to grant each next stage. Live env state is
+      // joined onto the registry's documentation — the registry never stores
+      // enablement, precisely so writing to it cannot grant anything.
+      if (p === '/kai/autonomy') {
+        const state = autonomyState(env);
+        let rows = [];
+        if (kaiBrainOk(env)) {
+          try {
+            const r = await env.KAI_BRAIN.prepare(
+              'SELECT key, stage, title, description, turn_on_steps, risk_note, requires FROM autonomy_registry ORDER BY stage'
+            ).all();
+            rows = r?.results || [];
+          } catch { rows = []; }
+        }
+        const ladder = rows.map(row => ({
+          ...row,
+          enabled: !!state[row.key],
+          blocked_by: row.requires && !state[row.requires] ? row.requires : null,
+        }));
+        return json({
+          agent: 'Kai El',
+          ladder,
+          enabled_now: Object.entries(state).filter(([, v]) => v).map(([k]) => k),
+          next_stage: ladder.find(l => !l.enabled) ?? null,
+          note: 'Enablement is read from deploy-time environment variables only, never from this database — an agent that can write its own permissions has none.',
+        });
+      }
       if (p === '/tier3/status')
         return json({ arena_renderer: { available: true, status: 'Loaded — edge voxel simulation' } });
 
@@ -2539,6 +3228,12 @@ export default {
       if (p === '/debug/env') {
         const known = ['DB', 'AI', 'VECTORIZE', 'ASSETS', 'FILES', 'RATE_LIMIT_KV', 'LLM_QUEUE'];
         const bindings = {}; for (const k of known) bindings[k] = !!env[k];
+        // Cloudflare Access (2026-08-09) — presence-only, same discipline as every
+        // other row here (F-001: names/booleans, never values). ACCESS_AUD/
+        // FOUNDER_EMAIL are plain vars, not secrets, but still reported this way
+        // for consistency and because it's what roadmapFounderActions() below reads
+        // to derive the founder-actions row for this switch.
+        bindings.ACCESS_CONFIGURED = !!(env.FOUNDER_EMAIL && env.ACCESS_AUD);
         // report which expected secrets are set, by presence only
         // FOUNDER_KEY added 2026-08-06 (task 35 investigation) — frontend/src/utils/
         // readiness.ts:48 has always checked secrets_present.includes('FOUNDER_KEY') for
@@ -2687,6 +3382,7 @@ export default {
             'POST /proposals/{id}/actioned (rate-limited)',
             "POST /council/consult (rate-limited; agent: maat|solomon|sekhmet)",
             'GET /pulse', 'GET /memory/status', 'POST /memory/search', 'POST /memory/remember',
+            'GET /kai/brain', 'GET /kai/autonomy',
             'GET /tier3/status', 'GET /arena/challenges', 'GET /arena/fallen',
             'POST /arena/challenge (token+rate-limited)', 'POST /arena/resolve/{id} (token+rate-limited)',
             'POST /arena/project/{id} (token+rate-limited)', 'POST /auth/token',
@@ -2921,4 +3617,23 @@ export {
   resolveSecret,
   founderKeyBound,
   broadcastToCommandCenter,
+  verifyAccessJWT,
+  // Kai El's brain (2026-08-10) — exported so worker/test/kai-brain.test.js drives
+  // the real functions rather than a reimplementation of them.
+  KAI_SWITCHES,
+  switchOn,
+  autonomyState,
+  kaiBrainOk,
+  kaiRemember,
+  kaiRecall,
+  recencyWeight,
+  RECENCY_HALF_LIFE_DAYS,
+  RECENCY_FLOOR,
+  logDecision,
+  logTrainingSample,
+  fourDBrain,
+  fetchRepoFile,
+  extractDiffBlock,
+  nextWorkTurnIndex,
+  runWorkCycle,
 };

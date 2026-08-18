@@ -24,10 +24,65 @@ interface Proposal {
   // points back at the original pending proposal it replaced, so the panel
   // can show real lineage instead of two unrelated-looking rows.
   modifies_id?: number | null;
+  // Kai El's first evolution into an architect agent (2026-08-10): an
+  // 'architect-proposal' can now carry a real, reviewable code diff instead of
+  // only prose describing one. All three are null on every other proposal kind
+  // and on architect-proposals with no diff — nothing here changes what those
+  // look like. diff_check is written only by .github/workflows/
+  // architect-proposal-check.yml, the one place that actually has git.
+  diff?: string | null;
+  diff_files?: string | null; // JSON array of touched paths, as stored
+  diff_check?: string | null; // null | 'pending' | 'applies_clean' | 'failed: <reason>'
 }
 
 const V11 = `${API_BASE_URL}/v11`;
 const KEY_STORAGE = 'hive_founder_key';
+
+// A real, reviewable diff — collapsed by default so a founder scanning many
+// proposals isn't forced past raw diff text to see the title/body. The
+// diff_check badge reports the ONE thing that matters before deciding: does
+// this actually apply, or would approving it approve something unusable.
+function DiffBlock({ p }: { p: Proposal }) {
+  if (!p.diff) return null;
+  let files: string[] = [];
+  try { files = JSON.parse(p.diff_files || '[]'); } catch { /* malformed stored JSON — show no file list rather than crash the panel */ }
+
+  const check = p.diff_check || 'pending';
+  const badge =
+    check === 'applies_clean'
+      ? { text: 'applies cleanly', cls: 'border-emerald-400/40 text-emerald-300' }
+      : check.startsWith('failed')
+        ? { text: 'does NOT apply', cls: 'border-red-400/40 text-red-300' }
+        : { text: 'checking…', cls: 'border-amber-400/40 text-amber-300' };
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span
+          title={check.startsWith('failed') ? check : undefined}
+          className={`shrink-0 text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${badge.cls}`}
+        >
+          {badge.text}
+        </span>
+        {files.length > 0 && (
+          <span className="text-[10px] text-slate-500">{files.join(', ')}</span>
+        )}
+      </div>
+      {check.startsWith('failed') && (
+        <div className="text-[10px] text-red-300/80">{check}</div>
+      )}
+      <details className="text-xs">
+        <summary className="cursor-pointer text-cyan-glow/80 select-none">View diff</summary>
+        <pre className="mt-1 max-h-64 overflow-auto rounded bg-black/40 p-2 text-[10px] text-slate-300 whitespace-pre-wrap">
+          {p.diff}
+        </pre>
+      </details>
+      <p className="text-[10px] text-slate-600">
+        Drafted by Kai El, never applied automatically — review, then apply it yourself.
+      </p>
+    </div>
+  );
+}
 
 // The hive's standing suggestion box: new implementations, goals, and
 // changes it thinks are worth doing — surfaced here, never applied on their
@@ -68,10 +123,43 @@ export default function ProposalsPanel() {
     localStorage.setItem(KEY_STORAGE, v);
   };
 
-  const decide = async (id: number, decision: 'approved' | 'rejected' | 'modified', extra?: { modified_body: string }) => {
+  // 2026-08-09: tries the Cloudflare Access route first. No Authorization header
+  // needed here at all — a founder with an active Access session automatically
+  // carries the CF_Authorization cookie on this same-origin fetch, so a matching
+  // request just succeeds with zero key handling. A 401 from THIS route means "no
+  // Access session yet" (or Access isn't provisioned), not a real error, so it
+  // falls through silently to the original FOUNDER_KEY path below rather than
+  // surfacing anything — that path's own errors are still shown normally.
+  const decide = async (id: number, decision: 'approved' | 'rejected' | 'modified', extra?: { modified_body: string; modified_title?: string }) => {
     setBusy(id);
     setError(null);
     try {
+      try {
+        const accessRes = await fetch(`${V11}/founder/proposals/${id}/decide`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ decision, ...extra }),
+        });
+        if (accessRes.ok) {
+          await load();
+          return;
+        }
+        if (accessRes.status !== 401) {
+          const d = await accessRes.json().catch(() => ({}));
+          setError(d.detail || `HTTP ${accessRes.status}`);
+          return;
+        }
+      } catch {
+        // Network/CORS trouble on the Access route — fall through to FOUNDER_KEY
+        // too, same as a 401, rather than surfacing a confusing error for the
+        // happy path (most visitors won't have Access set up at all yet).
+      }
+
+      if (!key) {
+        setError('Not signed in with Cloudflare Access, and no FOUNDER_KEY entered — use "Sign in as founder" above or paste a key.');
+        return;
+      }
+
       const r = await fetch(`${V11}/proposals/${id}/decide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
@@ -119,6 +207,20 @@ export default function ProposalsPanel() {
         </div>
       )}
 
+      {/* 2026-08-09: a plain top-level link, not a fetch — visiting it is what
+          actually triggers Cloudflare Access's login flow (redirect → email PIN
+          → redirect back). Once signed in, Approve/Reject above never touches
+          the key field again; this is here so a founder who hasn't set up
+          Access yet has an obvious way to start, rather than only discovering
+          it via a silent background retry. Optional: the key field below still
+          works on its own if Access isn't configured. */}
+      <a
+        href={`${V11}/founder/login`}
+        className="inline-block text-xs text-cyan-glow hover:underline"
+      >
+        Sign in as founder (Cloudflare Access) →
+      </a>
+
       <div className="flex items-center gap-2">
         <input
           type="password"
@@ -144,6 +246,7 @@ export default function ProposalsPanel() {
               <span className="text-sm text-slate-100">{p.title}</span>
             </div>
             {p.body && <p className="text-xs text-slate-400 leading-relaxed">{p.body}</p>}
+            <DiffBlock p={p} />
             <div className="flex items-center gap-2 pt-1">
               {/* First real consumer of components/common (task 13, 2026-08-06). The
                   shared Button also gives these two a real in-flight spinner via
@@ -271,6 +374,7 @@ export default function ProposalsPanel() {
               {typeof p.modifies_id === 'number' && (
                 <div className="text-cyan-glow/80">Counter-proposes #{p.modifies_id}</div>
               )}
+              <DiffBlock p={p} />
             </div>
           ))}
         </div>

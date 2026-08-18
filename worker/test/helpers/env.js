@@ -44,14 +44,29 @@ export function stubDB(routes = {}) {
         queries.push({ sql, args });
         return match(sql);
       };
-      // A matched value shaped like { meta: {...} } (optionally alongside
+      // run()'s default return matches real D1: {success, meta:{changes,...}}.
+      // default is `changes: 1`, i.e. "the write affected a row" — the common
+      // case, and the one every caller of run() before 2026-08-09 relied on
+      // (this default was missing entirely until decideProposal()'s
+      // `result.meta?.changes` check caught it: a plain {success:true} with
+      // no meta made every real decide look like "proposal not found", found
+      // via a real test failure, not inferred from reading the stub). A
+      // matched value shaped like { meta: {...} } (optionally alongside
       // `success`) is real D1's own run() result shape (INSERT/UPDATE/DELETE
       // report meta.changes / meta.last_row_id) — pass it through so a test
       // can assert on a row actually being written/changed, e.g. task 22's
       // modify/counter-propose flow, which reads inserted.meta.last_row_id
-      // and result.meta.changes for real. Anything else defaults to the
-      // bare { success: true } every prior caller already relied on.
-      const runResult = (v) => (v && typeof v === 'object' && 'meta' in v) ? v : { success: true };
+      // and result.meta.changes for real. Real bug found resolving PR #171's
+      // merge conflicts (2026-08-18): an earlier version of this function
+      // shadowed the module-level default and silently dropped meta.changes
+      // to undefined for any UNMAPPED query, which every existing caller
+      // before task 22 (2026-08-14) — including main's own Cloudflare Access
+      // decide-route tests — had never needed to stub explicitly. Restored
+      // the default here so a stub only needs to provide `meta` when it's
+      // asserting on the write, not merely to avoid a false "not found".
+      const runResult = (v) => (v && typeof v === 'object' && 'meta' in v)
+        ? { success: true, ...v }
+        : { success: true, meta: { changes: 1 } };
       return {
         bind: (...args) => ({
           run: async () => runResult(exec(args)),
@@ -151,6 +166,46 @@ export function stubOutboundFetch(handler) {
     return handler(String(url), init);
   };
   return { calls, restore: () => { globalThis.fetch = previous; } };
+}
+
+/**
+ * Cloudflare Access test JWTs (2026-08-09) — a real RSA keypair + real signing,
+ * not a mock, so tests exercise the exact crypto.subtle path verifyAccessJWT()
+ * itself uses. Shared here (rather than duplicated per test file) so any suite
+ * that needs a request carrying a valid Access identity can get one in two
+ * calls: generateAccessKeyPair() once, then signAccessJWT() per token.
+ */
+export async function generateAccessKeyPair(kid = 'test-key-1') {
+  const pair = await crypto.subtle.generateKey(
+    { name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
+    true,
+    ['sign', 'verify'],
+  );
+  const publicJwk = await crypto.subtle.exportKey('jwk', pair.publicKey);
+  publicJwk.kid = kid;
+  publicJwk.alg = 'RS256';
+  publicJwk.use = 'sig';
+  return { privateKey: pair.privateKey, publicJwk, kid };
+}
+
+function base64UrlEncode(bytes) {
+  let str = '';
+  for (const b of bytes) str += String.fromCharCode(b);
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+export async function signAccessJWT(privateKey, kid, payloadOverrides = {}) {
+  const header = { alg: 'RS256', typ: 'JWT', kid };
+  const payload = {
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    iat: Math.floor(Date.now() / 1000),
+    ...payloadOverrides,
+  };
+  const headerB64 = base64UrlEncode(new TextEncoder().encode(JSON.stringify(header)));
+  const payloadB64 = base64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
+  const signingInput = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, signingInput);
+  return `${headerB64}.${payloadB64}.${base64UrlEncode(new Uint8Array(sig))}`;
 }
 
 /** A minimal fetch Response-alike for provider replies. */
