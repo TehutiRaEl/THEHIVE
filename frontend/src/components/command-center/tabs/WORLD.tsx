@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
 import ColonyZoomPanel from '../../ColonyZoomPanel';
+import ColonyGrid from '../../ColonyCard/ColonyGrid';
 import { useHiveData } from '../../../hooks/useHiveData';
 
 const WORLD: React.FC = () => {
@@ -64,10 +65,8 @@ const WORLD: React.FC = () => {
         </section>
 
         <section className="world-map">
-          <h2>Colony Map</h2>
-          <div className="map-placeholder">
-            <p>Interactive colony map - Click "View Colony Graph" above</p>
-          </div>
+          <h2>Colonies <span style={{ opacity: 0.6, fontSize: 13 }}>(federation roster, live status via /v11/debug/colony-ping)</span></h2>
+          <ColonyGrid />
         </section>
 
         <section className="world-events">
