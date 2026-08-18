@@ -622,6 +622,34 @@ async function ensureTables(DB) {
     // constraint and this fix does not need a growing log to work.
     DB.prepare(`CREATE TABLE IF NOT EXISTS provider_health
       (provider TEXT PRIMARY KEY, ok INTEGER NOT NULL, error TEXT, checked_at TEXT NOT NULL)`),
+    // Venture capability-gap queue (2026-08-18): "I don't have capability X, which I
+    // need for Y, and considered Z as an alternative" — Kai El's sanctioned channel
+    // for asking for more access/tooling while working a venture repo, instead of
+    // improvising or silently going without. hive_proposals-shaped on purpose (same
+    // id/ts convention, same open->decided lifecycle) but kept as its own table: a
+    // capability request and a hive-evolution proposal are different founder
+    // decisions and don't belong in one queue. github_issue_url is set once
+    // venture-gap-mirror.yml mirrors the row into a real GitHub Issue on the
+    // `venture` repo — nullable so a gap can exist before that mirror ever runs.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS venture_capability_gaps
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
+       venture TEXT NOT NULL, title TEXT NOT NULL,
+       capability_needed TEXT NOT NULL, needed_for TEXT NOT NULL, alternatives TEXT,
+       status TEXT NOT NULL DEFAULT 'open', founder_note TEXT, decided_at TEXT,
+       github_issue_url TEXT)`),
+    // Venture sandbox runs (2026-08-18): the real record of Kai El actually building
+    // something in a venture repo. A run is never a direct push to that repo's main —
+    // kai-sandbox-run.yml always pushes a new branch and opens a real PR; merging
+    // that PR IS the founder's approval, the same role /proposals/:id/decide plays
+    // for text/diff proposals. Deliberately a separate table from
+    // venture_capability_gaps: "may I have access" and "here's finished work to
+    // review" are different founder decisions. linked_gap_id is nullable — set only
+    // when a run follows a granted capability gap.
+    DB.prepare(`CREATE TABLE IF NOT EXISTS venture_sandbox_runs
+      (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT NOT NULL,
+       venture TEXT NOT NULL, task TEXT NOT NULL, branch TEXT, pr_url TEXT,
+       status TEXT NOT NULL DEFAULT 'running', linked_gap_id INTEGER,
+       decided_at TEXT, founder_note TEXT)`),
   ]);
   // One-time chain-of-command backfill: only touches rows that don't have a
   // reports_to yet, so re-running this on every heartbeat is a safe no-op once set.
@@ -1568,6 +1596,11 @@ const KAI_SWITCHES = [
   'KAI_4DBRAIN_BRIDGE',
   'KAI_TAB_AUTONOMOUS_LOW',
   'KAI_FINANCIAL_AUTONOMY',
+  // Gates whether kai-sandbox-run.yml may fire without an explicit founder
+  // dispatch each time (2026-08-18). Off by default like every other switch in
+  // this array — the workflow itself always pushes a branch + opens a PR, never
+  // main, so this switch controls WHO can start a run, not what a run can touch.
+  'KAI_SANDBOX_AUTONOMY',
 ];
 
 // A switch is on only for an explicit affirmative value. Anything else —
@@ -2504,6 +2537,136 @@ export default {
         if (!existing.diff) return json({ detail: `proposal ${id} has no diff to check` }, 400);
         await DB.prepare('UPDATE hive_proposals SET diff_check=? WHERE id=?').bind(result.slice(0, 500), id).run();
         return json({ ok: true, id, diff_check: result.slice(0, 500) });
+      }
+      // ── Venture capability gaps (2026-08-18) ───────────────────────────────────
+      // Kai El's sanctioned "I don't have capability X, need it for Y, considered Z"
+      // channel — see venture_capability_gaps table comment in ensureTables().
+      if (p === '/ventures/gaps' && method === 'GET') {
+        try {
+          const { limit, offset } = pageParams(url, 50, 200);
+          const { results } = await DB.prepare(
+            `SELECT id, ts, venture, title, capability_needed, needed_for, alternatives,
+                    status, founder_note, decided_at, github_issue_url
+             FROM venture_capability_gaps
+             ORDER BY (status='open') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
+          return json({ gaps: results, founder_auth_bound: await founderKeyBound(env), limit, offset });
+        } catch { return json({ gaps: [], founder_auth_bound: await founderKeyBound(env) }); }
+      }
+      if (p === '/ventures/gaps' && method === 'POST') {
+        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        const body = await request.json().catch(() => ({}));
+        const venture = (body.venture || '').toString().trim().slice(0, 80);
+        const title = (body.title || '').toString().trim().slice(0, 200);
+        const capabilityNeeded = (body.capability_needed || '').toString().trim().slice(0, 1000);
+        const neededFor = (body.needed_for || '').toString().trim().slice(0, 1000);
+        const alternatives = (body.alternatives || '').toString().slice(0, 2000) || null;
+        if (!venture || !title || !capabilityNeeded || !neededFor) {
+          return json({ detail: 'venture, title, capability_needed, and needed_for are all required' }, 400);
+        }
+        await DB.prepare(
+          `INSERT INTO venture_capability_gaps (ts, venture, title, capability_needed, needed_for, alternatives, status)
+           VALUES (?,?,?,?,?,?,'open')`)
+          .bind(new Date().toISOString(), venture, title, capabilityNeeded, neededFor, alternatives).run();
+        return json({ ok: true });
+      }
+      const gapDecideMatch = p.match(/^\/ventures\/gaps\/(\d+)\/decide$/);
+      if (gapDecideMatch && method === 'POST') {
+        if (!(await founderAuthOk(request, env))) {
+          return json({
+            detail: (await founderKeyBound(env)) ? 'invalid or missing founder key'
+              : 'no FOUNDER_KEY bound yet — nothing can be decided until the founder sets one (see FLIP_THE_SWITCHES.md)',
+          }, 401);
+        }
+        const id = Number(gapDecideMatch[1]);
+        const body = await request.json().catch(() => ({}));
+        const decision = body.decision === 'granted' ? 'granted' : body.decision === 'declined' ? 'declined' : null;
+        if (!decision) return json({ detail: "decision must be 'granted' or 'declined'" }, 400);
+        const note = (body.note || '').toString().slice(0, 2000);
+        const existing = await DB.prepare('SELECT id FROM venture_capability_gaps WHERE id=?').bind(id).first();
+        if (!existing) return json({ detail: `gap ${id} not found` }, 404);
+        await DB.prepare('UPDATE venture_capability_gaps SET status=?, founder_note=?, decided_at=? WHERE id=?')
+          .bind(decision, note, new Date().toISOString(), id).run();
+        return json({ ok: true, id, status: decision });
+      }
+      // Called only by venture-gap-mirror.yml, once it creates the real GitHub Issue —
+      // idempotency guard lives here (WHERE github_issue_url IS NULL) so a re-run of
+      // the same workflow can never double-link or clobber an already-mirrored gap.
+      const gapIssueLinkedMatch = p.match(/^\/ventures\/gaps\/(\d+)\/issue-linked$/);
+      if (gapIssueLinkedMatch && method === 'POST') {
+        const ipGap = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!(await rateLimitOk(DB, ipGap, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        const id = Number(gapIssueLinkedMatch[1]);
+        const body = await request.json().catch(() => ({}));
+        const issueUrl = (body.issue_url || '').toString().trim().slice(0, 500);
+        if (!issueUrl) return json({ detail: 'issue_url required' }, 400);
+        const existing = await DB.prepare('SELECT id, github_issue_url FROM venture_capability_gaps WHERE id=?').bind(id).first();
+        if (!existing) return json({ detail: `gap ${id} not found` }, 404);
+        if (existing.github_issue_url) return json({ detail: `gap ${id} already linked to ${existing.github_issue_url}` }, 409);
+        await DB.prepare('UPDATE venture_capability_gaps SET github_issue_url=? WHERE id=? AND github_issue_url IS NULL')
+          .bind(issueUrl, id).run();
+        return json({ ok: true, id, github_issue_url: issueUrl });
+      }
+      // ── Venture sandbox runs (2026-08-18) ──────────────────────────────────────
+      // The real record of Kai El building something in a venture repo — see
+      // venture_sandbox_runs table comment in ensureTables(). A run is never a direct
+      // push to a venture's main; kai-sandbox-run.yml always opens a real PR, and
+      // merging that PR is the founder's actual approval (mirrored back via /decide
+      // below purely so the Command Center has one place to see run state).
+      if (p === '/ventures/sandbox-runs' && method === 'GET') {
+        try {
+          const { limit, offset } = pageParams(url, 50, 200);
+          const { results } = await DB.prepare(
+            `SELECT id, ts, venture, task, branch, pr_url, status, linked_gap_id, decided_at, founder_note
+             FROM venture_sandbox_runs
+             ORDER BY (status IN ('running','pr_open')) DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
+          return json({ runs: results, founder_auth_bound: await founderKeyBound(env), limit, offset });
+        } catch { return json({ runs: [], founder_auth_bound: await founderKeyBound(env) }); }
+      }
+      if (p === '/ventures/sandbox-runs' && method === 'POST') {
+        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        const body = await request.json().catch(() => ({}));
+        const venture = (body.venture || '').toString().trim().slice(0, 80);
+        const task = (body.task || '').toString().trim().slice(0, 1000);
+        const linkedGapId = Number.isInteger(body.linked_gap_id) ? body.linked_gap_id : null;
+        if (!venture || !task) return json({ detail: 'venture and task are required' }, 400);
+        const insert = await DB.prepare(
+          `INSERT INTO venture_sandbox_runs (ts, venture, task, status, linked_gap_id) VALUES (?,?,?,'running',?)`)
+          .bind(new Date().toISOString(), venture, task, linkedGapId).run();
+        return json({ ok: true, id: insert.meta?.last_row_id ?? null });
+      }
+      const runOpenedMatch = p.match(/^\/ventures\/sandbox-runs\/(\d+)\/opened$/);
+      if (runOpenedMatch && method === 'POST') {
+        const ipRun = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!(await rateLimitOk(DB, ipRun, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
+        const id = Number(runOpenedMatch[1]);
+        const body = await request.json().catch(() => ({}));
+        const branch = (body.branch || '').toString().trim().slice(0, 200);
+        const prUrl = (body.pr_url || '').toString().trim().slice(0, 500);
+        if (!branch || !prUrl) return json({ detail: 'branch and pr_url are required' }, 400);
+        const existing = await DB.prepare('SELECT id FROM venture_sandbox_runs WHERE id=?').bind(id).first();
+        if (!existing) return json({ detail: `run ${id} not found` }, 404);
+        await DB.prepare("UPDATE venture_sandbox_runs SET branch=?, pr_url=?, status='pr_open' WHERE id=?")
+          .bind(branch, prUrl, id).run();
+        return json({ ok: true, id, status: 'pr_open' });
+      }
+      const runDecideMatch = p.match(/^\/ventures\/sandbox-runs\/(\d+)\/decide$/);
+      if (runDecideMatch && method === 'POST') {
+        if (!(await founderAuthOk(request, env))) {
+          return json({
+            detail: (await founderKeyBound(env)) ? 'invalid or missing founder key'
+              : 'no FOUNDER_KEY bound yet — nothing can be decided until the founder sets one (see FLIP_THE_SWITCHES.md)',
+          }, 401);
+        }
+        const id = Number(runDecideMatch[1]);
+        const body = await request.json().catch(() => ({}));
+        const decision = body.decision === 'merged' ? 'merged' : body.decision === 'closed' ? 'closed' : null;
+        if (!decision) return json({ detail: "decision must be 'merged' or 'closed'" }, 400);
+        const note = (body.note || '').toString().slice(0, 2000);
+        const existing = await DB.prepare('SELECT id FROM venture_sandbox_runs WHERE id=?').bind(id).first();
+        if (!existing) return json({ detail: `run ${id} not found` }, 404);
+        await DB.prepare('UPDATE venture_sandbox_runs SET status=?, founder_note=?, decided_at=? WHERE id=?')
+          .bind(decision, note, new Date().toISOString(), id).run();
+        return json({ ok: true, id, status: decision });
       }
       // Sub-Architect's first workflow (TEAM_CHARTERS.md, 2026-07-18): decompose a
       // founder-initiated venture brief into a structured CEO->departments->tasks

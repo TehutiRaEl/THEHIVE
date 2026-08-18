@@ -1,0 +1,109 @@
+name: Kai Sandbox Run
+
+# Kai El's real sandbox (2026-08-18): the founder wants Kai El to actually build
+# inside a venture repo, with every finished piece of work landing as a PUSH TO A
+# BRANCH — never directly to that repo's main — so the PR itself is the proposal and
+# merging it is the founder's real approval, the same role
+# POST /v11/proposals/:id/decide plays for text/diff proposals.
+#
+# Why this workflow, and not wiring the Command Center's HiveTerminal.tsx to a real
+# shell: that component's own header comment already explains a previous session
+# checked this exact idea and declined — "wiring a public frontend to run real
+# commands would be a genuine remote-code-execution hole." That reasoning still
+# holds. Execution here instead happens on GitHub's own ephemeral hosted runner,
+# which dies at the end of the run — never inside the Worker, never in a browser tab.
+#
+# Cross-repo checkout/push/PR needs a real PAT (default GITHUB_TOKEN is
+# THEHIVE-scoped only) — same guard-and-degrade convention as
+# federation-issue-triage.yml and venture-gap-mirror.yml, reusing
+# HIVE_FEDERATION_TOKEN. No schedule trigger on purpose: every run starts from an
+# explicit workflow_dispatch, which by itself already satisfies
+# KAI_SANDBOX_AUTONOMY's real purpose (gating who may START a run) — a future
+# autonomous/scheduled trigger should check GET /v11/kai/autonomy for
+# KAI_SANDBOX_AUTONOMY before firing unattended, but that is not built here.
+#
+# ── OPEN FORK, not guessed at (per this whole project's ask-don't-assume rule) ──
+# Steps 1-2 and 4-5 below are real and complete: they register the run, check out
+# the real target venture repo, create a branch, and (once real work exists on that
+# branch) open a real PR and mirror the result back to the Worker. Step 3 — Kai El
+# ACTUALLY PERFORMING the task — is deliberately left as a placeholder rather than
+# silently wired to a guessed mechanism. Three real candidates exist in this repo's
+# own ecosystem (the Claude Code CLI/Action this very session runs under; automaton's
+# policy-gated exec() tool, currently scoped to automaton's own repo only; or a new
+# provider-routed call through the Worker's existing generate()) and picking wrong
+# here is exactly the kind of decision this project's standing discipline says to
+# ask about, not assume. See venture_sandbox_runs in the Command Center for anything
+# dispatched before step 3 is wired — it will sit at status=running honestly, never
+# fake a finished PR.
+
+on:
+  workflow_dispatch:
+    inputs:
+      venture_repo:
+        description: 'Target venture repo, e.g. TehutiRaEl/SVFG'
+        required: true
+      task:
+        description: 'What Kai El should build/change'
+        required: true
+      linked_gap_id:
+        description: 'Optional: the venture_capability_gaps id this run follows up on'
+        required: false
+
+jobs:
+  sandbox-run:
+    name: Real sandbox run — branch + PR, never a push to main
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.HIVE_FEDERATION_TOKEN }}
+      FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
+    steps:
+      - name: Guard — honest no-op if the federation token isn't bound yet
+        id: guard
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "No HIVE_FEDERATION_TOKEN bound (or it doesn't cover ${{ inputs.venture_repo }} yet)."
+            echo "This run genuinely does nothing, on purpose."
+            echo "bound=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "bound=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 1. Register the run with the Worker (status=running)
+        if: steps.guard.outputs.bound == 'true'
+        id: register
+        run: |
+          set -euo pipefail
+          gap_json="null"
+          if [ -n "${{ inputs.linked_gap_id }}" ]; then gap_json="${{ inputs.linked_gap_id }}"; fi
+          printf '{"venture":"%s","task":"%s","linked_gap_id":%s}' \
+            "${{ inputs.venture_repo }}" "$(echo "${{ inputs.task }}" | sed 's/"/\\"/g')" "$gap_json" \
+            > /tmp/register.json
+          code=$(curl -sS -m 25 -o /tmp/register-resp.json -w '%{http_code}' \
+            -X POST "https://thehive.sovereignhive.workers.dev/v11/ventures/sandbox-runs" \
+            -H "Content-Type: application/json" --data-binary @/tmp/register.json)
+          cat /tmp/register-resp.json
+          [ "$code" = "200" ] || { echo "::error::could not register the run"; exit 1; }
+          id=$(python3 -c "import json; print(json.load(open('/tmp/register-resp.json'))['id'])")
+          echo "run_id=$id" >> "$GITHUB_OUTPUT"
+
+      - name: 2. Check out the target venture repo, create the work branch
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          set -euo pipefail
+          git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${{ inputs.venture_repo }}.git" /tmp/venture-checkout
+          cd /tmp/venture-checkout
+          git checkout -b "kai/sandbox-run-${{ steps.register.outputs.run_id }}"
+
+      - name: 3. Kai El performs the task — NOT YET WIRED (see header comment)
+        if: steps.guard.outputs.bound == 'true'
+        run: |
+          echo "::warning::Step 3 (the actual work) is an open fork, not built yet —"
+          echo "see this workflow's header comment for the three real candidate"
+          echo "mechanisms and why none was picked without the founder's say."
+          echo "This run stops here, honestly, at status=running — no fabricated PR."
+          exit 0
+
+      # Steps 4 (commit/push the branch) and 5 (open the real PR, then POST the
+      # branch/pr_url back via scripts/post-founder-gated.sh to
+      # /v11/ventures/sandbox-runs/:id/opened) start only once step 3 produces a
+      # real change to commit — intentionally not reached yet.
