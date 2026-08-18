@@ -358,6 +358,48 @@ describe('the founder gate via Cloudflare Access (/v11/founder/*)', () => {
     assert.equal(updateCall.args[3], null,
       'the FOUNDER_KEY path must keep decided_by null exactly as before — no attribution change on this path');
   });
+
+  // GET /founder/whoami (2026-08-18) — the real fix for FLIP_THE_SWITCHES.md
+  // section 11's own stated "proof it worked" bar: ProposalsPanel.tsx's buttons
+  // were still gated on `!key` even for a genuinely-signed-in-via-Access founder,
+  // because nothing checked Access session state client-side before this route
+  // existed. JSON, always 200, never a 401 — "not signed in" is real, expected
+  // data ({email: null}), not an error the frontend has to special-case.
+  describe('GET /founder/whoami', () => {
+    test('a valid Access token returns the real, verified email', async () => {
+      withAccessJWKS();
+      const token = await sign();
+      const r = await call(req('/founder/whoami', { headers: { 'Cf-Access-Jwt-Assertion': token } }), accessEnv());
+      assert.equal(r.status, 200);
+      const b = await r.json();
+      assert.equal(b.email, FOUNDER_EMAIL);
+    });
+
+    test('no Access session returns {email: null}, not a 401', async () => {
+      withAccessJWKS();
+      const r = await call(req('/founder/whoami'), accessEnv());
+      assert.equal(r.status, 200);
+      const b = await r.json();
+      assert.equal(b.email, null);
+    });
+
+    test('Access not provisioned at all returns {email: null}, never throws', async () => {
+      const r = await call(req('/founder/whoami'), makeEnv());
+      assert.equal(r.status, 200);
+      const b = await r.json();
+      assert.equal(b.email, null);
+    });
+
+    test('an invalid/tampered token returns {email: null}, same as no session', async () => {
+      withAccessJWKS();
+      const token = await sign();
+      const badToken = token.slice(0, -4) + (token.slice(-4) === 'AAAA' ? 'BBBB' : 'AAAA');
+      const r = await call(req('/founder/whoami', { headers: { 'Cf-Access-Jwt-Assertion': badToken } }), accessEnv());
+      assert.equal(r.status, 200);
+      const b = await r.json();
+      assert.equal(b.email, null);
+    });
+  });
 });
 
 // FOUNDER_KEY moved to Cloudflare's Secrets Store 2026-08-08 — a binding shaped
