@@ -120,8 +120,17 @@ update.** v1 named three hard blockers. Real status today:
    Zero Trust dashboard) is real and still owed, but the blocker's *shape* has changed from
    "one binary secret" to "one real, documented, one-time dashboard action with working code
    waiting on the other side of it."
-3. **Vectorize/R2 provisioning** — not re-checked this pass, carries forward from v1
-   unverified.
+3. **Vectorize/R2 provisioning** — **checked for real, 2026-08-18**, via the Cloudflare
+   Developer Platform MCP tools becoming available mid-session (previously this container had
+   no live Cloudflare reach at all — the `edge-health-probe` GitHub Actions workflow was the
+   only eyes on production; this is a second, independent channel now). Real, live account
+   state: **R2 confirmed provisioned** — bucket `hive-files`, created 2026-08-03. **D1
+   confirmed live and populated** — `thehive-queen` (114,745,344 bytes, the real production
+   DB, created 2026-07-07), `sovereign-hive-app` (created 2026-07-25), `kai-el-brain` (created
+   2026-08-10). The `thehive` Worker itself confirmed live, `modified_on` timestamped
+   2026-08-18T11:24:40Z — consistent with this session's own recent merges landing on `main`.
+   **Vectorize itself not yet checked** (no Vectorize-list tool used this pass) — flagged
+   honestly as the one real remaining gap in this specific check, not assumed either way.
 
 **Phase 6 (harness manifests for remaining colonies)** — the literal per-colony files v1
 names (`aether.json` etc.) still don't exist, but the real underlying need looks addressed
