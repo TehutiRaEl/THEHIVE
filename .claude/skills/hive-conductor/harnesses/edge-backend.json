@@ -1,0 +1,60 @@
+{
+  "schema": "agent-harness/manifest.v1",
+  "domain": "edge-backend",
+  "domain_manifest_kind": "code-domain",
+  "note": "Hand-authored, not scanned. harness_manifest_builder.py --domain worker/backend returns skill_count:0 (no SKILL.md in code surfaces) -- verified 2026-08-18. Verification commands below are real, run from repo root, sourced from worker/package.json and the repo's tests/ layout, not invented.",
+  "owner": "Sonnet / Fable",
+  "surface": ["worker/", "backend/", "D1 (wrangler.jsonc bindings)"],
+  "skill_count": 1,
+  "loop_defaults": {
+    "max_attempts_per_task": 3,
+    "max_loop_iterations": 12,
+    "escalate_on": [
+      "attempts_exhausted",
+      "no_verification_available",
+      "destructive_or_irreversible_action",
+      "goal_drift_detected"
+    ]
+  },
+  "skills": [
+    {
+      "name": "edge-backend",
+      "path": "worker/",
+      "description": "Cloudflare Worker (worker/src/index.js), D1 database, Workers AI, the /v11 API serving production at thehive.sovereignhive.workers.dev; and backend/ (FastAPI System A, tested but not deployed anywhere live as of 2026-08-07).",
+      "tools": [
+        {
+          "cmd": "cd worker && node --check src/index.js",
+          "verification": [
+            {"cmd": "cd worker && node --check src/index.js", "expect_exit": 0, "kind": "smoke"}
+          ]
+        },
+        {
+          "cmd": "cd worker && npm test",
+          "verification": [
+            {"cmd": "cd worker && npm test", "expect_exit": 0, "kind": "unit"}
+          ]
+        },
+        {
+          "cmd": "python3 -m pytest tests/ -q",
+          "verification": [
+            {"cmd": "python3 -m pytest tests/ -q", "expect_exit": 0, "kind": "unit"}
+          ]
+        },
+        {
+          "cmd": "edge-health-probe.yml (GitHub Actions, cron 17 */6 * * *)",
+          "verification": [
+            {"cmd": "MANUAL: dispatch or await .github/workflows/edge-health-probe.yml and read its run summary -- this container cannot reach *.workers.dev directly", "expect_exit": 0, "kind": "manual-evidence"}
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    }
+  ]
+}

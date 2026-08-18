@@ -1,0 +1,48 @@
+{
+  "schema": "agent-harness/manifest.v1",
+  "domain": "governance",
+  "domain_manifest_kind": "code-domain",
+  "note": "Hand-authored, not scanned. soul.md/.queen/soul.md/docs/GOVERNANCE.md are documents, not a SKILL.md tree. Phase 1a of memory/planning/2026-08-18-unified-forward-plan-v2.md flags a real, still-open founder question about how these three relate -- this manifest documents that gap rather than papering over it.",
+  "owner": "Fable (Governance Kernel)",
+  "surface": ["soul.md", ".queen/soul.md", "docs/GOVERNANCE.md", "constitution-sync.yml", "governance_log"],
+  "skill_count": 1,
+  "loop_defaults": {
+    "max_attempts_per_task": 3,
+    "max_loop_iterations": 12,
+    "escalate_on": [
+      "attempts_exhausted",
+      "no_verification_available",
+      "destructive_or_irreversible_action",
+      "goal_drift_detected"
+    ]
+  },
+  "skills": [
+    {
+      "name": "governance",
+      "path": "soul.md",
+      "description": "F-001..F-006 constitutional articles, the mutable-law amendment process (2/3 guild vote + 30 days), and the six-colony constitution-sync mechanism. OPEN QUESTION (Phase 1a, unified-forward-plan-v2): whether .queen/soul.md and docs/GOVERNANCE.md are meant to be verbatim copies of soul.md, declared derived views, or genuinely separate documents -- unresolved, founder-blocked, do not decide unilaterally.",
+      "tools": [
+        {
+          "cmd": "diff soul.md .queen/soul.md",
+          "verification": [
+            {"cmd": "diff soul.md .queen/soul.md", "expect_exit": 1, "kind": "known-divergence"}
+          ]
+        },
+        {
+          "cmd": "checks-and-balances skill (authority-distribution audit against docs/GOVERNANCE.md)",
+          "verification": [
+            {"cmd": "MANUAL: run the checks-and-balances skill against the current .claude/agents/*.md reports_to chain", "expect_exit": 0, "kind": "manual-evidence"}
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": true,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    }
+  ]
+}

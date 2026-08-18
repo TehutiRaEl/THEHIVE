@@ -1,0 +1,48 @@
+{
+  "schema": "agent-harness/manifest.v1",
+  "domain": "colonies",
+  "domain_manifest_kind": "code-domain",
+  "note": "Hand-authored, not scanned -- the colony surface is 6 sibling GitHub repos, not a local folder, so harness_manifest_builder.py cannot see it at all. Verification commands sourced from .github/workflows/colony-health.yml's real matrix, not invented.",
+  "owner": "Fable",
+  "surface": ["THEHIVE (core)", "aether", "automatisch", "Kimi-K2", "NAR2", "4DBRAIN", "LocalAGI"],
+  "skill_count": 1,
+  "loop_defaults": {
+    "max_attempts_per_task": 3,
+    "max_loop_iterations": 12,
+    "escalate_on": [
+      "attempts_exhausted",
+      "no_verification_available",
+      "destructive_or_irreversible_action",
+      "goal_drift_detected"
+    ]
+  },
+  "skills": [
+    {
+      "name": "colonies",
+      "path": ".queen/hive.yml",
+      "description": "The six sibling-repo colonies plus THEHIVE itself, each exposing /colony/health, /colony/info, /colony/capabilities, /colony/events per docs/GOVERNANCE.md's federation contract.",
+      "tools": [
+        {
+          "cmd": "colony-health.yml (GitHub Actions, cron 0 6 * * *)",
+          "verification": [
+            {"cmd": "MANUAL: dispatch or await .github/workflows/colony-health.yml -- checks /colony/health across all 7 matrix entries; this container has no direct network reach to any colony", "expect_exit": 0, "kind": "manual-evidence"}
+          ]
+        },
+        {
+          "cmd": "constitution-sync.yml (GitHub Actions, on push to soul.md)",
+          "verification": [
+            {"cmd": "MANUAL: confirm secrets.PAT is set and .github/workflows/constitution-sync.yml's dispatch ran clean after a soul.md change -- it self-reports 'skipped gracefully' when PAT is unset, which is not the same as passing", "expect_exit": 0, "kind": "manual-evidence"}
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    }
+  ]
+}

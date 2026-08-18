@@ -1,0 +1,60 @@
+{
+  "schema": "agent-harness/manifest.v1",
+  "domain": "frontend",
+  "domain_manifest_kind": "code-domain",
+  "note": "Hand-authored, not scanned. harness_manifest_builder.py --domain frontend returns skill_count:0 (no SKILL.md in code surfaces) -- verified 2026-08-18. Commands sourced from frontend/package.json's real scripts, not invented.",
+  "owner": "Mistral",
+  "surface": ["frontend/", "docs/ (legacy docs/index.html + built docs/app)"],
+  "skill_count": 1,
+  "loop_defaults": {
+    "max_attempts_per_task": 3,
+    "max_loop_iterations": 12,
+    "escalate_on": [
+      "attempts_exhausted",
+      "no_verification_available",
+      "destructive_or_irreversible_action",
+      "goal_drift_detected"
+    ]
+  },
+  "skills": [
+    {
+      "name": "frontend",
+      "path": "frontend/",
+      "description": "React Command Center (frontend/, built to docs/app). Two frontend efforts exist in this repo (see root CLAUDE.md) -- verify which one a directive actually targets before building.",
+      "tools": [
+        {
+          "cmd": "cd frontend && npx tsc --noEmit",
+          "verification": [
+            {"cmd": "cd frontend && npx tsc --noEmit", "expect_exit": 0, "kind": "typecheck"}
+          ]
+        },
+        {
+          "cmd": "cd frontend && npm run build",
+          "verification": [
+            {"cmd": "cd frontend && npm run build", "expect_exit": 0, "kind": "build"}
+          ]
+        },
+        {
+          "cmd": "cd frontend && npm run lint",
+          "verification": [
+            {"cmd": "cd frontend && npm run lint", "expect_exit": 0, "kind": "lint"}
+          ]
+        },
+        {
+          "cmd": "ui-live-probe.yml (GitHub Actions, cron 37 */6 * * *)",
+          "verification": [
+            {"cmd": "MANUAL: dispatch or await .github/workflows/ui-live-probe.yml for a real production render check", "expect_exit": 0, "kind": "manual-evidence"}
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": true,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    }
+  ]
+}
