@@ -22,19 +22,21 @@ name: Kai Sandbox Run
 # autonomous/scheduled trigger should check GET /v11/kai/autonomy for
 # KAI_SANDBOX_AUTONOMY before firing unattended, but that is not built here.
 #
-# ── OPEN FORK, not guessed at (per this whole project's ask-don't-assume rule) ──
-# Steps 1-2 and 4-5 below are real and complete: they register the run, check out
-# the real target venture repo, create a branch, and (once real work exists on that
-# branch) open a real PR and mirror the result back to the Worker. Step 3 — Kai El
-# ACTUALLY PERFORMING the task — is deliberately left as a placeholder rather than
-# silently wired to a guessed mechanism. Three real candidates exist in this repo's
-# own ecosystem (the Claude Code CLI/Action this very session runs under; automaton's
-# policy-gated exec() tool, currently scoped to automaton's own repo only; or a new
-# provider-routed call through the Worker's existing generate()) and picking wrong
-# here is exactly the kind of decision this project's standing discipline says to
-# ask about, not assume. See venture_sandbox_runs in the Command Center for anything
-# dispatched before step 3 is wired — it will sit at status=running honestly, never
-# fake a finished PR.
+# ── Step 3 mechanism: automaton, adapted (2026-08-18) ──────────────────────────
+# Three real candidates were weighed (the Claude Code CLI/Action this session runs
+# under; automaton's own policy-gated exec()/write_target_file loop; a new agent
+# loop built from scratch on the Worker's generate()) — automaton won because it
+# already had the real, reviewed pieces: a genuine ReAct loop (agent/loop.js), a
+# policy engine with real gap-closure-tested safety rules, and an inference layer
+# that ALREADY calls THEHIVE's own multi-provider generate() waterfall
+# (inference/thehive-provider.js -> POST /v11/automaton/infer) — so this run is
+# never locked to one AI provider, satisfying the founder's explicit "not
+# Claude-only" direction for free. Full comparison of all three candidates:
+# TehutiRaEl/venture's ventures/venture/NOTES.md. New pieces added for this: config.js's
+# AUTOMATON_REPO_ROOT override, tools.js's write_target_file (deliberately NOT the
+# policy-anticipated `write_file` name — that one means self-modification, this
+# means writing into a different, external repo, and conflating the two would make
+# an accurate safety message read as a lie), and index.js's `--task` one-shot mode.
 
 on:
   workflow_dispatch:
@@ -55,7 +57,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.HIVE_FEDERATION_TOKEN }}
-      FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
     steps:
       - name: Guard — honest no-op if the federation token isn't bound yet
         id: guard
@@ -94,16 +95,76 @@ jobs:
           cd /tmp/venture-checkout
           git checkout -b "kai/sandbox-run-${{ steps.register.outputs.run_id }}"
 
-      - name: 3. Kai El performs the task — NOT YET WIRED (see header comment)
+      # THEHIVE itself, checked out to a fixed path — this is where automaton/
+      # (the step-3 engine) and scripts/post-founder-gated.sh (used below) live.
+      # A second, separate checkout from the target venture repo above on purpose:
+      # automaton needs to run FROM its own real source, pointed AT the venture
+      # checkout via AUTOMATON_REPO_ROOT, never the other way around.
+      - name: 3a. Check out THEHIVE (for automaton/ + scripts/)
         if: steps.guard.outputs.bound == 'true'
-        run: |
-          echo "::warning::Step 3 (the actual work) is an open fork, not built yet —"
-          echo "see this workflow's header comment for the three real candidate"
-          echo "mechanisms and why none was picked without the founder's say."
-          echo "This run stops here, honestly, at status=running — no fabricated PR."
-          exit 0
+        uses: actions/checkout@v4
+        with:
+          path: thehive-checkout
 
-      # Steps 4 (commit/push the branch) and 5 (open the real PR, then POST the
-      # branch/pr_url back via scripts/post-founder-gated.sh to
-      # /v11/ventures/sandbox-runs/:id/opened) start only once step 3 produces a
-      # real change to commit — intentionally not reached yet.
+      - name: 3b. Kai El performs the task — automaton's one-shot ReAct run
+        if: steps.guard.outputs.bound == 'true'
+        id: work
+        env:
+          AUTOMATON_REPO_ROOT: /tmp/venture-checkout
+        run: |
+          set -euo pipefail
+          # Fresh, throwaway state per run — never automaton's own real
+          # .automaton-home, and never reused between runs.
+          export AUTOMATON_HOME="$(mktemp -d)"
+          cd thehive-checkout/automaton
+          node src/index.js --task "${{ inputs.task }}" > /tmp/task-result.json
+          cat /tmp/task-result.json
+          # Real signal, not assumed: did the run actually produce a final
+          # response, or hit maxTurns/an inference failure with nothing to show?
+          has_final=$(python3 -c "import json; d=json.load(open('/tmp/task-result.json')); print('true' if d.get('finalText') else 'false')")
+          echo "has_final=$has_final" >> "$GITHUB_OUTPUT"
+          if [ "$has_final" != "true" ]; then
+            echo "::warning::the run did not reach a final response (see /tmp/task-result.json above) — nothing to commit, stopping honestly at status=running rather than opening an empty PR."
+          fi
+
+      - name: 4. Commit and push the branch — only if step 3 produced real changes
+        if: steps.guard.outputs.bound == 'true' && steps.work.outputs.has_final == 'true'
+        id: push
+        run: |
+          set -euo pipefail
+          cd /tmp/venture-checkout
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "::warning::the task run reported completion but left no real file changes — nothing to commit, stopping honestly rather than opening an empty PR."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "Kai El (sandbox run)"
+          git config user.email "kai-el@thehive.sovereignhive.workers.dev"
+          git add -A
+          git commit \
+            -m "Kai El sandbox run: ${{ inputs.task }}" \
+            -m "Run #${{ steps.register.outputs.run_id }} — see venture_sandbox_runs in the Command Center. This branch is the proposal; merging this PR is the founder's real approval, never an automatic merge."
+          branch="kai/sandbox-run-${{ steps.register.outputs.run_id }}"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ inputs.venture_repo }}.git" "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+
+      - name: 5. Open the real PR, then mirror branch/pr_url back to the Worker
+        if: steps.guard.outputs.bound == 'true' && steps.push.outputs.has_changes == 'true'
+        run: |
+          set -euo pipefail
+          pr_url=$(gh pr create --repo "${{ inputs.venture_repo }}" \
+            --title "Kai El sandbox run: ${{ inputs.task }}" \
+            --body "Run #${{ steps.register.outputs.run_id }}, dispatched via THEHIVE's kai-sandbox-run.yml. This branch was never pushed to main — merging this PR is the real approval. See venture_sandbox_runs in the Command Center for this run's status." \
+            --head "${{ steps.push.outputs.branch }}")
+          echo "$pr_url"
+          # POST /opened is rate-limited only, not founder-key-gated (same class
+          # as /proposals/:id/actioned) — a plain curl, not
+          # scripts/post-founder-gated.sh, since that script SKIPS the POST
+          # entirely when FOUNDER_KEY isn't set, which would be wrong here: this
+          # route needs no founder auth at all, so its real result must not
+          # depend on whether that unrelated secret happens to be bound.
+          printf '{"branch":"%s","pr_url":"%s"}' "${{ steps.push.outputs.branch }}" "$pr_url" > /tmp/opened.json
+          curl -sS -m 25 -X POST \
+            "https://thehive.sovereignhive.workers.dev/v11/ventures/sandbox-runs/${{ steps.register.outputs.run_id }}/opened" \
+            -H "Content-Type: application/json" --data-binary @/tmp/opened.json

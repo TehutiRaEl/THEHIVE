@@ -4,10 +4,12 @@ name: Venture Gap Mirror
 # the `venture` repo, so the founder sees Kai El's capability requests in normal
 # GitHub notifications, not only in the Command Center. Same poll-act-post-back shape
 # as architect-proposal-check.yml: curl the Worker's list endpoint, act per-item,
-# POST the result back via scripts/post-founder-gated.sh. Cross-repo issue creation
-# needs a real PAT (the default GITHUB_TOKEN is THEHIVE-scoped only) — same guard-
-# and-degrade-to-honest-no-op convention as federation-issue-triage.yml, reusing
-# HIVE_FEDERATION_TOKEN.
+# POST the result back with a plain curl (POST /issue-linked is rate-limited only,
+# not founder-key-gated — scripts/post-founder-gated.sh would wrongly skip the POST
+# entirely whenever FOUNDER_KEY happens to be unset, an unrelated secret this route
+# doesn't need). Cross-repo issue creation needs a real PAT (the default GITHUB_TOKEN
+# is THEHIVE-scoped only) — same guard-and-degrade-to-honest-no-op convention as
+# federation-issue-triage.yml, reusing HIVE_FEDERATION_TOKEN.
 #
 # Idempotency lives in the Worker, not here: POST .../issue-linked returns 409 for a
 # gap that already has a github_issue_url, so a duplicate run can never double-create
@@ -24,7 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.HIVE_FEDERATION_TOKEN }}
-      FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +54,15 @@ jobs:
           json.dump(pending, open('/tmp/pending.json', 'w'))
           PYEOF
 
+      # POST /issue-linked is rate-limited only, not founder-key-gated — a
+      # plain curl here, not scripts/post-founder-gated.sh, since that script
+      # skips the POST entirely when FOUNDER_KEY is unset, which would be
+      # wrong: this route needs no founder auth, so its real result must not
+      # depend on an unrelated secret happening to be bound (2026-08-18 fix —
+      # the original version of this workflow used the founder-gated script
+      # here by mistake, copying architect-proposal-check.yml's pattern
+      # without checking that /diff-check there really is founder-key-gated
+      # while /issue-linked here is not).
       - name: Create one Issue per gap, then link it back
         if: steps.guard.outputs.bound == 'true'
         run: |
@@ -79,7 +89,7 @@ jobs:
             issue_url=$(gh issue create --repo TehutiRaEl/venture --title "$title" --body-file /tmp/issue_body.md)
             echo "::notice::gap #$id -> $issue_url"
             echo "{\"issue_url\": \"$issue_url\"}" > /tmp/link-payload.json
-            scripts/post-founder-gated.sh \
+            curl -sS -m 25 -X POST \
               "https://thehive.sovereignhive.workers.dev/v11/ventures/gaps/$id/issue-linked" \
-              /tmp/link-payload.json
+              -H "Content-Type: application/json" --data-binary @/tmp/link-payload.json
           done

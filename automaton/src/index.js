@@ -7,6 +7,18 @@
 //   node src/index.js --approvals     list pending approval-queue entries
 //   node src/index.js --approve <id>  approve a pending entry (creator-sourced)
 //   node src/index.js --reject <id>   reject a pending entry
+//   node src/index.js --task "<text>" one bounded ReAct run (up to maxTurns
+//                                      cycles) against a real task, then exit
+//                                      (Kai El's sandbox-run mode,
+//                                      2026-08-18) — set AUTOMATON_HOME to a
+//                                      fresh temp dir and AUTOMATON_REPO_ROOT to
+//                                      the target checkout BEFORE invoking this,
+//                                      since both are read once at config.js's
+//                                      module-load time, not from a CLI flag.
+//                                      inputSource is always 'creator-cli' —
+//                                      write_target_file's authority rule
+//                                      requires exactly that, never an
+//                                      unattended trigger.
 //   node src/index.js --help
 
 import path from 'node:path';
@@ -56,7 +68,11 @@ function wireEverything() {
 
   const router = new Router([createTheHiveProvider(), createSimulateProvider()]);
   const turnState = { transfersThisTurn: 0 };
-  const tools = buildToolRegistry({ policyEngine, ledger, selfMod, replicator, lineage, repoRoot: ROOT_DIR, turnState });
+  // exec/read_file/write_target_file operate against config.repoRoot (defaults
+  // to ROOT_DIR, overridable via AUTOMATON_REPO_ROOT for a sandbox-run — see
+  // config.js). edit_own_file's own repoRoot stays hardcoded to ROOT_DIR above
+  // (selfMod, line ~52) on purpose — self-modification never follows this.
+  const tools = buildToolRegistry({ policyEngine, ledger, selfMod, replicator, lineage, repoRoot: config.repoRoot, turnState });
   const agentLoop = new AgentLoop({ router, tools, ledger });
 
   let genesisPrompt = process.env.AUTOMATON_GENESIS_PROMPT || 'Create genuine value for THEHIVE and its founder through honest work.';
@@ -70,7 +86,10 @@ function wireEverything() {
     soulHomeDir: config.homeDir, genesisPrompt, constitutionExcerpt, config,
   });
 
-  return { db, ledger, approvalQueue, auditLog, lineage, replicator, tasks, config };
+  // agentLoop/genesisPrompt/constitutionExcerpt added to the returned context
+  // 2026-08-18 for the new --task one-shot mode below — every other existing
+  // caller of wireEverything() already ignores extra keys it doesn't ask for.
+  return { db, ledger, approvalQueue, auditLog, lineage, replicator, tasks, config, agentLoop, genesisPrompt, constitutionExcerpt };
 }
 
 async function main() {
@@ -83,6 +102,8 @@ async function main() {
   --approvals    list pending approval-queue entries
   --approve <id> approve a pending entry
   --reject <id>  reject a pending entry
+  --task <text>  one bounded ReAct run (up to maxTurns cycles), then exit
+                 (set AUTOMATON_HOME + AUTOMATON_REPO_ROOT first — see header)
   --status       print ledger balance + survival tier + switch states`);
     return;
   }
@@ -137,6 +158,28 @@ async function main() {
   if (args.includes('--selfcheck')) {
     const results = await runOnce(ctx.tasks);
     console.log(JSON.stringify(results, null, 2));
+    return;
+  }
+
+  const taskIdx = args.indexOf('--task');
+  if (taskIdx !== -1) {
+    const task = args[taskIdx + 1];
+    if (!task) { console.error('--task requires a text argument'); process.exit(1); }
+    // 'creator-cli' — the same inputSource --approve/--reject already use —
+    // is deliberate: write_target_file's authority rule
+    // (policy-rules/authority.js's createTargetWriteFromExternalRule) denies
+    // 'external'/'heartbeat'/undefined outright, so a real sandbox-run
+    // dispatch must be able to prove it's a genuine creator/dispatch-
+    // initiated call, not an unattended trigger, before any real write can
+    // happen at all.
+    const result = await ctx.agentLoop.runTick({
+      soulFrontmatter: { corePurpose: ctx.genesisPrompt },
+      tier: 'normal',
+      constitutionExcerpt: ctx.constitutionExcerpt,
+      inputSource: 'creator-cli',
+      task,
+    });
+    console.log(JSON.stringify(result, null, 2));
     return;
   }
 

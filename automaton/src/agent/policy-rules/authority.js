@@ -64,6 +64,37 @@ export function createSelfModFromExternalRule() {
   };
 }
 
+// write_target_file (2026-08-18, Kai El's sandbox-run mode) gets its OWN
+// input-source restriction rather than being folded into
+// createSelfModFromExternalRule above — that rule's human-facing message says
+// "self-modification", which is accurate for edit_own_file/write_file
+// (automaton editing itself) but would be a lie for write_target_file
+// (automaton, via repoRoot, writing into a completely different checked-out
+// venture repo). Same restriction in spirit — an unattended trigger still
+// can't originate a real write — honest wording for what's actually true.
+export function createTargetWriteFromExternalRule() {
+  return {
+    name: 'authority.target_write_from_external',
+    priority: 7,
+    evaluate(request) {
+      const source = request.inputSource;
+      if (request.tool === 'write_target_file'
+        && (source === 'external' || source === 'heartbeat' || source === undefined)) {
+        return {
+          action: 'deny',
+          reasonCode: 'TARGET_WRITE_FROM_UNATTENDED_SOURCE',
+          humanMessage: `Target-repo writes cannot be triggered by an unattended (${source ?? 'unspecified'}) call — only a live agent turn or a creator/dispatch-initiated action can request one.`,
+        };
+      }
+      return null;
+    },
+  };
+}
+
 export function authorityRules() {
-  return [createBlockDangerousFromExternalRule(), createSelfModFromExternalRule()];
+  return [
+    createBlockDangerousFromExternalRule(),
+    createSelfModFromExternalRule(),
+    createTargetWriteFromExternalRule(),
+  ];
 }

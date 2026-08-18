@@ -25,6 +25,15 @@ export const config = {
   // Where this automaton's SQLite state, SOUL.md, and audit log live.
   homeDir: process.env.AUTOMATON_HOME || path.join(ROOT_DIR, '.automaton-home'),
 
+  // Where exec()/read_file()/write_target_file() actually operate (2026-08-18,
+  // Kai El's sandbox-run mode). Defaults to automaton's own directory — the
+  // original, only behavior before this — so nothing changes unless a one-shot
+  // `--task --target <path>` run explicitly overrides it. edit_own_file's
+  // repoRoot is separate (always ROOT_DIR, wired directly in index.js) and
+  // deliberately NEVER follows this override — self-modification always means
+  // automaton's own files, regardless of what target a sandbox run points at.
+  repoRoot: process.env.AUTOMATON_REPO_ROOT || ROOT_DIR,
+
   // ── Master switches (Tier-3, founder-only — see FLIP_THE_SWITCHES.md) ──
   // FINANCIAL_AUTONOMY: when false (default), the ledger is entirely
   // simulated play-money — real, tracked, survival-pressure-bearing, but

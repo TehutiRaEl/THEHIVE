@@ -36,10 +36,16 @@ export class AgentLoop {
   /**
    * Runs up to maxTurns think/act/observe cycles for one heartbeat tick.
    * Returns { turns: [...], finalText }.
+   *
+   * `task` (2026-08-18, Kai El's sandbox-run one-shot mode) overrides the
+   * generic "continue toward your genesis purpose" starting prompt with a
+   * real, specific task description — otherwise the loop's mechanism (think,
+   * call a tool, observe the result, repeat until final text or maxTurns) is
+   * identical to a normal heartbeat tick, unchanged.
    */
-  async runTick({ soulFrontmatter, tier, constitutionExcerpt, inputSource = 'agent' }) {
+  async runTick({ soulFrontmatter, tier, constitutionExcerpt, inputSource = 'agent', task = null }) {
     const turns = [];
-    let prompt = 'Continue toward your genesis purpose. Reflect on your current state and decide your next action.';
+    let prompt = task || 'Continue toward your genesis purpose. Reflect on your current state and decide your next action.';
     const system = buildSystemPrompt({
       soulFrontmatter, tier, balanceCents: this.ledger.balanceCents(), constitutionExcerpt,
     });
