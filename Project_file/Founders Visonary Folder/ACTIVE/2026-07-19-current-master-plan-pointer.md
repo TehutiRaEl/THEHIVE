@@ -1,4 +1,12 @@
-# Current master plan — pointer
+# Current master plan — pointer (SUPERSEDED 2026-08-18)
+
+**Superseded — see `2026-08-18-current-master-plan-pointer.md` in this same folder.** A real
+`plan-reality-audit` run found this plan had gone a month stale (not wrong, just silent on a
+month of real shipped work); `memory/planning/2026-08-18-unified-forward-plan-v2.md` is now
+the current plan. This file is kept for history — the reasoning below was accurate as of
+2026-07-19.
+
+---
 
 **The durable master plan lives at `memory/planning/2026-07-19-unified-forward-plan.md`.**
 
