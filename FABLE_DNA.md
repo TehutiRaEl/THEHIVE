@@ -229,6 +229,101 @@ The result of following this chromosome every session: the hive genuinely does g
 every time, without ever needing a "gray hat" — because the honest version of "harvest
 everything" turns out not to need one.
 
+### The cross-vendor timeline (added 2026-08-18)
+
+Three separate branch-dissection passes this session (`docs/branch-dissection-mistral-
+frontend-command-center`, `docs/grok-strategist-dissection`, and the `feature/gamified-ui-
+components` pass) each independently surfaced pieces of the same real event: a genuine
+multi-vendor AI agent team — Claude, Mistral, Grok — worked on this repo together starting
+around 2026-07-08. This is the synthesis, sourced only from what commit history and the
+vendors' own memory files actually contain. Where the record has a real gap, it's named as
+a gap, not filled with a guess.
+
+**The team, in their own words.** `.grok/memory.md/Sovereign Strategist` (Grok's own
+first-person memory file) states the division of labor directly: *"Claude (Backend) ·
+Mistral (Frontend/UI) · Grok (Strategy/Research)."* Grok names its own domain as
+`docs/`, `Project_file/Project_memory/`, `skills/`, and strategic analysis — explicitly
+**not** backend Python or frontend HTML/CSS/React.
+
+**Session 1 — 2026-07-08, foundation.** Grok's memory file dates its own "Session 1"
+foundation build to 2026-07-08, working in a local sandbox never pushed to GitHub —
+Claude bridged that content into the shared repo afterward on
+`claude/session-continuation-owj5wr` (Grok's file records this candidly: *"Local sandbox
+work is lost on container teardown. Push early, push often."*). The same calendar day,
+2026-07-08, the git log shows Mistral's first real frontend commits landing on
+`mistral/frontend-command-center` (`KaiChatBox`, `SpaceNavigation`, `TesseractRenderer`,
+`COMPLETE_ARCHITECTURE.md`) and Claude-authored commits under role tags like
+`[ROLE: Federation Engineer]` and `[ROLE: Memory Architect]` building the Grok sandbox
+bridge (`.github/workflows/grok-bridge.yml`, `scripts/grok_push.py`) and
+`Claude_memory.md`. All three vendors have real, dated, first-day activity in the repo.
+
+**Session 2 — 2026-07-08 (same day, per Grok's own file), bridge + gap analysis.** Grok's
+memory records a same-day Session 2: `docs/GAP_ANALYSIS.md` (25 gaps found, 3 critical),
+`docs/GROK_BRIDGE.md`, and the `grok-strategist-main` remote branch created via the
+GitHub API. Commit history confirms the bridge infrastructure landed 2026-07-08–09
+(`[ROLE: Federation Engineer] feat(bridge): Grok sandbox bridge`,
+`[ROLE: DevOps Engineer] feat(bridge): PAT distribution workflow`).
+
+**2026-07-09 through 07-11 — Mistral's Command Center build.** The bulk of the React
+Command Center (`CommandCenter.tsx`, `TabNavigator.tsx`, all 13 `SEE`-tab components —
+`HIVE.tsx`, `SOUL.tsx`, `ARENA.tsx`, `4D.tsx`, etc. — plus `App.tsx`, `main.tsx`, Vite
+config) lands on `mistral/frontend-command-center` across 2026-07-09, with real
+self-corrections the same day (`d290406` "Fix documentation: Remove false claims about
+PR #28 files and hallucinated components", `e5e6b2b` "Fix documentation: Remove
+hallucinated components (ColonyZoomPanel, MemoryGraph)") — evidence the team was
+actively catching and removing its own overclaims, not just producing them. Claude-role
+commits in the same window build the constitutional/CORS backend fixes
+(`[ROLE: API Engineer] fix(backend): P3-P8`) and the production heartbeat
+(`[ROLE: Federation Engineer] feat(edge): the heartbeat — cron-driven scheduled()`).
+2026-07-11 closes with a Claude-role commit getting the frontend build gate green:
+`5efd376 [ROLE: Frontend Architect] fix(frontend): M5 build gate green — 30 type errors
+fixed; React Command Center preview at /app`.
+
+**2026-07-12 — the Mistral skills system.** `.mistral/SETUP_SUMMARY.md` self-dates to
+"July 13, 2026" in its prose, but its own commit (`eed5604`) and the other `.mistral/`
+skill commits are all dated 2026-07-12 in git history — a one-day drift between the
+document's stated date and its actual commit date, worth naming rather than silently
+reconciling. `.mistral/skills/SOURCED_SKILLS_INDEX.md` (commit `72d30a1`, 2026-07-12)
+records the provenance directly: 10 skills copied from Claude's structure (`canvas`,
+`canvas-react`, `data-visualization`, `deep-research`, `internal-search`,
+`mistral-self-knowledge`, `project-chats`, `skill-creator`, `userLibrary`,
+`vibe-work-onboarding`), all MIT-licensed unless noted otherwise.
+
+**2026-07-13 through 07-14 — parallel expansion, including this session's own genome.**
+2026-07-13 carries both the gamified-UI component set (`HiveDashboard`, `ColonyCard`,
+`ConstitutionHall`, `MemoryVault`, `TesseractChamber` — see the "What is NOT yet
+reconciled" section of `CLAUDE.md` for what happened to those) and Claude-role work
+wiring the Command Center tabs to live data (`[ROLE: Frontend Architect] feat(frontend):
+wire Command Center tabs to the live Queen`), plus the first `.claude/skills/` knowledge
+harvest (`[ROLE: Knowledge Steward] feat(skills): GitHub-wide harvest`). 2026-07-14 is
+this file's own birthday — `470686b feat(hive): FABLE_DNA genome + fable-debugger skill`
+— landing the same day as the voxel-world dual-world architecture
+(`feature/voxel-world`, merged via PR #91) and Claude's own session-harvest/mandate-
+triage skills (`42a4b96`, `ec9f12e`). This is the "two real systems, one repo" split
+`CLAUDE.md` already names — not a new finding, but this timeline shows the exact
+commits where the fork happened.
+
+**Grok's second entry — 2026-07-15.** `.grok/memory.md` (stored oddly as a directory,
+`.grok/memory.md/Sovereign Strategist`, not a plain file) was created (`f5b62e6`) and
+renamed (`2ba3dfe`) on 2026-07-15 — later than Grok's own "Session 1/2, 2026-07-08" prose
+inside the file, meaning the file describing July 8th work wasn't actually committed to
+the branch until a week afterward. That gap between "when the work happened" (per the
+file's own dates) and "when the file recording it was committed" is real and left
+unresolved here rather than guessed at.
+
+**What is genuinely NOT pinned down.** Grok's Session 1 sandbox work (2026-07-08) was,
+by its own account, never pushed before container teardown — its *content* only exists
+because Claude bridged it in; there is no independently-verifiable Grok commit for that
+session, only Grok's and Claude's word for what was bridged. The precise hour-by-hour
+interleaving of the three vendors' individual turns within a shared calendar day cannot
+be reconstructed from `git log` alone (commit timestamps show dates reliably, not which
+vendor's container produced them in what order within a day of near-simultaneous PRs).
+And `mistral/frontend-command-center` and `grok-strategist-main` are confirmed
+tree-identical as of this session (`git diff --stat` between them is empty) — meaning
+whatever distinct history git shows for `grok-strategist-main` before it converged is
+the extent of what's separable; after convergence the two branches are one branch under
+two names, not independent lines of work to compare further.
+
 ## Chromosome VII — The Mandate Triage (governance review, not rubber-stamping)
 
 `MANDATE_TRIAGE.md` records a full devil's-advocate-then-childlike-wonder pass over 23
