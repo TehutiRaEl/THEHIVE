@@ -1557,18 +1557,22 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
     },
     // OpenRouter is OpenAI-API-compatible by design — same request/response shape as
     // openai above, different endpoint + model. The `model` id is the real lever for
-    // "open-source/free where possible" (the founder's explicit direction): pick a
-    // real free-tier OpenRouter model rather than a paid default, and verify the
-    // exact current id against OpenRouter's own model list before deploying — their
-    // free roster changes, so a hardcoded id here is a maintenance point, not a
-    // one-time choice.
+    // "open-source/free where possible" (the founder's explicit direction). This used
+    // to hardcode one specific free-tier id (meta-llama/llama-3.3-70b-instruct:free) —
+    // confirmed 2026-08-18 that OpenRouter delisted that exact model's free tier earlier
+    // this same month, which is precisely the "maintenance point, not a one-time choice"
+    // risk the original comment named. Default is now `openrouter/free`, OpenRouter's own
+    // Free Models Router (https://openrouter.ai/openrouter/free) — it auto-selects from
+    // whatever is currently live on the free roster, so a future delisting degrades to a
+    // different free model instead of a dead id. OPENROUTER_MODEL still overrides, for
+    // when the founder wants one specific model pinned.
     openrouter: async () => {
       if (!env.OPENROUTER_API_KEY) return null;
       const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.OPENROUTER_API_KEY}`, 'content-type': 'application/json' },
         body: JSON.stringify({
-          model: env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free', max_tokens: maxTokens,
+          model: env.OPENROUTER_MODEL || 'openrouter/free', max_tokens: maxTokens,
           messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
         }),
         signal: timeout(15000),
