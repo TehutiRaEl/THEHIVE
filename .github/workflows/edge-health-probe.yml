@@ -168,6 +168,66 @@ jobs:
             exit 1
           fi
 
+      - name: Real-time push round trip — task 14's Acceptance, proven live
+        run: |
+          # Task 14's own Acceptance bar is stricter than every other probe step
+          # here: "a Command Center client actually receiving a pushed update
+          # from the Worker, verified by observing it happen, not just code
+          # that compiles." A dev container can't reach *.workers.dev at all
+          # (see this workflow's own header comment), and the real trigger (the
+          # heartbeat) only fires on a 30-min cron — far too slow to wait on in
+          # CI. /v11/debug/ws-broadcast-test exists specifically to make this
+          # deterministic: open a real WebSocket, POST to that route, confirm
+          # the exact payload arrives over the socket within a short timeout.
+          pip install --quiet --disable-pip-version-check websockets
+          python3 - <<'PYEOF'
+          import asyncio, json, subprocess, sys, uuid
+          import websockets
+
+          MARKER = f"probe-{uuid.uuid4().hex[:8]}"
+
+          async def main():
+              uri = "wss://thehive.sovereignhive.workers.dev/v11/ws"
+              try:
+                  async with websockets.connect(uri, open_timeout=15) as ws:
+                      # Trigger the broadcast only once the socket is actually open,
+                      # so there is no race where the POST fires before we're listening.
+                      r = subprocess.run(
+                          ["curl", "-sS", "-m", "20", "-X", "POST",
+                           "-H", "Content-Type: application/json",
+                           "--data", json.dumps({"title": MARKER}),
+                           "https://thehive.sovereignhive.workers.dev/v11/debug/ws-broadcast-test"],
+                          capture_output=True, text=True,
+                      )
+                      print("POST /v11/debug/ws-broadcast-test ->", r.stdout.strip() or r.stderr.strip())
+                      if r.returncode != 0:
+                          print("::error::the trigger POST itself failed — see output above")
+                          sys.exit(1)
+
+                      deadline = asyncio.get_event_loop().time() + 15
+                      while asyncio.get_event_loop().time() < deadline:
+                          remaining = deadline - asyncio.get_event_loop().time()
+                          try:
+                              raw = await asyncio.wait_for(ws.recv(), timeout=max(remaining, 0.1))
+                          except asyncio.TimeoutError:
+                              break
+                          try:
+                              msg = json.loads(raw)
+                          except json.JSONDecodeError:
+                              continue
+                          print("received:", msg)
+                          if msg.get("type") == "update" and msg.get("title") == MARKER:
+                              print(f"PROVEN LIVE: a real client received a real pushed update over /v11/ws (marker {MARKER}).")
+                              return
+                      print(f"::error::never received our own marker ({MARKER}) back over the socket within 15s — the round trip is NOT proven live.")
+                      sys.exit(1)
+              except Exception as e:
+                  print(f"::error::WebSocket connection to {uri} failed: {e}")
+                  sys.exit(1)
+
+          asyncio.run(main())
+          PYEOF
+
       - name: Informational — is the FastAPI backend (render.yaml, System A) actually deployed?
         continue-on-error: true
         run: |

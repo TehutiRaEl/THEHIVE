@@ -37,17 +37,6 @@ export function stubDB(routes = {}) {
     return undefined;
   };
 
-  // run()'s default return matches real D1: {success, meta:{changes,...}}. A
-  // fixture can still override this (e.g. `{ meta: { changes: 0 } }` to
-  // simulate "nothing matched"); default is `changes: 1`, i.e. "the write
-  // affected a row" — the common case, and the one every existing caller of
-  // run() before 2026-08-09 happened to not depend on (this default was
-  // missing entirely until decideProposal()'s `result.meta?.changes` check
-  // caught it: a plain {success:true} with no meta made every real decide
-  // look like "proposal not found", found via a real test failure, not
-  // inferred from reading the stub).
-  const runResult = (v) => ({ success: true, meta: { changes: 1 }, ...(v || {}) });
-
   return {
     queries,
     prepare(sql) {
@@ -55,6 +44,29 @@ export function stubDB(routes = {}) {
         queries.push({ sql, args });
         return match(sql);
       };
+      // run()'s default return matches real D1: {success, meta:{changes,...}}.
+      // default is `changes: 1`, i.e. "the write affected a row" — the common
+      // case, and the one every caller of run() before 2026-08-09 relied on
+      // (this default was missing entirely until decideProposal()'s
+      // `result.meta?.changes` check caught it: a plain {success:true} with
+      // no meta made every real decide look like "proposal not found", found
+      // via a real test failure, not inferred from reading the stub). A
+      // matched value shaped like { meta: {...} } (optionally alongside
+      // `success`) is real D1's own run() result shape (INSERT/UPDATE/DELETE
+      // report meta.changes / meta.last_row_id) — pass it through so a test
+      // can assert on a row actually being written/changed, e.g. task 22's
+      // modify/counter-propose flow, which reads inserted.meta.last_row_id
+      // and result.meta.changes for real. Real bug found resolving PR #171's
+      // merge conflicts (2026-08-18): an earlier version of this function
+      // shadowed the module-level default and silently dropped meta.changes
+      // to undefined for any UNMAPPED query, which every existing caller
+      // before task 22 (2026-08-14) — including main's own Cloudflare Access
+      // decide-route tests — had never needed to stub explicitly. Restored
+      // the default here so a stub only needs to provide `meta` when it's
+      // asserting on the write, not merely to avoid a false "not found".
+      const runResult = (v) => (v && typeof v === 'object' && 'meta' in v)
+        ? { success: true, ...v }
+        : { success: true, meta: { changes: 1 } };
       return {
         bind: (...args) => ({
           run: async () => runResult(exec(args)),

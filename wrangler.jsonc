@@ -58,6 +58,19 @@
       { "queue": "hive-llm-jobs", "max_batch_size": 5, "max_retries": 3 }
     ]
   },
+  // Real-time Command Center push (task 14, 2026-08-17). Unlike Vectorize/R2/
+  // Queues above, a Durable Object needs no out-of-band `wrangler ... create`
+  // step — the migration below is what registers the class at deploy time, so
+  // this binds and migrates in the same commit as the class export in
+  // worker/src/index.js rather than shipping commented-out first.
+  "durable_objects": {
+    "bindings": [
+      { "name": "COMMAND_CENTER", "class_name": "CommandCenterDO" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1-command-center-do", "new_sqlite_classes": ["CommandCenterDO"] }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

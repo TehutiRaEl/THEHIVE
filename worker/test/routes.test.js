@@ -299,7 +299,7 @@ describe('the founder gate via Cloudflare Access (/v11/founder/*)', () => {
 
   test('a valid Access token decides a proposal and stamps decided_by with the real email', async () => {
     withAccessJWKS();
-    const DB = stubDB({ 'SELECT kind, body FROM hive_proposals': { kind: 'suggestion', body: '{}' } });
+    const DB = stubDB({ 'SELECT kind, title, body FROM hive_proposals': { kind: 'suggestion', title: 'x', body: '{}' } });
     const token = await sign();
 
     const r = await call(req('/founder/proposals/1/decide', {
@@ -347,7 +347,7 @@ describe('the founder gate via Cloudflare Access (/v11/founder/*)', () => {
   });
 
   test('regression guard: the original FOUNDER_KEY route is completely unaffected by any of this', async () => {
-    const env = makeEnv({ FOUNDER_KEY: 'real-key', DB: stubDB({ 'SELECT kind, body FROM hive_proposals': { kind: 'suggestion', body: '{}' } }) });
+    const env = makeEnv({ FOUNDER_KEY: 'real-key', DB: stubDB({ 'SELECT kind, title, body FROM hive_proposals': { kind: 'suggestion', title: 'x', body: '{}' } }) });
 
     const r = await call(req('/proposals/1/decide', {
       method: 'POST', body: { decision: 'approved' }, headers: { Authorization: 'Bearer real-key' },
@@ -432,7 +432,7 @@ describe('the founder gate under a Secrets Store FOUNDER_KEY binding', () => {
   test('the right key, via a Secrets Store binding, is accepted', async () => {
     const env = makeEnv({
       FOUNDER_KEY: stubSecretsStoreSecret('real-key'),
-      DB: stubDB({ 'SELECT kind, body FROM hive_proposals': { kind: 'suggestion', body: '{}' } }),
+      DB: stubDB({ 'SELECT kind, title, body FROM hive_proposals': { kind: 'suggestion', title: 't', body: '{}' } }),
     });
 
     const r = await call(req('/proposals/1/decide', {
@@ -470,6 +470,111 @@ describe('the founder gate under a Secrets Store FOUNDER_KEY binding', () => {
     const b = await r.json();
 
     assert.ok(!b.secrets_present.includes('FOUNDER_KEY'));
+  });
+});
+
+// Modify/counter-propose (task 22, 2026-08-14): the panel only ever supported
+// a binary approve/reject. 'modified' closes the original proposal (without
+// executing anything, unlike approve) and files a brand-new pending proposal
+// carrying the edited text, linked back via modifies_id — same founder-key
+// gating as approve/reject, still fail-closed.
+describe('POST /proposals/:id/decide — decision="modified" (task 22)', () => {
+  test('still fails closed with no FOUNDER_KEY bound', async () => {
+    const env = makeEnv({});
+
+    const r = await call(req('/proposals/1/decide', {
+      method: 'POST', body: { decision: 'modified', modified_body: 'a better version' },
+      headers: { Authorization: 'Bearer anything' },
+    }), env);
+
+    assert.equal(r.status, 401, 'the modify path must fail closed exactly like approve/reject');
+  });
+
+  test('an empty modified_body is rejected with 400, not silently accepted', async () => {
+    const env = makeEnv({
+      FOUNDER_KEY: 'real-key',
+      DB: stubDB({ 'SELECT kind, title, body FROM hive_proposals': { kind: 'suggestion', title: 'Original', body: 'x' } }),
+    });
+
+    const r = await call(req('/proposals/1/decide', {
+      method: 'POST', body: { decision: 'modified', modified_body: '   ' },
+      headers: { Authorization: 'Bearer real-key' },
+    }), env);
+
+    assert.equal(r.status, 400);
+    const b = await r.json();
+    assert.match(b.detail, /modified_body/);
+  });
+
+  test('a real modified_body: closes the original as modified, inserts a new pending counter-proposal linked via modifies_id', async () => {
+    const db = stubDB({
+      'SELECT kind, title, body FROM hive_proposals': { kind: 'suggestion', title: 'Original title', body: 'original body' },
+      'INSERT INTO hive_proposals': { meta: { last_row_id: 42 }, success: true },
+      "UPDATE hive_proposals SET status='modified'": { meta: { changes: 1 }, success: true },
+    });
+    const env = makeEnv({ FOUNDER_KEY: 'real-key', DB: db });
+
+    const r = await call(req('/proposals/7/decide', {
+      method: 'POST', body: { decision: 'modified', modified_body: 'the founder\'s counter-proposal text' },
+      headers: { Authorization: 'Bearer real-key' },
+    }), env);
+    const b = await r.json();
+
+    assert.equal(r.status, 200);
+    assert.equal(b.ok, true);
+    assert.equal(b.decision, 'modified');
+    assert.equal(b.new_proposal_id, 42, 'must surface the real new row id, not a placeholder');
+
+    const insert = db.queries.find((q) => q.sql.includes('INSERT INTO hive_proposals'));
+    assert.ok(insert, 'a real INSERT must have run');
+    assert.match(insert.args[0], /^\d{4}-\d{2}-\d{2}T/, 'first bound arg must be a real ISO timestamp');
+    assert.deepEqual(insert.args.slice(1), ['suggestion', 'Modified: Original title',
+      'the founder\'s counter-proposal text', 7],
+      'the new row must carry the original kind, a derived title, the edited body, and modifies_id=7');
+
+    const update = db.queries.find((q) => q.sql.includes("status='modified'"));
+    assert.ok(update, 'the original row must be closed as modified, not silently left pending');
+    assert.equal(update.args[2], 7, 'the UPDATE must target the original proposal id');
+  });
+
+  test('an explicit modified_title overrides the derived "Modified: <original>" default', async () => {
+    const db = stubDB({
+      'SELECT kind, title, body FROM hive_proposals': { kind: 'venture', title: 'Original', body: 'x' },
+      'INSERT INTO hive_proposals': { meta: { last_row_id: 99 }, success: true },
+      "UPDATE hive_proposals SET status='modified'": { meta: { changes: 1 }, success: true },
+    });
+    const env = makeEnv({ FOUNDER_KEY: 'real-key', DB: db });
+
+    await call(req('/proposals/3/decide', {
+      method: 'POST',
+      body: { decision: 'modified', modified_body: 'new text', modified_title: 'A genuinely new title' },
+      headers: { Authorization: 'Bearer real-key' },
+    }), env);
+
+    const insert = db.queries.find((q) => q.sql.includes('INSERT INTO hive_proposals'));
+    assert.equal(insert.args[2], 'A genuinely new title');
+  });
+
+  test('a decision of "modified" never calls executeApprovedAction — only approve does', async () => {
+    // action-request kind is the one case where 'approved' triggers real execution
+    // (executeApprovedAction). 'modified' must never take that path, even for the
+    // same kind — it only files a counter-proposal, exactly like reject records a
+    // decision without executing anything.
+    const db = stubDB({
+      'SELECT kind, title, body FROM hive_proposals': { kind: 'action-request', title: 'Original', body: '{"action":"noop","params":{}}' },
+      'INSERT INTO hive_proposals': { meta: { last_row_id: 5 }, success: true },
+      "UPDATE hive_proposals SET status='modified'": { meta: { changes: 1 }, success: true },
+    });
+    const env = makeEnv({ FOUNDER_KEY: 'real-key', DB: db });
+
+    const r = await call(req('/proposals/9/decide', {
+      method: 'POST', body: { decision: 'modified', modified_body: 'edited action text' },
+      headers: { Authorization: 'Bearer real-key' },
+    }), env);
+    const b = await r.json();
+
+    assert.equal(r.status, 200);
+    assert.equal(b.execution, undefined, 'modify must never report an execution result — it is not an approval');
   });
 });
 

@@ -13,31 +13,63 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-08-08 — read this section first)
+## Right now (updated 2026-08-17 — read this section first)
 
-- **⚠️ This section was wrong from 2026-08-04 to 2026-08-08 and said so with confidence.**
-  It claimed "ALL Routines deleted, nothing fires automatically" for four days *after* a
-  replacement Routine had been wired on 2026-08-04. The one file every autonomous firing
-  reads first was the file misinforming it. Corrected here; the incident history below is
-  kept deliberately, because it is why the standing rule exists.
+- **Task 14 (real-time Command Center updates) is FIXED, done, level `tested` — NOT
+  `verified-live` yet, on purpose.** New `CommandCenterDO` (Durable Object,
+  `wrangler.jsonc` binding + migration), `GET /v11/ws`, `broadcastToCommandCenter()`
+  fired from the heartbeat, new `frontend/src/hooks/useCommandCenterSocket.ts` wired
+  into `KaiElOS.tsx`. 14 new worker tests, mutation-tested, 127/127 green;
+  `tsc --noEmit` confirmed zero new frontend errors. **The live round trip cannot be
+  proven before the founder merges** (never-self-merge) — a new
+  `edge-health-probe.yml` step (opens a real `wss://.../v11/ws`, POSTs to the new
+  `/v11/debug/ws-broadcast-test` route, confirms the marker arrives) exists
+  specifically to supply that proof the moment this deploys; not dispatched this
+  firing since it would fail by design pre-merge. **The queue is now genuinely
+  empty** — tasks 14 and 26 were the last two pending items; both done this week.
+  Next firing: read the Protocol's own "if no task is left pending: stop" rule
+  first, don't invent scope.
+- **Task 46: a THIRD occurrence of the round-robin stuck-on-Ma'at symptom, 2026-08-17**
+  (run `32081431457`), same shape as 08-15 (self-resolved 08-16). Not re-investigated
+  in full — stale-cache/code-regression/isolated-logic-test were already ruled out
+  twice. Now a real recurring pattern (2 episodes in 3 days) rather than a one-off;
+  what would actually move this forward is founder-granted Cloudflare dashboard
+  access (task 46's original, still-open root question), not a third from-scratch
+  investigation from this container. **A red X on `edge-health-probe` can now mean
+  "round-robin stuck" as much as "production down"** — worth knowing before assuming
+  the worse one.
+- **Task 26 (hive_mesh.dispatch()'s HITL approval dead end) — FIXED 2026-08-16, done,
+  level `tested`.** Approving a held cross-colony dispatch used to only flip a DB row's
+  status — the event never actually re-fired (AUDIT_LEDGER.md 2026-08-02). Now
+  `/hitl/resolve` calls `hive_mesh.redispatch_approved()` when the resolved request's
+  `action_type` starts with `hive_mesh.dispatch:` and `approved=True`. New
+  `tests/integration/test_hitl_redispatch.py` proves the round trip, mutation-tested.
+  This is System A (`backend/`) code — not live in production per the section below,
+  so real-world blast radius is zero today, but the mechanism is now correct before any
+  future deploy decision.
 - **The "2 AM automation" is two different triggers, and only one of them ever fired at
-  2 AM.** This confused the founder and the record for days — resolved 2026-08-08 from
-  repo evidence (founder's commits carry `-0700`, so PT = UTC−7 in August):
-  | Trigger | Cron | In PT | State |
-  |---|---|---|---|
-  | `trig_013BTxUthvLX3C4nLs7MypVC` — the "autonomous arc" | fired `09:00Z` | **02:00 = 2 AM PT** | **DELETED 2026-08-01** in the incident below |
-  | `trig_01CJsVYwDs4pHMoFEC5JFi7V` — daily campaign Routine | `0 4 * * *` UTC | 21:00 = **9 PM PT** | Created 2026-08-04 (`CAMPAIGN.html` ~line 27) — see next bullet |
-  The 2 AM arc the founder remembers is the **deleted** one. Its replacement fires at
-  **9 PM PT**, not 2 AM. No repo workflow fires at 2 AM PT either — of the nine scheduled
-  workflows, the closest is `colony-health.yml` (`0 6 * * *` UTC), which is 2 AM *Eastern*.
-  Do not "fix" the 9 PM cron to 2 AM without the founder saying that is what they want.
-- **`trig_01CJsVYwDs4pHMoFEC5JFi7V`'s live state is `unverified` — do not claim it works.**
-  `list_triggers` requires an interactive approval and was denied three times (once
-  2026-08-07, twice 2026-08-08). Nothing in this container can see whether that Routine
-  still exists, is enabled, or when it next fires. Per `wired-or-not`, the honest level is
-  `unverified`, not "wired". **Ask the founder to approve `list_triggers` once**, then
-  record the real `next_run_at` / `ended_reason` / `suspension_reason` here. Never call
-  `fire_trigger`.
+  2 AM** (resolved 2026-08-08, still true): the deleted `trig_013BTxUthvLX3C4nLs7MypVC`
+  fired `09:00Z` = 2 AM PT; its replacement `trig_01CJsVYwDs4pHMoFEC5JFi7V` fires
+  `0 4 * * *` UTC = 9 PM PT, not 2 AM. Do not "fix" the 9 PM cron to 2 AM without the
+  founder saying that is what they want.
+- **`trig_01CJsVYwDs4pHMoFEC5JFi7V`'s live state is STILL `unverified`.** `list_triggers`
+  approval has never been granted (5+ asks across 2026-08-07/08, all implicitly skipped
+  since — no firing has re-requested it, this one included). Per `wired-or-not`, the
+  honest level stays `unverified`, not "wired". Never call `fire_trigger`.
+- **Open PRs: #171 only**, on this branch, covering the 08-11/08-14/08-15/08-16 firings
+  (task 15/19/21/22/23/24/25 work + task-46 live evidence). Unmerged, per the standing
+  never-self-merge rule.
+- **Task 46 (branch-deploy reliability): the 2026-08-15 round-robin regression
+  self-resolved.** Full 8-agent rotation confirmed again 2026-08-16 (edge-health-probe run
+  `31925783332`) — the stuck-on-Ma'at symptom from 08-15 is gone, no code fix was shipped
+  for it. This closes that specific symptom, not the underlying question: task 46 has
+  twice now caught a real gap between what `origin/main` says and what production
+  actually does, and that question stays exactly as founder-blocked as before —
+  Cloudflare Workers Builds dashboard access this repo doesn't have.
+- **Queue: EMPTY.** Tasks 14 and 26 were the last two `pending` items in the whole
+  60-task queue; both done as of 2026-08-16/17. A future firing's first move is the
+  Protocol's own "if no task is left pending: stop" rule — do not invent new scope to
+  fill the window. The founder is the only one who adds new tasks to this file.
 - **The 2026-08-01 incident — kept, because it is why the rule exists.** Every recurring
   Routine then — the hourly PR-heartbeat cron AND the nightly 2 AM arc AND an earlier
   `send_later` chain — used `persist_session:true` pointed at one long-lived session, so
@@ -50,10 +82,6 @@ that's the discipline this file exists to model, not just describe.
   tiny — "go there, do it, update it, stop". **Still do not create any NEW Routine without
   the founder's approval.** (That rule is about creating new ones; it never meant "assume
   none exist" — which is exactly how this section went stale.)
-- **Open PRs: ZERO.** Corrected 2026-08-08 — this line previously said "#143 only" and had
-  been stale for weeks. #155, #156, #157, #158 and #159 are all merged (verified via
-  `pull_request_read`: #159 `merged: true`, `merged_at 2026-08-08T02:45:02Z`).
-  `origin/main` is at `1fb37dd`.
 - **Task 51 is DECIDED (2026-08-08) — the token ceiling now counts real input + output
   only.** It had stopped two consecutive firings before either did any work; three
   measurements agree that ~90-96% of what it used to count was cache creation, which

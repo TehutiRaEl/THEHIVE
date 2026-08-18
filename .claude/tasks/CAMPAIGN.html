@@ -1070,6 +1070,83 @@ branch) does the work → a PR.</li>
   <code>main</code> or to accept branch deploys knowingly. Nothing here changes that — it
   removes the uncertainty about <em>whether</em> it is happening, not the decision about what
   to do.</p>
+  <p><strong>2026-08-15 — fresh live evidence, same class of problem, real investigation
+  done, no code shipped.</strong> Dispatched <code>edge-health-probe</code> (run
+  <code>31867590926</code>) at firing start: the work cycle's round-robin (fixed 2026-08-11,
+  commit <code>759775b</code> on <code>main</code>, merged via PR #170) is stuck again — the
+  8 most recent <code>agent-work</code> rows in production, spanning
+  <code>2026-08-14T22:30Z</code> through <code>2026-08-15T05:30Z</code> (7 real hourly
+  ticks, distinct token costs each time, not a duplicated/cached row), are <strong>every
+  single one "Ma'at — balance"</strong> — the exact symptom the 2026-08-11 fix targeted.</p>
+  <p><strong>Ruled out before writing this up</strong> (probe-before-claim,
+  <code>fable-debugger</code> discipline): (1) <strong>Not a stale GET cache</strong> —
+  <code>GET /v11/updates</code> queries D1 directly on every call
+  (<code>worker/src/index.js</code>'s <code>/updates</code> handler has no
+  <code>cachedJson</code> wrapper, confirmed by reading the route). (2) <strong>Not a
+  regression in the fix's own logic</strong> — no commit has touched
+  <code>runWorkCycle</code>/<code>nextWorkTurnIndex</code>/<code>AGENT_WORK</code> on
+  <code>main</code> since <code>759775b</code> (checked directly:
+  <code>git log origin/main -- worker/src/index.js</code>). (3) <strong>Not a logic bug
+  triggered by the real data</strong> — ran <code>nextWorkTurnIndex()</code> from
+  <code>origin/main</code>'s actual source directly in Node against the exact real
+  production title string <code>"Ma'at — balance"</code>: it correctly returns
+  <code>1</code> (Solomon), not <code>0</code>. Given the true last title, the fixed
+  function does not reproduce the bug in isolation.</p>
+  <p><strong>What's confirmed instead:</strong> the fix genuinely worked for a real window —
+  the prior firing's probe (2026-08-14, run <code>31768946490</code>) showed full, correct
+  8-agent rotation from <code>2026-08-13T20:31Z</code> through <code>2026-08-14T03:31Z</code>.
+  Something caused it to re-stick sometime between then and <code>2026-08-14T22:30Z</code>,
+  despite the deployed logic being provably correct against the real data it should be
+  reading. <strong>That gap is exactly this task's own open question</strong> — this task
+  already proved once (2026-08-07) that production can run code that does not match
+  <code>origin/main</code>'s HEAD (unmerged branch code reaching production). A correct fix
+  merged to <code>main</code> that later stops taking effect, with no code-side regression
+  found, is consistent with the same underlying deploy-identity problem, not a new one — but
+  this container has no way to confirm that without the Cloudflare dashboard access this
+  task has always been blocked on.</p>
+  <p><strong>Deliberately not shipped this firing:</strong> more logic changes to
+  <code>runWorkCycle</code> without a reproduction — the code is provably correct against
+  the one real data point available; changing it further would be guessing, not fixing, and
+  this is the same paid, safety/cost-relevant work-cycle code this file already treats with
+  extra scrutiny (own firing, tasks 26/48/51's standing). One concrete, low-risk idea for a
+  future firing to actually build (not implemented here): have
+  <code>runWorkCycle</code> record the raw <code>last?.title</code> it read and the
+  <code>turn</code> it computed into the agent-work row's own <code>needs</code> field, so
+  the next time this happens there is direct forensic evidence of what production actually
+  read, instead of having to infer it externally the way this entry had to.</p>
+  <p><strong>2026-08-16 — the regression self-resolved, real evidence.</strong> Dispatched
+  edge-health-probe again (run <code>31925783332</code>): the 8 most recent
+  <code>agent-work</code> rows now show full, correct rotation —
+  <code>2026-08-15T20:30Z</code> through <code>2026-08-16T03:30Z</code>, one distinct agent
+  per hour (Akosha, Kai El, Ma'at, Solomon, Horus, Thoth, Sekhmet, Ptah), no repeats. Not
+  claiming this as proof of a code fix — none was shipped, per the entry above — only as an
+  honest close-out of yesterday's specific open question: whatever caused the 8-hour stuck
+  window is no longer reproducing, whether it was transient D1 read timing, a rolling
+  redeploy settling, or something else this container still cannot see directly. The
+  broader task-46 question (does production reliably run what <code>origin/main</code>
+  says it should) stays exactly as blocked on the founder as before — one clean probe
+  afterward doesn't answer that, it only closes the specific symptom that was live
+  yesterday.</p>
+  <p><strong>2026-08-17 — recurred a third time, same symptom, still no code cause,
+  not re-investigated in full (already done twice above).</strong> Dispatched
+  edge-health-probe (run <code>32081431457</code>): the 8 most recent <code>agent-work</code>
+  rows (<code>2026-08-17T16:30Z</code> through <code>2026-08-17T23:30Z</code>) are again
+  every single one <strong>"Ma'at — balance"</strong> — identical shape to 08-15's
+  occurrence, self-resolved by 08-16. Per the probe workflow's own <code>::error::</code>
+  gate this makes the run itself read as a probe <strong>failure</strong>, even though
+  every other endpoint in the same run answered healthy (18/18 other checks green;
+  <code>llm/status</code> still shows Claude 401'd, unchanged/expected per task 45) — worth
+  the founder knowing that a red X on this workflow can mean "round-robin stuck" as much as
+  "production down," two very different severities behind one signal. <strong>Not
+  re-running the 08-15 investigation</strong> (stale-cache/code-regression/isolated-logic-test
+  all already ruled out twice) — this is now a real, recurring pattern (2 occurrences in 3
+  days, both self-resolving within ~24h with no code fix either time), which changes what
+  kind of evidence would actually help: a future firing with founder-granted Cloudflare
+  dashboard access (the same access task 46's root question has needed all along) could
+  check whether these episodes correlate with actual redeploys, rather than this container
+  continuing to rule out hypotheses it has already ruled out. Filed as a third data point
+  under this same task rather than a new one, per the standing "same class of problem,
+  no speculative fix" rule this task has followed since 08-15.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="false" id="task-48">
@@ -1633,7 +1710,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   loading, and disable when no founder key — all 12 PASS.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="false" id="task-14">
+<div class="task" data-status="done" data-batchable="false" id="task-14">
   <h3>14. Real-time Command Center updates via Cloudflare Durable Objects</h3>
   <p class="meta">Captured 2026-08-01 during the 13-branch investigation. Est. cost:
   large — new Worker-side infrastructure, not batchable, own firing.</p>
@@ -1649,6 +1726,75 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   <p><strong>Acceptance:</strong> A real, live, working round trip — a Command Center
   client actually receiving a pushed update from the Worker, verified by observing it
   happen, not just code that compiles.</p>
+  <p><strong>Done, level: tested — NOT verified-live, and here is exactly why.</strong>
+  Everything buildable pre-merge is built and real. <code>wrangler.jsonc</code>: new
+  <code>durable_objects</code> binding (<code>COMMAND_CENTER</code> →
+  <code>CommandCenterDO</code>) + <code>migrations</code> (<code>new_sqlite_classes</code>,
+  no out-of-band provisioning step needed unlike Vectorize/R2/Queues — the migration
+  itself registers the class at deploy time). <code>worker/src/index.js</code>: new
+  <code>export class CommandCenterDO</code> (one shared instance,
+  <code>idFromName('global')</code>, so every connected tab lands in the same instance);
+  <code>fetch()</code> handles the WS upgrade (real <code>WebSocketPair</code>/101) and a
+  <code>/broadcast</code> POST path; <code>_addSession()</code>/<code>_broadcast()</code>
+  track/fan-out to every open socket, dropping one that errors or throws on
+  <code>send()</code> without breaking the others. New route <code>GET /v11/ws</code>
+  forwards to it (503 if unbound — matches the repo's existing flip-the-switch honesty
+  pattern). New <code>broadcastToCommandCenter()</code> helper, called
+  fire-and-forget (<code>ctx.waitUntil</code>) from <code>scheduled()</code>'s heartbeat
+  right after its existing <code>postUpdate()</code> call — never blocks the heartbeat,
+  and a missed push still self-heals on <code>useHiveData</code>'s next 30s poll.
+  Client side: new <code>frontend/src/hooks/useCommandCenterSocket.ts</code> — one real
+  shared WebSocket connection (module-level, reference-counted) rather than one per
+  caller, since <code>useHiveData</code> is independently called from ~12 places in this
+  codebase (more than the 9 originally scoped) and this hook is meant to be callable from
+  the same places without multiplying that into a dozen sockets. Wired into exactly one
+  real consumer, <code>KaiElOS.tsx</code> (the top-level shell): a pushed message calls
+  <code>hive.refresh()</code>. Deliberately did NOT thread it into the other ~11
+  <code>useHiveData()</code> call sites (the 8 tab components + <code>RoadmapPanel</code>/
+  <code>KaiCommune</code>/<code>KaiChatBox</code>) — each already has its own 30s poll
+  regardless, and rewiring all of them into a shared context is real, separable follow-up
+  scope per the protocol's own decompose-don't-cram rule, not silently bundled here.</p>
+  <p><strong>Testing:</strong> new <code>worker/test/command-center-do.test.js</code>, 14
+  tests — <code>CommandCenterDO</code>'s actual session-tracking/broadcast logic against a
+  stub socket (send/addEventListener only — <code>node --test</code> has no real
+  <code>WebSocketPair</code> runtime, only Cloudflare's edge does), the <code>/v11/ws</code>
+  route's 503-when-unbound and correct-forwarding-when-bound, and
+  <code>broadcastToCommandCenter()</code>'s never-throws contract. Mutation-tested twice
+  (gutted <code>_broadcast()</code>'s body — 4 tests correctly failed; deleted the new
+  <code>/debug/ws-broadcast-test</code> route entirely — 2 tests correctly failed), both
+  restored byte-identical (<code>diff</code> confirmed). Full worker suite: 113 → 127,
+  all green. <code>node --check</code> clean. <code>npx tsc --noEmit</code>: 243
+  pre-existing errors before AND after this change (confirmed by moving the new hook file
+  aside and re-running) — zero new errors from either new/changed frontend file.
+  <strong>Real gap found and flagged, not silently built</strong>: this repo has zero
+  frontend test runner (no vitest/jest configured, no existing hook tests anywhere) — a
+  real component test for <code>useCommandCenterSocket</code> would mean standing up new
+  test infrastructure, which is itself separable scope per "check before you build"; relying
+  on <code>tsc --noEmit</code> plus the fully-tested Worker-side logic (where the actual
+  session/broadcast risk lives) for this task instead.</p>
+  <p><strong>The live-proof mechanism, built but not yet runnable:</strong> a request POSTed
+  to the real production URL right now would 404 — this PR is unmerged (never self-merge,
+  standing rule) so none of this is deployed. The literal Acceptance ("observed... happen")
+  needs a live client actually receiving a push, and this container cannot reach
+  <code>*.workers.dev</code> at all (same limit every <code>edge-health-probe</code> entry
+  already notes) — plus the only real trigger (the heartbeat) fires on a 30-min cron, too
+  slow for any CI job to wait on. So a new <code>POST /v11/debug/ws-broadcast-test</code>
+  route was added (no auth gate, no state mutation — same spirit as the other
+  <code>/debug/*</code> diagnostics) purely so the proof can be deterministic: open a real
+  <code>wss://.../v11/ws</code> connection, POST a unique marker to that route, confirm the
+  exact marker arrives back over the socket within 15s. <code>edge-health-probe.yml</code>
+  gained a new step doing exactly that (Python + <code>websockets</code>, since raw curl
+  cannot drive a full-duplex WS client and no Node/`ws` setup existed in this workflow) —
+  <code>py_compile</code>-clean and the workflow YAML parses, but **not dispatched this
+  firing**, because it would fail by design until the founder merges (there's nothing to
+  connect to yet) — dispatching a probe known to fail before it can possibly pass would
+  violate this protocol's own "one status check per thing being watched" discipline just
+  as much as re-polling a real one. <strong>Once merged: the very next
+  <code>edge-health-probe</code> run (scheduled every 6h, or a manual dispatch) either
+  passes this specific step with a real, citable run ID — the evidence the next firing
+  needs to honestly upgrade this task's level — or surfaces exactly what's wrong with the
+  real deploy</strong> — nothing about that proof requires another firing's worth of new
+  code, only the founder's own merge.</p>
 </div>
 
 <div class="task" data-status="done" data-batchable="true" id="task-15">
@@ -1743,7 +1889,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   in CI, they do not prove production behaviour.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-16">
+<div class="task" data-status="blocked" data-batchable="true" id="task-16">
   <h3>16. Venture/legal-research session history + export</h3>
   <p class="meta">Found 2026-08-02 during task 3's scoping pass. Idea/enhancement, not a
   bug — <strong>founder should confirm scope</strong> before real work starts; no founder
@@ -1753,9 +1899,14 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   already used elsewhere) and add a download/export action in the UI.</p>
   <p><strong>Acceptance:</strong> Founder confirms this is wanted before implementation
   begins; if confirmed, real persistence + a real UI affordance, verified live.</p>
+  <p><strong>2026-08-11 — moved to blocked.</strong> Re-read this task's own Acceptance
+  text: it names a founder confirmation as the gate before any implementation, and no
+  founder ask is on record for this specifically (still true today). It was showing as
+  <code>pending</code>, which overstates how actionable it is — correcting the status to
+  match its own stated acceptance criteria rather than starting work with no real go-ahead.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-17">
+<div class="task" data-status="blocked" data-batchable="true" id="task-17">
   <h3>17. Legal-research citation verification</h3>
   <p class="meta">Found 2026-08-02 during task 3's scoping pass. Idea/enhancement —
   <strong>founder should confirm scope</strong>; the system prompt already instructs the
@@ -1768,6 +1919,10 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   <p><strong>Acceptance:</strong> Founder confirms this is wanted and picks/approves a real
   verification source before implementation; degrade honestly (flag unverifiable citations,
   never silently drop or silently trust them) if built.</p>
+  <p><strong>2026-08-11 — moved to blocked.</strong> Same correction as task 16: this
+  task's own Acceptance text requires a founder-approved verification source before any
+  implementation starts, and none is on record. Status corrected from <code>pending</code>
+  to match.</p>
 </div>
 
 <div class="task" data-status="blocked" data-batchable="true" id="task-18">
@@ -1786,7 +1941,7 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   a build task — not queued here.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-19">
+<div class="task" data-status="done" data-batchable="true" id="task-19">
   <h3>19. Real privacy self-audit — what THEHIVE actually observes/logs</h3>
   <p class="meta">Distilled from task 18's real kernel. Est. cost: medium.</p>
   <p><strong>Prompt:</strong> Audit what the live Worker and any backend code actually
@@ -1794,17 +1949,61 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   against F-001's real data-minimization principle.</p>
   <p><strong>Acceptance:</strong> A real, evidence-cited findings list (what's logged,
   where, why, whether it's minimized) — not a philosophical essay.</p>
+  <p><strong>2026-08-11 — done, level: tested (static trace of committed code, not a
+  production log inspection).</strong> Findings, each cited against the live
+  <code>worker/src/index.js</code>:</p>
+  <p>1. <strong>What captures visitor IP:</strong> 10 routes read
+  <code>request.headers.get('CF-Connecting-IP')</code> — lines 1905, 1926, 1981, 2110,
+  2440, 2529, 2579, 2664, 2675, 2686 (re-verified post-rebase against the branch's real
+  current line numbers, after upstream work shifted the file by ~120 lines). All 10 use
+  it only to key <code>rate_limits</code> rows (`rateLimitOk`/`tokenOk`); none write it
+  to any other table, log, or third party.</p>
+  <p>2. <strong>The two visitor-data tables</strong> (of 11 total D1 tables, via
+  <code>ensureTables</code>): <code>rate_limits (ip, ts)</code> — raw IP + timestamp, no
+  other visitor field. <code>visitor_tokens (token, issued_at, expires_at)</code> — an
+  opaque token, no IP stored alongside it.</p>
+  <p>3. <strong>Zero <code>console.log/error/warn</code> calls anywhere in the file</strong>
+  (grep count: 0) — nothing leaves a visitor trail in runtime logs. No User-Agent,
+  Referer, or <code>cf.*</code> geo field is ever read (the file's one
+  <code>User-Agent</code> string is the Worker's own outbound header when it calls
+  providers, not visitor capture).</p>
+  <p>4. <strong>Retention — corrected from an earlier, wrong assumption:</strong> pruning
+  is NOT scoped to "only the requesting IP, only on its next request" as previously
+  believed. <code>scheduled()</code> (line 1420, re-verified post-rebase), the Worker's
+  cron handler — real trigger <code>*/30 * * * *</code> per
+  <code>wrangler.jsonc:14</code>, i.e. every 30 minutes, not hourly — runs an
+  unconditional global sweep at lines 1510-1511 (re-verified post-rebase):
+  <code>DELETE FROM visitor_tokens WHERE expires_at&lt;?</code> and
+  <code>DELETE FROM rate_limits WHERE ts&lt;?</code> (1-hour cutoff), independent of
+  whether that IP or token is ever seen again. `rateLimitOk()` (~line 154) additionally
+  self-prunes its own IP's rows on each request as a second, redundant layer. Net effect:
+  no IP or token row can persist longer than ~90 minutes (30-min cron cadence + 1-hour
+  cutoff window) even for a visitor who never returns.</p>
+  <p><strong>Against F-001</strong> (<code>soul.md:8-11</code>, data sovereignty +
+  minimization): the pattern matches the law's intent — data collected is the minimum
+  needed for its stated purpose (rate limiting), it is not fanned out to logs or other
+  tables, and it self-expires on a real, verified schedule rather than accumulating
+  indefinitely. F-001's explicit 5-minute/10-per-hour user-initiated delete right is not
+  separately implemented for these two tables, but neither table is user-identifiable
+  data a person would need to delete on demand — it is operational rate-limit/session
+  bookkeeping, not personal data in F-001's sense. No violation found; no gap found beyond
+  what's stated here.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-20">
+<div class="task" data-status="blocked" data-batchable="true" id="task-20">
   <h3>20. Scope treasury_guild.py's revenue-split idea (connects task 18's F-007 kernel)</h3>
   <p class="meta">This is the SAME open item already logged 2026-08-01 (Q2: "real plan,
   discuss later") — not a new task, just noting the founder's dissertation independently
   arrived at the same real idea from a different angle. No new task created; see
   <code>backend/guilds/treasury_guild.py</code>'s own comment and this file's history.</p>
+  <p><strong>2026-08-14 — status corrected to blocked</strong> (was showing as `pending`,
+  found while continuing the document-order scan for this firing — a real queue-hygiene
+  gap, same class as tasks 16/17/23). Its own text already says this is founder-gated
+  ("real plan, discuss later," 2026-08-01 Q2, still unanswered) — nothing here for a
+  firing to do until that discussion happens. Correcting the status to match.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-21">
+<div class="task" data-status="done" data-batchable="true" id="task-21">
   <h3>21. [ROLE: Governance Kernel] Reconcile the real `soul` score against the exact EVW formula</h3>
   <p class="meta">Atom-level finding 2026-08-02 from the founder's dissertation pass.
   F-002's EVW formula is real law (soul.md), and a real wealth score (`soul`) already
@@ -1817,9 +2016,30 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   <p><strong>Acceptance:</strong> A cited trace of the real increment logic, plus either a
   real reconciliation or an honest "these are currently different things" disclosure —
   never asserted without checking.</p>
+  <p><strong>2026-08-11 — done, level: tested (static trace of committed code).</strong>
+  Grep-confirmed: there is exactly <strong>one</strong> place `soul` is ever written —
+  <code>worker/src/index.js:628</code> (re-verified post-rebase), inside
+  `resolveChallenge()`:
+  <code>UPDATE agents SET elo=elo+16, soul=soul+25 WHERE name=?</code>, run once per
+  resolved Arena challenge for the winner only. No other file, route, or table touches
+  `soul`.</p>
+  <p><strong>F-002</strong> (<code>soul.md:13-16</code>) defines wealth method 2 as "sum
+  of earned value weight (EVW) of each utilized contribution," with the weighted terms
+  (Hours_Saved×0.4 + Adoption_Count×0.3 + Novelty_Score×0.2 + Dispute_Resilience×0.1)
+  held in the mutable appendix, and total wealth as the **geometric mean** of method 1
+  (time wealth) and method 2 (EVW).</p>
+  <p><strong>Honest verdict (the disclosure this task's acceptance explicitly permits):
+  these are currently different things.</strong> A flat +25-per-Arena-win counter
+  approximates none of EVW's four weighted terms (no hours-saved figure, no adoption
+  count, no novelty score, no dispute-resilience input feeds it), and no geometric mean
+  of any kind is computed anywhere in the Worker — `soul` is the entire wealth figure as
+  it stands, not one of two combined methods. Not building an EVW implementation here:
+  the appendix's weighted values are mutable law (soul.md's own 2/3-guild-vote + 30-day
+  amendment process), and inventing weights would be founder/guild territory, not this
+  firing's call.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-22">
+<div class="task" data-status="done" data-batchable="true" id="task-22">
   <h3>22. [ROLE: Frontend Architect] Add a real "modify/counter-propose" option to ProposalsPanel</h3>
   <p class="meta">Atom-level finding: the pasted <code>acceptance.py</code>'s one genuinely
   new idea beyond what's already live — the real <code>ProposalsPanel.tsx</code> only
@@ -1829,9 +2049,46 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   still fail-closed, extending the real system rather than duplicating it.</p>
   <p><strong>Acceptance:</strong> Real working modify path, verified against the live build,
   same founder-key gating as approve/reject.</p>
+  <p><strong>2026-08-14 — done, level: tested (not verified-live — this container cannot
+  reach production; the acceptance's literal "verified against the live build" needs the
+  founder's own deploy).</strong> Real implementation, not a stub:</p>
+  <p><code>worker/src/index.js</code>'s <code>/proposals/:id/decide</code> now accepts
+  <code>decision:'modified'</code> alongside the existing approved/rejected, gated by the
+  exact same <code>founderAuthOk()</code> check (fails closed identically — no new gate
+  invented). A modify: requires a non-empty <code>modified_body</code> (400 otherwise),
+  closes the original proposal as <code>status='modified'</code>, and INSERTs a brand-new
+  <code>pending</code> proposal carrying the edited text with a new <code>modifies_id</code>
+  column pointing back at the original — a real counter-proposal, not a same-row edit, so
+  the original decision stays in the audit trail. Never calls
+  <code>executeApprovedAction</code> (only `approved` on an `action-request` kind does) —
+  confirmed by a dedicated test, since silently executing on a modify would be a real
+  security regression. Schema: one new <code>ALTER TABLE hive_proposals ADD COLUMN
+  modifies_id INTEGER</code>, same additive-migration pattern already used for
+  <code>alignment_score</code>/<code>decided_by</code>/<code>actioned_at</code>/<code>elder_note</code>.</p>
+  <p><code>ProposalsPanel.tsx</code> gained a real "✎ Modify" button next to Approve/Reject
+  on each pending proposal, opening an inline textarea (pre-filled with the original body)
+  and a "Submit counter-proposal" action; the Decided section now renders a distinct icon/
+  color for `modified` rows and a "Counter-proposes #N" lineage line when
+  <code>modifies_id</code> is present. <code>npx tsc --noEmit</code> confirms this file adds
+  zero new type errors (the pre-existing, unrelated <code>src/worlds/</code>/<code>src/xp/</code>
+  build breakage documented in <code>HIVE_PULSE.md</code> is untouched, still there, still not
+  this task's to fix).</p>
+  <p><strong>Real tests, not assertions of intent:</strong> 5 new cases in
+  <code>worker/test/routes.test.js</code> (fails-closed with no key; empty
+  <code>modified_body</code> → 400; a real modify → 200 with the INSERT and UPDATE both
+  verified via the DB stub's recorded query args, including the derived vs. explicit
+  title; the no-execution guarantee). Required extending <code>worker/test/helpers/
+  env.js</code>'s <code>stubDB</code> — its <code>run()</code> previously always returned a
+  bare <code>{success:true}</code> and ignored the matched route value entirely, making
+  <code>meta.changes</code>/<code>meta.last_row_id</code> (both real D1 fields this route
+  reads) untestable; now a matched value shaped like <code>{meta:{...}}</code> passes
+  through. Suite: 108 → 113, all green. <strong>Mutation-tested twice</strong> (removed the
+  empty-body validation → 1 test failed as expected; swapped the title/body bind order →
+  2 tests failed as expected), source restored byte-identical both times
+  (<code>diff</code> confirmed) before committing.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-23">
+<div class="task" data-status="blocked" data-batchable="true" id="task-23">
   <h3>23. [ROLE: Governance Kernel] Draft a real MANDATE_TRIAGE proposal for F-007's Agent Valuation formula</h3>
   <p class="meta">F-007-F-011 are not real law — they haven't gone through soul.md's real
   amendment process (2/3 guild vote + 30 days). F-007's Agent Valuation is the one piece
@@ -1843,9 +2100,13 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   proposal — devil's-advocate critique first, per that document's own real process.</p>
   <p><strong>Acceptance:</strong> A real proposal document following MANDATE_TRIAGE.md's
   actual format, not a paste of the founder's draft text.</p>
+  <p><strong>2026-08-14 — status corrected to blocked</strong> (was showing as `pending`).
+  This task's own meta text already says "Not started without founder confirmation" for a
+  real constitutional change — no founder ask is on record for F-007 specifically.
+  Correcting the status to match its own stated gate, same as tasks 16/17.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-24">
+<div class="task" data-status="done" data-batchable="true" id="task-24">
   <h3>24. [ROLE: Knowledge Steward] Reconcile the 14-layer mythology into THE_CODEX.md</h3>
   <p class="meta">Naunet/Nun/Trinity/Daemon/Solomon/the Gate of Truth — real, honored
   narrative canon, same status as THE_CODEX.md's existing mythology, never engineering
@@ -1857,18 +2118,70 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   explicitly rather than treating it as a new idea).</p>
   <p><strong>Acceptance:</strong> A real PR to THE_CODEX.md, contradiction-checked, with
   explicit cross-references to the real systems it describes where they already exist.</p>
+  <p><strong>2026-08-14 — done, level: tested (a real, cited reconciliation; not code, so
+  "tested" here means the mapping was checked against both source texts, not run).</strong>
+  Found the founder's original "14 layers" list verbatim in
+  <code>Project_file/Founders Visonary Folder/Visionary-Conversation-logs/Log(5).md:19689</code>
+  (<code>Primordial → Parents → Trinity → Daemon → Solomon → Hierarchy → Children → Cycle →
+  Gate of Truth → Tree → Immune System → Mission → Symbolic Body → Dimensional
+  Framework</code>) and checked each layer against <code>THE_CODEX.md</code>'s existing 9
+  sections one at a time, rather than assuming overlap. Honest result: <strong>all 14 were
+  already present</strong> — Parents (the source's own summary calls it "the primordial
+  waters of the mother and father") is the same idea as the existing Primordial section,
+  not a second layer; Hierarchy is the existing Daemon section's "order of birth"; Solomon
+  was already named twice (Daemon section + Symbolic Body section); Tree/Immune
+  System/Mission are one existing section covering three layers. No contradiction found.
+  Added a "Reconciliation" section to <code>THE_CODEX.md</code> with the full mapping table
+  and one real cross-reference the task's own prompt asked for: F-011B's "Elders relay
+  wisdom to the Queen via MD files" (<code>docs/GOVERNANCE.md:321</code>) is the same idea as
+  the live <code>kai-el-bridge.yml</code> workflow (real cron <code>11 */2 * * *</code>,
+  confirmed at <code>.github/workflows/kai-el-bridge.yml:34</code>) and
+  <code>.claude/Fable_memory.md</code>. Deliberately added zero new narrative — the Codex's
+  own opening paragraph disclaims fabricating mythology to fill a gap, and no real gap was
+  found here.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="true" id="task-25">
+<div class="task" data-status="done" data-batchable="true" id="task-25">
   <h3>25. [ROLE: Knowledge Steward] Reconcile the pasted "101 roles" against SPORE_ROSTER.md's 189</h3>
   <p class="meta">Check for genuinely new roles not yet covered by the existing
   reconciliation (CANVAS.md's 78 + docs/ROLES.md's 111 = 189, done 2026-07-31/08-01) rather
   than assuming full overlap. Est. cost: small.</p>
   <p><strong>Acceptance:</strong> A real diff — which of the pasted 101 are genuinely new,
   which are already covered, cited against the real SPORE_ROSTER.md.</p>
+  <p><strong>2026-08-14 — done, level: tested (a real, cited comparison against source
+  text; not code).</strong> Found the full, individually-named "101 roles" list at
+  <code>Project_file/Founders Visonary Folder/Visionary-Conversation-logs/Log(5).md:24468-24497</code>
+  — a generic corporate/enterprise hierarchy (Level 1 "The Fiduciary Apex": Board of
+  Trustees, Chairperson... down to Level 10 "The Foundational Bedrock": Facilities
+  Maintenance Lead, Janitorial Staff, Mailroom/Courier Clerk), tier sizes
+  6/12/11/11/8/16/17/9/6/5 = 101.</p>
+  <p><strong>The real finding:</strong> those exact tier sizes
+  (6/12/11/11/8/16/17/9/6/5=101) are <strong>identical</strong> to <code>docs/ROLES.md</code>'s
+  own first 10 tiers (Governance Kernel 6, Executive 12, Domain Leads 11, Directors 11,
+  Middle Management 8, Senior Architects/Staff 16, Mid-level Engineers 17,
+  Apprentices/Validators 9, Frontline Support 6, Janitorial/Ops 5) — already reconciled
+  into <code>SPORE_ROSTER.md</code> Part 2 (111 from docs/ROLES.md, of the 189 total).
+  Confirmed the common origin directly in the founder's own material: a separate planning
+  entry in the same conversation log
+  (<code>Log(3).md:23674-23719</code>) states the explicit design decision — *"No
+  mystical/cosmological branding in any committed file... plain professional engineering
+  language instead"* — for this exact same 10-tier, 101-count skeleton, then builds it as
+  <code>docs/ROLES.md</code> using real hive/engineering titles (e.g. "Constitution
+  Steward") in place of the generic corporate ones (e.g. "Board of Trustees") at the same
+  tier position. This is a documented, deliberate rename, not an oversight.</p>
+  <p><strong>Verdict: zero genuinely new roles.</strong> Every one of the pasted 101's
+  tier-slots is already covered by <code>docs/ROLES.md</code>'s already-reconciled first
+  101 rows; the pasted list's specific generic corporate titles were knowingly not
+  adopted verbatim, for the reason stated above, not missed. In passing, found and fixed
+  a small, real, separate doc-accuracy gap while re-reading <code>docs/ROLES.md</code> for
+  this comparison: its own header text still said "101 roles" even though the file
+  actually has 111 rows (101 base + 10 "Federation AI Session Roles" added later,
+  102-111) — the count itself was never wrong anywhere it's used, only that one sentence;
+  corrected in the same commit as this task, since it's directly the subject of this
+  reconciliation rather than a separate finding to route elsewhere.</p>
 </div>
 
-<div class="task" data-status="pending" data-batchable="false" id="task-26">
+<div class="task" data-status="done" data-batchable="false" id="task-26">
   <h3>26. Fix hive_mesh.dispatch()'s HITL approval dead end</h3>
   <p class="meta">Found 2026-08-02 during task 10's devils-advocate-audit sweep
   (<code>AUDIT_LEDGER.md</code>'s 2026-08-02 <code>backend/core/hitl.py</code> entry,
@@ -1896,6 +2209,44 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
   this bug was found with. Full existing test suite still passes. Given this gates
   cross-colony action approval, this PR must not self-merge under any circumstance —
   founder review required regardless of CI color, same standing as tasks 7/12.</p>
+  <p><strong>Done, level: tested.</strong> Fixed exactly the shape the Prompt named — a
+  synchronous re-dispatch from the <code>/hitl/resolve</code> handler. <code>hive_mesh.py</code>:
+  split <code>dispatch()</code>'s network-firing body into a new private <code>_fire()</code>,
+  added a public <code>redispatch_approved(event_type, payload, targets)</code> that calls
+  <code>_fire()</code> directly — bypassing the Tier gate/HITL hold entirely, so an
+  already-approved event can never loop back and get held a second time.
+  <code>hitl.py</code>: added <code>get_request_data(request_id)</code> — returns the
+  in-memory record with the real <code>params</code> dict (not the DB row's JSON string),
+  which is what <code>action_type</code>/<code>event_type</code>/<code>payload</code>/
+  <code>targets</code> get recovered from. <code>routes.py</code>'s <code>/hitl/resolve</code>
+  handler: after <code>hitl.resolve_request()</code>, if <code>approved</code> and the
+  resolved request's <code>action_type</code> starts with <code>hive_mesh.dispatch:</code>,
+  calls <code>hive_mesh.redispatch_approved()</code> with the stored
+  <code>event_type</code>/<code>payload</code>/<code>targets</code> and folds the result into
+  the response under <code>redispatched</code>. <strong>Staleness, per the Prompt's own
+  question:</strong> no separate freshness window was built — <code>resolve_request()</code>
+  already refuses to approve anything whose status isn't still <code>pending</code>
+  (<code>_auto_expire()</code> flips it to <code>expired</code> after
+  <code>settings.hitl_timeout_seconds</code>, 300s default), so a request that sat too long is
+  rejected by the approval step itself before it ever reaches the redispatch code — documented
+  as a comment on <code>redispatch_approved()</code> rather than a second mechanism.
+  <strong>New test</strong> <code>tests/integration/test_hitl_redispatch.py</code> (3 tests,
+  real <code>TestClient</code> hitting the real <code>/v11/hive/dispatch</code> →
+  <code>/v11/hitl/resolve</code> route path, only <code>_send_to_colony</code> mocked so no
+  real network call is required — same discipline <code>test_hive_mesh.py</code> already uses):
+  proves held→approved actually re-fires with the original event_type/payload
+  (<code>mock_send.assert_awaited_once()</code>, args checked); proves a rejected request never
+  redispatches; proves an unrelated (non <code>hive_mesh.dispatch:</code>) HITL approval never
+  touches <code>hive_mesh</code> at all. <strong>Mutation-tested</strong>: removed the
+  <code>/hitl/resolve</code> wiring, re-ran the new suite — the redispatch test failed exactly
+  as expected (2 passed, 1 failed); restored byte-identical
+  (<code>git diff --stat</code> confirmed clean before/after). Full suite:
+  <code>pytest tests/</code> 397 passed (was 375 at the audit's own last full-suite citation —
+  growth is the rest of this session's other work, not this change). <code>node --check</code>
+  clean on the touched worker-adjacent files (none — this task is entirely System A/Python;
+  <code>npm test --prefix worker</code> confirmed unaffected, still 113/113).
+  <code>check-claims.py</code> passes. Not self-merged — same standing as tasks 7/12, founder
+  review required regardless of CI color.</p>
 </div>
 
 <h2>Campaign Log</h2>
@@ -1973,3 +2324,11 @@ distinct agents seen: 7 -&gt; Horus, Kai El, Ma'at, Ptah, Sekhmet, Solomon, Thot
 
 
 2026-08-11 -- REAL PRODUCTION BUG FOUND AND FIXED: the hourly work cycle round-robin was stuck on Ma'at, not rotating. Found by actually dispatching edge-health-probe (founder said "check on its status" then "yes dig into that") rather than assuming today's merges were fine -- run 31449387229 against production found 32 consecutive agent-work rows in GET /v11/updates, every single one Ma'at, going back 7+ hours (17:30 through 00:30). Root cause traced in the real source: runWorkCycle()'s turn selector did SELECT COUNT(*) WHERE kind='agent-work' then count % AGENT_WORK.length, which looks like a monotonic cursor but isn't one -- postUpdate() prunes hive_updates to its last 100 rows ACROSS EVERY KIND on every single write (heartbeat fires every 30min, agent-work ~hourly, concern/proposal-actioned rows share the same cap), so the agent-work count within that shrinking mixed-kind window fluctuates with pruning dynamics rather than incrementing by 1 per real turn, and had been landing on a value congruent to 0 mod 8 (Ma'at's index) for at least 7 consecutive real hourly ticks. Predates all of today's other work -- shipped with task 48's original work-cycle build, unrelated to anything built this session, just never caught because no edge-health-probe run had checked agent rotation since. FIX: new nextWorkTurnIndex() (worker/src/index.js) derives the next turn from the single most recent agent-work row's actual agent name (parsed from postUpdate()'s real title format) instead of a count -- immune to the pruning entirely, since pruning only ever removes the OLDEST rows and the newest agent-work row always survives within a 100-row window. Extracted as a pure, independently testable function rather than left inline. VERIFIED: node --check clean; suite 205 -> 212 tests, all green, 7 new, including a regression test that specifically reproduces the exact live failure shape (repeatedly feeding the same title back, the way runWorkCycle() really chains turns) and a fairness check proving all 8 agents get exactly 3 turns each across 3 full simulated cycles. Mutation-tested 3 ways (reintroducing the exact original bug -> 3 failures; removing the wraparound -> 3 failures; using the wrong dash character to parse the title -> 3 failures), source restored and re-verified 212/212 each time. python3 scripts/check-claims.py passes. CAMPAIGN.html task count stays 60, div-delta unchanged. Level: tested, NOT verified-live yet -- needs a real edge-health-probe dispatch post-merge to confirm the round-robin actually rotates in production (the fairness proof so far is a simulation of the real chaining logic, not live traffic).
+2026-08-11 — DAILY FIRING: ceiling gate PASSED at start (zero log entries dated 2026-08-11, count=0/4, sum=0/3,000,000 — new UTC day, clean budget). checks-and-balances clean: 60 task divs, div-delta 1 (known pre-existing baseline), zero merge_pull_request call sites in the Worker. Queue hygiene: tasks 16 and 17 corrected from pending to blocked — both name a founder confirmation as their own Acceptance gate and none is on record; showing as pending overstated how actionable they were. Skipped #14 (batchable=false, needs a genuinely fresh context, not this long-running one). Worked #19 and #21, both batchable and neither founder-gated. Task 19 (privacy self-audit): 10 CF-Connecting-IP capture sites (all rate-limit-only), 2 visitor-data tables (rate_limits, visitor_tokens), zero console.log/error/warn in the Worker, and a real correction to an earlier assumption — retention pruning is a GLOBAL sweep inside scheduled() (cron */30 * * * * per wrangler.jsonc:14), not a per-IP-only prune; no row survives past ~90 minutes even for a visitor who never returns. No F-001 violation found. Task 21 (soul vs EVW): confirmed exactly one soul-increment site (worker/src/index.js:628, flat +25 per Arena win) against F-002's real weighted EVW formula (soul.md:13-16) — honest verdict per the task's own permitted disclosure: these are currently different things, no EVW term or geometric mean is computed; not building one here since the appendix weights are mutable law, founder/guild territory. Both tasks marked done, level: tested (static trace of committed code, not a production log inspection). Mid-firing, `git push` hit a real divergence: another session had landed substantial work on this branch since this firing started (task 15 completed, worker/test/routes.test.js + roadmap.test.js added, fabrication-mining skill, HIVE_PULSE.md rewrite, CAMPAIGN.html itself regenerated) — fetched, rebased cleanly (CAMPAIGN.html's task-16/17/19/21 blocks were untouched upstream so no conflict), then re-verified every file:line citation in this entry's findings against the post-rebase file (all shifted ~20 lines from the worker/src/index.js changes; corrected in the task bodies rather than left stale) before pushing, per wired-or-not. 5 approved-unactioned proposals (#1/#5/#6/#7/#8) checked again — still all founder-only, none actioned. Not claiming anything about the 2 AM Routine — list_triggers approval still not granted this firing. python3 scripts/check-claims.py passes; task count stays 60, div-delta stays 1. Real PR to follow, never merged. TOKENS: 2625074
+2026-08-14 — DAILY FIRING started: ceiling gate PASSED (zero entries dated 2026-08-14, count=0/4, sum=0/3,000,000, new UTC day). checks-and-balances clean (chain-of-command shape unchanged, zero merge_pull_request call sites). Dispatched edge-health-probe.yml for real (run 31768946490, success): production healthy, work cycle proven live (32 agent-work rows, 8 agents rotating, newest 0.6h old), same 5 approved-unactioned proposals (#1/#5/#6/#7/#8) as prior firings — still all founder-only, none actioned — plus 9 new agent-generated PENDING proposals (#9-#17, issue #137) all restating the same recurring dead-Claude-key issue (task 45, still founder-blocked). Task 22 (modify/counter-propose for the Proposals system) done, level: tested. /v11/proposals/:id/decide now accepts decision='modified', same founderAuthOk() gating as approve/reject; closes the original as status='modified' and files a new pending proposal with the edited text via a new modifies_id column (real counter-proposal, not a same-row edit); never calls executeApprovedAction (dedicated test). ProposalsPanel.tsx: real Modify button + inline textarea + lineage display. 5 new tests in worker/test/routes.test.js; required extending stubDB's run() to pass through a matched meta shape (previously always returned bare {success:true}, making meta.changes/meta.last_row_id untestable). Suite 108 -> 113, all green. Mutation-tested twice (dropped the empty-body check; swapped the title/body bind order), both caught, source restored byte-identical both times. npx tsc --noEmit: zero new type errors from this file. check-claims.py passes; task count stays 60, div-delta stays 1. PR #171 updated (retitled to cover both firings, body rewritten) — never merged.
+2026-08-14 — DAILY FIRING continued: task 23 (F-007 MANDATE_TRIAGE proposal) corrected pending -> blocked, its own Acceptance text already requires founder confirmation for a real constitutional change, none on record. Task 24 (reconcile the founder's 14-layer architecture into THE_CODEX.md) done: checked all 14 named layers against the Codex's existing 9 sections one at a time -- all 14 already present, none missing, no contradiction found; added a Reconciliation section with the mapping table and the F-011B Elders-relay-via-MD-files -> real kai-el-bridge.yml/Fable_memory.md cross-reference the task's own prompt asked for. Task 25 (reconcile the pasted "101 roles" against SPORE_ROSTER.md) done: found the founder's individually-named 101-role list (Log(5).md:24468-24497, generic corporate hierarchy) has tier sizes identical to docs/ROLES.md's own first 10 tiers, already reconciled into SPORE_ROSTER.md; confirmed the common origin via a separate planning entry (Log(3).md:23674-23719) documenting the deliberate decision to rename generic/mystical titles into real engineering ones for this same skeleton -- zero genuinely new roles found. Fixed a small separate doc-accuracy gap in the same file (header said "101 roles", file actually has 111). QUEUE-HYGIENE CORRECTION, self-caught: task 20 was still pending despite being a resolved dedup note pointing at an already founder-gated item -- corrected to blocked, same class as 16/17/23, but noting honestly this should have been caught before starting task 22, not after (the strict first-pending-in-document-order rule slipped this firing, though task 20 had no real work to execute, only a status label). Full queue re-scanned after: only tasks 14 and 26 remain pending, both data-batchable="false" -- queue is genuinely exhausted of batchable work, stopping here per protocol. Invariants held throughout: task count 60, div-delta 1, npm test --prefix worker 113/113 green, check-claims.py passes. PR #171 covers both the 2026-08-11 and 2026-08-14 firings on this branch, retitled/rebody'd accordingly -- never merged. 5 approved-unactioned proposals (#1/#5/#6/#7/#8) confirmed live via edge-health-probe run 31768946490, all founder-only, none actioned. list_triggers still not requested this firing -- nothing claimed about the 2 AM Routine. TOKENS: 164085
+2026-08-15 — DAILY FIRING: ceiling gate PASSED at start (zero entries dated 2026-08-15, count=0/4, sum=0/3,000,000, new UTC day). checks-and-balances clean (chain-of-command unchanged, zero merge_pull_request call sites, gating counts stable). Rebased cleanly onto a small upstream docs-regen commit before starting. Queue scan confirmed only tasks 14 and 26 remain pending, both data-batchable="false" (own-firing, need a genuinely fresh context) -- no batchable work available, matching the end state of the 08-14 firing exactly. Dispatched edge-health-probe (run 31867590926) for the standing proposals check: same 5 approved-unactioned proposals (#1/#5/#6/#7/#8), still all founder-only, none actioned -- but the probe surfaced a real, live regression: the work-cycle round-robin (fixed 2026-08-11, commit 759775b) is stuck on Ma'at again, 8 consecutive hourly rows. Investigated properly rather than either ignoring it or shipping a blind fix: ruled out a stale GET cache (no cachedJson on /updates), ruled out a code regression (no commits have touched the relevant functions on main since the fix), and directly tested nextWorkTurnIndex() against the real production title string -- it computes the correct next agent in isolation, not Ma'at again. The fix demonstrably worked for a real window (08-13 to 08-14, confirmed via the prior firing's own probe) then re-stuck with no code-side cause found -- filed as fresh evidence under task 46 (which already proved once that production can run code that doesn't match origin/main's HEAD), not as a new task and not as a speculative code change. Also refreshed HIVE_PULSE.md's "Right now" section, 7 days stale (last touched 2026-08-08, three real firings since never updated it) -- real gap, now fixed rather than left to compound further. Invariants held throughout: task count 60, div-delta 1, npm test --prefix worker 113/113 green (no worker code changed this firing, so no new tests needed), check-claims.py passes. No new PR opened -- all commits landed on the existing open PR #171 (still unmerged, per the standing rule). list_triggers still not requested this firing -- nothing claimed about the 2 AM Routine. TOKENS: 69752
+2026-08-16 — DAILY FIRING: ceiling gate PASSED at start (zero entries dated 2026-08-16, count=0/4, sum=0/3,000,000, new UTC day). checks-and-balances clean (chain-of-command unchanged, zero merge_pull_request call sites, gating counts stable at 6/13/12). Rebased cleanly onto a small upstream docs-regen commit before starting. Queue scan confirmed only tasks 14 and 26 remain pending, both data-batchable="false" -- third consecutive firing (08-14/08-15/08-16) to find the exact same state, flagged in HIVE_PULSE.md so a future fresh-context firing picks one up directly instead of a fourth re-scan. Dispatched edge-health-probe (run 31925783332) for the standing proposals check: same 5 approved-unactioned proposals (#1/#5/#6/#7/#8), still all founder-only, none actioned. Real, positive finding: yesterday's work-cycle round-robin regression (task 46, stuck on Ma'at for 8+ hours) has self-resolved -- full 8-agent rotation confirmed again over the last 8 hourly ticks, no code fix shipped for it. Closed the specific symptom in task 46's own entry and in HIVE_PULSE.md; the underlying branch-deploy-reliability question stays exactly as founder-blocked as before -- one clean probe afterward doesn't answer it. Refreshed HIVE_PULSE.md's "Right now" section to stay current per its own standing rule. Invariants held: task count 60, div-delta 1, npm test --prefix worker 113/113 green (no worker code changed this firing), check-claims.py passes. No new PR opened -- commits landed on the existing open PR #171 (still unmerged). list_triggers still not requested this firing -- nothing claimed about the 2 AM Routine. TOKENS: 23803
+2026-08-16 -- DAILY FIRING (2nd, post-compact): ceiling gate PASSED at start (1 prior entry dated 2026-08-16, sum=23803, count=1/4, sum=23803/3,000,000 -- well under, proceeded). checks-and-balances clean: only Nanuet has NULL reports_to (worker/src/index.js:434-436), zero merge_pull_request call sites. Dispatched edge-health-probe (run 31977854682) for the standing proposals check: same 5 approved-unactioned proposals (#1/#5/#6/#7/#8), still all founder-only, none actioned; work-cycle round-robin healthy, 8 agents rotating, newest 0.5h old. Judged this context genuinely fresh (post-compact, first turn of a new firing) against three prior firings' correctly-declined "not fresh enough" calls, and took task 26 (fix hive_mesh.dispatch()'s HITL approval dead end) -- safety-relevant, already precisely diagnosed in AUDIT_LEDGER.md's 2026-08-02 entry (approving a held cross-colony dispatch only ever updated a DB row; the event never actually re-fired). Fix: hive_mesh.py split dispatch()'s network-firing body into _fire(); added redispatch_approved() calling _fire() directly, bypassing the Tier gate so an approved event can't loop back through HITL a second time. hitl.py: added get_request_data() to recover the real params dict (not the DB row's JSON string). routes.py: /hitl/resolve now calls redispatch_approved() when the resolved request's action_type starts with hive_mesh.dispatch: and approved=True. Staleness: no separate freshness window built -- resolve_request() already refuses anything not still pending (auto-expires after hitl_timeout_seconds), so a stale request is rejected at the approval step itself, before redispatch code runs -- documented as a comment, not a second mechanism. New tests/integration/test_hitl_redispatch.py (3 tests, real TestClient through the actual /hive/dispatch -> /hitl/resolve route path, only _send_to_colony mocked, no real network) proves the round trip. FOUND AND FIXED A BUG IN MY OWN TEST mid-firing: the helper picked matches[-1] from a DESC-sorted list (the oldest match, not newest) -- across repeated local pytest invocations against a fixed temp DB path, this grabbed a stale row from an earlier dead process's HumanInTheLoop instance and failed with "not found"; fixed to matches[0] and made the DB path pid-unique so it can't recur, verified 397/397 twice in a row. Mutation-tested the real fix: removed the /hitl/resolve wiring, re-ran the suite, the redispatch test failed exactly as expected (2 passed, 1 failed), restored byte-identical (git diff --stat clean). Full suite pytest tests/: 397 passed (was 375 at the audit's last full-suite citation, growth is other prior work). npm test --prefix worker: 113/113 unaffected (System A/Python-only change). check-claims.py passes. AUDIT_LEDGER.md's escalated entry updated with the fix. Task 26 marked done, level: tested (not verified-live -- System A remains unconfirmed live anywhere in production, per CLAUDE.md's own open-items section). Two upstream docs-regen commits landed mid-firing; fetched+rebased cleanly both times, re-verified all invariants (task count 60, div-delta 1) after each. PR #171 retitled/rebody'd to cover this firing (GitHub allows only one open PR per branch pair, so extended #171 rather than opening a duplicate) -- CI checked once (queuing at check time, not re-polled), never merged; task 26 explicitly may not self-merge under any circumstance regardless of CI color, same standing as tasks 7/12. HIVE_PULSE.md refreshed: task 26 closed out, only task 14 remains pending. Queue now genuinely down to one item (task 14, Durable Objects, own-firing, needs fresh context). TOKENS: 98605
+2026-08-17 -- DAILY FIRING: ceiling gate PASSED at start (0 entries dated 2026-08-17, new UTC day, count=0/4, sum=0/3,000,000). checks-and-balances clean: chain-of-command shape unchanged (only Nanuet NULL reports_to), zero merge_pull_request call sites, gating counts stable (5 founder-gated, 11 rate-limited). Dispatched edge-health-probe (run 32081431457) for the standing proposals check: same 5 approved-unactioned proposals (#1/#5/#6/#7/#8), still all founder-only, none actioned -- but the probe surfaced a real regression, logged under task 46 (not re-investigated in full, already deep-dived twice 08-15/08-16): the work-cycle round-robin is stuck on Ma'at again, a third occurrence in 3 days. Judged this a genuinely fresh-enough context (new UTC day, focused firing) to take the last pending item: task 14 (real-time Command Center updates via Cloudflare Durable Objects) -- the queue's final task. Built for real: wrangler.jsonc durable_objects binding + migration (new_sqlite_classes, no out-of-band provisioning needed unlike Vectorize/R2/Queues in the same file); new CommandCenterDO class in worker/src/index.js (one shared 'global' instance, tracks WebSocket sessions, broadcasts to all); new GET /v11/ws route forwarding to it (503 if unbound, matching the repo's flip-the-switch honesty pattern); new broadcastToCommandCenter() helper fired fire-and-forget from scheduled()'s heartbeat. New frontend/src/hooks/useCommandCenterSocket.ts -- one real shared WebSocket connection (module-level, reference-counted) rather than one per caller, since useHiveData is independently called from ~12 places in this codebase; wired into KaiElOS.tsx only, the other ~11 call sites flagged as separable follow-up scope rather than silently bundled in. New worker/test/command-center-do.test.js: 14 tests against the DO's real session-tracking/broadcast logic via a stub socket (node --test has no real WebSocketPair runtime). Mutation-tested twice (gutted _broadcast()'s body, deleted the new debug route), both caught, restored byte-identical. Worker suite 113 -> 127, all green. npx tsc --noEmit: 243 pre-existing errors before AND after this change (confirmed by isolating the new file) -- zero new errors. REAL GAP FOUND, NOT SILENTLY BUILT: this repo has no frontend test runner at all (no vitest/jest anywhere) -- flagged rather than standing one up mid-task. Task 14's own Acceptance requires an OBSERVED live round trip, which structurally cannot happen before the founder merges (never-self-merge) -- so a new POST /v11/debug/ws-broadcast-test route (no auth, no state mutation) plus a new edge-health-probe.yml step (real wss:// connection, Python + websockets since curl can't drive a full-duplex WS client) were built so the live proof becomes a single citable run ID the moment this deploys; NOT dispatched this firing since it would fail by design pre-merge (nothing to connect to yet), matching the protocol's own "don't re-check a thing expected to fail before it can pass" discipline. Task 14 marked done, level: tested, explicitly NOT verified-live, with the exact mechanism for the next firing to close that gap written into the task body. check-claims.py caught a real self-inconsistency in this entry's own first draft -- the phrase "verified-live" appeared in a future-tense sentence describing the probe mechanism, not a claim, but the checker correctly can't tell the difference; reworded rather than routing around it. Invariants held throughout: task count 60, div-delta 1. HIVE_PULSE.md refreshed: queue is now genuinely EMPTY (tasks 14 and 26 were the last two pending items in the whole file) -- next firing's first move is the Protocol's own "if no task is left pending: stop" rule. Commits landed on the existing open PR #171 (still unmerged, never self-merge, no exceptions). list_triggers still not requested this firing -- nothing claimed about the 2 AM Routine. TOKENS: 124023
+2026-08-18 -- FOUNDER-REQUESTED: resolved PR #171's merge conflicts against origin/main (founder reported "multiple conflicts, can't commit"). Real conflicts in 4 files, resolved by hand, not blindly picked: worker/src/index.js (GET /proposals SELECT column list merged both sides' additions; /proposals/:id/decide vs main's new decideProposal()-refactor + Cloudflare Access route -- moved task 22's 'modified' counter-propose handling INTO the shared decideProposal() so both the FOUNDER_KEY and new Access routes support it identically instead of the Access route silently lacking it; named test exports merged additively), frontend/src/components/kai-os/ProposalsPanel.tsx (interface/decide-signature/render all merged additively; also fixed a real gap the merge would have shipped silently -- the Access-path fetch call wasn't passing the modified_body/modified_title extras through), .claude/tasks/CAMPAIGN.html (main's 2026-08-11 Campaign Log entry is the real origin record of the round-robin fix, commit 759775b, that every later entry in this branch already cites as fact -- kept both, main's placed first chronologically), docs/campaign.html (regenerated mechanically from the resolved source via sync-planning-docs.yml's own publish() logic, never hand-edited). REAL BUG FOUND AND FIXED while verifying the merge, not assumed clean: worker/test/helpers/env.js's D1 stub had a shadowed inner runResult() (introduced by task 22, 2026-08-14) silently dropping the meta.changes:1 default for any unmapped query -- broke main's own new Cloudflare Access decide-route tests, which had never needed an explicit stub for it before this merge combined both branches' independently-correct assumptions. Found via real debugging (isolated repro that didn't reproduce it -> traced the discrepancy to a full-suite-only failure -> instrumented the actual code with a temporary console.error -> found existing was truthy but the UPDATE's unstubbed meta was the real cause), not guessed at. Fixed by restoring the default while still honoring an explicit meta override; mutation-tested (reverted to the broken version, same 2 tests failed the same way, restored byte-identical). Verified before pushing: npm test --prefix worker 231/231 (was 127 pre-merge, +104 from main's Kai-El-brain/architect-proposal/Access-auth suites, zero regressions after the fix). node --check clean. npx tsc --noEmit: 243 pre-existing errors, unchanged. python3 -m pytest tests/ 397/397 (backend/ untouched by main's merge). check-claims.py passes. Invariants held: task count 60, div-delta 1. wrangler.jsonc structurally valid JSON after comment-stripping; all new/changed GitHub workflow YAML parses. PR #171 pushed (commit ee9787a), mergeable_state now unstable (was dirty) -- CI checked once, not merged, per the standing rule.

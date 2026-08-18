@@ -455,14 +455,46 @@ async function executeApprovedAction(env, action, params) {
 // unchanged) or the founder's real, Access-verified email for the new path —
 // hive_proposals.decided_by previously only ever recorded 'queen' or null; this
 // is the first time it can record a real human identity.
-async function decideProposal(env, ctx, id, decision, note, decidedByLabel) {
+async function decideProposal(env, ctx, id, decision, note, decidedByLabel, modifiedFields = null) {
   const DB = env.DB;
-  // Fetch kind+body BEFORE the state-changing UPDATE, since only an
+  // Fetch kind+title+body BEFORE the state-changing UPDATE, since only an
   // 'action-request' proposal that is being APPROVED ever executes
   // anything — approval alone on every other kind still just records a
-  // decision, same as before this task.
-  const existing = await DB.prepare('SELECT kind, body FROM hive_proposals WHERE id=? AND status=\'pending\'').bind(id).first();
+  // decision, same as before this task. title is needed too: a 'modified'
+  // decision derives the counter-proposal's title from it.
+  const existing = await DB.prepare('SELECT kind, title, body FROM hive_proposals WHERE id=? AND status=\'pending\'').bind(id).first();
   if (!existing) return { status: 404, body: { detail: `proposal ${id} not found or already decided` } };
+
+  // Modify/counter-propose (task 22, 2026-08-14): closes the original
+  // (status='modified') and files a brand-new pending proposal carrying the
+  // edited text, linked back via modifies_id. Handled here, not per-route, so
+  // both /proposals/:id/decide (FOUNDER_KEY) and /founder/proposals/:id/decide
+  // (Cloudflare Access) support it identically rather than one silently
+  // lacking it.
+  if (decision === 'modified') {
+    const modifiedBody = (modifiedFields?.modified_body || '').toString().trim().slice(0, 4000);
+    if (!modifiedBody) return { status: 400, body: { detail: 'modified decision requires a non-empty modified_body' } };
+    const modifiedTitle = (modifiedFields?.modified_title || '').toString().trim().slice(0, 200)
+      || `Modified: ${existing.title}`.slice(0, 200);
+    const nowIso = new Date().toISOString();
+    const inserted = await DB.prepare(
+      'INSERT INTO hive_proposals (ts, kind, title, body, status, modifies_id) VALUES (?,?,?,?,\'pending\',?)'
+    ).bind(nowIso, existing.kind, modifiedTitle, modifiedBody, id).run();
+    const newId = inserted.meta?.last_row_id;
+    const closeNote = (note ? note + ' | ' : '') + `counter-proposed as #${newId}`;
+    const result = await DB.prepare(
+      "UPDATE hive_proposals SET status='modified', decided_at=?, founder_note=? WHERE id=? AND status='pending'"
+    ).bind(nowIso, closeNote, id).run();
+    if (!result.meta?.changes) {
+      return { status: 404, body: { detail: `proposal ${id} not found or already decided` } };
+    }
+    ctx?.waitUntil?.(postUpdate(DB, {
+      kind: 'proposal-decided', title: `Proposal #${id} modified`,
+      body: `${closeNote} — new proposal #${newId} is pending your decision.`,
+    }));
+    return { status: 200, body: { ok: true, id, decision: 'modified', new_proposal_id: newId } };
+  }
+
   let execResult = null;
   let finalNote = note;
   if (decision === 'approved' && existing.kind === 'action-request') {
@@ -512,6 +544,13 @@ async function ensureTables(DB) {
     // null when both clear it; set to the objecting Elder's reason when either vetoes
     // (which downgrades the proposal back to pending — see elderCouncilVeto()).
     'ALTER TABLE hive_proposals ADD COLUMN elder_note TEXT',
+    // Modify/counter-propose (task 22, 2026-08-14): when the founder wants
+    // changes rather than a flat approve/reject, /decide with
+    // decision='modified' closes the original (status='modified') and files
+    // a brand-new pending proposal carrying the edited text. modifies_id on
+    // the new row points back to what it counter-proposes, so the panel can
+    // show real lineage instead of two unrelated-looking rows.
+    'ALTER TABLE hive_proposals ADD COLUMN modifies_id INTEGER',
   ]) {
     try { await DB.prepare(stmt).run(); } catch {}
   }
@@ -809,6 +848,23 @@ async function postUpdate(DB, { kind, title, body = '', needs = '' }) {
       'DELETE FROM hive_updates WHERE id NOT IN (SELECT id FROM hive_updates ORDER BY id DESC LIMIT 100)'
     ).run();
   } catch { /* D1 not ready — heartbeat still proceeds */ }
+}
+
+// Real-time Command Center push (task 14). Fire-and-forget — a client that
+// never connects, or missed this tick, still gets the same data on its next
+// 30s poll (useHiveData is untouched by this; the WS is additive, not a
+// replacement for the poll's own resilience). env.COMMAND_CENTER is only
+// undefined in the worker/test/*.test.js stub env, which has no DO runtime —
+// this must no-op there rather than throw.
+async function broadcastToCommandCenter(env, payload) {
+  if (!env.COMMAND_CENTER) return;
+  try {
+    const id = env.COMMAND_CENTER.idFromName('global');
+    await env.COMMAND_CENTER.get(id).fetch('https://internal/broadcast', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  } catch { /* best-effort push; poll fallback still works */ }
 }
 
 // Task 45's fix: every generate() call now reports the real outcome for whichever
@@ -2088,11 +2144,15 @@ export default {
     // channel with idle ticks). A plain-language "what I did this cycle" note.
     const notable = acted.filter((a) => a.startsWith('resolved') || a.startsWith('spawned') || a.startsWith('projected'));
     if (notable.length) {
-      await postUpdate(DB, {
+      const heartbeatUpdate = {
         kind: 'heartbeat',
         title: `Arena cycle — ${notable.length} action${notable.length > 1 ? 's' : ''}`,
         body: notable.join(' · '),
-      });
+      };
+      await postUpdate(DB, heartbeatUpdate);
+      // Real-time push (task 14): best-effort, never blocks the heartbeat —
+      // a client that missed this still gets the same data on its next poll.
+      ctx.waitUntil(broadcastToCommandCenter(env, { ...heartbeatUpdate, ts }));
     }
     // Sovereign memory: the hive remembers what it did, semantically.
     // No-ops when Vectorize/AI are unbound (until the index is provisioned).
@@ -2119,6 +2179,15 @@ export default {
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
 
     try {
+      // Real-time Command Center push (task 14). One shared Durable Object
+      // instance ('global') holds every connected client's WebSocket and
+      // broadcasts to all of them — the Worker itself never tracks sessions.
+      if (p === '/ws') {
+        if (!env.COMMAND_CENTER) return json({ detail: 'real-time push not bound yet' }, 503);
+        const id = env.COMMAND_CENTER.idFromName('global');
+        return env.COMMAND_CENTER.get(id).fetch(request);
+      }
+
       if (p === '/health' || p === '/colony/health')
         return json({ status: 'healthy', version: '11.0-edge', colony: 'THEHIVE', runtime: 'cloudflare-worker' });
 
@@ -2292,7 +2361,7 @@ export default {
           // every other kind/row simply returns null for all three, unchanged
           // from before these columns existed.
           const { results } = await DB.prepare(
-            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note, diff, diff_files, diff_check FROM hive_proposals
+            `SELECT id, ts, kind, title, body, status, decided_at, founder_note, alignment_score, decided_by, actioned_at, elder_note, modifies_id, diff, diff_files, diff_check FROM hive_proposals
              ORDER BY (status='pending') DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all();
           return json({ proposals: results, founder_auth_bound: await founderKeyBound(env), queen_auto_approval_bound: !!env.QUEEN_AUTONOMOUS_APPROVAL, limit, offset });
         } catch { return json({ proposals: [], founder_auth_bound: await founderKeyBound(env) }); }
@@ -2355,10 +2424,14 @@ export default {
         }
         const id = Number(decideMatch[1]);
         const body = await request.json().catch(() => ({}));
-        const decision = body.decision === 'approved' ? 'approved' : body.decision === 'rejected' ? 'rejected' : null;
-        if (!decision) return json({ detail: "decision must be 'approved' or 'rejected'" }, 400);
+        const decision = body.decision === 'approved' ? 'approved'
+          : body.decision === 'rejected' ? 'rejected'
+          : body.decision === 'modified' ? 'modified'
+          : null;
+        if (!decision) return json({ detail: "decision must be 'approved', 'rejected', or 'modified'" }, 400);
         const note = (body.note || '').toString().slice(0, 2000);
-        const result = await decideProposal(env, ctx, id, decision, note, null);
+        const result = await decideProposal(env, ctx, id, decision, note, null,
+          { modified_title: body.modified_title, modified_body: body.modified_body });
         return json(result.body, result.status);
       }
       // Same decision path, reached via a Cloudflare Access identity instead of
@@ -2375,10 +2448,14 @@ export default {
         }
         const id = Number(decideMatchAccess[1]);
         const body = await request.json().catch(() => ({}));
-        const decision = body.decision === 'approved' ? 'approved' : body.decision === 'rejected' ? 'rejected' : null;
-        if (!decision) return json({ detail: "decision must be 'approved' or 'rejected'" }, 400);
+        const decision = body.decision === 'approved' ? 'approved'
+          : body.decision === 'rejected' ? 'rejected'
+          : body.decision === 'modified' ? 'modified'
+          : null;
+        if (!decision) return json({ detail: "decision must be 'approved', 'rejected', or 'modified'" }, 400);
         const note = (body.note || '').toString().slice(0, 2000);
-        const result = await decideProposal(env, ctx, id, decision, note, accessEmail);
+        const result = await decideProposal(env, ctx, id, decision, note, accessEmail,
+          { modified_title: body.modified_title, modified_body: body.modified_body });
         return json(result.body, result.status);
       }
       // The real bridge (2026-08-04, task 32): an approved proposal used to just sit
@@ -3280,6 +3357,20 @@ export default {
         });
       }
 
+      // Task 14's own Acceptance requires an OBSERVED live round trip, not just
+      // code that compiles — and the only real trigger (the heartbeat) fires on
+      // a 30-min cron, far too slow for a CI job to wait on. This lets
+      // edge-health-probe.yml open a real /v11/ws connection, POST here, and
+      // confirm the exact message arrives — deterministic, no 30-min wait,
+      // same spirit as the other /debug/* diagnostics (no state mutation, no
+      // auth gate, nothing here is ever a real hive action).
+      if (p === '/debug/ws-broadcast-test' && method === 'POST') {
+        const body = await request.json().catch(() => ({}));
+        const payload = { kind: 'debug-test', title: body.title || 'ws-broadcast-test' };
+        await broadcastToCommandCenter(env, payload);
+        return json({ broadcasted: true, payload });
+      }
+
       // The route map — everything the Queen serves (prefix each with /v11).
       if (p === '/debug/endpoints' || p === '/routes') {
         return json({
@@ -3297,6 +3388,7 @@ export default {
             'POST /arena/project/{id} (token+rate-limited)', 'POST /auth/token',
             'GET /debug/health', 'GET /debug/env', 'GET /debug/git', 'GET /debug/logs',
             'GET /debug/colony-ping', 'GET /debug/endpoints',
+            'GET /ws (real-time push, Durable Object)', 'POST /debug/ws-broadcast-test',
             'GET /ml/status', 'GET /browser/status', 'GET /knowledge/status',
             'GET /admin/d1-export (WORKER_ADMIN_KEY)',
           ],
@@ -3451,6 +3543,58 @@ export default {
   },
 };
 
+// Real-time Command Center push (task 14). Cloudflare instantiates exactly
+// one of these per `idFromName('global')` — every connected browser lands in
+// the same instance, so a broadcast from anywhere (currently: the heartbeat
+// in scheduled(), via broadcastToCommandCenter()) reaches every open tab.
+// `fetch()` needs the runtime's real WebSocketPair/101 upgrade, which
+// node --test can't drive — worker/test/command-center-do.test.js instead
+// exercises _addSession()/_broadcast() directly against a stub socket
+// (send()/addEventListener() only), the same "test the real logic behind a
+// minimal stub" discipline the rest of this suite already uses.
+export class CommandCenterDO {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+    this.sessions = new Set();
+  }
+
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname === '/broadcast') {
+      const payload = await request.json().catch(() => ({}));
+      this._broadcast(payload);
+      return new Response('ok');
+    }
+    if (request.headers.get('Upgrade') !== 'websocket') {
+      return new Response('Expected Upgrade: websocket', { status: 426 });
+    }
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair);
+    server.accept();
+    this._addSession(server);
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  _addSession(ws) {
+    this.sessions.add(ws);
+    const drop = () => this.sessions.delete(ws);
+    ws.addEventListener('close', drop);
+    ws.addEventListener('error', drop);
+  }
+
+  _broadcast(payload) {
+    const msg = JSON.stringify({ type: 'update', ...payload });
+    for (const ws of this.sessions) {
+      try {
+        ws.send(msg);
+      } catch {
+        this.sessions.delete(ws);
+      }
+    }
+  }
+}
+
 // ── Named exports, for tests only ────────────────────────────────────────
 // The Worker runtime only ever uses `export default` above; these extra named
 // exports are inert in production and exist so worker/test/*.test.js can import
@@ -3472,6 +3616,7 @@ export {
   AGENT_WORK,
   resolveSecret,
   founderKeyBound,
+  broadcastToCommandCenter,
   verifyAccessJWT,
   // Kai El's brain (2026-08-10) — exported so worker/test/kai-brain.test.js drives
   // the real functions rather than a reimplementation of them.
