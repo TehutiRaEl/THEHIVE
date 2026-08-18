@@ -140,14 +140,28 @@ runs immediately, no `npm install`.
   resolve all three. System B's Worker **is** live and now proven to be running its agents
   (run `31216919290`).
 - Two frontend efforts exist: this session's React Command Center (`frontend/`,
-  `docs/app/`) and a separate "gamified UI" component set merged via a different branch
-  (`feature/gamified-ui-components` — HiveDashboard, ColonyCard, TesseractChamber,
-  ConstitutionHall, MemoryVault, etc.). Which one is the live, canonical frontend has not
-  been checked in this session.
-- Two skill sets exist side by side (System A's `brain-query`/`hive-status`/`soul-check`/…
+  `docs/app/`) and a separate "gamified UI" component set on the orphaned
+  `feature/gamified-ui-components` branch (HiveDashboard, ColonyCard, TesseractChamber,
+  ConstitutionHall, MemoryVault, etc.). **CORRECTED 2026-08-18, via a real
+  `branch-dissection` pass:** only `TesseractChamber` actually made it to `main`
+  (byte-identical) — `HiveDashboard`, `ColonyCard`, `ConstitutionHall`, and `MemoryVault`
+  never made it anywhere; they exist only on that orphaned branch. Founder confirmed this
+  was real, wanted, unfinished work (not an experiment to discard) — real shape, fictional
+  placeholder content, needs re-skinning with live federation data, not a rebuild. See
+  `Project_file/Founders Visonary Folder/HIVE_UPDATES/` for the full directive.
+- ~~Two skill sets exist side by side (System A's `brain-query`/`hive-status`/`soul-check`/…
   and System B's `fable-debugger`/`research-to-dna`/`skill-census`/…) with no cross-
-  references between them yet. `skill-census`, run on this repo, will show this gap
-  directly — it hasn't yet been re-run since these were discovered.
+  references between them yet.~~ — **RE-CHECKED 2026-08-18** (PR #180,
+  `SKILL_CENSUS_REPORT_2026-08-18.md`): one correction, one partial resolution. System A's
+  named list is not actually a skill set — all nine are `.claude/commands/*.md`
+  slash-commands; System A's only real skill is `hive-memory.md`. Skill-to-command
+  cross-referencing is still genuinely zero, but the `.claude/agents/` layer already
+  bridges System A and B (`autonomous-hive-agent` and `checks-and-balances`, both System
+  B skills, directly name and depend on System A's `constitutional-validator`/
+  `colony-health-monitor`/`memory-librarian` subagents) — built after this line was
+  written, never folded back in until now. One real, previously-undocumented duplication
+  found: `/merge-verify` (command, check-only) and `merge-readiness` (skill, verify +
+  autofix + re-push loop) cover the same capability two different ways.
 - ~~`FABLE_DNA.md` Chromosome I and `soul.md` described the same six laws with different
   wording~~ — reconciled 2026-07-30. Three real drifts found (F-001/F-002 had dropped
   concrete mechanics — the 5-min/10-per-hour delete right, sell-transfers-a-copy, the EVW
