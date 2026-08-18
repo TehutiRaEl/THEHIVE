@@ -13,40 +13,68 @@ that's the discipline this file exists to model, not just describe.
 
 ---
 
-## Right now (updated 2026-08-17 — read this section first)
+## Right now (updated 2026-08-18 — read this section first)
 
-- **Task 14 (real-time Command Center updates) is FIXED, done, level `tested` — NOT
-  `verified-live` yet, on purpose.** New `CommandCenterDO` (Durable Object,
-  `wrangler.jsonc` binding + migration), `GET /v11/ws`, `broadcastToCommandCenter()`
-  fired from the heartbeat, new `frontend/src/hooks/useCommandCenterSocket.ts` wired
-  into `KaiElOS.tsx`. 14 new worker tests, mutation-tested, 127/127 green;
-  `tsc --noEmit` confirmed zero new frontend errors. **The live round trip cannot be
-  proven before the founder merges** (never-self-merge) — a new
-  `edge-health-probe.yml` step (opens a real `wss://.../v11/ws`, POSTs to the new
-  `/v11/debug/ws-broadcast-test` route, confirms the marker arrives) exists
-  specifically to supply that proof the moment this deploys; not dispatched this
-  firing since it would fail by design pre-merge. **The queue is now genuinely
-  empty** — tasks 14 and 26 were the last two pending items; both done this week.
-  Next firing: read the Protocol's own "if no task is left pending: stop" rule
-  first, don't invent scope.
-- **Task 46: a THIRD occurrence of the round-robin stuck-on-Ma'at symptom, 2026-08-17**
-  (run `32081431457`), same shape as 08-15 (self-resolved 08-16). Not re-investigated
-  in full — stale-cache/code-regression/isolated-logic-test were already ruled out
-  twice. Now a real recurring pattern (2 episodes in 3 days) rather than a one-off;
-  what would actually move this forward is founder-granted Cloudflare dashboard
-  access (task 46's original, still-open root question), not a third from-scratch
-  investigation from this container. **A red X on `edge-health-probe` can now mean
-  "round-robin stuck" as much as "production down"** — worth knowing before assuming
-  the worse one.
-- **Task 26 (hive_mesh.dispatch()'s HITL approval dead end) — FIXED 2026-08-16, done,
-  level `tested`.** Approving a held cross-colony dispatch used to only flip a DB row's
-  status — the event never actually re-fired (AUDIT_LEDGER.md 2026-08-02). Now
-  `/hitl/resolve` calls `hive_mesh.redispatch_approved()` when the resolved request's
-  `action_type` starts with `hive_mesh.dispatch:` and `approved=True`. New
-  `tests/integration/test_hitl_redispatch.py` proves the round trip, mutation-tested.
-  This is System A (`backend/`) code — not live in production per the section below,
-  so real-world blast radius is zero today, but the mechanism is now correct before any
-  future deploy decision.
+- **PR #171 MERGED 2026-08-18** (founder-merged, `merged_at` 2026-08-18T01:19:44Z) —
+  tasks 14/15/19/21/22/24/25/26 all now real on `main`, not just on this branch. This
+  branch was restarted fresh from `origin/main` after the merge (77 commits of other
+  real work landed on `main` in the meantime — see below), per the standing
+  already-merged-branch rule. **Do not assume this file's older bullets below still
+  match `main` without checking** — most of the "Right now" content from 2026-08-16/17
+  describes branch-local state that is now either merged, superseded, or stale;
+  kept below only where still independently true.
+- **Task 14 UPGRADED TO verified-live, 2026-08-18.** The first `edge-health-probe` run
+  after the merge (run `32171115429`) proved the real WebSocket round trip live:
+  `PROVEN LIVE: a real client received a real pushed update over /v11/ws`. Task 14's
+  own strict Acceptance bar (observed, not just compiled) is now met with a citable
+  run ID.
+- **Queue is EMPTY again, real check 2026-08-18.** Task 47 (the ~200+ agent roster)
+  was the only `pending` item on `main` — corrected to `blocked`: its own 2026-08-10
+  update already named the sequencing gate ("wait for the 6-Elder pilot AND task 41"),
+  and checking both directly found task 38 (pilot) done but task 41 (Hoard
+  pay-to-exist, real financial infra) still blocked — one of two conditions met, not
+  actionable yet. **60/60 tasks now done or blocked, zero pending.** Next firing:
+  Protocol's own "if no task left pending: stop" rule applies again — don't invent
+  scope.
+- **A month of real work landed on `main` since this branch's PR was last synced
+  (2026-08-11 through 2026-08-18) — read `memory/planning/2026-08-18-unified-forward-
+  plan-v2.md` for the full reconciliation, not re-summarized in full here to keep this
+  file small.** Highlights that change what a firing should assume is true:
+  - **Task 52 (the Queen's orchestrator) is real and live**: named **Akosha** by the
+    founder (2026-08-10), reports to Kai El, real `AGENT_WORK` entry (`focus:
+    'coordination'`), reads real provider health + Council findings into one summary
+    every round-robin turn, feeds `hiveSnapshot()`'s PROVIDER ROLES/JOB ROUTING lines
+    so every agent sees real routing state. `agents` D1 table now has **9** rows, not
+    8. Nanuet's `queenReview()` got the described delegation-note addition too.
+  - **`hive-conductor`'s domain routing was fully broken, now fixed** (PR #186):
+    `harness_manifest_builder.py` always returned empty for any non-`.claude/skills/`
+    domain; new `domain_router.py` + 5 real `harnesses/*.json` manifests
+    (edge-backend/frontend/colonies/governance/strategy) make it actually runnable.
+  - **5-provider LLM waterfall**: OpenAI + OpenRouter added alongside
+    Claude/Groq/Mistral/Workers AI; OpenRouter defaults to `openrouter/free`.
+  - **Cloudflare Access login fully wired end-to-end**, including the frontend fix
+    (`ProposalsPanel.tsx` buttons no longer gated on the raw key when an Access
+    session exists).
+  - **`automaton/` gained a real sandbox-run engine** (`kai-sandbox-run.yml`,
+    `venture-gap-mirror.yml`) — 27 tests/8 suites now, not 15/15.
+  - **`branch-dissection` (new skill) + a real stale-branch audit**
+    (`BRANCH_AUDIT_2026-08-18.md`) — `feature/gamified-ui-components` fully dissected;
+    only `TesseractChamber` actually reached `main`, the other 4 components
+    (HiveDashboard/ColonyCard/ConstitutionHall/MemoryVault) exist only on that
+    orphaned branch, founder confirmed real wanted unfinished work, not a discard.
+  - **`ColonyCard` re-skinned with real federation data**, mounted in the WORLD tab.
+  - **`plan-reality-audit` (new skill)** found the old master plan (v1) had gone a
+    month stale (not wrong, just silent on a month of shipped work) — v2 supersedes it,
+    `memory/planning/CLAUDE.md` points there now.
+  - Real Cloudflare account state checked directly (Developer Platform MCP, not just
+    `edge-health-probe`): R2 (`hive-files`) and D1 (`thehive-queen`,
+    `kai-el-brain`, plus an empty unused `sovereign-hive-app`) all confirmed live.
+    Vectorize itself not yet independently re-checked.
+- **Task 46: still an open root question** (Cloudflare Workers Builds branch-deploy
+  config), but the round-robin symptom is NOT currently stuck (checked live in the
+  same 2026-08-18 probe above — 8 distinct agents rotating normally, newest 1h old).
+  A red X on `edge-health-probe` can still mean either "round-robin stuck" or
+  "production down" — check which before assuming the worse one.
 - **The "2 AM automation" is two different triggers, and only one of them ever fired at
   2 AM** (resolved 2026-08-08, still true): the deleted `trig_013BTxUthvLX3C4nLs7MypVC`
   fired `09:00Z` = 2 AM PT; its replacement `trig_01CJsVYwDs4pHMoFEC5JFi7V` fires
@@ -56,20 +84,9 @@ that's the discipline this file exists to model, not just describe.
   approval has never been granted (5+ asks across 2026-08-07/08, all implicitly skipped
   since — no firing has re-requested it, this one included). Per `wired-or-not`, the
   honest level stays `unverified`, not "wired". Never call `fire_trigger`.
-- **Open PRs: #171 only**, on this branch, covering the 08-11/08-14/08-15/08-16 firings
-  (task 15/19/21/22/23/24/25 work + task-46 live evidence). Unmerged, per the standing
-  never-self-merge rule.
-- **Task 46 (branch-deploy reliability): the 2026-08-15 round-robin regression
-  self-resolved.** Full 8-agent rotation confirmed again 2026-08-16 (edge-health-probe run
-  `31925783332`) — the stuck-on-Ma'at symptom from 08-15 is gone, no code fix was shipped
-  for it. This closes that specific symptom, not the underlying question: task 46 has
-  twice now caught a real gap between what `origin/main` says and what production
-  actually does, and that question stays exactly as founder-blocked as before —
-  Cloudflare Workers Builds dashboard access this repo doesn't have.
-- **Queue: EMPTY.** Tasks 14 and 26 were the last two `pending` items in the whole
-  60-task queue; both done as of 2026-08-16/17. A future firing's first move is the
-  Protocol's own "if no task is left pending: stop" rule — do not invent new scope to
-  fill the window. The founder is the only one who adds new tasks to this file.
+- **Open PRs on this branch: none yet this firing** — this branch was just restarted
+  fresh from `origin/main` (see PR #171 merged, above); today's queue-hygiene commits
+  (task 14 verified-live, task 47 blocked) will get a real PR before this firing ends.
 - **The 2026-08-01 incident — kept, because it is why the rule exists.** Every recurring
   Routine then — the hourly PR-heartbeat cron AND the nightly 2 AM arc AND an earlier
   `send_later` chain — used `persist_session:true` pointed at one long-lived session, so
