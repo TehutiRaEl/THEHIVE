@@ -69,7 +69,16 @@ def build_task(idx, skill, goal, defaults):
     checks = []
     tool_cmds = []
     for tool in skill.get("tools", []):
-        tool_cmds.append("python3 %s --help  # discover flags first" % tool["script"])
+        # Two tool shapes: a python "script" (the original skill-folder case,
+        # discoverable via --help) or a real shell "cmd" (a code-domain's own
+        # verification command — e.g. `cd worker && npm test` — which has no
+        # --help to discover; see hive-conductor's domain manifests, added
+        # 2026-08-18, for the real usage). Backward compatible: existing
+        # manifests only ever set "script", so this branch is new, additive.
+        if tool.get("script"):
+            tool_cmds.append("python3 %s --help  # discover flags first" % tool["script"])
+        elif tool.get("cmd"):
+            tool_cmds.append(tool["cmd"])
         checks.extend(tool.get("verification", []))
     if not checks:
         checks.append({

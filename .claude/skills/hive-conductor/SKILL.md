@@ -67,12 +67,65 @@ Manifests live in `harnesses/`. Each maps to a team seat and a code surface.
 | **strategy** | Grok | gap analysis, positioning | Grok bridge push, ACTIVE/ note |
 
 ## Routing (deterministic first, ask second)
-1. Score the directive against domain keywords (edge/worker/api → edge-backend; tab/UI/react
-   → frontend; colony/capabilities → colonies; soul/constitution/article → governance;
-   gap/market/positioning → strategy).
-2. Single clear winner → dispatch. Multiple → split into one task per domain, ordered by
-   dependency (backend before the frontend that calls it; governance gate always last).
-3. No clear match → ask the founder one question with a recommended lane.
+
+**This is now runnable, not just prose** (fixed 2026-08-18 — see "The manifest gap this
+closes" below):
+
+```bash
+python3 .claude/skills/hive-conductor/scripts/domain_router.py --directive "<founder directive>"
+```
+
+1. `domain_router.py` scores the directive against domain keywords (edge/worker/api →
+   edge-backend; tab/UI/react → frontend; colony/capabilities → colonies;
+   soul/constitution/article → governance; gap/market/positioning → strategy) and prints the
+   matched domain(s) plus the exact `goal_compiler.py` command to run next.
+2. Single clear winner → dispatch. Multiple (`MULTI-DOMAIN-SPLIT`) → split into one task per
+   domain, ordered by dependency (backend before the frontend that calls it; governance gate
+   always last).
+3. No clear match (`REFUSED-NO-MATCH`, exit 3) → the script prints a forcing question; ask the
+   founder one question with a recommended lane, don't guess.
+
+## The manifest gap this closes (2026-08-18)
+
+A `plan-reality-audit`-style check found this skill's own "Quick start" step 1
+(`harness_manifest_builder.py --domain <domain>`) had never actually been run against any of
+the five real domains in the table above — running it for real proves why:
+
+```
+python3 .claude/skills/agent-harness/scripts/harness_manifest_builder.py \
+  --domain worker --repo-root . --json
+# -> {"skill_count": 0, "skills": [], ...}
+```
+
+`harness_manifest_builder.py` scans a folder for `SKILL.md` files — exactly right for
+`.claude/skills/` itself (that's what `harnesses/skills-active.json` and
+`agent-harness/assets/harnesses/thehive.json` are), but `worker/`, `frontend/`, `backend/`,
+and the colony repos are code/doc surfaces with no `SKILL.md` anywhere in them, so the scan
+always returns empty. The Conductor's own routing table pointed at a tool that could never
+produce a manifest for the domains it names. Verdict (`plan-reality-audit` ladder): **half
+done** — `goal_compiler.py`/`loop_controller.py` genuinely work once given a real manifest;
+no domain ever had one.
+
+Fixed with two additive, backward-compatible pieces (neither touches how `.claude/skills/`
+manifests already work):
+- **`domain_router.py`** (above) — the routing half, made runnable.
+- **Five hand-authored manifests** committed at `harnesses/{edge-backend,frontend,colonies,
+  governance,strategy}.json`, schema-compatible with `agent-harness/manifest.v1` — each
+  `skills[].tools[]` entry lists that domain's real, currently-existing verification
+  command (`cd worker && npm test`, `cd frontend && npx tsc --noEmit`, etc., sourced from
+  each domain's own `package.json`/workflow file, not invented) rather than a scanned
+  `SKILL.md`. `goal_compiler.py` got one small additive patch (a `cmd`-based tool shape
+  alongside the original `script`-based one) so it can build tasks from these without any
+  change to existing skill-folder manifests.
+- Full pipeline verified locally, real output not simulated:
+  `domain_router.py --directive "fix the worker API rate limiter" ` → routes `edge-backend`
+  → `goal_compiler.py --manifest harnesses/edge-backend.json` → 1 task, real verification
+  commands → `loop_controller.py init && next` → real `execute` directive emitted. Level:
+  `tested` (local pipeline run, not yet used on a real founder directive end-to-end).
+- **Still honestly incomplete**: `colonies`, `governance`, and `strategy` manifests are
+  mostly `manual-evidence` checks (no local machine check exists for "did the colony sync
+  actually happen" or "is this strategy doc good") — named plainly in each manifest's own
+  `note` field rather than papering over it with a fake green.
 
 ## Phase 0.5 — Reach for what exists before building anything (2026-08-07)
 
@@ -210,11 +263,12 @@ be skipped, and treat "did the Conductor actually run these phases?" as a live q
 ```bash
 # 0. RECALL — ask memory what the hive already did (RAO Phase 0); prepend the brief to the goal
 python3 .claude/skills/hive-conductor/scripts/recall_context.py --goal "<founder directive>" --brief
-# 1. Build/refresh a hive-domain manifest (points the harness builder at a hive skill surface)
-python3 .claude/skills/agent-harness/scripts/harness_manifest_builder.py \
-  --domain <edge-backend|frontend|colonies|governance|strategy> \
-  --repo-root . --out-dir .claude/skills/hive-conductor/harnesses --no-timestamp
-# 2. Compile the founder directive into a plan against that manifest
+# 1. ROUTE — score the directive against the five real domains (see "Routing" above)
+python3 .claude/skills/hive-conductor/scripts/domain_router.py --directive "<founder directive>"
+# 2. Compile the founder directive into a plan against the routed domain's committed manifest
+#    (harnesses/{edge-backend,frontend,colonies,governance,strategy}.json already exist —
+#    do NOT run harness_manifest_builder.py --domain here, it returns skill_count:0 for
+#    every one of these five; that tool is for scanning .claude/skills/ itself, see above)
 python3 .claude/skills/agent-harness/scripts/goal_compiler.py \
   --goal "<founder directive>" --manifest .claude/skills/hive-conductor/harnesses/<domain>.json --out plan.json
 # 3. Drive the loop (init → next → record → verify → close), governance gate before close.

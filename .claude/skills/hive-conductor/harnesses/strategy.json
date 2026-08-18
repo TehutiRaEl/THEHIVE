@@ -1,0 +1,49 @@
+{
+  "schema": "agent-harness/manifest.v1",
+  "domain": "strategy",
+  "domain_manifest_kind": "code-domain",
+  "note": "Hand-authored, not scanned. Strategy work (gap analysis, positioning) is judgment-heavy and genuinely has no machine check per hive-conductor/SKILL.md's own domain table ('Grok bridge push, ACTIVE/ note') -- this manifest names that honestly rather than inventing a fake verification command to look more automated than it is.",
+  "owner": "Grok",
+  "surface": ["docs/STRATEGY.md", "docs/GAP_ANALYSIS.md", "docs/MARKET_INTELLIGENCE.md", "Project_file/Founders Visonary Folder/ACTIVE/"],
+  "skill_count": 1,
+  "loop_defaults": {
+    "max_attempts_per_task": 3,
+    "max_loop_iterations": 12,
+    "escalate_on": [
+      "attempts_exhausted",
+      "no_verification_available",
+      "destructive_or_irreversible_action",
+      "goal_drift_detected"
+    ]
+  },
+  "skills": [
+    {
+      "name": "strategy",
+      "path": "docs/STRATEGY.md",
+      "description": "Gap analysis, market positioning, and the Grok bridge push -- judgment work with no automated pass/fail; verification here is a human review of the produced doc, not a green check.",
+      "tools": [
+        {
+          "cmd": "test -f docs/STRATEGY.md && test -f docs/GAP_ANALYSIS.md",
+          "verification": [
+            {"cmd": "test -f docs/STRATEGY.md && test -f docs/GAP_ANALYSIS.md", "expect_exit": 0, "kind": "existence"}
+          ]
+        },
+        {
+          "cmd": "python3 scripts/grok_push.py --help",
+          "verification": [
+            {"cmd": "python3 scripts/grok_push.py --help", "expect_exit": 0, "kind": "smoke"},
+            {"cmd": "MANUAL: strategy output has no automated pass/fail beyond existence -- a human (founder or Grok bridge) must review substance before this task can close, per this domain's own honest limits", "expect_exit": 0, "kind": "manual-evidence"}
+          ]
+        }
+      ],
+      "agentic_signals": {
+        "goal_intake": false,
+        "refusal_gate": false,
+        "verification": false,
+        "loop_discipline": false,
+        "close_out": false
+      },
+      "references": []
+    }
+  ]
+}
