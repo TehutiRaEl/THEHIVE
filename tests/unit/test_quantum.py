@@ -57,8 +57,15 @@ class TestBB84:
         assert result["eve_detected"] is False
 
     def test_exchange_with_eve(self):
+        # Real, known flakiness fixed here (found on PR #183's CI): with no
+        # fixed seed, Eve's interception is genuinely random per bit, so
+        # roughly 1-in-100 runs show zero errors by pure chance even with
+        # Eve present (~0.75^n_sifted for n_bits=32) and the assertion below
+        # fails on real, correct code. Fixed seed for reproducibility, same
+        # precedent as test_measure() above.
         bb = BB84()
-        result = bb.exchange(32, eve_present=True)
+        rng = np.random.RandomState(42)
+        result = bb.exchange(32, eve_present=True, rng=rng)
         assert result["eve_detected"] is True or result["qber"] > 0
 
 class TestGroverSearch:
