@@ -14,7 +14,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { PROVIDERS, PROVIDER_RETRY_AFTER_MS, providerOrder } from '../src/index.js';
 
-const ALL = ['claude', 'groq', 'mistral', 'workers-ai'];
+const ALL = ['claude', 'groq', 'mistral', 'openai', 'openrouter', 'workers-ai'];
 const MIN = 60 * 1000;
 // Health rows as D1 really returns them: ok is an INTEGER 0/1, not a boolean.
 const failedAgo = (msAgo, error = 'HTTP 401: invalid x-api-key') =>
@@ -39,7 +39,7 @@ describe('the documented waterfall is still the default', () => {
 describe('preference routing — the roles the UI always displayed but never enforced', () => {
   test("prefer 'speed' really puts Groq first", () => {
     assert.deepEqual(providerOrder({}, { prefer: 'speed' }),
-      ['groq', 'claude', 'mistral', 'workers-ai']);
+      ['groq', 'claude', 'mistral', 'openai', 'openrouter', 'workers-ai']);
   });
 
   test("prefer 'reasoning' keeps Claude first and the rest stable", () => {
@@ -48,12 +48,17 @@ describe('preference routing — the roles the UI always displayed but never enf
 
   test("prefer 'local' matches Mistral on a partial role match", () => {
     assert.deepEqual(providerOrder({}, { prefer: 'local' }),
-      ['mistral', 'claude', 'groq', 'workers-ai']);
+      ['mistral', 'claude', 'groq', 'openai', 'openrouter', 'workers-ai']);
   });
 
   test('a provider id works as a preference too, not just a role word', () => {
     assert.deepEqual(providerOrder({}, { prefer: 'mistral' }),
-      ['mistral', 'claude', 'groq', 'workers-ai']);
+      ['mistral', 'claude', 'groq', 'openai', 'openrouter', 'workers-ai']);
+  });
+
+  test("prefer 'open-source' matches OpenRouter — the founder's non-Claude-only lever", () => {
+    assert.deepEqual(providerOrder({}, { prefer: 'open-source' }),
+      ['openrouter', 'claude', 'groq', 'mistral', 'openai', 'workers-ai']);
   });
 
   test('every role named in PROVIDERS resolves to its own provider', () => {
@@ -69,7 +74,7 @@ describe('preference routing — the roles the UI always displayed but never enf
 describe('task 45 — a dead provider must not keep being tried first', () => {
   test('a recently-failed Claude is moved to the back of the line', () => {
     assert.deepEqual(providerOrder({}, { health: { claude: failedAgo(2 * MIN) } }),
-      ['groq', 'mistral', 'workers-ai', 'claude']);
+      ['groq', 'mistral', 'openai', 'openrouter', 'workers-ai', 'claude']);
   });
 
   test('real health OUTRANKS the job preference', () => {
@@ -77,13 +82,13 @@ describe('task 45 — a dead provider must not keep being tried first', () => {
     // mode wearing a different hat, so a reasoning job still skips a dead Claude.
     assert.deepEqual(
       providerOrder({}, { prefer: 'reasoning', health: { claude: failedAgo(2 * MIN) } }),
-      ['groq', 'mistral', 'workers-ai', 'claude']);
+      ['groq', 'mistral', 'openai', 'openrouter', 'workers-ai', 'claude']);
   });
 
   test('relative order among several dead providers is preserved', () => {
     assert.deepEqual(
       providerOrder({}, { health: { claude: failedAgo(MIN), groq: failedAgo(MIN) } }),
-      ['mistral', 'workers-ai', 'claude', 'groq']);
+      ['mistral', 'openai', 'openrouter', 'workers-ai', 'claude', 'groq']);
   });
 
   test('when everything is down, every provider is still attempted', () => {
@@ -106,7 +111,7 @@ describe('recovery — a failing provider must come back on its own', () => {
   test('a failure just inside the retry window is still deprioritised', () => {
     assert.deepEqual(
       providerOrder({}, { health: { claude: failedAgo(PROVIDER_RETRY_AFTER_MS - MIN) } }),
-      ['groq', 'mistral', 'workers-ai', 'claude']);
+      ['groq', 'mistral', 'openai', 'openrouter', 'workers-ai', 'claude']);
   });
 
   test('the retry window is a sane length, not zero or infinite', () => {

@@ -1324,14 +1324,24 @@ const GENOME_CHROMOSOMES = [
 ];
 
 // ── Multi-provider generative voice (the swappable organ, FABLE_DNA) ─────
-// Waterfall: Claude → Groq → Mistral → Workers AI. Each external provider
-// activates the moment its API key exists as a Worker secret — the founder
-// flips the switch (wrangler secret put <NAME>); no code change needed.
-// Secret PRESENCE is reported (names/booleans only, F-001) — never values.
+// Waterfall: Claude → Groq → Mistral → OpenAI → OpenRouter → Workers AI. Each
+// external provider activates the moment its API key exists as a Worker
+// secret — the founder flips the switch (wrangler secret put <NAME>); no
+// code change needed. Secret PRESENCE is reported (names/booleans only,
+// F-001) — never values.
+//
+// OpenAI/OpenRouter added 2026-08-18 at the founder's explicit direction:
+// Kai El must not be locked to one provider — real, existing OPENAI_API_KEY/
+// OPENROUTER_API_KEY secrets were already bound but never wired into this
+// array. OpenRouter in particular is the concrete lever for "open-source and
+// free where possible" — it's an OpenAI-compatible gateway that can route to
+// free-tier open models via its `model` field, not a second closed provider.
 const PROVIDERS = [
   { id: 'claude', label: 'Claude', role: 'Reasoning', secret: 'ANTHROPIC_API_KEY' },
   { id: 'groq', label: 'Groq', role: 'Speed', secret: 'GROQ_API_KEY' },
   { id: 'mistral', label: 'Mistral', role: 'Local intelligence', secret: 'MISTRAL_API_KEY' },
+  { id: 'openai', label: 'OpenAI', role: 'General', secret: 'OPENAI_API_KEY' },
+  { id: 'openrouter', label: 'OpenRouter', role: 'Open-source + free-tier models', secret: 'OPENROUTER_API_KEY' },
   { id: 'workers-ai', label: 'Cloudflare Workers AI', role: 'Deployment + runtime inference', secret: null },
 ];
 
@@ -1482,6 +1492,53 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
         headers: { Authorization: `Bearer ${env.MISTRAL_API_KEY}`, 'content-type': 'application/json' },
         body: JSON.stringify({
           model: 'mistral-small-latest', max_tokens: maxTokens,
+          messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
+        }),
+        signal: timeout(15000),
+      });
+      if (!r.ok) {
+        const body = await r.text().catch(() => '');
+        throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
+      }
+      const d = await r.json();
+      const text = (d?.choices?.[0]?.message?.content || '').trim();
+      if (!text) throw new Error('HTTP 200 but no usable text in response');
+      return { text, usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+    },
+    openai: async () => {
+      if (!env.OPENAI_API_KEY) return null;
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: 'gpt-5', max_tokens: maxTokens,
+          messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
+        }),
+        signal: timeout(15000),
+      });
+      if (!r.ok) {
+        const body = await r.text().catch(() => '');
+        throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
+      }
+      const d = await r.json();
+      const text = (d?.choices?.[0]?.message?.content || '').trim();
+      if (!text) throw new Error('HTTP 200 but no usable text in response');
+      return { text, usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
+    },
+    // OpenRouter is OpenAI-API-compatible by design — same request/response shape as
+    // openai above, different endpoint + model. The `model` id is the real lever for
+    // "open-source/free where possible" (the founder's explicit direction): pick a
+    // real free-tier OpenRouter model rather than a paid default, and verify the
+    // exact current id against OpenRouter's own model list before deploying — their
+    // free roster changes, so a hardcoded id here is a maintenance point, not a
+    // one-time choice.
+    openrouter: async () => {
+      if (!env.OPENROUTER_API_KEY) return null;
+      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${env.OPENROUTER_API_KEY}`, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free', max_tokens: maxTokens,
           messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
         }),
         signal: timeout(15000),

@@ -34,7 +34,10 @@ export function createFileSizeValidationRule(cfg) {
     name: 'validation.file_size',
     priority: 18,
     evaluate(request) {
-      if (request.tool !== 'edit_own_file' && request.tool !== 'write_file') return null;
+      // write_target_file (2026-08-18) reuses the same cfg.selfMod.maxFileSizeBytes
+      // cap as edit_own_file/write_file — one size ceiling for every file-write
+      // tool, not a separate number to keep in sync.
+      if (request.tool !== 'edit_own_file' && request.tool !== 'write_file' && request.tool !== 'write_target_file') return null;
       if (request.contentBytes && request.contentBytes > cfg.selfMod.maxFileSizeBytes) {
         return { action: 'deny', reasonCode: 'FILE_TOO_LARGE', humanMessage: `${request.contentBytes} bytes exceeds cap of ${cfg.selfMod.maxFileSizeBytes}.` };
       }

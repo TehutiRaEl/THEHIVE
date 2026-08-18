@@ -48,6 +48,32 @@ export function buildToolRegistry({ policyEngine, ledger, selfMod, replicator, l
       return { ok: true, content: fs.readFileSync(full, 'utf8').slice(0, 50_000) };
     },
 
+    /**
+     * Writes a file inside `repoRoot` — real, generic file-write capability
+     * for a sandbox run building something in a checked-out TARGET repo
+     * (2026-08-18). Deliberately a distinct tool from `edit_own_file`, not a
+     * repurposing of it: `edit_own_file` means automaton modifying its own
+     * source via `selfMod`, always scoped to automaton's own ROOT_DIR
+     * regardless of `repoRoot` (see index.js) — reusing that name/path here
+     * would make its own safety rule's "self-modification" language a lie
+     * once `repoRoot` points at someone else's repo. Same path-traversal
+     * guard as read_file; policy-gated by its own rules
+     * (policy-rules/authority.js's createTargetWriteFromExternalRule,
+     * policy-rules/validation.js's file-size cap) rather than the
+     * self-mod-specific rules `edit_own_file`/legacy `write_file` carry.
+     */
+    async write_target_file({ targetPath, content }, { inputSource = 'agent' } = {}) {
+      const decision = checkPolicy({
+        tool: 'write_target_file', inputSource, targetPath, contentBytes: Buffer.byteLength(content ?? '', 'utf8'),
+      });
+      if (decision.action !== 'allow') return toolResult(decision);
+      const full = path.resolve(repoRoot, targetPath);
+      if (!full.startsWith(path.resolve(repoRoot))) return { ok: false, error: 'path traversal outside repo root' };
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, content ?? '', 'utf8');
+      return { ok: true, targetPath };
+    },
+
     async edit_own_file({ targetPath, content }, { inputSource = 'agent' } = {}) {
       const decision = checkPolicy({
         tool: 'edit_own_file', inputSource, targetPath, contentBytes: Buffer.byteLength(content, 'utf8'),
