@@ -163,6 +163,19 @@ Everything under "What changed since 2026-07-19" above is now Closed Ground for 
 the same way v1 declared its own predecessor's Workstreams A-D closed. Not re-litigated by
 future sessions; built on top of.
 
+## New: Phase 12 — the Queen's campaign orchestration (2026-08-19, own sub-plan)
+
+**STILL OPEN, own document, not summarized here to avoid the two-copy drift Phase 1c
+exists to prevent.** Full plan: `memory/planning/2026-08-19-queen-orchestration-master-
+plan.md`. One-line version: Nanuet has no real orchestration role today (confirmed by
+grep — `autonomous-hive-agent/SKILL.md` never mentions her) despite three separate,
+already-real pieces existing that a build could stand on — Akosha (coordination under Kai
+El, done), `hive-conductor`'s real domain routing (PR #186, tested not verified-live), and
+Kai El's own D1-brain pattern (`c347a6a`) which the founder already said, verbatim, to
+repeat for Nanuet "later, when work on the Queen resumes." That resumption is what the new
+doc plans, phased the same way Kai El's own build was (foundation → routing → staged
+campaign-queue ownership), gated on real founder sign-off before the higher-autonomy tiers.
+
 ## Deferred vision — unchanged from v1
 
 The macro-universe vision, GOVERNANCE.md's uncalibrated founder-phase-allocation
