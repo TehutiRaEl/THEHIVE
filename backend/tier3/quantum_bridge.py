@@ -154,11 +154,11 @@ class QuantumCircuit:
 # ════════════════════════════════════════════════════════════
 class QRNG:
     """Generate true (simulated) quantum random bits via H|0⟩ measurement."""
-    def random_bits(self, n: int) -> List[int]:
+    def random_bits(self, n: int, rng: Optional[np.random.RandomState] = None) -> List[int]:
         bits = []
         for _ in range(n):
             qc = QuantumCircuit(1); qc.h(0)
-            bits.append(qc.measure(0))
+            bits.append(qc.measure(0, rng))
         return bits
 
     def random_int(self, low: int, high: int) -> int:
@@ -191,10 +191,17 @@ class BB84:
     Simulates the BB84 QKD protocol between two agents (Alice and Bob).
     Eve intercept simulation included.
     """
-    def exchange(self, n_bits: int = 64, eve_present: bool = False) -> Dict:
-        alice_bits  = qrng.random_bits(n_bits)
-        alice_bases = qrng.random_bits(n_bits)
-        bob_bases = qrng.random_bits(n_bits)
+    def exchange(self, n_bits: int = 64, eve_present: bool = False,
+                 rng: Optional[np.random.RandomState] = None) -> Dict:
+        # rng is optional and defaults to None (a fresh, OS-entropy-seeded
+        # RandomState per measurement, same as always) — real production
+        # callers (backend/api/routes.py's /v11/quantum/bb84) never pass it,
+        # so behavior there is unchanged. Threaded through purely so a test
+        # can inject a fixed seed for reproducibility, the same reason
+        # QuantumCircuit.measure() already accepts one (see test_measure).
+        alice_bits  = qrng.random_bits(n_bits, rng)
+        alice_bases = qrng.random_bits(n_bits, rng)
+        bob_bases = qrng.random_bits(n_bits, rng)
 
         transmitted = []
         bob_results = []
@@ -205,16 +212,16 @@ class BB84:
             if alice_bases[i]: qc.h(0)
 
             if eve_present:
-                eve_basis = qrng.random_bits(1)[0]
+                eve_basis = qrng.random_bits(1, rng)[0]
                 if eve_basis: qc.h(0)
-                qc.measure(0)
+                qc.measure(0, rng)
                 qc2 = QuantumCircuit(1)
                 if qc.measurements[0]: qc2.x(0)
                 if eve_basis: qc2.h(0)
                 qc = qc2
 
             if bob_bases[i]: qc.h(0)
-            result = qc.measure(0)
+            result = qc.measure(0, rng)
             transmitted.append(qc)
             bob_results.append(result)
 
