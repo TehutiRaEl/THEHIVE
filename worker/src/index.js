@@ -1657,6 +1657,13 @@ async function recall(env, query, topK = 5) {
         text: m.metadata?.text ?? '',
         kind: m.metadata?.kind ?? '',
         ts: m.metadata?.ts ?? '',
+        // `agent` is written by kaiRemember()/nanuetRemember() and passed through
+        // here (added 2026-08-19, Phase Q-A) so a per-agent recall can tell whose
+        // memory a match is. Purely additive: every existing caller reads named
+        // fields, so an extra one changes nothing for them. Without it, Nanuet's
+        // "own brain" would return Kai El's memories from the shared Vectorize
+        // index — a brain that answers with someone else's memories is not her own.
+        agent: m.metadata?.agent ?? '',
       })),
     };
   } catch (e) { return { available: false, matches: [], error: String(e) }; }
@@ -1831,6 +1838,219 @@ async function logTrainingSample(env, t) {
     ).run();
     return { logged: true };
   } catch (e) { return { logged: false, error: String(e) }; }
+}
+
+// ── Nanuet's own brain (nanuet-brain D1, 2026-08-19, Phase Q-A) ──────────
+// The Queen's own memory and decision record. Kai El's block above is the
+// template and this is deliberately its mirror image, not a new pattern: the
+// founder's own words on 2026-08-10 were that Kai El got his own D1 database,
+// a decision/outcome log and a staged-autonomy ladder, and "the same for Nanuet
+// later, when work on the Queen resumes." This is that resumption.
+//
+// THE DATABASE DOES NOT EXIST YET, and only the founder can create it. So every
+// function here has to degrade honestly rather than crash — with NANUET_BRAIN
+// unbound (which is the state today, in production, right now) each one returns
+// a clear "not provisioned" result and the Queen behaves exactly as she does
+// today. Schema and the founder's exact provisioning commands:
+// worker/schema/nanuet-brain.sql. Ladder: worker/schema/NANUET_AUTONOMY.md.
+//
+// SCOPE, stated so a later session does not quietly widen it: Phase Q-A gives
+// Nanuet MEMORY and a LOG. No new authority, no money, no ability to act. Phase
+// Q-B (domain routing) and Phase Q-C (owning the campaign queue) are documented
+// in the ladder as destinations and are NOT built here.
+
+// Staged autonomy, same construction as KAI_SWITCHES: read from deploy-time env
+// vars ONLY, never from the database Nanuet herself writes to. autonomy_registry
+// in nanuet-brain documents these switches and deliberately has no `enabled`
+// column, because an agent that can write its own permissions has none.
+//
+// That reasoning binds harder here than it does for Kai El. Nanuet is the one
+// agent in the roster whose reports_to is NULL (worker/src/index.js:669) — there
+// is no superior above her to catch a self-grant. Authority stays where she
+// cannot reach it.
+const NANUET_SWITCHES = [
+  // Stages 1-2 — BUILT in Phase Q-A. Both default off.
+  'NANUET_BRAIN_WRITE',
+  'NANUET_REVIEW_LOG',
+  // Stages 3-6 — NOT BUILT. Reported by /v11/nanuet/autonomy so the ladder's
+  // destination is visible and explicit rather than invented later, exactly as
+  // KAI_FINANCIAL_AUTONOMY is listed-but-unwired in KAI_SWITCHES above. Nothing
+  // in this file reads any of them to authorise anything, because there is
+  // nothing to authorise: the capabilities do not exist.
+  'NANUET_DOMAIN_ROUTING',
+  'NANUET_CAMPAIGN_OBSERVE',
+  'NANUET_CAMPAIGN_ADVISE',
+  'NANUET_DELEGATE_AKOSHA',
+];
+
+// The Queen's ONE pre-existing real power, reported read-only alongside the
+// ladder above. QUEEN_AUTONOMOUS_APPROVAL predates this phase (2026-08-03,
+// FLIP_THE_SWITCHES.md switch 9) and is read by queenDecide(), not by anything
+// here. It is surfaced because a founder looking at "what can Nanuet do" should
+// see it in the same place as everything else — omitting it would make this
+// ladder read as the complete picture when it is not. Phase Q-A does not change
+// it, gate it, or depend on it.
+const NANUET_PREEXISTING_SWITCHES = ['QUEEN_AUTONOMOUS_APPROVAL'];
+
+function nanuetBrainOk(env) { return !!env?.NANUET_BRAIN; }
+
+function nanuetAutonomyState(env) {
+  const out = {};
+  for (const k of NANUET_SWITCHES) out[k] = switchOn(env, k);
+  return out;
+}
+
+// One shared reason string so the API, the tests and a future reader all get the
+// same answer to "why did nothing happen": whether the database is missing or the
+// switch is off is a real distinction, and collapsing the two would repeat task
+// 45's bug (two different facts reported as one).
+function nanuetWriteBlockedReason(env) {
+  if (!nanuetBrainOk(env)) {
+    return 'nanuet-brain is not provisioned — the D1 database does not exist yet (founder-only: see worker/schema/nanuet-brain.sql)';
+  }
+  if (!switchOn(env, 'NANUET_BRAIN_WRITE')) return 'NANUET_BRAIN_WRITE is off';
+  return null;
+}
+
+// Write one memory to Nanuet's own brain: the FULL text in D1 (Vectorize metadata
+// truncates to 512 chars, so the complete text has always been thrown away at
+// write time) plus the embedding in Vectorize for semantic search. The two halves
+// are independent on purpose — either can fail without the other, and a half-write
+// is better than a lost memory.
+//
+// The vector half is tagged agent:'Nanuet' so nanuetRecall() below can tell her
+// memories apart from Kai El's in the one shared index.
+async function nanuetRemember(env, { id, kind, text, summary, source, importance, agent } = {}) {
+  const blocked = nanuetWriteBlockedReason(env);
+  if (blocked) return { stored: false, reason: blocked };
+  const ts = new Date().toISOString();
+  const memId = String(id || `nanuet-${kind || 'note'}-${Date.now()}`);
+  const who = agent || 'Nanuet';
+  let vectorOk = false;
+  try { vectorOk = await remember(env, memId, text, { kind: kind || 'note', ts, agent: who }); } catch { /* vector half is optional */ }
+  try {
+    await env.NANUET_BRAIN.prepare(
+      `INSERT OR REPLACE INTO memories (id, agent, kind, text, summary, source, ts, importance, vector_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      memId, who, kind || 'note', String(text ?? ''),
+      summary ?? null, source ?? null, ts,
+      typeof importance === 'number' ? importance : 0.5,
+      vectorOk ? memId : null
+    ).run();
+    return { stored: true, id: memId, vector: vectorOk };
+  } catch (e) { return { stored: false, vector: vectorOk, error: String(e) }; }
+}
+
+// Recency-weighted recall, built in FROM THE START rather than retrofitted.
+//
+// This is the one place Phase Q-A deliberately does not mirror Kai El's build.
+// His recall() shipped doing pure cosine similarity while ignoring the `ts` it
+// stores, so a day-one fact could outrank today's purely on wording; that gap is
+// on record (task 53's audit) and needed a follow-up fix. Nanuet inherits the
+// fixed behaviour instead of the bug — same recencyWeight()/half-life/floor
+// constants as kaiRecall(), reused rather than re-declared so the two cannot
+// drift to different decay curves.
+//
+// It also does something kaiRecall() does not: filters to HER OWN memories. The
+// Vectorize index is shared across the whole hive, so an unfiltered "her own
+// brain" would answer with Kai El's memories. Filtering happens in JS after an
+// over-fetch rather than through a Vectorize metadata filter, because metadata
+// filtering needs metadata indexes that have never been created on this index —
+// passing a filter the index cannot honour would silently return nothing.
+const NANUET_RECALL_OVERFETCH = 5;   // her rows are a minority of a shared index
+const NANUET_RECALL_MAX_FETCH = 100; // Vectorize's own topK ceiling
+
+async function nanuetRecall(env, query, topK = 5, { agent = 'Nanuet' } = {}) {
+  const want = Math.max(1, topK);
+  const fetchK = Math.min(NANUET_RECALL_MAX_FETCH, Math.max(want * NANUET_RECALL_OVERFETCH, 25));
+  const base = await recall(env, query, fetchK);
+  if (!base.available) return { ...base, reranked: false, filtered_to: agent };
+  const now = Date.now();
+  const matches = base.matches
+    // An untagged memory (agent: '') predates this tagging and cannot be proven
+    // hers, so it is excluded. Including it would let the filter quietly fail
+    // open — the exact shape of bug switchOn() is written to avoid.
+    .filter(m => String(m.agent || '') === agent)
+    .map(m => {
+      const weight = recencyWeight(m.ts, now);
+      return { ...m, similarity: m.score, recency_weight: +weight.toFixed(4), score: +(m.score * weight).toFixed(4) };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, want);
+  return { available: true, reranked: true, filtered_to: agent, matches };
+}
+
+// The decision/outcome record — the honest half of what the founder called a
+// "training database", under its real name. Real weight-level fine-tuning needs
+// infrastructure that does not exist yet (same dependency as task 53); the
+// founder's own framing was "log now, real fine-tuning later", so this logs.
+//
+// risk_reason/risk_handling are required in code for high-risk rows, not merely
+// prompted for, because a prompt-only rule is one bad generation away from a
+// high-risk row with no explanation attached. Same enforcement as logDecision().
+async function logNanuetDecision(env, d = {}) {
+  const blocked = nanuetWriteBlockedReason(env);
+  if (blocked) return { logged: false, reason: blocked };
+  const tier = ['low', 'normal', 'high'].includes(d?.risk_tier) ? d.risk_tier : 'normal';
+  if (tier === 'high' && (!d?.risk_reason || !d?.risk_handling)) {
+    return { logged: false, error: 'high-risk decisions require risk_reason and risk_handling' };
+  }
+  // A score outside 0-100 is a bug upstream, not a fact worth persisting. Clamped
+  // rather than rejected so one malformed score never costs the whole decision row.
+  const score = Number.isFinite(d?.alignment_score)
+    ? Math.min(100, Math.max(0, Math.round(d.alignment_score)))
+    : null;
+  try {
+    const r = await env.NANUET_BRAIN.prepare(
+      `INSERT INTO decision_log (agent, ts, surface, request, reasoning, action, risk_tier,
+        risk_reason, risk_handling, autonomy_mode, subject_kind, subject_id, alignment_score,
+        provider, tokens_in, tokens_out)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      d.agent || 'Nanuet', new Date().toISOString(), d.surface || 'proposal-review',
+      String(d.request ?? ''), d.reasoning ?? null, d.action ?? null, tier,
+      d.risk_reason ?? null, d.risk_handling ?? null,
+      d.autonomy_mode || 'draft-approve',
+      d.subject_kind ?? null, d.subject_id != null ? String(d.subject_id) : null, score,
+      d.provider ?? null,
+      Number.isFinite(d.tokens_in) ? d.tokens_in : null,
+      Number.isFinite(d.tokens_out) ? d.tokens_out : null
+    ).run();
+    return { logged: true, id: r?.meta?.last_row_id ?? null };
+  } catch (e) { return { logged: false, error: String(e) }; }
+}
+
+// Stage 2 of the ladder, and the only place Phase Q-A touches an existing code
+// path: when Nanuet scores a proposal through queenReview(), record that she did.
+//
+// This adds NOTHING to what she is allowed to decide. queenDecide() below still
+// makes exactly the same call, on exactly the same pre-existing switch, and
+// reaches exactly the same verdict whether this logs or not. It writes down a
+// decision that already happened — which is the entire point of a decision log,
+// and is why it is safe to wire in during a memory-only phase.
+//
+// Three gates, all off today: the database must exist, NANUET_BRAIN_WRITE must be
+// on, and NANUET_REVIEW_LOG must be on. Any one missing is a clean no-op.
+async function logQueenReview(env, { title, body, score, reason, decision, proposalId, provider } = {}) {
+  if (!switchOn(env, 'NANUET_REVIEW_LOG')) return { logged: false, reason: 'NANUET_REVIEW_LOG is off' };
+  return logNanuetDecision(env, {
+    surface: 'proposal-review',
+    subject_kind: 'proposal',
+    subject_id: proposalId,
+    request: `${String(title ?? '')}\n${String(body ?? '').slice(0, 1000)}`.trim(),
+    reasoning: reason ?? null,
+    action: decision ?? null,
+    alignment_score: score,
+    // Her review is advisory-plus: a >=98 score can approve a proposal outright,
+    // which is a real state change, so it is never logged as low-risk. It is not
+    // logged as high-risk either — that tier demands a written why/how, and
+    // demanding one from a two-line SCORE/REASON reply would produce boilerplate,
+    // which is worse than an honest 'normal'.
+    risk_tier: 'normal',
+    autonomy_mode: 'autonomous',
+    provider: provider ?? null,
+  });
 }
 
 // ── The 4DBRAIN bridge ───────────────────────────────────────────────────
@@ -2058,7 +2278,12 @@ async function elderCouncilVeto(env, { title, body }) {
 // Shared by both proposal-creation paths (POST /proposals and the PROPOSAL: marker in
 // command_text) so the Queen's approval + Elders' Council check runs identically either
 // way, instead of two copies of the same five-variable dance drifting apart over time.
-async function queenDecide(env, requestUrl, { title, body }) {
+// `proposalId` is accepted but NULL from all three current callers, and that is
+// stated rather than hidden: the Queen decides before the proposal row is
+// inserted, so at this moment the proposal genuinely has no id yet. The parameter
+// exists so a future caller that already has one can tie the decision row to it;
+// it is not a value this code can invent.
+async function queenDecide(env, requestUrl, { title, body, proposalId }) {
   let qStatus = 'pending', qScore = null, qDecidedBy = null, qDecidedAt = null, elderNote = null;
   if (env.QUEEN_AUTONOMOUS_APPROVAL) {
     const review = await queenReview(env, requestUrl, { title, body });
@@ -2072,6 +2297,21 @@ async function queenDecide(env, requestUrl, { title, body }) {
           qStatus = 'approved'; qDecidedBy = 'queen'; qDecidedAt = new Date().toISOString();
         }
       }
+      // Phase Q-A, stage 2: write down the review that just happened. Deliberately
+      // placed AFTER the verdict is settled so the row records the real outcome
+      // (approved / held by an Elder / scored-but-below-threshold) rather than an
+      // intention. Triple-gated and inert today — nanuet-brain does not exist yet,
+      // and both NANUET_* switches default off. It changes no variable above it:
+      // remove this block and every verdict is identical.
+      try {
+        await logQueenReview(env, {
+          title, body,
+          score: review.score,
+          reason: review.reason,
+          decision: qStatus === 'approved' ? 'approved' : (elderNote ? `held: ${elderNote}` : 'left pending'),
+          proposalId: proposalId ?? null,
+        });
+      } catch { /* a decision log must never be able to break a decision */ }
     }
   }
   return { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote };
@@ -3503,6 +3743,97 @@ export default {
           note: 'Enablement is read from deploy-time environment variables only, never from this database — an agent that can write its own permissions has none.',
         });
       }
+      // ── Nanuet's brain (2026-08-19, Phase Q-A) ────────────────────────
+      // Read-only, unauthenticated status — same posture as /kai/brain above,
+      // /memory/status and /debug/*: real state, no secret values, and honest
+      // about what is off.
+      //
+      // The difference from /kai/brain is that Kai El's database exists and
+      // Nanuet's does not. That is reported as a first-class fact, not inferred
+      // from a missing count: `provisioned:false` plus the exact founder step
+      // that would change it. A route that answered `counts: null` and left the
+      // reader to guess whether the DB is empty or absent would be exactly the
+      // kind of ambiguity this repo's own audits keep catching.
+      if (p === '/nanuet/brain') {
+        const bound = nanuetBrainOk(env);
+        const st = {
+          agent: 'Nanuet',
+          provisioned: bound,
+          bound,
+          write_enabled: switchOn(env, 'NANUET_BRAIN_WRITE'),
+          review_log_enabled: switchOn(env, 'NANUET_REVIEW_LOG'),
+          counts: null,
+        };
+        if (bound) {
+          try {
+            const r = await env.NANUET_BRAIN.prepare(
+              `SELECT (SELECT COUNT(*) FROM memories) AS memories,
+                      (SELECT COUNT(*) FROM decision_log) AS decisions,
+                      (SELECT COUNT(*) FROM training_samples) AS training_samples,
+                      (SELECT COUNT(*) FROM training_samples WHERE eligible=1) AS training_eligible`
+            ).first();
+            st.counts = r || null;
+          } catch (e) { st.error = String(e); }
+        } else {
+          st.note =
+            'nanuet-brain does not exist yet. Creating it is founder-only and costs one of the ' +
+            'account\'s 10 D1 slots: `npx wrangler d1 create nanuet-brain`, then ' +
+            '`npx wrangler d1 execute nanuet-brain --remote --file=worker/schema/nanuet-brain.sql`, ' +
+            'then uncomment the NANUET_BRAIN block in wrangler.jsonc with the real database_id and deploy. ' +
+            'Until then every read and write here is a clean no-op and Nanuet behaves exactly as she does today.';
+        }
+        return json({
+          ...st,
+          recency: { half_life_days: RECENCY_HALF_LIFE_DAYS, floor: RECENCY_FLOOR },
+          phase: 'Q-A — memory and decision log only. No new authority, no autonomous action.',
+        });
+      }
+      // The staged-autonomy ladder: what Nanuet can do, what she cannot yet, and
+      // exactly what the founder does to grant each next stage. Live env state is
+      // joined onto the registry's documentation — the registry never stores
+      // enablement, precisely so writing to it cannot grant anything.
+      //
+      // With the database unprovisioned there are no registry rows to join, so
+      // the ladder falls back to reporting the switches themselves. It reports
+      // them as OFF, which is the truth, rather than reporting nothing.
+      if (p === '/nanuet/autonomy') {
+        const state = nanuetAutonomyState(env);
+        let rows = [];
+        if (nanuetBrainOk(env)) {
+          try {
+            const r = await env.NANUET_BRAIN.prepare(
+              'SELECT key, stage, title, description, turn_on_steps, risk_note, requires FROM autonomy_registry ORDER BY stage'
+            ).all();
+            rows = r?.results || [];
+          } catch { rows = []; }
+        }
+        const ladder = rows.map(row => ({
+          ...row,
+          enabled: !!state[row.key],
+          blocked_by: row.requires && !state[row.requires] ? row.requires : null,
+        }));
+        return json({
+          agent: 'Nanuet',
+          provisioned: nanuetBrainOk(env),
+          ladder,
+          switches: state,
+          enabled_now: Object.entries(state).filter(([, v]) => v).map(([k]) => k),
+          next_stage: ladder.find(l => !l.enabled) ?? null,
+          // Reported, never managed here — see NANUET_PREEXISTING_SWITCHES.
+          pre_existing: Object.fromEntries(
+            NANUET_PREEXISTING_SWITCHES.map(k => [k, switchOn(env, k) || !!env?.[k]])
+          ),
+          pre_existing_note:
+            'QUEEN_AUTONOMOUS_APPROVAL predates this ladder (FLIP_THE_SWITCHES.md switch 9) and is ' +
+            'shown for completeness only. Phase Q-A does not change, gate, or depend on it.',
+          note:
+            'Enablement is read from deploy-time environment variables only, never from this database — ' +
+            'an agent that can write its own permissions has none. Nanuet has no superior in the roster ' +
+            '(reports_to IS NULL), so this rule matters more for her than for any other agent. ' +
+            'Stages 1-2 are built; stages 3-6 are documented destinations that are NOT built.',
+          docs: 'worker/schema/NANUET_AUTONOMY.md',
+        });
+      }
       if (p === '/tier3/status')
         return json({ arena_renderer: { available: true, status: 'Loaded — edge voxel simulation' } });
 
@@ -3936,6 +4267,18 @@ export {
   RECENCY_FLOOR,
   logDecision,
   logTrainingSample,
+  // Nanuet's brain (2026-08-19, Phase Q-A) — exported so
+  // worker/test/nanuet-brain.test.js drives the real functions rather than a
+  // reimplementation of them, same reason as Kai El's block above.
+  NANUET_SWITCHES,
+  NANUET_PREEXISTING_SWITCHES,
+  nanuetBrainOk,
+  nanuetAutonomyState,
+  nanuetWriteBlockedReason,
+  nanuetRemember,
+  nanuetRecall,
+  logNanuetDecision,
+  logQueenReview,
   fourDBrain,
   fetchRepoFile,
   extractDiffBlock,
