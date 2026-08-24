@@ -1,0 +1,103 @@
+{
+  "id": "cli-e40e2f8a5920",
+  "created_at": "2026-08-22T07:22:43.490385+00:00",
+  "captured": {
+    "id": "cli-e40e2f8a5920",
+    "captured_at": "2026-08-22T07:22:43.489469+00:00",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "Fully implemented medium daemon, MCP stdio, file graph, FETCH_ALLOWLISTED, CI workflow, Kai CLI. No more hypothecation."
+      }
+    ],
+    "decisions": [],
+    "rejected_approaches": [],
+    "rationale": [],
+    "code": [],
+    "architecture": [],
+    "metadata": {
+      "source": "kai_cli",
+      "platform": "hive",
+      "tags": [
+        "cli"
+      ],
+      "raw_keys": [
+        "conversation",
+        "id",
+        "platform",
+        "source",
+        "tags"
+      ]
+    }
+  },
+  "compressed": {
+    "header": {
+      "protocol": "AIST-hive-v1",
+      "capture_id": "cli-e40e2f8a5920",
+      "captured_at": "2026-08-22T07:22:43.489469+00:00",
+      "source": "kai_cli",
+      "platform": "hive",
+      "message_count": 1
+    },
+    "essence": [
+      "user: Fully implemented medium daemon, MCP stdio, file graph, FETCH_ALLOWLISTED, CI workflow, Kai CLI. No more hypothecation."
+    ],
+    "memory": {
+      "code_blocks": 0,
+      "code_previews": [],
+      "metadata": {
+        "source": "kai_cli",
+        "platform": "hive",
+        "tags": [
+          "cli"
+        ],
+        "raw_keys": [
+          "conversation",
+          "id",
+          "platform",
+          "source",
+          "tags"
+        ]
+      }
+    },
+    "decisions": [],
+    "threads": [],
+    "rejected": [],
+    "architecture_tags": [],
+    "stats": {
+      "approx_input_chars": 119,
+      "approx_output_chars": 590
+    }
+  },
+  "store": {
+    "id": "cli-e40e2f8a5920",
+    "neuromcp_path": "/home/workdir/artifacts/TheCopy-ops/bridge/implementation/bridges/cli-e40e2f8a5920.json",
+    "medium_path": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/outbox/bridge-cli-e40e2f8a5920.json",
+    "stored_at": "2026-08-22T07:22:44.740007+00:00"
+  },
+  "injection": {
+    "target": "hive",
+    "bridge_id": "cli-e40e2f8a5920",
+    "mode": "hive_file",
+    "operator_gate": true,
+    "prompt_text": "[HIVE BRIDGE INJECT \u2192 hive]\nContinue from this compressed session context. Do not invent prior work.\n\n## Header\n{\n  \"protocol\": \"AIST-hive-v1\",\n  \"capture_id\": \"cli-e40e2f8a5920\",\n  \"captured_at\": \"2026-08-22T07:22:43.489469+00:00\",\n  \"source\": \"kai_cli\",\n  \"platform\": \"hive\",\n  \"message_count\": 1\n}\n\n## Essence\n- user: Fully implemented medium daemon, MCP stdio, file graph, FETCH_ALLOWLISTED, CI workflow, Kai CLI. No more hypothecation.\n\n## Decisions\n\n## Open threads\n\n## Architecture tags\n(none)",
+    "structured": {
+      "header": {
+        "protocol": "AIST-hive-v1",
+        "capture_id": "cli-e40e2f8a5920",
+        "captured_at": "2026-08-22T07:22:43.489469+00:00",
+        "source": "kai_cli",
+        "platform": "hive",
+        "message_count": 1
+      },
+      "essence": [
+        "user: Fully implemented medium daemon, MCP stdio, file graph, FETCH_ALLOWLISTED, CI workflow, Kai CLI. No more hypothecation."
+      ],
+      "decisions": [],
+      "threads": [],
+      "architecture_tags": []
+    },
+    "hint": "Write prompt_text to medium_channel or conversation_logs."
+  },
+  "inject_target": "hive"
+}

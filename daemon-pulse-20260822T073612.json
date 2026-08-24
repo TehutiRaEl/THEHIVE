@@ -1,0 +1,20 @@
+{
+  "ts": "2026-08-22T07:36:12.813862+00:00",
+  "daemon": "medium_channel",
+  "processed_this_run": 1,
+  "total_cycles": 3,
+  "results": [
+    {
+      "bridge_id": "inbox-mcp-test-write",
+      "source": "mcp-test-write.md",
+      "cycle": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/cycles/2026-08-22-mcp-test-write.md",
+      "store": {
+        "id": "inbox-mcp-test-write",
+        "neuromcp_path": "/home/workdir/artifacts/TheCopy-ops/bridge/implementation/bridges/inbox-mcp-test-write.json",
+        "medium_path": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/outbox/bridge-inbox-mcp-test-write.json",
+        "stored_at": "2026-08-22T07:36:09.143137+00:00"
+      },
+      "ts": "2026-08-22T07:36:12.347625+00:00"
+    }
+  ]
+}

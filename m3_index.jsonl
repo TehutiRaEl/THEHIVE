@@ -1,0 +1,30 @@
+{"id": "cap-f9735045f0cb", "tags": [], "decisions": ["persistent medium"]}
+{"id": "cap-f9735045f0cb", "tags": [], "decisions": ["persistent medium"]}
+{"id": "cap-f7c8cb5114a2", "tags": ["phase 0", "ladybug"], "decisions": ["Phase 0 = federal USC + pure LadybugDB"]}
+{"id": "cap-f7c8cb5114a2", "tags": ["phase 0", "ladybug"], "decisions": ["Phase 0 = federal USC + pure LadybugDB"]}
+{"id": "cap-d37ac42e61d6", "tags": [], "decisions": ["persistent medium"]}
+{"id": "cap-d37ac42e61d6", "tags": [], "decisions": ["persistent medium"]}
+{"id": "cap-85e636c495cd", "tags": [], "decisions": ["persistent medium"]}
+{"id": "cap-85e636c495cd", "tags": [], "decisions": ["persistent medium"]}
+{"id": "inbox-test-daemon-item", "tags": [], "decisions": ["the medium daemon must process inbox to outbox"]}
+{"id": "inbox-test-daemon-item", "tags": [], "decisions": ["the medium daemon must process inbox to outbox"]}
+{"id": "inbox-2026-08-20-founder-persistent-medium", "tags": [], "decisions": []}
+{"id": "inbox-2026-08-20-founder-persistent-medium", "tags": [], "decisions": []}
+{"id": "mcp-079d8fcb7b1a", "tags": [], "decisions": ["MCP tools must call real Bridge pipeline"]}
+{"id": "mcp-079d8fcb7b1a", "tags": [], "decisions": ["MCP tools must call real Bridge pipeline"]}
+{"id": "inbox-mcp-test-write", "tags": [], "decisions": []}
+{"id": "inbox-mcp-test-write", "tags": [], "decisions": []}
+{"id": "cli-e40e2f8a5920", "tags": [], "decisions": []}
+{"id": "cli-e40e2f8a5920", "tags": [], "decisions": []}
+{"id": "pulse-095d12f4b8", "tags": ["phase0"], "decisions": []}
+{"id": "pulse-095d12f4b8", "tags": ["phase0"], "decisions": []}
+{"id": "mcp-0adeb66e52a7", "tags": [], "decisions": ["MCP tools must call real Bridge pipeline"]}
+{"id": "mcp-0adeb66e52a7", "tags": [], "decisions": ["MCP tools must call real Bridge pipeline"]}
+{"id": "mcp-958e941bec17", "tags": [], "decisions": ["MCP tools must call real Bridge pipeline"]}
+{"id": "mcp-958e941bec17", "tags": [], "decisions": ["MCP tools must call real Bridge pipeline"]}
+{"id": "inbox-mcp-test-write", "tags": [], "decisions": []}
+{"id": "inbox-mcp-test-write", "tags": [], "decisions": []}
+{"id": "pulse-cab94683df", "tags": ["phase0"], "decisions": []}
+{"id": "pulse-cab94683df", "tags": ["phase0"], "decisions": []}
+{"id": "mcp-e0fa8cb9c50b", "tags": [], "decisions": ["MCP tools must call real Bridge pipeline"]}
+{"id": "mcp-e0fa8cb9c50b", "tags": [], "decisions": ["MCP tools must call real Bridge pipeline"]}

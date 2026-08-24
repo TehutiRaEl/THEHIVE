@@ -1,0 +1,109 @@
+{
+  "id": "mcp-e0fa8cb9c50b",
+  "created_at": "2026-08-22T07:36:17.443896+00:00",
+  "captured": {
+    "id": "mcp-e0fa8cb9c50b",
+    "captured_at": "2026-08-22T07:36:17.442992+00:00",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "Decided MCP tools must call real Bridge pipeline."
+      }
+    ],
+    "decisions": [
+      "MCP tools must call real Bridge pipeline"
+    ],
+    "rejected_approaches": [],
+    "rationale": [],
+    "code": [],
+    "architecture": [],
+    "metadata": {
+      "source": "mcp_server",
+      "platform": "hive",
+      "tags": [
+        "mcp"
+      ],
+      "raw_keys": [
+        "conversation",
+        "id",
+        "platform",
+        "source",
+        "tags"
+      ]
+    }
+  },
+  "compressed": {
+    "header": {
+      "protocol": "AIST-hive-v1",
+      "capture_id": "mcp-e0fa8cb9c50b",
+      "captured_at": "2026-08-22T07:36:17.442992+00:00",
+      "source": "mcp_server",
+      "platform": "hive",
+      "message_count": 1
+    },
+    "essence": [
+      "user: Decided MCP tools must call real Bridge pipeline."
+    ],
+    "memory": {
+      "code_blocks": 0,
+      "code_previews": [],
+      "metadata": {
+        "source": "mcp_server",
+        "platform": "hive",
+        "tags": [
+          "mcp"
+        ],
+        "raw_keys": [
+          "conversation",
+          "id",
+          "platform",
+          "source",
+          "tags"
+        ]
+      }
+    },
+    "decisions": [
+      "MCP tools must call real Bridge pipeline"
+    ],
+    "threads": [],
+    "rejected": [],
+    "architecture_tags": [],
+    "stats": {
+      "approx_input_chars": 49,
+      "approx_output_chars": 568
+    }
+  },
+  "store": {
+    "id": "mcp-e0fa8cb9c50b",
+    "neuromcp_path": "/home/workdir/artifacts/TheCopy-ops/bridge/implementation/bridges/mcp-e0fa8cb9c50b.json",
+    "medium_path": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/outbox/bridge-mcp-e0fa8cb9c50b.json",
+    "stored_at": "2026-08-22T07:36:18.531697+00:00"
+  },
+  "injection": {
+    "target": "hive",
+    "bridge_id": "mcp-e0fa8cb9c50b",
+    "mode": "hive_file",
+    "operator_gate": true,
+    "prompt_text": "[HIVE BRIDGE INJECT \u2192 hive]\nContinue from this compressed session context. Do not invent prior work.\n\n## Header\n{\n  \"protocol\": \"AIST-hive-v1\",\n  \"capture_id\": \"mcp-e0fa8cb9c50b\",\n  \"captured_at\": \"2026-08-22T07:36:17.442992+00:00\",\n  \"source\": \"mcp_server\",\n  \"platform\": \"hive\",\n  \"message_count\": 1\n}\n\n## Essence\n- user: Decided MCP tools must call real Bridge pipeline.\n\n## Decisions\n- MCP tools must call real Bridge pipeline\n\n## Open threads\n\n## Architecture tags\n(none)",
+    "structured": {
+      "header": {
+        "protocol": "AIST-hive-v1",
+        "capture_id": "mcp-e0fa8cb9c50b",
+        "captured_at": "2026-08-22T07:36:17.442992+00:00",
+        "source": "mcp_server",
+        "platform": "hive",
+        "message_count": 1
+      },
+      "essence": [
+        "user: Decided MCP tools must call real Bridge pipeline."
+      ],
+      "decisions": [
+        "MCP tools must call real Bridge pipeline"
+      ],
+      "threads": [],
+      "architecture_tags": []
+    },
+    "hint": "Write prompt_text to medium_channel or conversation_logs."
+  },
+  "inject_target": "hive"
+}

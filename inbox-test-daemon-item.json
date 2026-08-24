@@ -1,0 +1,125 @@
+{
+  "id": "inbox-test-daemon-item",
+  "created_at": "2026-08-22T07:22:16.695094+00:00",
+  "captured": {
+    "id": "inbox-test-daemon-item",
+    "captured_at": "2026-08-22T07:22:16.693994+00:00",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "We decided the medium daemon must process inbox to outbox. Rejected leaving founder drops unprocessed. Because continuity across sessions is the point."
+      }
+    ],
+    "decisions": [
+      "the medium daemon must process inbox to outbox"
+    ],
+    "rejected_approaches": [
+      "leaving founder drops unprocessed"
+    ],
+    "rationale": [
+      "continuity across sessions is the point"
+    ],
+    "code": [],
+    "architecture": [],
+    "metadata": {
+      "source": "medium_inbox",
+      "platform": "hive",
+      "tags": [
+        "medium",
+        "founder",
+        "inbox"
+      ],
+      "raw_keys": [
+        "conversation",
+        "id",
+        "platform",
+        "source",
+        "tags",
+        "text"
+      ]
+    }
+  },
+  "compressed": {
+    "header": {
+      "protocol": "AIST-hive-v1",
+      "capture_id": "inbox-test-daemon-item",
+      "captured_at": "2026-08-22T07:22:16.693994+00:00",
+      "source": "medium_inbox",
+      "platform": "hive",
+      "message_count": 1
+    },
+    "essence": [
+      "user: We decided the medium daemon must process inbox to outbox. Rejected leaving founder drops unprocessed. Because continuity across sessions is the point."
+    ],
+    "memory": {
+      "code_blocks": 0,
+      "code_previews": [],
+      "metadata": {
+        "source": "medium_inbox",
+        "platform": "hive",
+        "tags": [
+          "medium",
+          "founder",
+          "inbox"
+        ],
+        "raw_keys": [
+          "conversation",
+          "id",
+          "platform",
+          "source",
+          "tags",
+          "text"
+        ]
+      }
+    },
+    "decisions": [
+      "the medium daemon must process inbox to outbox"
+    ],
+    "threads": [
+      "rationale:continuity across sessions is the point"
+    ],
+    "rejected": [
+      "leaving founder drops unprocessed"
+    ],
+    "architecture_tags": [],
+    "stats": {
+      "approx_input_chars": 151,
+      "approx_output_chars": 803
+    }
+  },
+  "store": {
+    "id": "inbox-test-daemon-item",
+    "neuromcp_path": "/home/workdir/artifacts/TheCopy-ops/bridge/implementation/bridges/inbox-test-daemon-item.json",
+    "medium_path": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/outbox/bridge-inbox-test-daemon-item.json",
+    "stored_at": "2026-08-22T07:22:17.855678+00:00"
+  },
+  "injection": {
+    "target": "hive",
+    "bridge_id": "inbox-test-daemon-item",
+    "mode": "hive_file",
+    "operator_gate": true,
+    "prompt_text": "[HIVE BRIDGE INJECT \u2192 hive]\nContinue from this compressed session context. Do not invent prior work.\n\n## Header\n{\n  \"protocol\": \"AIST-hive-v1\",\n  \"capture_id\": \"inbox-test-daemon-item\",\n  \"captured_at\": \"2026-08-22T07:22:16.693994+00:00\",\n  \"source\": \"medium_inbox\",\n  \"platform\": \"hive\",\n  \"message_count\": 1\n}\n\n## Essence\n- user: We decided the medium daemon must process inbox to outbox. Rejected leaving founder drops unprocessed. Because continuity across sessions is the point.\n\n## Decisions\n- the medium daemon must process inbox to outbox\n\n## Open threads\n- rationale:continuity across sessions is the point\n\n## Architecture tags\n(none)",
+    "structured": {
+      "header": {
+        "protocol": "AIST-hive-v1",
+        "capture_id": "inbox-test-daemon-item",
+        "captured_at": "2026-08-22T07:22:16.693994+00:00",
+        "source": "medium_inbox",
+        "platform": "hive",
+        "message_count": 1
+      },
+      "essence": [
+        "user: We decided the medium daemon must process inbox to outbox. Rejected leaving founder drops unprocessed. Because continuity across sessions is the point."
+      ],
+      "decisions": [
+        "the medium daemon must process inbox to outbox"
+      ],
+      "threads": [
+        "rationale:continuity across sessions is the point"
+      ],
+      "architecture_tags": []
+    },
+    "hint": "Write prompt_text to medium_channel or conversation_logs."
+  },
+  "inject_target": "hive"
+}

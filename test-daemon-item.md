@@ -1,0 +1,1 @@
+We decided the medium daemon must process inbox to outbox. Rejected leaving founder drops unprocessed. Because continuity across sessions is the point.

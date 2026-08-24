@@ -1,0 +1,14 @@
+{
+  "ts": "2026-08-23T03:16:37.725550+00:00",
+  "event": "FOUNDER_TIER3_RESEARCH",
+  "grant_tier": 3,
+  "kill_switch": false,
+  "allowlist": [
+    "uscode.house.gov",
+    "www.govinfo.gov",
+    "www.courtlistener.com",
+    "github.com"
+  ],
+  "proposed_allowlist": [],
+  "note": "Tier 3 Research. Kill off. Live allowlist unchanged (4 domains). Kai may append proposed_allowlist[] only \u2014 never live allowlist. ask_before_new_domain=true enforced."
+}

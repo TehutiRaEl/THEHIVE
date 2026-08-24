@@ -1,0 +1,111 @@
+{
+  "id": "pulse-cab94683df",
+  "created_at": "2026-08-22T07:36:13.113428+00:00",
+  "captured": {
+    "id": "pulse-cab94683df",
+    "captured_at": "2026-08-22T07:36:13.113293+00:00",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "Recursive pulse: observe medium, phase0, nanuet; evolve strategies."
+      }
+    ],
+    "decisions": [],
+    "rejected_approaches": [],
+    "rationale": [],
+    "code": [],
+    "architecture": [
+      "phase0"
+    ],
+    "metadata": {
+      "source": "recursive_pulse",
+      "platform": "unknown",
+      "tags": [
+        "pulse",
+        "recursive"
+      ],
+      "raw_keys": [
+        "conversation",
+        "id",
+        "source",
+        "tags"
+      ]
+    }
+  },
+  "compressed": {
+    "header": {
+      "protocol": "AIST-hive-v1",
+      "capture_id": "pulse-cab94683df",
+      "captured_at": "2026-08-22T07:36:13.113293+00:00",
+      "source": "recursive_pulse",
+      "platform": "unknown",
+      "message_count": 1
+    },
+    "essence": [
+      "arch:phase0",
+      "user: Recursive pulse: observe medium, phase0, nanuet; evolve strategies."
+    ],
+    "memory": {
+      "code_blocks": 0,
+      "code_previews": [],
+      "metadata": {
+        "source": "recursive_pulse",
+        "platform": "unknown",
+        "tags": [
+          "pulse",
+          "recursive"
+        ],
+        "raw_keys": [
+          "conversation",
+          "id",
+          "source",
+          "tags"
+        ]
+      }
+    },
+    "decisions": [],
+    "threads": [],
+    "rejected": [],
+    "architecture_tags": [
+      "phase0"
+    ],
+    "stats": {
+      "approx_input_chars": 67,
+      "approx_output_chars": 586
+    }
+  },
+  "store": {
+    "id": "pulse-cab94683df",
+    "neuromcp_path": "/home/workdir/artifacts/TheCopy-ops/bridge/implementation/bridges/pulse-cab94683df.json",
+    "medium_path": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/outbox/bridge-pulse-cab94683df.json",
+    "stored_at": "2026-08-22T07:36:14.070648+00:00"
+  },
+  "injection": {
+    "target": "hive",
+    "bridge_id": "pulse-cab94683df",
+    "mode": "hive_file",
+    "operator_gate": true,
+    "prompt_text": "[HIVE BRIDGE INJECT \u2192 hive]\nContinue from this compressed session context. Do not invent prior work.\n\n## Header\n{\n  \"protocol\": \"AIST-hive-v1\",\n  \"capture_id\": \"pulse-cab94683df\",\n  \"captured_at\": \"2026-08-22T07:36:13.113293+00:00\",\n  \"source\": \"recursive_pulse\",\n  \"platform\": \"unknown\",\n  \"message_count\": 1\n}\n\n## Essence\n- arch:phase0\n- user: Recursive pulse: observe medium, phase0, nanuet; evolve strategies.\n\n## Decisions\n\n## Open threads\n\n## Architecture tags\nphase0",
+    "structured": {
+      "header": {
+        "protocol": "AIST-hive-v1",
+        "capture_id": "pulse-cab94683df",
+        "captured_at": "2026-08-22T07:36:13.113293+00:00",
+        "source": "recursive_pulse",
+        "platform": "unknown",
+        "message_count": 1
+      },
+      "essence": [
+        "arch:phase0",
+        "user: Recursive pulse: observe medium, phase0, nanuet; evolve strategies."
+      ],
+      "decisions": [],
+      "threads": [],
+      "architecture_tags": [
+        "phase0"
+      ]
+    },
+    "hint": "Write prompt_text to medium_channel or conversation_logs."
+  },
+  "inject_target": "hive"
+}

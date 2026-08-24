@@ -1,0 +1,109 @@
+{
+  "id": "inbox-mcp-test-write",
+  "created_at": "2026-08-22T07:36:07.497314+00:00",
+  "captured": {
+    "id": "inbox-mcp-test-write",
+    "captured_at": "2026-08-22T07:36:07.496428+00:00",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "MCP test write"
+      }
+    ],
+    "decisions": [],
+    "rejected_approaches": [],
+    "rationale": [],
+    "code": [],
+    "architecture": [],
+    "metadata": {
+      "source": "medium_inbox",
+      "platform": "hive",
+      "tags": [
+        "medium",
+        "founder",
+        "inbox"
+      ],
+      "raw_keys": [
+        "conversation",
+        "id",
+        "platform",
+        "source",
+        "tags",
+        "text"
+      ]
+    }
+  },
+  "compressed": {
+    "header": {
+      "protocol": "AIST-hive-v1",
+      "capture_id": "inbox-mcp-test-write",
+      "captured_at": "2026-08-22T07:36:07.496428+00:00",
+      "source": "medium_inbox",
+      "platform": "hive",
+      "message_count": 1
+    },
+    "essence": [
+      "user: MCP test write"
+    ],
+    "memory": {
+      "code_blocks": 0,
+      "code_previews": [],
+      "metadata": {
+        "source": "medium_inbox",
+        "platform": "hive",
+        "tags": [
+          "medium",
+          "founder",
+          "inbox"
+        ],
+        "raw_keys": [
+          "conversation",
+          "id",
+          "platform",
+          "source",
+          "tags",
+          "text"
+        ]
+      }
+    },
+    "decisions": [],
+    "threads": [],
+    "rejected": [],
+    "architecture_tags": [],
+    "stats": {
+      "approx_input_chars": 14,
+      "approx_output_chars": 530
+    }
+  },
+  "store": {
+    "id": "inbox-mcp-test-write",
+    "neuromcp_path": "/home/workdir/artifacts/TheCopy-ops/bridge/implementation/bridges/inbox-mcp-test-write.json",
+    "medium_path": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/outbox/bridge-inbox-mcp-test-write.json",
+    "stored_at": "2026-08-22T07:36:09.143137+00:00"
+  },
+  "injection": {
+    "target": "hive",
+    "bridge_id": "inbox-mcp-test-write",
+    "mode": "hive_file",
+    "operator_gate": true,
+    "prompt_text": "[HIVE BRIDGE INJECT \u2192 hive]\nContinue from this compressed session context. Do not invent prior work.\n\n## Header\n{\n  \"protocol\": \"AIST-hive-v1\",\n  \"capture_id\": \"inbox-mcp-test-write\",\n  \"captured_at\": \"2026-08-22T07:36:07.496428+00:00\",\n  \"source\": \"medium_inbox\",\n  \"platform\": \"hive\",\n  \"message_count\": 1\n}\n\n## Essence\n- user: MCP test write\n\n## Decisions\n\n## Open threads\n\n## Architecture tags\n(none)",
+    "structured": {
+      "header": {
+        "protocol": "AIST-hive-v1",
+        "capture_id": "inbox-mcp-test-write",
+        "captured_at": "2026-08-22T07:36:07.496428+00:00",
+        "source": "medium_inbox",
+        "platform": "hive",
+        "message_count": 1
+      },
+      "essence": [
+        "user: MCP test write"
+      ],
+      "decisions": [],
+      "threads": [],
+      "architecture_tags": []
+    },
+    "hint": "Write prompt_text to medium_channel or conversation_logs."
+  },
+  "inject_target": "hive"
+}

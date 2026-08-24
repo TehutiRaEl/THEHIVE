@@ -1,0 +1,148 @@
+{
+  "id": "cap-f7c8cb5114a2",
+  "created_at": "2026-08-21T22:44:30.616694+00:00",
+  "captured": {
+    "id": "cap-f7c8cb5114a2",
+    "captured_at": "2026-08-21T22:44:30.616022+00:00",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "We decided Phase 0 uses LadybugDB. Rejected dual-write SurrealDB for now. Next: operator Chrome smoke when desktop available. Because mobile iOS only until Monday."
+      },
+      {
+        "role": "assistant",
+        "content": "Locked federal USC + Ladybug; medium channel persistent; operator MV3 skeleton tested."
+      }
+    ],
+    "decisions": [
+      "Phase 0 = federal USC + pure LadybugDB"
+    ],
+    "rejected_approaches": [
+      "SurrealDB dual-write in Phase 0"
+    ],
+    "rationale": [
+      "mobile iOS only until Monday"
+    ],
+    "code": [],
+    "architecture": [
+      "phase 0",
+      "ladybug"
+    ],
+    "metadata": {
+      "source": "pipeline_cli",
+      "platform": "hive",
+      "tags": [
+        "bridge",
+        "phase0",
+        "operator"
+      ],
+      "raw_keys": [
+        "conversation",
+        "decisions",
+        "id",
+        "platform",
+        "rejected_approaches",
+        "source",
+        "tags"
+      ]
+    }
+  },
+  "compressed": {
+    "header": {
+      "protocol": "AIST-hive-v1",
+      "capture_id": "cap-f7c8cb5114a2",
+      "captured_at": "2026-08-21T22:44:30.616022+00:00",
+      "source": "pipeline_cli",
+      "platform": "hive",
+      "message_count": 2
+    },
+    "essence": [
+      "arch:phase 0",
+      "arch:ladybug",
+      "user: We decided Phase 0 uses LadybugDB. Rejected dual-write SurrealDB for now. Next: operator Chrome smoke when desktop available. Because mobile iOS only until Monday.",
+      "assistant: Locked federal USC + Ladybug; medium channel persistent; operator MV3 skeleton tested."
+    ],
+    "memory": {
+      "code_blocks": 0,
+      "code_previews": [],
+      "metadata": {
+        "source": "pipeline_cli",
+        "platform": "hive",
+        "tags": [
+          "bridge",
+          "phase0",
+          "operator"
+        ],
+        "raw_keys": [
+          "conversation",
+          "decisions",
+          "id",
+          "platform",
+          "rejected_approaches",
+          "source",
+          "tags"
+        ]
+      }
+    },
+    "decisions": [
+      "Phase 0 = federal USC + pure LadybugDB"
+    ],
+    "threads": [
+      "rationale:mobile iOS only until Monday",
+      "We decided Phase 0 uses LadybugDB. Rejected dual-write SurrealDB for now. Next: operator Chrome smoke when desktop available. Because mobile iOS only until Monday."
+    ],
+    "rejected": [
+      "SurrealDB dual-write in Phase 0"
+    ],
+    "architecture_tags": [
+      "phase 0",
+      "ladybug"
+    ],
+    "stats": {
+      "approx_input_chars": 249,
+      "approx_output_chars": 1138
+    }
+  },
+  "store": {
+    "id": "cap-f7c8cb5114a2",
+    "neuromcp_path": "/home/workdir/artifacts/TheCopy-ops/bridge/implementation/bridges/cap-f7c8cb5114a2.json",
+    "medium_path": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/outbox/bridge-cap-f7c8cb5114a2.json",
+    "stored_at": "2026-08-21T22:44:31.868787+00:00"
+  },
+  "injection": {
+    "target": "grok",
+    "bridge_id": "cap-f7c8cb5114a2",
+    "mode": "clipboard_or_system_prompt",
+    "operator_gate": true,
+    "prompt_text": "[HIVE BRIDGE INJECT \u2192 grok]\nContinue from this compressed session context. Do not invent prior work.\n\n## Header\n{\n  \"protocol\": \"AIST-hive-v1\",\n  \"capture_id\": \"cap-f7c8cb5114a2\",\n  \"captured_at\": \"2026-08-21T22:44:30.616022+00:00\",\n  \"source\": \"pipeline_cli\",\n  \"platform\": \"hive\",\n  \"message_count\": 2\n}\n\n## Essence\n- arch:phase 0\n- arch:ladybug\n- user: We decided Phase 0 uses LadybugDB. Rejected dual-write SurrealDB for now. Next: operator Chrome smoke when desktop available. Because mobile iOS only until Monday.\n- assistant: Locked federal USC + Ladybug; medium channel persistent; operator MV3 skeleton tested.\n\n## Decisions\n- Phase 0 = federal USC + pure LadybugDB\n\n## Open threads\n- rationale:mobile iOS only until Monday\n- We decided Phase 0 uses LadybugDB. Rejected dual-write SurrealDB for now. Next: operator Chrome smoke when desktop available. Because mobile iOS only until Monday.\n\n## Architecture tags\nphase 0, ladybug",
+    "structured": {
+      "header": {
+        "protocol": "AIST-hive-v1",
+        "capture_id": "cap-f7c8cb5114a2",
+        "captured_at": "2026-08-21T22:44:30.616022+00:00",
+        "source": "pipeline_cli",
+        "platform": "hive",
+        "message_count": 2
+      },
+      "essence": [
+        "arch:phase 0",
+        "arch:ladybug",
+        "user: We decided Phase 0 uses LadybugDB. Rejected dual-write SurrealDB for now. Next: operator Chrome smoke when desktop available. Because mobile iOS only until Monday.",
+        "assistant: Locked federal USC + Ladybug; medium channel persistent; operator MV3 skeleton tested."
+      ],
+      "decisions": [
+        "Phase 0 = federal USC + pure LadybugDB"
+      ],
+      "threads": [
+        "rationale:mobile iOS only until Monday",
+        "We decided Phase 0 uses LadybugDB. Rejected dual-write SurrealDB for now. Next: operator Chrome smoke when desktop available. Because mobile iOS only until Monday."
+      ],
+      "architecture_tags": [
+        "phase 0",
+        "ladybug"
+      ]
+    },
+    "hint": "Paste at session start; pair with STANDING_CHANNEL.md if in Hive."
+  },
+  "inject_target": "grok"
+}

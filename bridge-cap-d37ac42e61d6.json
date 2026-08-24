@@ -1,0 +1,105 @@
+{
+  "id": "cap-d37ac42e61d6",
+  "created_at": "2026-08-21T22:55:52.115676+00:00",
+  "captured": {
+    "id": "cap-d37ac42e61d6",
+    "captured_at": "2026-08-21T22:55:52.115513+00:00",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "Decided medium channel is persistent. Next: MCP mesh."
+      }
+    ],
+    "decisions": [
+      "persistent medium"
+    ],
+    "rejected_approaches": [],
+    "rationale": [],
+    "code": [],
+    "architecture": [],
+    "metadata": {
+      "source": "unit_test",
+      "platform": "unknown",
+      "tags": [],
+      "raw_keys": [
+        "conversation",
+        "decisions",
+        "source"
+      ]
+    }
+  },
+  "compressed": {
+    "header": {
+      "protocol": "AIST-hive-v1",
+      "capture_id": "cap-d37ac42e61d6",
+      "captured_at": "2026-08-21T22:55:52.115513+00:00",
+      "source": "unit_test",
+      "platform": "unknown",
+      "message_count": 1
+    },
+    "essence": [
+      "user: Decided medium channel is persistent. Next: MCP mesh."
+    ],
+    "memory": {
+      "code_blocks": 0,
+      "code_previews": [],
+      "metadata": {
+        "source": "unit_test",
+        "platform": "unknown",
+        "tags": [],
+        "raw_keys": [
+          "conversation",
+          "decisions",
+          "source"
+        ]
+      }
+    },
+    "decisions": [
+      "persistent medium"
+    ],
+    "threads": [
+      "Decided medium channel is persistent. Next: MCP mesh."
+    ],
+    "rejected": [],
+    "architecture_tags": [],
+    "stats": {
+      "approx_input_chars": 53,
+      "approx_output_chars": 590
+    }
+  },
+  "store": {
+    "id": "cap-d37ac42e61d6",
+    "neuromcp_path": "/home/workdir/artifacts/TheCopy-ops/bridge/implementation/bridges/cap-d37ac42e61d6.json",
+    "medium_path": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/outbox/bridge-cap-d37ac42e61d6.json",
+    "stored_at": "2026-08-21T22:55:53.566464+00:00"
+  },
+  "injection": {
+    "target": "hive",
+    "bridge_id": "cap-d37ac42e61d6",
+    "mode": "hive_file",
+    "operator_gate": true,
+    "prompt_text": "[HIVE BRIDGE INJECT \u2192 hive]\nContinue from this compressed session context. Do not invent prior work.\n\n## Header\n{\n  \"protocol\": \"AIST-hive-v1\",\n  \"capture_id\": \"cap-d37ac42e61d6\",\n  \"captured_at\": \"2026-08-21T22:55:52.115513+00:00\",\n  \"source\": \"unit_test\",\n  \"platform\": \"unknown\",\n  \"message_count\": 1\n}\n\n## Essence\n- user: Decided medium channel is persistent. Next: MCP mesh.\n\n## Decisions\n- persistent medium\n\n## Open threads\n- Decided medium channel is persistent. Next: MCP mesh.\n\n## Architecture tags\n(none)",
+    "structured": {
+      "header": {
+        "protocol": "AIST-hive-v1",
+        "capture_id": "cap-d37ac42e61d6",
+        "captured_at": "2026-08-21T22:55:52.115513+00:00",
+        "source": "unit_test",
+        "platform": "unknown",
+        "message_count": 1
+      },
+      "essence": [
+        "user: Decided medium channel is persistent. Next: MCP mesh."
+      ],
+      "decisions": [
+        "persistent medium"
+      ],
+      "threads": [
+        "Decided medium channel is persistent. Next: MCP mesh."
+      ],
+      "architecture_tags": []
+    },
+    "hint": "Write prompt_text to medium_channel or conversation_logs."
+  },
+  "inject_target": "hive"
+}

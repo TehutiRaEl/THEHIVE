@@ -1,0 +1,22 @@
+{
+  "compression": {
+    "weight": 2.5000000000000013,
+    "successes": 15,
+    "failures": 0
+  },
+  "injection": {
+    "weight": 2.5000000000000013,
+    "successes": 15,
+    "failures": 0
+  },
+  "platforms": {
+    "hive": {
+      "successes": 14,
+      "failures": 0
+    },
+    "grok": {
+      "successes": 1,
+      "failures": 0
+    }
+  }
+}

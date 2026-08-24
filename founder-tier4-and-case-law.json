@@ -1,0 +1,17 @@
+{
+  "ts": "2026-08-23T03:20:08.944853+00:00",
+  "event": "FOUNDER_TIER4_AND_CASE_LAW",
+  "grant_tier": 4,
+  "kill_switch": false,
+  "allowlist": [
+    "uscode.house.gov",
+    "www.govinfo.gov",
+    "www.courtlistener.com",
+    "github.com",
+    "case.law"
+  ],
+  "promoted_to_live": [
+    "case.law"
+  ],
+  "note": "Tier 4 Directed. Kill off. case.law promoted to live allowlist. Kai may execute explicit Founder directives on allowlisted ground with full activity log. Still cannot exceed budgets, ignore Human Filter, or self-promote domains to live."
+}

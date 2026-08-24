@@ -1,0 +1,20 @@
+{
+  "ts": "2026-08-22T07:22:26.241026+00:00",
+  "daemon": "medium_channel",
+  "processed_this_run": 1,
+  "total_cycles": 1,
+  "results": [
+    {
+      "bridge_id": "inbox-2026-08-20-founder-persistent-medium",
+      "source": "2026-08-20-founder-persistent-medium.md",
+      "cycle": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/cycles/2026-08-22-2026-08-20-founder-persistent-medium.md",
+      "store": {
+        "id": "inbox-2026-08-20-founder-persistent-medium",
+        "neuromcp_path": "/home/workdir/artifacts/TheCopy-ops/bridge/implementation/bridges/inbox-2026-08-20-founder-persistent-medium.json",
+        "medium_path": "/home/workdir/artifacts/TheCopy-ops/bridge/medium_channel/outbox/bridge-inbox-2026-08-20-founder-persistent-medium.json",
+        "stored_at": "2026-08-22T07:22:22.838287+00:00"
+      },
+      "ts": "2026-08-22T07:22:26.067813+00:00"
+    }
+  ]
+}

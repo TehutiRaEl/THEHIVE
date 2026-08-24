@@ -1,0 +1,38 @@
+{
+  "ts": "2026-08-22T07:36:06.428917+00:00",
+  "steps": {
+    "medium": {
+      "ok": true,
+      "processed": 1
+    },
+    "bridge": {
+      "ok": true,
+      "id": "pulse-cab94683df",
+      "evolution": {
+        "optimize_compression": "prefer_tighter_essence_caps",
+        "optimize_injection": "injection_packet_ok"
+      }
+    },
+    "phase0": {
+      "nodes": 7,
+      "edges": 6,
+      "by_level": {
+        "root": 1,
+        "title": 3,
+        "part": 1,
+        "section": 2
+      },
+      "backend": "file_native",
+      "graph_dir": "/home/workdir/artifacts/TheCopy-ops/kaiel/legal_brain/phase0/graph"
+    },
+    "nanuet": {
+      "ok": true,
+      "status": "alive",
+      "backend": "file_native",
+      "active_memories": 2,
+      "pruned_memories": 1,
+      "wisdom_entries": 3,
+      "ts": "2026-08-22T07:36:16.267322+00:00"
+    }
+  }
+}

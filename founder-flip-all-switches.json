@@ -1,0 +1,105 @@
+{
+  "ts": "2026-08-22T07:36:00.590021+00:00",
+  "event": "FOUNDER_FLIP_ALL_SWITCHES",
+  "grant": {
+    "tier": 2,
+    "kill_switch": false,
+    "allowlist": [
+      {
+        "domain": "uscode.house.gov",
+        "actions": [
+          "fetch",
+          "open_tab",
+          "read_dom"
+        ],
+        "reason": "Phase 0 USC",
+        "added_by": "founder",
+        "added_at": "2026-08-22T07:35:22.791791+00:00"
+      },
+      {
+        "domain": "www.govinfo.gov",
+        "actions": [
+          "fetch",
+          "open_tab",
+          "read_dom"
+        ],
+        "reason": "Federal bulk",
+        "added_by": "founder",
+        "added_at": "2026-08-22T07:35:22.791791+00:00"
+      },
+      {
+        "domain": "www.courtlistener.com",
+        "actions": [
+          "fetch",
+          "open_tab",
+          "read_dom"
+        ],
+        "reason": "Cases",
+        "added_by": "founder",
+        "added_at": "2026-08-22T07:35:22.791791+00:00"
+      },
+      {
+        "domain": "github.com",
+        "actions": [
+          "fetch",
+          "open_tab"
+        ],
+        "reason": "Public Hive repos read",
+        "added_by": "founder",
+        "added_at": "2026-08-22T07:35:22.791791+00:00"
+      }
+    ],
+    "deny_list": [],
+    "budgets": {
+      "max_tabs_open_by_kai": 5,
+      "max_fetches_per_hour": 120,
+      "max_job_runtime_minutes": 30,
+      "max_dom_chars_read_per_page": 750000,
+      "ask_before_new_domain": true
+    },
+    "updated_at": "2026-08-22T07:35:22.791791+00:00",
+    "updated_by": "founder_permission_flip_all_2026-08-22",
+    "note": "All in-repo switches flipped ON under Founder permission. Tier 2 Fetch allowlist. Kill off. Seed+github allowlist. Raised budgets."
+  },
+  "status": {
+    "ts": "2026-08-22T07:36:00.590021+00:00",
+    "device_id": "hive-repo-sovereign",
+    "grant_tier": 2,
+    "kill_switch": false,
+    "device_budget": {
+      "max_tabs_open_by_kai": 5,
+      "max_fetches_per_hour": 120,
+      "max_job_runtime_minutes": 30,
+      "max_dom_chars_read_per_page": 750000,
+      "ask_before_new_domain": true
+    },
+    "allowlist_count": 4,
+    "done": [],
+    "in_progress": [],
+    "next": [
+      {
+        "job_id": "legal-p0-01",
+        "title": "Validate Phase0 file graph hierarchy",
+        "status": "pending",
+        "priority": 80
+      },
+      {
+        "job_id": "legal-p0-02",
+        "title": "Walk title-18 path",
+        "status": "pending",
+        "priority": 70
+      },
+      {
+        "job_id": "status-sync-01",
+        "title": "Sync grant to medium outbox",
+        "status": "pending",
+        "priority": 90
+      }
+    ],
+    "blocked": [],
+    "asking": [],
+    "narrative": "Grant Tier 2. Kill False. Allowlist 4 domains. Founder flip-all 2026-08-22 enforced in-repo.",
+    "updated_by": "founder_permission_flip_all_2026-08-22"
+  },
+  "queue_jobs": 4
+}
