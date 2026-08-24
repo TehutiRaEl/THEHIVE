@@ -1,0 +1,22 @@
+{
+  "tier": 4,
+  "kill_switch": false,
+  "allowlist": [
+    {"domain": "uscode.house.gov", "actions": ["fetch", "open_tab", "read_dom"], "reason": "Phase 0 USC", "added_by": "founder"},
+    {"domain": "www.govinfo.gov", "actions": ["fetch", "open_tab", "read_dom"], "reason": "Federal bulk", "added_by": "founder"},
+    {"domain": "www.courtlistener.com", "actions": ["fetch", "open_tab", "read_dom"], "reason": "Cases", "added_by": "founder"},
+    {"domain": "github.com", "actions": ["fetch", "open_tab"], "reason": "Public Hive repos read", "added_by": "founder"},
+    {"domain": "case.law", "actions": ["fetch", "open_tab"], "reason": "Caselaw bulk CAP path", "added_by": "founder"}
+  ],
+  "deny_list": [],
+  "proposed_allowlist": [],
+  "budgets": {
+    "max_tabs_open_by_kai": 5,
+    "max_fetches_per_hour": 120,
+    "max_job_runtime_minutes": 30,
+    "max_dom_chars_read_per_page": 750000,
+    "ask_before_new_domain": true
+  },
+  "updated_by": "founder_permission_tier4_and_case_law_2026-08-22",
+  "note": "Tier 4 Directed. Landed from sandbox session."
+}
