@@ -1,12 +1,13 @@
 # THEHIVE Call List (canonical)
 
-> **Status:** Draft for **founder acknowledgment**. Until you mark this accepted in the
-> Visionary Folder log + FOUNDERS_VISION appendix, agents treat this as the proposed
-> map of *what may be called* — not a license to invent new gates or spend paths.
+> **Status:** **Founder-accepted 2026-08-29.** Binding operational inventory for hive
+> planning. Session reply treated as “call list accepted.” Does **not** expand autonomy,
+> spend, or merge authority.
 >
 > **Date:** 2026-08-29  
 > **Authority:** Founder-directed (“add call list to visionary logs and founders vision;
-> acknowledge all calls; macro → micro; implement → wire → test → develop → deploy”).
+> acknowledge all calls; macro → micro; implement → wire → test → develop → deploy”).  
+> **Ack log:** `Project_file/Founders Visonary Folder/ANSWERED/2026-08-29-call-list-acknowledgment-accepted.md`
 
 ---
 
@@ -161,15 +162,9 @@ No step is skipped for “docs only” items that claim to be live.
 
 ## 5. Founder acknowledgment
 
-**Required from you (founder):**
+**Accepted 2026-08-29** by founder session reply. Inventory is binding for planning.
 
-1. Read this call list (or skim levels 2–3).  
-2. Confirm hierarchy + TownHall flow still match your intent.  
-3. Confirm the implement→deploy ladder is how you want work gated.  
-4. Mark acceptance in the Visionary Folder log (companion file) and/or reply
-   “call list accepted” so agents may treat this as binding inventory.
-
-Until then: **proposed inventory**, not constitutional law.
+Still does **not** expand spend/merge/constitution authority. PR #195 wire remains separate.
 
 ---
 
