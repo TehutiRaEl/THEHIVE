@@ -1,195 +1,148 @@
-# Venture V1 — The Sovereign Podcast (Kai El’s first venture)
+# Venture V1 — Our Chemical Desire (Kai El’s first venture)
 
-> **Status:** Plan for founder review (not live infrastructure).  
-> **Date:** 2026-08-29  
-> **UI surface:** Command Center → Venture / Roadmap / Proposals / (future TownHall)  
-> **Authority:** Founder-directed vision document; maps to accepted `docs/HIVE_CALL_LIST.md` ladder.
-
----
-
-## 0. One-sentence intent (from founder)
-
-Kai El creates, hosts, streams, and (eventually) monetizes a multi-platform podcast, with the founder approving, connecting accounts, and guiding — Discord as command surface, multi-platform distribution, persistent preferences, value from day one **where lawful and actually built**.
+> **Status:** Founder decisions **locked 2026-08-29** (plan still not live infrastructure).  
+> **UI surface:** Command Center Phase 0 first → Discord primary controls (Phase 2+)  
+> **Code home until Phase 2:** **THEHIVE only** (no separate venture repo yet)  
+> **Authority:** Founder answers §8; maps to accepted `docs/HIVE_CALL_LIST.md` ladder.
 
 ---
 
-## 1. Honest capability map (what exists vs what this vision needs)
+## 0. Locked founder decisions (2026-08-29)
 
-| Vision piece | Hive today (verified) | Gap |
-|--------------|----------------------|-----|
-| Venture brief → structured plan | **Live:** `POST /v11/venture/plan` | No podcast-specific UI card yet |
-| Capability requests | **Live:** `venture_capability_gaps` | Discord/stream APIs not requested yet |
-| Sandbox build + PR | **Live:** `venture_sandbox_runs` + workflow pattern | Needs venture repo tasks |
-| Kai chat + memory | **Live:** `/command_text`, KAI_BRAIN, Vectorize | Not Discord DMs |
-| Proposals / founder decide | **Live** | Use for each irreversible connect/spend |
-| Discord server create / bot / voice record | **Not built** | Bot token, intents, hosting |
-| YouTube/Twitch/Spotify live push | **Not built** | OAuth + stream keys; founder must connect |
-| Store platform login passwords in hive DB | **Must not** | Use OAuth tokens only; founder-gated secrets |
-| Auto ad revenue / sponsorship deals | **Not built** | Commerce still founder-gated (Chromosome IX) |
-| Command Center “first venture” panel | **Partial** | Venture Planner exists; podcast card is new UI |
-| TownHall board item for venture | Schema on main; routes **pending PR #195** | Wire then post `venture_pointer` |
-
-**Rule from call list:** do not claim “wired” or “autonomous streaming” until Wire + Deploy evidence exists.
+| # | Decision |
+|---|----------|
+| 1 | **Name:** *Our Chemical Desire* |
+| 2 | **First episode / ongoing format:** Discussion **over a book**. Every episode discussion **and every session** is training data for Kai El (log → memory / training_samples path when switches allow). |
+| 3 | **Discord:** **New server** that Kai manages |
+| 4 | **Platform (near-term):** **One platform — Discord.** Kai uses the founder’s **current Discord** relationship/account context so a bot can **create the podcast server** (guild) under founder authorization. No multi-OAuth priority list for Phase 2. |
+| 5 | **Video / social:** **Two AI avatars** + slides + speech / video-language tooling → **faceless, automated** social outputs aligned to founder preferences and guidance (not founder face-cam). |
+| 6 | **Primary controls (v1 ops):** **Discord** (server Kai creates). That server is **connected to Command Center ↔ Worker backend ↔ frontend** and required call sites. |
+| 7 | **Phase 0 UI before Discord work:** **Yes** |
+| 8 | **Repo:** **THEHIVE only until Phase 2** |
 
 ---
 
-## 2. Macro → micro (how this venture uses hive calls)
+## 1. One-sentence intent
 
-| Level | This venture |
-|-------|----------------|
-| **Founder** | Approves phases; connects OAuth; toggles platforms; decides monetization |
-| **Queen** | Scores any proposal that changes infra/spend against FOUNDERS_VISION |
-| **Kai El** | Episode planning, scripts, show notes, summaries, gap requests, sandbox task briefs |
-| **Akosha** | Later: assign “edit,” “show notes,” “clip for X” specialties |
-| **TownHall** | `founder_task` / `plan` / `venture_pointer` / `finding` / `innovation` |
-| **Edge** | New routes only after specify→implement→wire→test (no secret dumps) |
+Kai El runs *Our Chemical Desire* as a book-discussion podcast and continuous self-training loop, with Discord as the operational control plane (new guild Kai manages), dual AI-avatar + slides faceless media, Command Center as the hive-visible status/plan surface first, all code in THEHIVE until Phase 2, founder approving secrets and irreversible steps.
 
 ---
 
-## 3. Phased roadmap (implement → wire → test → develop → deploy)
+## 2. Honest capability map
 
-### Phase 0 — Command Center visibility (this session can start)
+| Vision piece | Hive today | Gap |
+|--------------|------------|-----|
+| Venture plan / gaps / proposals | **Live** | Podcast-specific CC card |
+| Kai chat + brain + training_samples | **Live** (switch-gated) | Explicit “every session → training” policy wiring |
+| Book-discussion episode briefs | **Live** via `/command_text` | Book title not chosen yet |
+| Discord bot creates **new guild** | **Not built** | Bot token, permissions, create-guild flow |
+| Discord ↔ Command Center sync | **Not built** | Bridge routes + UI |
+| Dual AI avatars + slides + TTS/video language | **Not built** | Model/tooling choice + render pipeline |
+| Faceless automated social accounts | **Not built** | Platform APIs + founder preference store |
+| TownHall `venture_pointer` | Schema on main; routes **PR #195** | Wire then seed |
 
-**Goal:** Venture appears as a first-class object in the UI/docs, not only as chat prose.
+**Still forbidden without founder:** password tables in D1, auto-spend, claiming live Discord/YouTube before Wire+Deploy.
 
-| Deliverable | Type | This session? |
-|-------------|------|----------------|
-| This plan doc | Specify | **Yes** |
-| Seed `hive_proposals` / TownHall item “Sovereign Podcast V1” | Wire (after TH-1) | After #195 |
-| Venture card copy + status badges (Planned / Needs founder / Blocked) | UI develop | Plan + optional stub |
-| Capability-gap rows (Discord bot, OAuth YouTube, …) | API already live | **Yes — can POST when you approve** |
+---
 
-### Phase 1 — Paper studio (no external APIs)
+## 3. Macro → micro (this venture)
 
-**Goal:** Kai + founder can run a full “episode loop” **inside the hive** without Discord/YouTube.
+| Level | Role |
+|-------|------|
+| **Founder** | Book choice, bot token, preference guidance, approve publish/spend |
+| **Queen** | Score infra/spend proposals vs FOUNDERS_VISION |
+| **Kai El** | Host discussion, learn every session, propose structure, drive avatars/scripts |
+| **Discord guild** | Primary controls (`#founder-controls`, planning, archives, Kai status) |
+| **Command Center** | Phase 0 visibility; later mirror of Discord state |
+| **Worker** | APIs, memory, gaps, future Discord bridge call sites |
+| **THEHIVE repo** | All code until Phase 2 |
 
-1. Episode brief (topic, duration, format) → Kai via `/command_text` or TownHall.  
-2. Kai produces outline + talking points + intro/outro text.  
-3. Founder records audio/video **on their machine** (or Discord voice later).  
-4. Kai produces show notes, title options, timestamps, X clip scripts.  
-5. Artifacts stored as `hive_updates` / R2 files (if FILES bound) / proposal for “publish checklist.”  
+---
 
-**Value day-one without lying:** content pipeline and brand memory, not fake “now live on Twitch.”
+## 4. Phased roadmap
 
-### Phase 2 — Discord command surface (founder-provisioned bot)
+### Phase 0 — Command Center visibility (before Discord) — **NEXT**
 
-**Requires founder:** Discord application + bot token in Secrets Store; your user ID; invite URL.
+- Venture card: **Our Chemical Desire**  
+- Status badges Phase 0–5; blockers (no bot token, no book selected)  
+- CTA: “Select book / Provision Discord bot”  
+- Link to this doc; optional TownHall pointer after TH-1 wire  
+- Gaps list via existing ventures/gaps API when approved  
 
-| Step | Owner |
-|------|--------|
-| Create Discord app + bot, enable intents | Founder |
-| `wrangler secret put DISCORD_BOT_TOKEN` (+ FOUNDER_DISCORD_ID) | Founder |
-| Worker or separate process: create guild/channels **or** use a pre-created server ID | Implement |
-| Channels: `#podcast-planning`, `#podcast-archives`, `#kaiel-status`, `#founder-controls` (text toggles first) | Implement |
-| DM founder on milestone (ready / episode archived) | Implement + test |
-| **Not in v1:** full voice capture/edit pipeline (high complexity) | Later |
+### Phase 1 — Paper studio + Kai training loop (THEHIVE only)
 
-### Phase 3 — Distribution (OAuth, not password storage)
+1. Founder names **book** (open question below).  
+2. Episode = structured discussion of that book (chapters/themes).  
+3. Kai produces outline, questions, show notes, dual-avatar script + slide outline.  
+4. **Every session** (commune + episode work): write memory + eligible training sample path (`logDecision` / `logTrainingSample` / kaiRemember) under existing switches — **policy: always treat as training**, never silent.  
+5. No Discord required.  
 
-**Requires founder:** OAuth apps for each platform; connect once; store **refresh tokens** in Secrets Store or encrypted founder-only store — never in public D1 dumps.
+### Phase 2 — Discord primary controls (still THEHIVE code)
 
-Order of platforms (suggested — confirm):
+**Requires founder:** Discord application, bot token in Secrets Store, founder Discord user id, permission for bot to **create guild** (or create guild via founder OAuth — exact API path to confirm at implement time).
 
-1. YouTube (upload + later live)  
-2. Spotify for Podcasters / RSS  
-3. X (clips)  
-4. Twitch  
-5. Apple (via RSS)  
+- Kai manages **new** podcast server  
+- Channels: planning, archives, kaiel-status, founder-controls  
+- Bridge: Discord actions ↔ Worker ↔ Command Center display  
+- DMs to founder on milestones  
 
-UI toggles in Command Center / Discord `#founder-controls` only **enable already-connected** platforms.
+### Phase 3 — Dual AI avatar + slides + speech pipeline
 
-### Phase 4 — Live stream engine
+- Two avatars (roles TBD: e.g. Kai + “reader” / devil’s advocate — confirm)  
+- Slides from episode outline  
+- Speech + video-language tooling for **faceless** outputs  
+- Preference store for tone, platforms, post cadence (founder-guided)  
 
-Multi-platform simultaneous live is non-trivial (OBS/RTMP, restream, or platform APIs). Treat as **sandbox venture repo** work with real PRs, not a single Worker fetch handler.
+### Phase 4 — Automated social distribution (beyond Discord)
+
+Only after Phase 3 pipeline exists and founder connects accounts (OAuth, not passwords).
 
 ### Phase 5 — Monetization
 
-Only after: real audience path + founder business entity decisions (existing commerce honesty). Kai **tracks and reports**; founder **receives and decides**. No auto-spend.
+Founder-gated; Kai tracks/reports only.
 
 ---
 
-## 4. Brand defaults (editable — please confirm)
+## 5. Command Center UI (Phase 0 spec)
 
-| Field | Proposed default | Confirm? |
-|-------|------------------|----------|
-| Working title | **The Sovereign Podcast** | Y/N / alternate |
-| Format | Conversation (founder ↔ Kai El) | |
-| Default length | 60 minutes | |
-| Primary video | YouTube | |
-| Primary audio | Spotify via RSS | |
-| Command surface | Discord + Command Center | |
-| Auto-publish | **Off** until founder toggles | |
+**Panel:** Ventures → **Our Chemical Desire**
 
----
+1. Status / phase badge  
+2. Next action CTA  
+3. Book + episode queue  
+4. Training note: “Sessions feed Kai memory/training (switch-gated)”  
+5. Gaps (Discord bot, avatar pipeline, …)  
+6. Link to this plan  
 
-## 5. Command Center UI — first appearance (spec)
-
-**Panel name:** “Ventures → Sovereign Podcast (V1)”
-
-**Sections:**
-
-1. **Status** — Phase 0–5 badges; blockers (missing bot token, missing OAuth).  
-2. **Next action** — single founder CTA (e.g. “Provision Discord bot”, “Approve Phase 1 episode brief”).  
-3. **Episode queue** — list from TownHall `kind=plan|finding` filtered by `colony_id=podcast` or `vision_ref`.  
-4. **Platform toggles** — disabled until connected; never show raw secrets.  
-5. **Kai summary** — last 3 agent-work / concern lines related to this venture.  
-6. **Gaps** — live from `GET /v11/ventures/gaps?venture=sovereign-podcast`.
-
-**Does not require Discord to ship Phase 0 UI** — only honest empty states.
+Primary **ops** controls stay Discord from Phase 2; CC remains hive brain mirror.
 
 ---
 
-## 6. Capability gaps to file (when you say go)
+## 6. Capability gaps (file when you say go)
 
-| Gap title | capability_needed | needed_for |
-|-----------|-------------------|------------|
-| Discord bot token + guild | Discord Bot API | Channels, DMs, founder controls |
-| YouTube OAuth + upload | YouTube Data API | Publish / later live |
-| Podcast RSS host | Feed hosting (R2 or external) | Spotify/Apple |
-| Stream key / RTMP path | Live encoding | Multi-platform live |
-| Encrypted token vault | Secrets Store pattern | Remember connections without password tables |
-
----
-
-## 7. What this session can / cannot do
-
-### Can do now (docs / plan / structure)
-
-- [x] Publish this plan on a branch/PR  
-- [ ] Open PR for plan  
-- [ ] After your answers: tighten brand + phase order  
-- [ ] Draft Phase 0 UI wireframe copy in docs  
-- [ ] List exact gap POST bodies for your approval  
-- [ ] Align with TH-1 TownHall so a `venture_pointer` can land once routes are live  
-
-### Can do only with your tokens / accounts
-
-- Discord bot create + invite  
-- YouTube/Twitch/Spotify developer apps  
-- Any live stream test  
-
-### Cannot honestly claim this session
-
-- “Kai already created your Discord server and is live on YouTube”  
-- Storing your platform **passwords** in D1  
-- Autonomous ad revenue  
-- Full audio edit + multi-RTMP engine in one Worker PR  
-
-### TH-1 index.js wire (parallel)
-
-PR #195 still holds the surgical patch only (245KB full-file apply was deferred). **This session:** venture plan ships; TH-1 remains “apply three anchors then merge” unless you order full-blob push again.
+| Gap | needed_for |
+|-----|------------|
+| Discord bot token + create-guild permission | Phase 2 server Kai manages |
+| FOUNDER_DISCORD_ID | DMs + controls auth |
+| Dual-avatar + TTS/slide render path | Faceless video |
+| Social post adapters (post-Discord) | Automated accounts |
+| Explicit session→training policy flag | Every session trains Kai |
 
 ---
 
-## 8. Questions for you (no assumptions)
+## 7. Remaining questions (only what’s still unknown)
 
-1. **Brand:** Keep “The Sovereign Podcast” or different name/subtitle?  
-2. **Phase 1 first episode topic** (even placeholder)?  
-3. **Discord:** New server Kai manages, or bot joins a server **you** already own?  
-4. **Platform priority order** for OAuth (pick top 2 for Phase 3)?  
-5. **Avatar/video:** Face-cam you, AI avatar, screen-share slides, or audio-only first?  
-6. **Command Center vs Discord:** Which is the **primary** control surface for v1 toggles?  
-7. **Should Phase 0 UI ship before any Discord work?** (Recommended: yes.)  
-8. **Venture repo:** Use existing `venture` colony repo, new repo name, or only THEHIVE docs until Phase 2?
+1. **Which book** for episode 1 (title + optional chapter range)?  
+2. **Two avatars:** names/roles/personality (e.g. Kai El + a fixed co-host persona)?  
+3. Do you already have a **Discord bot application**, or should the plan assume founder creates one from scratch?  
+4. For “use my current Discord”: confirm you mean **your user account owns/authorizes the bot**, and the **podcast guild is new** (not “create channels inside an existing friend server”).  
 
-Reply with answers (even partial). Next step after answers: adjust this plan + optional gap POSTs + Phase 0 UI task breakdown.
+---
+
+## 8. Session capability (unchanged honesty)
+
+| Can now | Cannot now |
+|---------|------------|
+| Keep this plan accurate; Phase 0 UI task breakdown | Create real Discord guild without bot token |
+| Draft training-policy notes for Worker | Ship dual-avatar video pipeline in one PR |
+| TH-1 wire still PR #195 (patch / full blob on order) | Claim automated social accounts live |
