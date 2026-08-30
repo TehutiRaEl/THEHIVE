@@ -1,17 +1,18 @@
-# VISION — Sovereign Podcast (first Kai El venture)
+# VISION — Our Chemical Desire (first Kai El venture)
 
-**Date:** 2026-08-29  
-**Status:** Founder vision intake; operational plan in repo  
+**Date:** 2026-08-29 (decisions locked same day)  
 **Plan:** [`docs/ventures/PODCAST_VENTURE_V1.md`](../../../docs/ventures/PODCAST_VENTURE_V1.md)
 
-## Founder intent (compressed)
+## Locked
 
-Fully autonomous, self-orchestrating podcast venture: Discord as command center, multi-platform stream/distribution, Kai DMs, record/edit/publish loop, persistent preferences, value generation — founder approves, connects accounts, guides.
+- **Name:** Our Chemical Desire  
+- **Format:** Book discussion; every episode + every session trains Kai  
+- **Discord:** New server Kai manages; near-term **one platform = Discord** via founder’s Discord authorization  
+- **Media:** Two AI avatars + slides + speech/video-language → faceless automated social aligned to founder guidance  
+- **Controls:** Discord primary; connected to Command Center ↔ backend ↔ frontend  
+- **Phase 0 UI before Discord:** Yes  
+- **Repo:** THEHIVE only until Phase 2  
 
-## Hive honesty gate
+## Still open
 
-Maps to accepted call list ladder. Phase 0–1 can start without external APIs. Discord bot, OAuth, live multi-stream, and monetization are later phases requiring founder-provisioned secrets and explicit decides. No platform passwords in D1.
-
-## Open questions
-
-Listed in plan §8 (brand, first topic, Discord ownership, platform priority, video format, primary UI, Phase 0 before Discord, venture repo).
+Book title for ep 1; avatar personas; bot app existing or new; confirm new guild (not channels-only on an existing community server).
