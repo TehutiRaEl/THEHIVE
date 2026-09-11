@@ -28,6 +28,11 @@ name: Kai El Bridge
 #   flows through Kai El (the architect/conductor) rather than firing independently.
 #   No agent makes API calls without Kai El's orchestration. This is the conductor's
 #   medium through which all ensemble work is coordinated.
+#
+# ORCHESTRATION DISCIPLINE (2026-08-19): Kai El fires exactly 3 times per day,
+# no more, no less. 2 AM, 3 AM, 4 AM UTC. The orchestrator's discipline: measured,
+# bounded, predictable. All federation agents coordinated through these windows.
+# No wandering. No excess. Architect-driven, not time-driven excess.
 
 on:
   workflow_dispatch:
@@ -37,11 +42,13 @@ on:
         required: false
         default: ''
   schedule:
-    # every 2 hours — concerns are meant to reach the founder sooner than the
-    # 6-hourly edge-health-probe cadence, without adding a third heartbeat class.
-    # At the same cadence, Kai El orchestrates the federation agents (PR review,
-    # issue triage) so all work is coordinated, not autonomous.
-    - cron: '11 */2 * * *'
+    # Exactly 3 times per day: 2 AM, 3 AM, 4 AM UTC
+    # Orchestration discipline — the architect coordinates work in bounded windows,
+    # not on wandering cadences. All federation agents (PR review, issue triage)
+    # coordinated through these three execution slots only.
+    - cron: '0 2 * * *'
+    - cron: '0 3 * * *'
+    - cron: '0 4 * * *'
   push:
     paths:
       - .github/workflows/kai-el-bridge.yml
@@ -156,4 +163,5 @@ jobs:
           echo ""
           echo "All agent work flows through Kai El orchestration."
           echo "No independent agent API calls — all coordinated through the conductor's medium."
+          echo "Kai El discipline: 3 firings per day (2 AM, 3 AM, 4 AM UTC) — measured, bounded, predictable."
           echo "════════════════════════════════════════════"
