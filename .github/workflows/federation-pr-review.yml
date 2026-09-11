@@ -20,13 +20,10 @@ name: Federation PR Review
 # pattern, same honesty as every other gated resource in this hive (see
 # SWITCHBOARD.md / FLIP_THE_SWITCHES.md). Ships now; degrades to an honest, logged
 # no-op run until HIVE_FEDERATION_TOKEN is bound.
-
+github/workflows/federation-pr-review.yml
 on:
   workflow_dispatch: {}
-  schedule:
-    # every 6 hours — PR review is lower-urgency than the 2h Kai El concern bridge,
-    # higher-urgency than a once-daily sweep
-    - cron: '23 */6 * * *'
+  
   push:
     paths:
       - .github/workflows/federation-pr-review.yml
