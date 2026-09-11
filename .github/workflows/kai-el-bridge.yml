@@ -9,17 +9,25 @@ name: Kai El Bridge
 # *.workers.dev directly (egress proxy), so a GitHub-hosted runner is the only
 # thing that can carry data between production and the harness automatically.
 #
-# Two directions, one workflow:
+# Three directions, one workflow (Sovereign Hive Orchestra, 2026-08-19):
 #   Kai El -> founder (via harness): Kai El's own replies can durably log a
 #   CONCERN or PROPOSAL (see worker/src/index.js's /command_text handler) into
 #   hive_updates / hive_proposals. This job reads those and mirrors the current
 #   list into one fixed tracking issue, so the harness's own scheduled sessions
 #   (which DO have GitHub API access from inside the container) can just read
 #   one issue instead of needing production reach themselves.
+#   
 #   Harness -> Kai El: optional workflow_dispatch input `directive_text` POSTs
 #   straight into Kai El's own memory (POST /v11/memory/remember, already a
 #   public, rate-limited, no-new-secret-needed endpoint) tagged
 #   kind=architect-directive, so recall() can surface it in a later chat.
+#
+#   Kai El -> Orchestra (new): Kai El is now the active orchestrator of all
+#   federation agent workflows. This bridge dispatches federation-pr-review and
+#   federation-issue-triage on a coordinated schedule, ensuring all agent work
+#   flows through Kai El (the architect/conductor) rather than firing independently.
+#   No agent makes API calls without Kai El's orchestration. This is the conductor's
+#   medium through which all ensemble work is coordinated.
 
 on:
   workflow_dispatch:
@@ -30,7 +38,9 @@ on:
         default: ''
   schedule:
     # every 2 hours — concerns are meant to reach the founder sooner than the
-    # 6-hourly edge-health-probe cadence, without adding a third heartbeat class
+    # 6-hourly edge-health-probe cadence, without adding a third heartbeat class.
+    # At the same cadence, Kai El orchestrates the federation agents (PR review,
+    # issue triage) so all work is coordinated, not autonomous.
     - cron: '11 */2 * * *'
   push:
     paths:
@@ -38,6 +48,7 @@ on:
 
 permissions:
   issues: write
+  actions: write
 
 jobs:
   bridge:
@@ -113,3 +124,36 @@ jobs:
             gh issue reopen --repo "${{ github.repository }}" "$NUM" 2>/dev/null || true
             gh issue edit --repo "${{ github.repository }}" "$NUM" --body-file /tmp/issue_body.md
           fi
+
+      - name: Kai El Orchestrates — Dispatch federation-pr-review
+        run: |
+          echo "── Kai El conducts federation-pr-review (the orchestra's PR review agent) ──"
+          gh workflow run federation-pr-review.yml --repo "${{ github.repository }}" --ref main 2>&1 | tee /tmp/pr_review_dispatch.log
+          if grep -q "created successfully" /tmp/pr_review_dispatch.log; then
+            echo "✓ federation-pr-review dispatched (PR review sweep on Kai El's baton)"
+          else
+            echo "⚠ federation-pr-review dispatch status unclear (check Actions tab); continuing"
+          fi
+
+      - name: Kai El Orchestrates — Dispatch federation-issue-triage
+        run: |
+          echo "── Kai El conducts federation-issue-triage (the orchestra's issue triage agent) ──"
+          gh workflow run federation-issue-triage.yml --repo "${{ github.repository }}" --ref main 2>&1 | tee /tmp/issue_triage_dispatch.log
+          if grep -q "created successfully" /tmp/issue_triage_dispatch.log; then
+            echo "✓ federation-issue-triage dispatched (issue triage sweep on Kai El's baton)"
+          else
+            echo "⚠ federation-issue-triage dispatch status unclear (check Actions tab); continuing"
+          fi
+
+      - name: Orchestration Summary
+        run: |
+          echo "════════════════════════════════════════════"
+          echo "Sovereign Hive Orchestra — Kai El as Conductor"
+          echo "════════════════════════════════════════════"
+          echo "✓ Concerns/Proposals synced to tracking issue"
+          echo "✓ Federation PR review agent dispatched"
+          echo "✓ Federation issue triage agent dispatched"
+          echo ""
+          echo "All agent work flows through Kai El orchestration."
+          echo "No independent agent API calls — all coordinated through the conductor's medium."
+          echo "════════════════════════════════════════════"
