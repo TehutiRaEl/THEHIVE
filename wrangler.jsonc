@@ -98,6 +98,41 @@
       "database_name": "kai-el-brain",
       "database_id": "7c62dea9-64ba-4d38-a5bf-234d5a504f19"
     }
+    // Nanuet's own brain (2026-08-19, Phase Q-A). The founder's own words on
+    // 2026-08-10, right after choosing a separate database for Kai El: "the same
+    // for Nanuet later, when work on the Queen resumes." This is that resumption.
+    //
+    // ⚠️ BINDING IS COMMENTED OUT ON PURPOSE — and for the opposite reason to
+    // KAI_BRAIN above. Kai El's database genuinely exists, so binding it cannot
+    // fail the deploy. THE nanuet-brain DATABASE DOES NOT EXIST YET, and a D1
+    // binding pointing at a database that does not exist fails the deploy at
+    // build time — which would take the live Queen (heartbeat + API) down. Same
+    // flip-the-switch discipline as the Vectorize/R2/Queues blocks above, and
+    // the same reason those shipped commented first.
+    //
+    // Creating it is founder-only: it costs one of the account's 10 D1 slots
+    // (2/10 used as of the founder's own dashboard reading on 2026-08-10).
+    //
+    // TO ACTIVATE — all four steps, in this order:
+    //   1. npx wrangler d1 create nanuet-brain
+    //   2. npx wrangler d1 execute nanuet-brain --remote --file=worker/schema/nanuet-brain.sql
+    //   3. add a "," after the "}" that closes the KAI_BRAIN block above, then
+    //      uncomment the block below and paste the real database_id from step 1
+    //   4. Deploy, then check GET /v11/nanuet/brain reports provisioned:true
+    //
+    // Until then, worker/src/index.js's nanuetBrainOk()/nanuetWriteBlockedReason()
+    // guards make every read and write a clean no-op: /v11/nanuet/brain answers
+    // provisioned:false with the steps above, and Nanuet behaves exactly as she
+    // does today. Nothing crashes and nothing is silently skipped.
+    //
+    // Creating the database grants no behaviour on its own — every switch on the
+    // ladder (worker/schema/NANUET_AUTONOMY.md) is still off until the founder
+    // sets it. Provisioning and enabling are two separate decisions on purpose.
+    // ,{
+    //   "binding": "NANUET_BRAIN",
+    //   "database_name": "nanuet-brain",
+    //   "database_id": "<paste the id printed by `wrangler d1 create nanuet-brain`>"
+    // }
   ],
   // FOUNDER_KEY moved to Cloudflare's Secrets Store (an account-wide vault,
   // distinct from a classic per-Worker secret set via `wrangler secret put`)

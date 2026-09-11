@@ -5,11 +5,18 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      # docs/app/ is this workflow's OWN build output (frontend/ -> docs/app/, below) —
+      # excluded from the trigger for the same structural reason sync-planning-docs.yml's
+      # own header comment gives for its equivalent artifacts: a job must never be able to
+      # watch the path it commits to, or its own commit re-fires it. Real source changes
+      # come in via 'frontend/**' below instead.
+      - '!docs/app/**'
+      - 'frontend/**'
       - 'README.md'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -43,6 +50,46 @@ jobs:
           mkdir -p docs/memory
           cp memory/_graph.json docs/memory/_graph.json
           cp memory/_index.md docs/memory/_index.md
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # docs/app/ is a checked-in build artifact, not source — it drifted 15 days
+      # stale (2026-08-03 → 2026-08-18) because nothing ever rebuilt it after
+      # frontend/ changed, silently serving the founder a pre-fix Command Center
+      # (e.g. the Development Roadmap panel's founder-actions section, live-fetch-
+      # wired 2026-08-06, three days after this bundle's last build). Building it
+      # fresh on every relevant push is the fix; frontend/package.json's own
+      # `build:app` script is the exact, already-documented command.
+      - name: Build Command Center (frontend/ -> docs/app/)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build:app
+
+      - name: Commit and push docs/app only if the build actually changed
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add docs/app
+          if git diff --cached --quiet; then
+            echo "no change — docs/app already matches frontend/, nothing to commit"
+            exit 0
+          fi
+          git commit -m "$(cat <<'EOF'
+          [ROLE: Federation Engineer] Rebuild docs/app from frontend/
+
+          Automated, mechanical vite build (frontend/package.json's own build:app
+          script) — not a hand edit. See pages.yml's own header comment for why this
+          exists: docs/app went 15 days stale (2026-08-03 -> 2026-08-18) with nothing
+          rebuilding it after frontend/ changed.
+          EOF
+          )"
+          git push
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
