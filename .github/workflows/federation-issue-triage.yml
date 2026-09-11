@@ -17,12 +17,10 @@ name: Federation Issue Triage
 #     concerns/proposals queue) so the founder has one place to see federation-wide issue
 #     state instead of checking every colony repo separately.
 # Never transfers, closes, assigns, or reprioritizes an issue — comment/label only.
-
+github/workflows/federation-pr-review.yml
 on:
   workflow_dispatch: {}
-  schedule:
-    # offset from federation-pr-review.yml's :23 so both don't contend on shared runners
-    - cron: '41 */3 * * *'
+  
   push:
     paths:
       - .github/workflows/federation-issue-triage.yml
