@@ -42,3 +42,31 @@ A proposal is **not** aligned, regardless of how it's worded, if it: spends mone
 deletes data, grants itself new authority, executes an external action, or changes the
 Constitution — those categories always require the founder directly, no score high
 enough to skip that.
+
+---
+
+## Appendix A — Hive Call List (operational map)
+
+**Canonical inventory:** [`docs/HIVE_CALL_LIST.md`](./HIVE_CALL_LIST.md)  
+**Ack log:** `Project_file/Founders Visonary Folder/ANSWERED/2026-08-29-call-list-acknowledgment-accepted.md`  
+**Status:** **Founder-accepted 2026-08-29** — binding for hive planning; does not expand autonomy, spend, or merge power.
+
+### Why it sits under vision
+
+The Queen scores proposals against *this* file. Agents plan work against *named calls*.
+Without one acknowledged call list, “aligned” work can still invent parallel surfaces
+or claim something is live when only a doc exists. The call list is the **operational
+half** of vision: what may be invoked, by whom, at which tier, and how a call graduates
+from specify → implement → wire → test → develop → deploy.
+
+### Macro → micro (summary)
+
+Founder vision/logs → TownHall board → Kai plan/direct → Akosha assign → agents →
+Council review → Queen digest (against this vision) → board loop.  
+Irreversible acts remain founder calls (`founderAuthOk` / Access / decide routes).
+
+### Queen note
+
+When scoring, prefer proposals that wire or test a call already on the list over
+proposals that introduce unnamed new call surfaces without updating
+`HIVE_CALL_LIST.md` in the same change.
