@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - .github/workflows/th1-self-heal.yml
+      - scripts/apply-th1-wire.py
 jobs:
   apply:
     runs-on: ubuntu-latest
@@ -14,40 +15,19 @@ jobs:
         with:
           ref: grok/th1-index-wire-2026-08-29
           fetch-depth: 0
-      - name: Restore index.js and apply TH-1 patch
+      - name: Restore index.js from main and run surgical wire
         run: |
           set -euo pipefail
           git fetch origin main
-          echo "Trying bases..."
-          if git cat-file -e c56d518814aad8da5a399d1afd1696957f6ca891^{commit} 2>/dev/null; then
-            echo "Using commit c56d518"
-            git show c56d518814aad8da5a399d1afd1696957f6ca891:worker/src/index.js > worker/src/index.js
-          else
-            echo "Using origin/main"
-            git show origin/main:worker/src/index.js > worker/src/index.js
-          fi
+          git show origin/main:worker/src/index.js > worker/src/index.js
           wc -c worker/src/index.js
-          head -2 worker/src/index.js
-          if ! grep -q "THEHIVE Queen" worker/src/index.js; then
-            echo "Restored file does not look like the Worker" >&2
-            exit 1
-          fi
-          if grep -q townhall_items worker/src/index.js; then
-            echo "Already contains townhall_items — skip apply"
-          else
-            git apply -v docs/TH1_INDEX_WIRE.patch || {
-              echo "Strict apply failed; trying 3-way"
-              git apply --3way docs/TH1_INDEX_WIRE.patch || {
-                echo "Patch failed" >&2
-                exit 1
-              }
-            }
-          fi
+          head -1 worker/src/index.js
+          python3 scripts/apply-th1-wire.py
           node --check worker/src/index.js
-          grep -n "townhall_items\\|/townhall" worker/src/index.js | head
+          grep -n "townhall_items\|/townhall" worker/src/index.js | head -20
           git config user.name "th1-self-heal"
           git config user.email "th1-self-heal@users.noreply.github.com"
           git add worker/src/index.js
           git diff --cached --stat
-          git commit -m "TH-1: self-heal restore + surgical townhall wire (three anchors)" || echo "No changes"
+          git commit -m "TH-1: self-heal restore from main + surgical townhall wire" || echo "No changes"
           git push origin HEAD:grok/th1-index-wire-2026-08-29
