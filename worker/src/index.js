@@ -1,2 +1,2 @@
-// THEHIVE Queen — edge implementation of the Command Center API slice.
-// TH1_RESTORE_MARKER_v1
+// chunk test - if this works we proceed with full file in next attempts
+export const TH1 = true;
