@@ -1,0 +1,33 @@
+name: TH-1 Self-Heal Wire
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - .github/workflows/th1-self-heal.yml
+      - scripts/apply-th1-wire.py
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: grok/th1-index-wire-2026-08-29
+          fetch-depth: 0
+      - name: Restore index.js from main and run surgical wire
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:worker/src/index.js > worker/src/index.js
+          wc -c worker/src/index.js
+          head -1 worker/src/index.js
+          python3 scripts/apply-th1-wire.py
+          node --check worker/src/index.js
+          grep -n "townhall_items\|/townhall" worker/src/index.js | head -20
+          git config user.name "th1-self-heal"
+          git config user.email "th1-self-heal@users.noreply.github.com"
+          git add worker/src/index.js
+          git diff --cached --stat
+          git commit -m "TH-1: self-heal restore from main + surgical townhall wire" || echo "No changes"
+          git push origin HEAD:grok/th1-index-wire-2026-08-29
