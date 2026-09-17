@@ -1,1 +1,2 @@
-// RESTORE_PENDING — use artifacts/th1-wire-kit/worker/src/index.js.wired
+// THEHIVE Queen — edge implementation of the Command Center API slice.
+// TH1_RESTORE_MARKER_v1
