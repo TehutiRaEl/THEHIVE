@@ -1,10 +1,10 @@
 # Provider & Gateway Model Mapping
 
-**Branch:** `grok/providers-deepseek-kimi-2026-08`  
-**Date:** 2026-08-28  
-**Status:** Blueprint locked; code wiring is the next commit on this branch.
+**Branch:** `grok/providers-wire-2026-09-17`  
+**Date:** 2026-09-17  
+**Status:** Blueprint locked; **code wire PR in progress** (PROVIDERS + generate attempts).
 
-## Current live roster (main / pre-this-branch)
+## Current live roster (main / pre-wire)
 
 | id | label | role | secret |
 |----|-------|------|--------|
@@ -15,13 +15,11 @@
 | openrouter | OpenRouter | Open-source + free-tier models | OPENROUTER_API_KEY |
 | workers-ai | Cloudflare Workers AI | Deployment + runtime inference | (AI binding) |
 
-**Not present:** DeepSeek, Kimi/Moonshot as first-class providers or UI keys.
+**Adding:** DeepSeek, Kimi/Moonshot as first-class providers.
 
 ---
 
-## Target roster (this blueprint)
-
-Add two first-class providers; keep OpenRouter as multi-gateway fallback.
+## Target roster
 
 ```js
 const PROVIDERS = [
@@ -40,173 +38,31 @@ const PROVIDERS = [
 
 ## Direct API endpoints & default models (Aug 2026)
 
-### DeepSeek (first-class)
+### DeepSeek
+- Base: `https://api.deepseek.com` (`/chat/completions`)
+- Auth: `Authorization: Bearer ${DEEPSEEK_API_KEY}`
+- Default model: `deepseek-v4-pro` (override: `DEEPSEEK_MODEL`)
+- Fast: `deepseek-v4-flash`
 
-| Field | Value |
-|-------|--------|
-| Base URL | `https://api.deepseek.com` (OpenAI-compatible: `/chat/completions`) |
-| Auth | `Authorization: Bearer ${DEEPSEEK_API_KEY}` |
-| Default model | `deepseek-v4-pro` (reasoning / code) |
-| Fast alternative | `deepseek-v4-flash` |
-| Env override | `DEEPSEEK_MODEL` (optional) |
-| Notes | Old ids `deepseek-chat` / `deepseek-reasoner` retired after 2026-07-24. Thinking mode via body `thinking: { type: "enabled" }` optional. |
+### Kimi / Moonshot
+- Base: `https://api.moonshot.ai/v1`
+- Auth: `Authorization: Bearer ${MOONSHOT_API_KEY}` (alias `KIMI_API_KEY` accepted in wire)
+- Default model: `kimi-k3` (override: `KIMI_MODEL` / `MOONSHOT_MODEL`)
 
-### Kimi / Moonshot (first-class)
-
-| Field | Value |
-|-------|--------|
-| Base URL | `https://api.moonshot.ai/v1` |
-| Auth | `Authorization: Bearer ${MOONSHOT_API_KEY}` (alias accepted: `KIMI_API_KEY` in resolve path if desired) |
-| Default model | `kimi-k3` (flagship, ~1M context, always-thinking capable) |
-| Coding alternative | `kimi-k2.7-code` |
-| General alternative | `kimi-k2.6` |
-| Env override | `KIMI_MODEL` or `MOONSHOT_MODEL` |
-| Notes | `kimi-k2.5` / `moonshot-v1-*` sunset for new users (platform 2026-08-31). Prefer `kimi-k3`. |
-
-### OpenRouter (gateway — multi-model)
-
-| Field | Value |
-|-------|--------|
-| Base URL | `https://openrouter.ai/api/v1/chat/completions` |
-| Auth | `Authorization: Bearer ${OPENROUTER_API_KEY}` |
-| Default model | `openrouter/free` (auto free roster) |
-| Env pin | `OPENROUTER_MODEL` |
-
-#### OpenRouter model map (use when direct key absent or founder pins gateway)
-
-| Intent | OpenRouter model id |
-|--------|---------------------|
-| Free / cheapest auto | `openrouter/free` |
-| DeepSeek V4 Pro | `deepseek/deepseek-v4-pro` |
-| DeepSeek V4 Flash | `deepseek/deepseek-v4-flash` |
-| Kimi K3 (if listed) | `moonshotai/kimi-k3` (verify live `/models`) |
-| Kimi K2.6 | `moonshotai/kimi-k2.6` |
-| Kimi K2.7 Code | `moonshotai/kimi-k2.7-code` |
-| Claude via OR | `anthropic/claude-sonnet-4` (or current) |
-| Llama speed via OR | current free/paid Llama id from OR catalog |
-
-**Routing rule:** Prefer direct provider key when bound. If only `OPENROUTER_API_KEY` is bound, OpenRouter answers with `OPENROUTER_MODEL` or `openrouter/free`. Optional later: map `prefer: 'reasoning'` → try DeepSeek direct, then OpenRouter `deepseek/deepseek-v4-pro`, then Claude.
+### OpenRouter
+- Default: `openrouter/free` or `OPENROUTER_MODEL` pin
 
 ---
 
-## generate() attempt branches (to add)
+## Founder flip sequence (after this PR merges + deploy)
 
-```js
-deepseek: async () => {
-  if (!env.DEEPSEEK_API_KEY) return null;
-  const r = await fetch('https://api.deepseek.com/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: env.DEEPSEEK_MODEL || 'deepseek-v4-pro',
-      max_tokens: maxTokens,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: prompt },
-      ],
-    }),
-    signal: timeout(20000),
-  });
-  if (!r.ok) {
-    const body = await r.text().catch(() => '');
-    throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
-  }
-  const d = await r.json();
-  const text = (d?.choices?.[0]?.message?.content || '').trim();
-  if (!text) throw new Error('HTTP 200 but no usable text in response');
-  return {
-    text,
-    usage: d?.usage
-      ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null }
-      : null,
-  };
-},
+1. `wrangler secret put DEEPSEEK_API_KEY`
+2. `wrangler secret put MOONSHOT_API_KEY`
+3. Confirm `OPENROUTER_API_KEY` bound
+4. Redeploy Worker
+5. GET `/v11/llm/status` — expect deepseek/kimi in roster
+6. Optional pin-test via `provider=deepseek|kimi` on command_text
 
-kimi: async () => {
-  const key = env.MOONSHOT_API_KEY || env.KIMI_API_KEY;
-  if (!key) return null;
-  const r = await fetch('https://api.moonshot.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${key}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: env.KIMI_MODEL || env.MOONSHOT_MODEL || 'kimi-k3',
-      max_tokens: maxTokens,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: prompt },
-      ],
-    }),
-    signal: timeout(20000),
-  });
-  if (!r.ok) {
-    const body = await r.text().catch(() => '');
-    throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
-  }
-  const d = await r.json();
-  const text = (d?.choices?.[0]?.message?.content || '').trim();
-  if (!text) throw new Error('HTTP 200 but no usable text in response');
-  return {
-    text,
-    usage: d?.usage
-      ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null }
-      : null,
-  };
-},
-```
+## Out of scope
 
-OpenRouter branch stays as-is; optional enhancement:
-
-```js
-model: env.OPENROUTER_MODEL || 'openrouter/free',
-// Documented pins:
-// OPENROUTER_MODEL=deepseek/deepseek-v4-pro
-// OPENROUTER_MODEL=moonshotai/kimi-k2.6
-```
-
-`providerRoster` / `providerOrder` / `recordProviderHealth` / `/llm/status` pick up new ids automatically once they are in `PROVIDERS` and `attempts`.
-
----
-
-## Secrets (founder-only)
-
-| Secret | How |
-|--------|-----|
-| DEEPSEEK_API_KEY | Cloudflare Worker secret or Secrets Store |
-| MOONSHOT_API_KEY | Cloudflare Worker secret (Kimi platform key) |
-| OPENROUTER_API_KEY | Already documented; ensure bound + redeploy |
-| Optional | DEEPSEEK_MODEL, KIMI_MODEL, OPENROUTER_MODEL |
-
-Presence-only in `/debug/env` and readiness (F-001: never values).
-
----
-
-## UI
-
-Command Center ConnectedModels / `/llm/status` already map the full roster. After deploy + secrets, DeepSeek and Kimi rows appear with bound/health/usage — no separate frontend key form required unless you want explicit chips.
-
----
-
-## Founder flip sequence
-
-1. Merge/wire this branch’s code (PROVIDERS + attempts).
-2. `wrangler secret put DEEPSEEK_API_KEY`
-3. `wrangler secret put MOONSHOT_API_KEY`
-4. Confirm `OPENROUTER_API_KEY` bound; optional `OPENROUTER_MODEL=deepseek/deepseek-v4-flash`
-5. Redeploy Worker.
-6. GET `/v11/llm/status` — expect deepseek/kimi in roster; bound true after secrets.
-7. POST `/v11/command_text` with `{ "provider": "deepseek" }` / `{ "provider": "kimi" }` to pin-test.
-
----
-
-## Out of scope this PR
-
-- n8n workflow designer
-- GitHub PR/issue runner (preferred next tool for visibility)
-- Changing Groq model id (docs still list `llama-3.3-70b-versatile`; 404 may be account/catalog lag)
-- Money / social / scraping connectors
+n8n, GitHub runner, Groq model id change, money/social connectors.
