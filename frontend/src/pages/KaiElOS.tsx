@@ -14,6 +14,7 @@ import ConnectedModels from '../components/kai-os/ConnectedModels';
 import DreamLogs from '../components/kai-os/DreamLogs';
 import HiveUpdates from '../components/kai-os/HiveUpdates';
 import ProposalsPanel from '../components/kai-os/ProposalsPanel';
+import BodyLineagePanel from '../components/kai-os/BodyLineagePanel';
 import LegalLearning from '../components/kai-os/LegalLearning';
 import VenturePlanner from '../components/kai-os/VenturePlanner';
 import FilesPanel from '../components/kai-os/FilesPanel';
@@ -49,7 +50,7 @@ const FULL_TABS: Record<string, ComponentType> = {
   wow: WOW, 'no-mans-sky': NO_MANS_SKY, settings: SETTINGS,
 };
 
-type PanelId = 'updates' | 'proposals' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training' | 'roadmap' | 'grok-bridge';
+type PanelId = 'updates' | 'proposals' | 'body' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'dream' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training' | 'roadmap' | 'grok-bridge';
 
 function TabLoadFallback() {
   return (
@@ -61,11 +62,6 @@ function TabLoadFallback() {
 
 export default function KaiElOS() {
   const hive = useHiveData();
-  // Task 14: a real pushed update refreshes the shell immediately instead of
-  // waiting up to 30s for the next poll. hive.refresh() re-runs the same
-  // Promise.all useHiveData already does — this is additive, not a second
-  // source of truth, and a dropped/missed push still self-heals on the next
-  // poll tick either way.
   useCommandCenterSocket(() => hive.refresh());
   const wide = useIsWideViewport();
   const [forceDesktop, setForceDesktop] = useForceDesktop();
@@ -117,13 +113,17 @@ export default function KaiElOS() {
     );
   }
 
+  const dreamBody = <DreamLogs hive={hive} />;
+
   const panels: Partial<Record<PanelId, { title: string; body: React.ReactNode }>> = {
     updates: { title: 'Hive Updates', body: <HiveUpdates hive={hive} /> },
     proposals: { title: 'Proposals — the hive suggests, you decide', body: <ProposalsPanel /> },
+    body: { title: 'Body & Lineage · Option A proprioception', body: <BodyLineagePanel /> },
     legal: { title: 'Legal Learning · Commerce Under Law', body: <LegalLearning /> },
     venture: { title: 'Venture Planner · the Sub-Architect’s first workflow', body: <VenturePlanner /> },
     constitution: { title: 'The Constitution', body: <ConstitutionViewer /> },
-    'dream-logs': { title: 'Memories · Dream Logs', body: <DreamLogs hive={hive} /> },
+    'dream-logs': { title: 'Memories · Dream Logs', body: dreamBody },
+    dream: { title: 'Memories · Dream Logs', body: dreamBody },
     'workflows-panel': {
       title: 'Workflows', body: (
         <div className="max-w-md"><WorkflowsDrawer /></div>
@@ -133,7 +133,7 @@ export default function KaiElOS() {
     skills: {
       title: 'Active Skills', body: (
         <p className="text-slate-400 text-sm leading-relaxed max-w-lg">
-          {hive.agents.length} agents active. The hive's own skills (fable-debugger, research-to-dna,
+          {hive.agents.length} agents active. The hive&apos;s own skills (fable-debugger, research-to-dna,
           session-harvest, pocket-dimensions, anomaly-triage, merge-readiness, nine-miss-truths,
           skill-census, and more) live in <code className="text-cyan-glow">.claude/skills/</code> —
           run <code className="text-cyan-glow">skill-census</code> for a live audit of which are actually wired to something.
