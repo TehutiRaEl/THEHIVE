@@ -14,6 +14,7 @@ import ConnectedModels from '../components/kai-os/ConnectedModels';
 import DreamLogs from '../components/kai-os/DreamLogs';
 import HiveUpdates from '../components/kai-os/HiveUpdates';
 import ProposalsPanel from '../components/kai-os/ProposalsPanel';
+import BodyLineagePanel from '../components/kai-os/BodyLineagePanel';
 import LegalLearning from '../components/kai-os/LegalLearning';
 import VenturePlanner from '../components/kai-os/VenturePlanner';
 import FilesPanel from '../components/kai-os/FilesPanel';
@@ -49,7 +50,7 @@ const FULL_TABS: Record<string, ComponentType> = {
   wow: WOW, 'no-mans-sky': NO_MANS_SKY, settings: SETTINGS,
 };
 
-type PanelId = 'updates' | 'proposals' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training' | 'roadmap' | 'grok-bridge';
+type PanelId = 'updates' | 'proposals' | 'body' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training' | 'roadmap' | 'grok-bridge';
 
 function TabLoadFallback() {
   return (
@@ -97,6 +98,8 @@ export default function KaiElOS() {
   const handleSelect = useCallback((id: string) => {
     setNavOpen(false);
     if (id === 'commune') { setActiveSection(null); setCommuneOpen(true); return; }
+    // LeftNav uses 'dream'; panel key is 'dream-logs'
+    if (id === 'dream') { setActiveSection('dream-logs'); return; }
     setActiveSection(id);
   }, []);
 
@@ -120,6 +123,7 @@ export default function KaiElOS() {
   const panels: Partial<Record<PanelId, { title: string; body: React.ReactNode }>> = {
     updates: { title: 'Hive Updates', body: <HiveUpdates hive={hive} /> },
     proposals: { title: 'Proposals — the hive suggests, you decide', body: <ProposalsPanel /> },
+    body: { title: 'Body & Lineage · proprioception', body: <BodyLineagePanel /> },
     legal: { title: 'Legal Learning · Commerce Under Law', body: <LegalLearning /> },
     venture: { title: 'Venture Planner · the Sub-Architect’s first workflow', body: <VenturePlanner /> },
     constitution: { title: 'The Constitution', body: <ConstitutionViewer /> },
