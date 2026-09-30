@@ -7,10 +7,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Advisory signal only (founder 2026-09-30): does not block merge.
+# Localhost defaults are expected to be unreachable in GitHub-hosted CI.
+
 jobs:
   health-check:
     name: Check colony health endpoints
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -40,7 +44,9 @@ jobs:
     steps:
       - name: Health check — ${{ matrix.colony.name }}
         id: health
+        continue-on-error: true
         run: |
+          set +e
           url="${{ matrix.colony.url }}${{ matrix.colony.path }}"
           echo "Checking: $url"
 
@@ -61,8 +67,10 @@ jobs:
             echo "colony_status=unreachable" >> "$GITHUB_OUTPUT"
             echo "check_result=fail" >> "$GITHUB_OUTPUT"
           fi
+          exit 0
 
       - name: Report result
+        if: always()
         run: |
           colony="${{ matrix.colony.name }}"
           result="${{ steps.health.outputs.check_result }}"
@@ -70,17 +78,21 @@ jobs:
           if [ "$result" = "pass" ]; then
             echo "✓ $colony — $status"
           else
-            echo "✗ $colony — unreachable (non-blocking in CI; configure $colony URL in repo vars to enable real checks)"
+            echo "✗ $colony — unreachable (advisory only; set repo vars for live federation URLs)"
           fi
+          exit 0
 
   manifest-check:
     name: Verify colony manifests
     runs-on: ubuntu-latest
+    continue-on-error: true
     needs: health-check
     if: always()
     steps:
       - name: Check Queen manifest
+        continue-on-error: true
         run: |
+          set +e
           url="${{ vars.THEHIVE_URL || 'http://localhost:8080' }}/colony/manifest"
           echo "Fetching colony manifest from $url"
           response=$(curl -sf --max-time 10 "$url" 2>/dev/null) || true
@@ -90,9 +102,11 @@ jobs:
           else
             echo "Queen unreachable or manifest not available (configure THEHIVE_URL repo var)"
           fi
+          exit 0
 
       - name: Summary
+        if: always()
         run: |
-          echo "Colony health matrix complete."
+          echo "Colony health matrix complete (advisory — does not block merge)."
           echo "Set repository variables (THEHIVE_URL, NAR2_URL, etc.) to point at a live federation."
-          echo "Health failures are non-blocking on localhost defaults — real endpoints require live deployment."
+          exit 0
