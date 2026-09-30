@@ -1,0 +1,121 @@
+--- a/worker/src/index.js
++++ b/worker/src/index.js
+@@ -1,3 +1,40 @@
++import { withLens } from './lens/anchor.js';
++import { loadVoice } from './lens/voice.js';
++import { SEER } from './agents/seer.js';
++import { createGate, logGateRefusal, normalizeTitle } from './gates/create-gate.js';
++
++
++// ── Dual Lens helpers (feat/lens-perception-layer) ───────────────────────
++async function reviewProposal(env, proposal) {
++  const voice = await loadVoice(env);
++  const system = SEER.instruction + '\n\nVOICE.md:\n' + (voice || '(VOICE.md not yet populated — refuse until first compression)');
++  const gen = await generate(env, {
++    system,
++    prompt: 'Review this proposal and return ONLY the JSON object specified in your instructions.\n\n' + JSON.stringify(proposal),
++    maxTokens: 400,
++    prefer: SEER.prefer || 'reasoning',
++  });
++  if (!gen?.text) {
++    return { verdict: 'refuse', failing_question: 'seer-empty', reason: 'seer returned no text' };
++  }
++  try {
++    const m = gen.text.match(/\{[\s\S]*\}/);
++    return JSON.parse(m ? m[0] : gen.text);
++  } catch {
++    return { verdict: 'refuse', failing_question: 'seer-parse', reason: 'seer returned unparseable output' };
++  }
++}
++
++async function safeCreateProposal(env, DB, proposal, insertFn) {
++  const gate = await createGate(env, DB, proposal);
++  if (!gate.ok) {
++    await logGateRefusal(env, DB, gate, proposal);
++    return { ok: false, ...gate };
++  }
++  await insertFn(gate.normalized_title);
++  return { ok: true, normalized_title: gate.normalized_title };
++}
++
+ // THEHIVE Queen — edge implementation of the Command Center API slice.
+ // Same JSON shapes as backend/api/routes.py (/v11), persisted in D1.
+ // Auth: visitor-tier tokens issued freely from /auth/token and stored in D1.
+@@ -551,6 +588,8 @@
+     // the new row points back to what it counter-proposes, so the panel can
+     // show real lineage instead of two unrelated-looking rows.
+     'ALTER TABLE hive_proposals ADD COLUMN modifies_id INTEGER',
++    // Dual Lens create-gate: normalized theme key for Gate 1.
++    'ALTER TABLE hive_proposals ADD COLUMN normalized_title TEXT',
+     // Phase 2 usage visibility (2026-08-18): running totals on the existing
+     // bounded provider_health row, not a new growing log table — see that
+     // table's own CREATE TABLE comment below for the full reasoning.
+@@ -663,6 +702,10 @@
+        venture TEXT NOT NULL, task TEXT NOT NULL, branch TEXT, pr_url TEXT,
+        status TEXT NOT NULL DEFAULT 'running', linked_gap_id INTEGER,
+        decided_at TEXT, founder_note TEXT)`),
++    DB.prepare(`CREATE TABLE IF NOT EXISTS gate_refusals
++      (id INTEGER PRIMARY KEY AUTOINCREMENT,
++       ts TEXT NOT NULL, layer TEXT NOT NULL, reason TEXT NOT NULL,
++       title TEXT NOT NULL, body_excerpt TEXT, existing_id INTEGER, kind TEXT)`),
+     DB.prepare(`CREATE TABLE IF NOT EXISTS townhall_items
+       (id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL, updated_at TEXT NOT NULL,
+@@ -1315,7 +1358,7 @@
+ 
+   const snapshot = await hiveSnapshot(env, DB);
+   const gen = await generate(env, {
+-    system: job.system + '\n\nWrite plainly. Never invent a number or fact not present in the snapshot.',
++    system: withLens(job.system + '\n\nWrite plainly. Never invent a number or fact not present in the snapshot.'),
+     prompt: 'HIVE SNAPSHOT:\n' + snapshot + '\n\nYour finding:',
+     maxTokens: 220,
+     // The real routing (task 52): this job's work asks for a provider ROLE, and
+@@ -1349,9 +1392,24 @@
+   if (marker) {
+     const title = marker[1].trim().slice(0, 200);
+     ctx?.waitUntil?.((async () => {
++      const proposal = { kind: 'architect-proposal', title, body: gen.text };
++      const seerVerdict = await reviewProposal(env, proposal);
++      if (seerVerdict.verdict !== 'pass') {
++        await logGateRefusal(env, DB, {
++          layer: 'seer-' + (seerVerdict.failing_question || 'unknown'),
++          reason: seerVerdict.reason || 'seer refused',
++          existing_id: null,
++        }, proposal);
++        return;
++      }
++      const gate = await createGate(env, DB, proposal);
++      if (!gate.ok) {
++        await logGateRefusal(env, DB, gate, proposal);
++        return;
++      }
+       const { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote } = await queenDecide(env, 'https://thehive.sovereignhive.workers.dev/', { title, body: gen.text });
+-      await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note) VALUES (?,?,?,?,?,?,?,?,?)')
+-        .bind(new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote).run();
++      await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note, normalized_title) VALUES (?,?,?,?,?,?,?,?,?,?)')
++        .bind(new Date().toISOString(), 'architect-proposal', title, gen.text, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote, gate.normalized_title).run();
+     })());
+   }
+ 
+@@ -2920,12 +2978,22 @@
+         if (!title) return json({ detail: 'title required' }, 400);
+-        // The Queen's real approval power (switch 9) — see queenReview() above for the
+-        // full boundary, and queenDecide()/elderCouncilVeto() for the Elders' Council
+-        // check now layered on top. 'action-request' is already excluded above.
++        // Dual Lens create-gate before Queen (local wire 2026-09-30)
++        const proposal = { kind, title, body: detail };
++        const gate = await createGate(env, DB, proposal);
++        if (!gate.ok) {
++          await logGateRefusal(env, DB, gate, proposal);
++          return json({ ok: false, refused: true, layer: gate.layer, reason: gate.reason, existing_id: gate.existing_id ?? null }, 409);
++        }
++        // The Queen's real approval power (switch 9) — see queenReview() above for the
++        // full boundary, and queenDecide()/elderCouncilVeto() for the Elders' Council
++        // check now layered on top. 'action-request' is already excluded above.
+         const { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote } = await queenDecide(env, request.url, { title, body: detail });
+-        await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note) VALUES (?,?,?,?,?,?,?,?,?)')
+-          .bind(new Date().toISOString(), kind, title, detail, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote).run();
+-        return json({ ok: true });
++        await DB.prepare('INSERT INTO hive_proposals (ts, kind, title, body, status, alignment_score, decided_by, decided_at, elder_note, normalized_title) VALUES (?,?,?,?,?,?,?,?,?,?)')
++          .bind(new Date().toISOString(), kind, title, detail, qStatus, qScore, qDecidedBy, qDecidedAt, elderNote, gate.normalized_title).run();
++        return json({ ok: true, normalized_title: gate.normalized_title });
