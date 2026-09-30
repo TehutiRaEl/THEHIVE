@@ -20,10 +20,9 @@ name: Federation PR Review
 # pattern, same honesty as every other gated resource in this hive (see
 # SWITCHBOARD.md / FLIP_THE_SWITCHES.md). Ships now; degrades to an honest, logged
 # no-op run until HIVE_FEDERATION_TOKEN is bound.
-github/workflows/federation-pr-review.yml
+
 on:
   workflow_dispatch: {}
-  
   push:
     paths:
       - .github/workflows/federation-pr-review.yml
@@ -36,6 +35,7 @@ jobs:
   review:
     name: Real, evidence-cited first-pass review on every open federation PR
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       GH_TOKEN: ${{ secrets.HIVE_FEDERATION_TOKEN }}
     steps:
@@ -56,12 +56,6 @@ jobs:
       - name: Discover real colony repos from the authoritative manifest
         if: steps.guard.outputs.bound == 'true'
         run: |
-          # .queen/hive.yml is the single source of truth for colony repos — never a
-          # separate hardcoded list that could drift from it. Keep only real,
-          # TehutiRaEl-owned repos; skip THEHIVE itself (already covered by this
-          # repo's own review discipline) and any externally-owned/forked
-          # infrastructure entry (e.g. n8nio/n8n) this hive doesn't own and has no
-          # standing to auto-comment on.
           grep -oP '(?<=repo: )\S+' .queen/hive.yml \
             | grep -E '^TehutiRaEl/' \
             | grep -v '^TehutiRaEl/THEHIVE$' \
@@ -76,21 +70,16 @@ jobs:
           while IFS= read -r REPO; do
             [ -z "$REPO" ] && continue
             echo "── $REPO ──"
-            # A repo THEHIVE's manifest lists but this token can't see (private,
-            # not shared, deleted) degrades to a skipped line, never a hard failure —
-            # one inaccessible repo must not stop the rest of the sweep.
             PRS=$(gh pr list --repo "$REPO" --state open --json number,title,url,updatedAt,isDraft 2>/dev/null) || { echo "  (could not list PRs — skipping, token may lack access)"; continue; }
             COUNT=$(echo "$PRS" | jq 'length' 2>/dev/null || echo 0)
             echo "  $COUNT open PR(s)"
             for NUM in $(echo "$PRS" | jq -r '.[].number' 2>/dev/null); do
-              # Idempotency: skip if this workflow already left its marker comment.
               ALREADY=$(gh pr view "$NUM" --repo "$REPO" --json comments 2>/dev/null \
                 | jq -r --arg m "$MARKER" '[.comments[]? | select(.body | contains($m))] | length' 2>/dev/null || echo 0)
               if [ "${ALREADY:-0}" != "0" ]; then
                 echo "  PR #$NUM: already has a federation review comment, skipping"
                 continue
               fi
-              # Real evidence, not an opinion: mergeable state + real check-run status.
               PRVIEW=$(gh pr view "$NUM" --repo "$REPO" --json mergeable,mergeStateStatus,isDraft,title,updatedAt 2>/dev/null)
               MERGEABLE=$(echo "$PRVIEW" | jq -r '.mergeable // "UNKNOWN"')
               MERGE_STATE=$(echo "$PRVIEW" | jq -r '.mergeStateStatus // "UNKNOWN"')

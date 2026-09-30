@@ -17,10 +17,9 @@ name: Federation Issue Triage
 #     concerns/proposals queue) so the founder has one place to see federation-wide issue
 #     state instead of checking every colony repo separately.
 # Never transfers, closes, assigns, or reprioritizes an issue — comment/label only.
-github/workflows/federation-pr-review.yml
+
 on:
   workflow_dispatch: {}
-  
   push:
     paths:
       - .github/workflows/federation-issue-triage.yml
@@ -33,6 +32,7 @@ jobs:
   triage:
     name: Real first-pass label + urgent-flag + mirror-to-tracking-issue
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       GH_TOKEN: ${{ secrets.HIVE_FEDERATION_TOKEN }}
     steps:
@@ -53,9 +53,6 @@ jobs:
       - name: Discover real colony repos from the authoritative manifest
         if: steps.guard.outputs.bound == 'true'
         run: |
-          # Same discovery method as federation-pr-review.yml, deliberately kept
-          # identical rather than reinvented — one source of truth (.queen/hive.yml),
-          # never a separately-hardcoded repo list that could drift.
           grep -oP '(?<=repo: )\S+' .queen/hive.yml \
             | grep -E '^TehutiRaEl/' \
             | grep -v '^TehutiRaEl/THEHIVE$' \
@@ -83,7 +80,6 @@ jobs:
                 continue
               fi
               HAY=$(echo "$TITLE $BODY_TEXT" | tr '[:upper:]' '[:lower:]')
-              # Explicit, explainable keyword heuristics — never claimed as more than that.
               LABEL="needs-triage"
               case "$HAY" in
                 *bug*|*error*|*crash*|*broken*|*fails*) LABEL="bug" ;;
@@ -94,8 +90,6 @@ jobs:
               case "$HAY" in
                 *security*|*vulnerability*|*critical*|*production\ down*|*data\ loss*|*cve*) URGENT="true" ;;
               esac
-              # Create labels if missing (best-effort — a repo the token can create
-              # labels in gets them; one that can't still gets hive-triaged attempted).
               for L in "$LABEL" "hive-triaged" "urgent"; do
                 gh label create "$L" --repo "$REPO" --color "ededed" 2>/dev/null || true
               done
