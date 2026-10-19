@@ -1,0 +1,86 @@
+# AUDIT_SCHEMA — Fable Five-Level Truth + Classifications
+
+**Status:** DRAFT for first plan/vision domain audit PR  
+**Date:** 2026-10-12  
+**Authority:** Peer method accepted by founder domain choice (plan docs + visionary logs first)
+
+---
+
+## 1. Truth levels (L1–L5)
+
+| Level | Name | Evidence required |
+|------:|------|-------------------|
+| L1 | On disk | File exists in tree at a stated commit |
+| L2 | Wired | Reachable from a real runtime path |
+| L3 | Tested | Automated tests run and pass covering the claim |
+| L4 | Deployed | Present in production build, binding, or applied migration |
+| L5 | Verified-live | Observed working in production with citable probe/run ID |
+
+Below L1: **Unverified** — claimed somewhere, no evidence at any level.
+
+Report the **highest level the evidence supports**, not the aspirational level.
+
+---
+
+## 2. Classifications
+
+| Class | Meaning |
+|-------|---------|
+| live | L5 — verified in production |
+| wired | L2–L4 — reachable / tested / deployed but not verified-live |
+| waiting | On disk or designed; blocked on founder decision |
+| planned | Designed; not built |
+| hallucinated | Claim was **never true** |
+| stale | Claim **was true**, no longer true |
+| redundant | Exists twice; one copy should die |
+| gray | Ambiguous; founder bucket |
+| hole | Designed, not built, gap is material |
+
+---
+
+## 3. Hallucination types (plan/vision layer)
+
+1. Dead Vision — scoring doc describes abandoned goal  
+2. Ghost Campaign — task references work that was never real  
+3. Phantom Merge — log claims merge/completion without evidence  
+4. Vestigial Rule — protocol references deleted/renamed system  
+5. Named-But-Never-Built — capability named, no code  
+6. Assumed-Live — treated as production when only disk-verified  
+
+Code/runtime types (for later domain audits): log, doc, runtime, agent hallucinations (see peer review PART IV).
+
+---
+
+## 4. Truth hierarchy (proposed — founder ratify)
+
+**production > code > plan > narrative**
+
+When sources conflict, lower layers yield. Unresolved conflicts → `contradictions-*.md` without silent resolution.
+
+---
+
+## 5. Orphaned directive protocol (four lenses together)
+
+For each directive given, never implemented, never revoked:
+
+```
+DIRECTIVE / DATE / CONTEXT / STATUS
+WONDER / ADVOCATE / HOLMES / DA VINCI
+CONVERGENCE / CASE (1–4) / REASON
+```
+
+Cases: (1) alive unblocked (2) alive blocker removed (3) superseded silently (4) dead correctly.
+
+Founder decides. Gut-vs-lenses policy: **OPEN** until founder answers.
+
+---
+
+## 6. Domain order
+
+1. Plan docs + Founders Visionary logs (**first** — founder)  
+2. Worker  
+3. Backend / frontend / federation / economy (queued)
+
+---
+
+*This schema is the law of subsequent audit reports.*
