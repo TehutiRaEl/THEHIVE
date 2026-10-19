@@ -1,0 +1,69 @@
+# ACTIVE BATCH PLAN — Cockpit Frame · Plan/Vision Audit · Kai Fork Path
+**Date:** 2026-10-12  
+**Status:** ACTIVE · DO NOT EXPAND SPEND/MERGE WITHOUT FOUNDER  
+**Derived from:** HIVE_UPDATES 060 + ANSWERED peer-review thread
+
+---
+
+## North star (binding product frame)
+
+**Cockpit over portfolio:** one observation deck; Kai as operator in a sandboxed fork; founder merge authority; ventures as isolated laboratories. Governance exists to make the cockpit safe.
+
+---
+
+## Batch A — Log & orient (this delivery)
+
+| # | Task | Owner | Done when |
+|---|------|-------|-----------|
+| A1 | Deposit peer-review thread into HIVE_UPDATES + ANSWERED | Grok/Bridge | Files on `grok-strategist-main` or main via founder merge |
+| A2 | ACTIVE batch plan (this file) | Grok | Same |
+| A3 | Draft AUDIT_SCHEMA for plan/vision domain | Grok | `docs/audit/AUDIT_SCHEMA.md` in package/PR |
+
+## Batch B — First PR scope (plan docs + visionary logs)
+
+| # | Task | Notes |
+|---|------|-------|
+| B1 | Inventory all plan docs (12+) with dates + claimed authority | Pass 1 |
+| B2 | Inventory visionary logs (HIVE_UPDATES, VISION, ACTIVE, ANSWERED, MODIFICATIONS, conversation logs index) | Pass 1 logs — full text of multi-MB logs may be indexed by filename/date first |
+| B3 | Claim extraction (system vs intent) | Pass 2 |
+| B4 | Verification vs code/production/ledger where possible | Pass 3 — production > code > plan > narrative *(pending founder ratify)* |
+| B5 | Contradiction + authority maps | Passes 4–5 |
+| B6 | Hallucinations (never true) + stale (was true) | Distinct reports |
+| B7 | Orphaned directives + four-lens convergence templates | CASE 1–4 |
+| B8 | Improvements not on roadmap | Feed next campaigns |
+| B9 | Founder review hold — no self-merge | Constitutional |
+
+**PR artifacts (must all exist for "done"):**  
+`AUDIT_SCHEMA.md`, `plan-docs-*.md`, `visionary-logs-*.md`, `contradictions-*.md`, `authority-map-*.md`, `hallucinations-*.md`, `stale-claims-*.md`, `orphaned-directives-*.md`, `improvements-*.md`
+
+## Batch C — After audit merges (queued, not started)
+
+| # | Task | Depends |
+|---|------|---------|
+| C1 | Worker domain audit (same schema) | B done |
+| C2 | Wire **Kai fork workflow** (branch/worktree, commit from cycle, PR to founder) | Founder git policy |
+| C3 | Cockpit observation-deck slice (one venture end-to-end visible) | C2 partial OK |
+| C4 | Vision version log (timestamped CURRENT pointer) | Founder process |
+| C5 | One real venture loop (simplest) through Kai fork → founder merge | C2 |
+| C6 | Legal fence implementation per venture ToS | Design exists; build |
+| C7 | Learning loop (delta + novelty + brain write) | Meta-forensic + audit holes |
+| C8 | Answer OPEN Q5 (gut vs lenses) | Founder only |
+
+## Explicit non-goals for this batch
+
+- No autonomous real-money trading  
+- No mass cross-account credential grant without legal fence  
+- No self-merge  
+- No money/replication switches  
+- No claiming "portfolio live" until cockpit + one venture loop proven  
+
+## Founder decisions still needed
+
+1. Ratify truth hierarchy: production > code > plan > narrative?  
+2. Answer OPEN Q5 (gut vs lens disagreement).  
+3. Confirm Kai fork branch naming (`kai/*` vs `grok-strategist-main` vs dedicated `kai-operator-main`).  
+4. Which single venture is first after audit (faceless / podcast / other) — **after** audit, not before.
+
+---
+
+*End ACTIVE batch plan.*
