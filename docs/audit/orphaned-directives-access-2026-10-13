@@ -1,0 +1,108 @@
+# Orphaned Directive Audit — Q-002 Cloudflare Access
+**Date:** 2026-10-13  
+**Method:** Four lenses together (Devil’s Advocate · Childlike Wonder · Sherlock Holmes · da Vinci)  
+**Directive ID:** Q-002  
+**Prior four-lens run:** Q-001 Oracle (2026-10-12) — this is the **second** execution (generalization check)
+
+---
+
+## DIRECTIVE
+
+**Exact question:** Is Cloudflare Access (Zero Trust Application for `/v11/founder/*`) created, and are `ACCESS_TEAM_DOMAIN` / `ACCESS_AUD` / `FOUNDER_EMAIL` set on the Worker?
+
+**Context:** Optional additive founder login so browser sessions need not paste `FOUNDER_KEY`. Documented in roadmap founderActions, FLIP_THE_SWITCHES, ACCESS_BIOSYSTEM_STATUS.
+
+**Status entering audit:** open · never completed · never revoked
+
+---
+
+## WONDER
+
+What was being reached for: a **cockpit you can sit in without carrying a secret in your pocket**. Founder identity should feel like walking into a room that already knows you — not like typing a password into every panel.
+
+The spark is not “Cloudflare product adoption.” The spark is: **founder presence without founder friction**, while still not handing the keys to the agents.
+
+---
+
+## ADVOCATE
+
+Structural reasons it sits undone:
+
+1. **Optional by design.** FOUNDER_KEY continues to work. Nothing breaks while Access is off. No forcing function (same class as Oracle Case 5).
+2. **Dashboard-only work.** Cannot be completed by a PR or by Kai. Requires Zero Trust clicks + secret/vars binding + redeploy.
+3. **Ambiguous “done.”** “Created Application” ≠ “vars set” ≠ “login actually works.” Three sub-steps; partial completion looks like stall.
+4. **Competes with irreversible-cost items.** Oracle, D1, money switches feel heavier; Access loses attention because failure is invisible.
+
+Mechanism of abandonment: **zero cost to defer + multi-step founder-only path + no weekly triage.**
+
+---
+
+## HOLMES
+
+Evidence cited:
+
+| Date / source | Fact |
+|---------------|------|
+| Live probe 2026-10-13 | `GET /v11/debug/env` → `bindings.ACCESS_CONFIGURED: false` |
+| Same probe | `secrets_present` lists `FOUNDER_KEY` only (Access vars not reported as present) |
+| Live roadmap 2026-10-13 | founderAction “Set up Cloudflare Access…” → `status: blocked`, `statusLabel: needs you` |
+| Body text (roadmap) | Explicitly optional/additive; FOUNDER_KEY keeps working |
+| Prior session memory | Founder dashboard checks for Access Application were left unanswered / open |
+| Handoff §11 Q-002 | Listed as open; blocks clarity on tasks 35/46 narrative |
+
+Dog that did not bark: no production outage, no failed founder approve/reject attributed to missing Access — **FOUNDER_KEY path carries the load**, so silence is consistent with “optional deferred,” not “broken unnoticed.”
+
+---
+
+## DA VINCI
+
+Fully drawn shape is larger than “turn on Access.”
+
+Anatomy:
+
+1. **Identity plane** — who is the founder in the browser (Access JWT vs shared FOUNDER_KEY).  
+2. **Capability plane** — what `/v11/founder/*` may do once identified.  
+3. **Multi-actor future** — second trusted human (peer review named this); Access is the on-ramp, FOUNDER_KEY is a single shared secret anti-pattern at scale.  
+4. **Blast radius** — FOUNDER_KEY in CI + human paste vs short-lived Access assertion.
+
+The directive as written is a **toggle**. The real drawing is **founder identity architecture**. Choosing “defer Access” is coherent if FOUNDER_KEY remains single-user and acceptable. Choosing “build Access” is coherent if the cockpit must become multi-actor or keyless.
+
+---
+
+## CONVERGENCE
+
+| Dimension | Result |
+|-----------|--------|
+| Still wanted? | **Maybe** — wanted as UX/multi-actor path; not required for current single-founder FOUNDER_KEY operation |
+| Still possible? | **Yes** — pure dashboard + vars; no code blocker |
+| Still real? | **Yes as open optional** — live `ACCESS_CONFIGURED: false` confirms not done |
+| Still right framing? | **Partially** — “create Access” underspecifies identity architecture |
+
+**CASE: 5** (Alive, blocked by founder throughput / no forcing function)  
+**with a Case-4 edge:** if founder explicitly accepts FOUNDER_KEY-only indefinitely, Access can be **retired from blocked list** into “wontfix / deferred-until-multi-actor” — that would be a decision, not silence.
+
+**REASON:** Live probe proves unset; roadmap proves still “needs you”; nothing supersedes; cost of inaction is invisible friction only.
+
+**RECOMMENDATION FOR FOUNDER (not auto-applied):**
+
+1. **Decide in 2 minutes:** (A) Defer until multi-actor needed — move to ANSWERED as deferred, remove from blocked pressure; or (B) Build this week — Application + three vars + one successful login test.  
+2. Do **not** leave as eternal “blocked” with no date — that recreates the Oracle class failure.
+
+---
+
+## METHOD VALIDATION NOTE
+
+Compared to Oracle (Q-001) four-lens run:
+
+| Aspect | Oracle | Access |
+|--------|--------|--------|
+| Case | 5 | 5 |
+| Invisible cost of delay | Yes | Yes |
+| Founder-only dashboard/ops | Yes | Yes |
+| Production currently works without decision | Partially (skip paths) | **Yes** (FOUNDER_KEY) |
+
+**Method generalized:** second independent directive also converged on Case 5 / missing forcing function. Not proof of universality, but **not a one-off fluke**.
+
+---
+
+*End four-lens finding Q-002.*
