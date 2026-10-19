@@ -1,0 +1,172 @@
+# FOUNDER_QUEUE.md — Open Founder Decisions (Single Source of Truth)
+
+**Rule:** This file is the only home for open founder-level questions.  
+PR bodies may say `opens Q-NNN` — they must not be the only place the question lives.  
+When decided, move the entry to `docs/FOUNDER_ANSWERED.md` with call + date.  
+Ranked roughly smallest decision-cost first where known.
+
+**Status legend:** open | blocked-waiting | partial
+
+---
+
+## Q-010
+
+**Question:** Is the frontend canonical resolved (React Command Center as the one surface)?  
+**Raised:** ~2026-08 campaign / full-plan frontend debates  
+**Source link:** campaign / full-plan frontend tabs  
+
+**Recommendation (if any):** Treat React Command Center path as practical canon; archive competing “which UI is real” threads.  
+**Reasoning:** Live product traffic and docs point at Worker-served app; competing surfaces create dual maintenance.  
+
+**Cost to decide:** 5 minutes (yes/no confirmation)  
+**Downstream chain:** Frontend audit scope, docs links, “Demo Mode” copy  
+
+**Status:** open
+
+---
+
+## Q-009
+
+**Question:** Five approved-unactioned proposals (#1, #5, #6, #7, #8) — triage: action, reject, or re-queue?  
+**Raised:** campaign / hive_proposals  
+**Source link:** production `hive_proposals` + campaign  
+
+**Recommendation (if any):** One triage pass; close or action each; stop “approved forever.”  
+**Reasoning:** Approved-without-action dilutes the meaning of approval.  
+
+**Cost to decide:** 20–40 minutes  
+**Downstream chain:** Proposal UX trust, Queen scoring credibility  
+
+**Status:** open
+
+---
+
+## Q-002
+
+**Question:** Cloudflare Access — is Zero Trust Application created for `/v11/founder/*`, and are ACCESS_TEAM_DOMAIN / ACCESS_AUD / FOUNDER_EMAIL set on the Worker?  
+**Raised:** task 46 / roadmap founderActions / ACCESS_BIOSYSTEM_STATUS  
+**Source link:** live `/v11/debug/env` → `ACCESS_CONFIGURED: false` (probed 2026-10-13)  
+
+**Recommendation (if any):** Optional additive path; FOUNDER_KEY still works. Create Access app only if founder wants browser login without pasting key.  
+**Reasoning:** Live probe shows Access not configured; not a production outage.  
+
+**Cost to decide:** 15–30 minutes dashboard work if yes; 2 minutes if defer  
+**Downstream chain:** Founder UX, task 35/46 clarity, multi-actor future  
+
+**Status:** open
+
+---
+
+## Q-003
+
+**Question:** Production D1 — apply migration `001-add-normalized-title.sql` to thehive-queen? (Staging first required by prior founder doctrine.)  
+**Raised:** Dual Lens / create-gate work  
+**Source link:** worker schema / DEPLOY_WIRE_LEDGER  
+
+**Recommendation (if any):** Staging first; production only after verified. Note: create-gate `normalized_title` behavior was observed live in prior probe — confirm whether ensureTables already covered part of this.  
+**Reasoning:** Schema changes are irreversible class; prior doctrine says staging first.  
+
+**Cost to decide:** 20 minutes if staging path clear  
+**Downstream chain:** Gate backfill completeness, formal migration honesty  
+
+**Status:** open
+
+---
+
+## Q-001
+
+**Question:** Oracle box — provision (set three secrets so deploy.yml works) or retire System A honestly (mark retired, remove permanent skip, reword biosystem Demo Mode)?  
+**Raised:** 2026-08-01 task 53  
+**Source link:** campaign.html task 53; four-lens audit 2026-10-12  
+
+**Recommendation (if any):** Four-lens Case 5 — class problem is missing forcing function; decision still founder-only. Prefer explicit retire or provision; stop silent skip.  
+**Reasoning:** See `docs/audit/orphaned-directives-oracle-2026-10-12.md` (handoff §7).  
+
+**Cost to decide:** 10 minutes yes/no once preferred path chosen; provision costs ongoing ops  
+**Downstream chain:** System A, biosystem.html, Python/MCP harness, Arithmancer capabilities  
+
+**Status:** open · four-lens executed once (2026-10-12)
+
+---
+
+## Q-008
+
+**Question:** Venture colony repo — create and connect?  
+**Raised:** campaign / federation  
+**Source link:** founder-only colony text  
+
+**Recommendation (if any):** Defer until cockpit + one venture loop proven.  
+**Reasoning:** Premature federation expands surface before operator pattern is real.  
+
+**Cost to decide:** 5 minutes (defer vs schedule)  
+**Downstream chain:** Federation scope, public-repo policy  
+
+**Status:** open
+
+---
+
+## Q-007
+
+**Question:** Autonomy ladder — enable any stage ≥ 1 (starting with KAI_BRAIN_WRITE)?  
+**Raised:** FLIP_THE_SWITCHES / `/v11/kai/autonomy`  
+**Source link:** live autonomy API enabled_now: [] (prior probes)  
+
+**Recommendation (if any):** Stage 1 only (`KAI_BRAIN_WRITE=on`) after plan/vision audit baseline; not higher stages.  
+**Reasoning:** Memory write is lowest risk; financial/replication remain Never/Block.  
+
+**Cost to decide:** 5 minutes dashboard variable  
+**Downstream chain:** Learning-loop prep, Kai lab memory  
+
+**Status:** open
+
+---
+
+## Q-006
+
+**Question:** Enable QUEEN_AUTONOMOUS_APPROVAL (switch 9)?  
+**Raised:** FLIP_THE_SWITCHES  
+**Source link:** switch default off  
+
+**Recommendation (if any):** Keep off until proposal quality + Dual Lens proven under load.  
+**Reasoning:** Auto-approve action-requests is high-blast.  
+
+**Cost to decide:** 2 minutes  
+**Downstream chain:** Proposal pipeline trust  
+
+**Status:** open
+
+---
+
+## Q-004
+
+**Question:** Enable AUTOMATON_FINANCIAL_AUTONOMY?  
+**Raised:** FLIP_THE_SWITCHES / F-002  
+**Source link:** money switches founder-only  
+
+**Recommendation (if any):** Keep off. Requires legal structure before any yes.  
+**Reasoning:** Real capital + autonomous signal = regulated class.  
+
+**Cost to decide:** 2 minutes (no) / weeks (yes path)  
+**Downstream chain:** Wallet, economy reality  
+
+**Status:** open
+
+---
+
+## Q-005
+
+**Question:** Enable AUTOMATON_REPLICATION_AUTONOMY?  
+**Raised:** FLIP_THE_SWITCHES  
+**Source link:** replication switch off  
+
+**Recommendation (if any):** Keep off indefinitely until explicit written repo approval.  
+**Reasoning:** Prior founder doctrine: money/replication off until written approval.  
+
+**Cost to decide:** 2 minutes  
+**Downstream chain:** Colony spawn risk  
+
+**Status:** open
+
+---
+
+*End open queue. Do not add founder questions only in PR bodies — append here.*
