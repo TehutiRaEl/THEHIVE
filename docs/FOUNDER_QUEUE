@@ -38,19 +38,3 @@ Ranked roughly smallest decision-cost first where known.
 **Downstream chain:** Proposal UX trust, Queen scoring credibility  
 
 **Status:** open
-
----
-
-## Q-008
-
-**Question:** Venture colony repo — create and connect?  
-**Raised:** campaign / federation  
-**Source link:** founder-only colony text  
-
-**Recommendation (if any):** Defer until cockpit + one venture loop proven.  
-**Reasoning:** Premature federation expands surface before operator pattern is real.  
-
-**Cost to decide:** 5 minutes (defer vs schedule)  
-**Downstream chain:** Federation scope, public-repo policy  
-
-**Status:** open

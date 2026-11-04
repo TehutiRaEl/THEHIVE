@@ -114,3 +114,19 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Any future stage enablement requires a new founder decision.
 **Downstream chain:** Learning-loop prep, Kai lab memory.
 **Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-008 — DECIDED 2026-11-04
+
+**Question (as queued):** Venture colony repo — create and connect?
+**Founder decision:** ALREADY EXISTS — NO NEW REPO.
+**Verified 2026-11-04 before recording:**
+- Repo TehutiRaEl/venture (private, main) exists, created 2026-07-18.
+- It is NOT empty, but scaffold-only: README.md, CLAUDE.md, manifest.yaml, docs/, ventures/, .claude/, last commit 2026-08-18 (tip e7846f625e533fac38069183e1fbc8a72e886067, Genesis Ventures Program scaffold).
+- No commits since 2026-08-18, so no proven venture loop has run through it since then.
+**What this means:**
+- Do not create a second venture colony repo. TehutiRaEl/venture is the venture colony repo.
+- Activation/connection as a live venture loop is still pending proof (cockpit + one venture loop proven) — this decision records existence, not live activation.
+**Downstream chain:** Federation scope, public-repo policy.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
