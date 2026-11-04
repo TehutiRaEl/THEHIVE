@@ -89,22 +89,6 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-004
-
-**Question:** Enable AUTOMATON_FINANCIAL_AUTONOMY?  
-**Raised:** FLIP_THE_SWITCHES / F-002  
-**Source link:** money switches founder-only  
-
-**Recommendation (if any):** Keep off. Requires legal structure before any yes.  
-**Reasoning:** Real capital + autonomous signal = regulated class.  
-
-**Cost to decide:** 2 minutes (no) / weeks (yes path)  
-**Downstream chain:** Wallet, economy reality  
-
-**Status:** open
-
----
-
 ## Q-005
 
 **Question:** Enable AUTOMATON_REPLICATION_AUTONOMY?  

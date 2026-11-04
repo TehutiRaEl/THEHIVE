@@ -49,3 +49,24 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Status note: this records the DECISION and its staging gate only. It does NOT claim the migration has been applied to staging or production, or that the live D1 schema has been verified.
 **Downstream chain:** Gate backfill completeness, formal migration honesty.
 **Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-004 — DECIDED 2026-11-04
+
+**Question (as queued):** Enable AUTOMATON_FINANCIAL_AUTONOMY?
+**Founder decision:** ENABLED ONLY THROUGH GATED TIERS. No blanket financial autonomy.
+**Gated tiers, as approved by the founder 2026-11-04:**
+- Tier 1 — Steady, scalable services: copywriting services, faceless social media generating steady and scalable revenue, an animated podcast show, dropshipping, etc.
+- Tier 2 — Active income, lawful only: day trading, legal and lawful arbitrage, freelance gigs, marketing, finishing the books the founder started, then publishing and advertising them, etc.
+- Tier 3 — Formal business: run an LLC, create businesses aligned with the founder vision and the Hive, etc.
+- Tier 4 — Structure and protection: form a dynasty trust, S corp, C corp, insure the Hive and the founder bonded, apply for government grants and any other government money, etc.
+- Tier 5 — Entrepreneur mogul AI: the AI operating at mogul scale across ventures, after the lower tiers are proven.
+**Gates and limits recorded with the decision:**
+- Tier 1 first. Each higher tier is unlocked only by a separate founder decision after the lower tier is proven.
+- No automatic money moves: each real money action still requires the founder's explicit yes.
+- Tiers 3–4 are legal/financial work requiring qualified human counsel; forming entities, trusts, or insurance is not authorized by flipping a switch alone.
+- Government grants: terms must be checked per grant; "no strings attached" is not assumed — hidden fees, duties, or obligations must be verified before acceptance.
+- Animated show: an original show inspired by that style/format, with original characters and world. It does NOT continue a copyrighted show's characters or story without a license.
+**Downstream chain:** Wallet, economy reality.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
