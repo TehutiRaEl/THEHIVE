@@ -3,3 +3,21 @@
 Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 
 *(Empty at creation 2026-10-13 — no formal moves yet this session.)*
+
+---
+
+## Q-001 — DECIDED 2026-11-04
+
+**Question (as queued):** Oracle box — provision (set three secrets so deploy.yml works) or retire System A honestly (mark retired, remove permanent skip, reword biosystem Demo Mode)?
+**Founder decision:** PROVISION — repurposed. NOT retire.
+**What this means, in the founder's own approved terms (2026-11-04):**
+- Cloudflare Worker remains the public system of record. The Oracle box does NOT become a second public Hive.
+- System A is to be reengineered, not restored as-is, and stripped down to only what the Worker lacks — not duplicated route-for-route.
+- Purposes approved:
+  1. Private engine behind the Worker — heavy/private work the Worker calls for, including colony, knowledge, ML, browser, and debug routes the Worker only partly mirrors, plus economy, governance, simulator, and tier2/tier3 modules.
+  2. HiveMesh colony host — separate private colony services, rather than cramming them into edge code.
+  3. Long-running lab — scheduled audits, plan-reality checks, batch work, learning loop, and venture loops that need hours, not seconds.
+  4. Staging twin / sandbox — test migrations, Dual Lens changes, and D1 work before production.
+  5. Reengineered, not restored as-is — one clear job for the box, avoiding a recreated two-systems problem.
+**Downstream chain:** System A, biosystem.html, Python/MCP harness, Arithmancer capabilities.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.

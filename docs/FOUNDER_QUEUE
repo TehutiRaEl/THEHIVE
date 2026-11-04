@@ -73,22 +73,6 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-001
-
-**Question:** Oracle box — provision (set three secrets so deploy.yml works) or retire System A honestly (mark retired, remove permanent skip, reword biosystem Demo Mode)?  
-**Raised:** 2026-08-01 task 53  
-**Source link:** campaign.html task 53; four-lens audit 2026-10-12  
-
-**Recommendation (if any):** Four-lens Case 5 — class problem is missing forcing function; decision still founder-only. Prefer explicit retire or provision; stop silent skip.  
-**Reasoning:** See `docs/audit/orphaned-directives-oracle-2026-10-12.md` (handoff §7).  
-
-**Cost to decide:** 10 minutes yes/no once preferred path chosen; provision costs ongoing ops  
-**Downstream chain:** System A, biosystem.html, Python/MCP harness, Arithmancer capabilities  
-
-**Status:** open · four-lens executed once (2026-10-12)
-
----
-
 ## Q-008
 
 **Question:** Venture colony repo — create and connect?  
