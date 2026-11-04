@@ -70,19 +70,3 @@ Ranked roughly smallest decision-cost first where known.
 **Downstream chain:** Learning-loop prep, Kai lab memory  
 
 **Status:** open
-
----
-
-## Q-006
-
-**Question:** Enable QUEEN_AUTONOMOUS_APPROVAL (switch 9)?  
-**Raised:** FLIP_THE_SWITCHES  
-**Source link:** switch default off  
-
-**Recommendation (if any):** Keep off until proposal quality + Dual Lens proven under load.  
-**Reasoning:** Auto-approve action-requests is high-blast.  
-
-**Cost to decide:** 2 minutes  
-**Downstream chain:** Proposal pipeline trust  
-
-**Status:** open

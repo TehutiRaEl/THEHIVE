@@ -83,3 +83,18 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - This follows prior founder doctrine: money/replication off until written approval.
 **Downstream chain:** Colony spawn risk.
 **Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-006 — DECIDED 2026-11-04
+
+**Question (as queued):** Enable QUEEN_AUTONOMOUS_APPROVAL (switch 9)?
+**Founder decision:** KEEP OFF FOR NOW, CONDITIONAL.
+**Founder's condition, in his words:** She (the Queen) can't do so until she is 100% present in the Hive — fully coded, tested, wired up, deployed, and checked if live.
+**What this means:**
+- Queen auto-approve (switch 9) stays OFF now.
+- It must not operate until the Queen is 100% present in the Hive, having passed the founder's definition of done in exact order: compiles → tested → wired → merged → deployed → verified-live.
+- Code presence alone is not enough; live verification is required.
+- Even when that condition is met, auto-approve can never skip the action-request execution gate for money, deletion, publishing, constitution changes, or external actions (per docs/FOUNDERS_VISION.md).
+**Downstream chain:** Proposal pipeline trust.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
