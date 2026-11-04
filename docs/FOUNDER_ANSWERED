@@ -98,3 +98,19 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Even when that condition is met, auto-approve can never skip the action-request execution gate for money, deletion, publishing, constitution changes, or external actions (per docs/FOUNDERS_VISION.md).
 **Downstream chain:** Proposal pipeline trust.
 **Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-007 — DECIDED 2026-11-04
+
+**Question (as queued):** Autonomy ladder — enable any stage ≥ 1 (starting with KAI_BRAIN_WRITE)?
+**Founder decision:** KEEP ALL AUTONOMY STAGES OFF.
+**Founder's reason, in his words:** Kai hasn't done any real work yet, so why would I enable that if he's building blindly?
+**What this means:**
+- Stage 1 (KAI_BRAIN_WRITE) is NOT enabled.
+- No higher stage is enabled either.
+- Live state at decision time was consistent with this: all 7 Kai autonomy stages off, next = stage 1.
+- Enabling brain-write before Kai has done real work and a baseline exists would be building blindly — learning must follow real work, not precede it.
+- Any future stage enablement requires a new founder decision.
+**Downstream chain:** Learning-loop prep, Kai lab memory.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.

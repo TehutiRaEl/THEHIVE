@@ -54,19 +54,3 @@ Ranked roughly smallest decision-cost first where known.
 **Downstream chain:** Federation scope, public-repo policy  
 
 **Status:** open
-
----
-
-## Q-007
-
-**Question:** Autonomy ladder — enable any stage ≥ 1 (starting with KAI_BRAIN_WRITE)?  
-**Raised:** FLIP_THE_SWITCHES / `/v11/kai/autonomy`  
-**Source link:** live autonomy API enabled_now: [] (prior probes)  
-
-**Recommendation (if any):** Stage 1 only (`KAI_BRAIN_WRITE=on`) after plan/vision audit baseline; not higher stages.  
-**Reasoning:** Memory write is lowest risk; financial/replication remain Never/Block.  
-
-**Cost to decide:** 5 minutes dashboard variable  
-**Downstream chain:** Learning-loop prep, Kai lab memory  
-
-**Status:** open
