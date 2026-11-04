@@ -21,3 +21,17 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
   5. Reengineered, not restored as-is — one clear job for the box, avoiding a recreated two-systems problem.
 **Downstream chain:** System A, biosystem.html, Python/MCP harness, Arithmancer capabilities.
 **Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-002 — DECIDED 2026-11-04
+
+**Question (as queued):** Cloudflare Access — is Zero Trust Application created for `/v11/founder/*`, and are ACCESS_TEAM_DOMAIN / ACCESS_AUD / FOUNDER_EMAIL set on the Worker?
+**Founder decision:** CREATE the Cloudflare Access app.
+**What this means:**
+- Create a Cloudflare Zero Trust Application for `/v11/founder/*`.
+- Set ACCESS_TEAM_DOMAIN, ACCESS_AUD, and FOUNDER_EMAIL on the Worker.
+- Purpose: browser login for founder routes without pasting FOUNDER_KEY. FOUNDER_KEY remains as a fallback until Access is verified-live.
+- Status note: this records the DECISION only. It does NOT claim ACCESS_CONFIGURED is true — that must be verified-live after the dashboard work (queue estimate: 15–30 minutes) and a fresh live probe.
+**Downstream chain:** Founder UX, task 35/46 clarity, multi-actor future.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.

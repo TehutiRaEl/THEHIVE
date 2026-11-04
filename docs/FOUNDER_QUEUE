@@ -41,22 +41,6 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-002
-
-**Question:** Cloudflare Access — is Zero Trust Application created for `/v11/founder/*`, and are ACCESS_TEAM_DOMAIN / ACCESS_AUD / FOUNDER_EMAIL set on the Worker?  
-**Raised:** task 46 / roadmap founderActions / ACCESS_BIOSYSTEM_STATUS  
-**Source link:** live `/v11/debug/env` → `ACCESS_CONFIGURED: false` (probed 2026-10-13)  
-
-**Recommendation (if any):** Optional additive path; FOUNDER_KEY still works. Create Access app only if founder wants browser login without pasting key.  
-**Reasoning:** Live probe shows Access not configured; not a production outage.  
-
-**Cost to decide:** 15–30 minutes dashboard work if yes; 2 minutes if defer  
-**Downstream chain:** Founder UX, task 35/46 clarity, multi-actor future  
-
-**Status:** open
-
----
-
 ## Q-003
 
 **Question:** Production D1 — apply migration `001-add-normalized-title.sql` to thehive-queen? (Staging first required by prior founder doctrine.)  
