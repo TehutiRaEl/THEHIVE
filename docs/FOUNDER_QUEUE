@@ -86,23 +86,3 @@ Ranked roughly smallest decision-cost first where known.
 **Downstream chain:** Proposal pipeline trust  
 
 **Status:** open
-
----
-
-## Q-005
-
-**Question:** Enable AUTOMATON_REPLICATION_AUTONOMY?  
-**Raised:** FLIP_THE_SWITCHES  
-**Source link:** replication switch off  
-
-**Recommendation (if any):** Keep off indefinitely until explicit written repo approval.  
-**Reasoning:** Prior founder doctrine: money/replication off until written approval.  
-
-**Cost to decide:** 2 minutes  
-**Downstream chain:** Colony spawn risk  
-
-**Status:** open
-
----
-
-*End open queue. Do not add founder questions only in PR bodies — append here.*
