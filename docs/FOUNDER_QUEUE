@@ -41,22 +41,6 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-003
-
-**Question:** Production D1 — apply migration `001-add-normalized-title.sql` to thehive-queen? (Staging first required by prior founder doctrine.)  
-**Raised:** Dual Lens / create-gate work  
-**Source link:** worker schema / DEPLOY_WIRE_LEDGER  
-
-**Recommendation (if any):** Staging first; production only after verified. Note: create-gate `normalized_title` behavior was observed live in prior probe — confirm whether ensureTables already covered part of this.  
-**Reasoning:** Schema changes are irreversible class; prior doctrine says staging first.  
-
-**Cost to decide:** 20 minutes if staging path clear  
-**Downstream chain:** Gate backfill completeness, formal migration honesty  
-
-**Status:** open
-
----
-
 ## Q-008
 
 **Question:** Venture colony repo — create and connect?  

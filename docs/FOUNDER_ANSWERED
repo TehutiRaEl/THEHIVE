@@ -35,3 +35,17 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Status note: this records the DECISION only. It does NOT claim ACCESS_CONFIGURED is true — that must be verified-live after the dashboard work (queue estimate: 15–30 minutes) and a fresh live probe.
 **Downstream chain:** Founder UX, task 35/46 clarity, multi-actor future.
 **Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-003 — DECIDED 2026-11-04
+
+**Question (as queued):** Production D1 — apply migration `001-add-normalized-title.sql` to thehive-queen? (Staging first required by prior founder doctrine.)
+**Founder decision:** STAGING FIRST, then production only after verified.
+**What this means:**
+- Apply `001-add-normalized-title.sql` to a staging D1 first, verify it there, and only then apply it to production thehive-queen.
+- Production application is NOT authorized by this decision alone until staging verification is recorded.
+- This follows prior founder doctrine: schema changes are in the irreversible class, so staging first is required.
+- Status note: this records the DECISION and its staging gate only. It does NOT claim the migration has been applied to staging or production, or that the live D1 schema has been verified.
+**Downstream chain:** Gate backfill completeness, formal migration honesty.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
