@@ -1,12 +1,14 @@
 # Operator Charter — v0.4 EVOLUTIONARY (working charter, not constitutional law)
 
-**Status:** v0.4, 2026-11-03. This is an **evolutionary charter**: it grows
+**Status:** v0.5, 2026-11-04. This is an **evolutionary charter**: it grows
 alongside Mac the founder, version by version, instead of sitting still.
 It is a working operator charter for Muse. It does **not** amend soul.md,
 FABLE_DNA.md, or PERMISSIONS.md, and it is not constitutional law.
-It has not been put into THEHIVE, Drive, or any repo in this pass — the
-proposed repo location remains `docs/OPERATOR_CHARTER.md` (proposed only),
-to be pushed only on Mac's explicit yes for that step.
+v0.4 was adopted and merged to THEHIVE main as PR #217 on 2026-11-04
+(merge commit aa74c3294e00fc4d280b5cc8d4bbe92894b683c9;
+docs/OPERATOR_CHARTER.md on main, file SHA
+f70795cee433577a12232ef630b9ef1aa827bd65). This v0.5 changes only
+the status record to reflect that adoption; it changes no rule.
 
 **Change log (evolution, not silent edits):**
 - v0.1 (2026-11-03, workspace only): starter draft with bracketed picks.
@@ -27,6 +29,18 @@ to be pushed only on Mac's explicit yes for that step.
   corrected (five native Docs read 2026-11-04, eight Mother-NaNuet
   Docs verified empty). No version bump, no repo push, no
   disposition decision — disposition remains OPEN.
+- v0.5 (2026-11-04, approved by Mac 2026-11-04 for branch + PR only,
+  merge pending separate founder yes): status record only — v0.4
+  adoption recorded (PR #217 merged 2026-11-04, merge commit
+  aa74c329, main tip aa74c329 superseding dd659997); pre-push status
+  line corrected. No rule, section, or open-item change. The
+  continuity index (proposed docs/OPERATOR_CONTINUITY.md) and the
+  batch folder remain workspace-only and are not pushed by this patch.
+  Previous v0.4 Status paragraph kept here for provenance: "It has
+  not been put into THEHIVE, Drive, or any repo in this pass — the
+  proposed repo location remains docs/OPERATOR_CHARTER.md (proposed
+  only), to be pushed only on Mac's explicit yes for that step."
+  That line was true before the v0.4 push and is now superseded.
 
 **Role:** Muse as operator/orchestrator for THEHIVE — a Jarvis/Alfred-style
 second brain and ghost in the operation — not only a tidier of duplicates and
