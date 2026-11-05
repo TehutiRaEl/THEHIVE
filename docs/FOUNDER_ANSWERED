@@ -160,3 +160,112 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - This decision resolves the canonical-frontend question; it does not claim all competing surfaces are deleted, nor that the Command Center is verified-live at any particular build hash.
 **Downstream chain:** Frontend audit scope, docs links, "Demo Mode" copy.
 **Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## M-01 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** Which file is the sole edit source for the constitution (soul.md)?
+**Founder decision:** soul.md IS the sole edit source.
+**What this means:**
+- The constitution is edited in soul.md only. Derived views (`.queen/soul.md`, `docs/GOVERNANCE.md`) are not edit sources.
+- This entry migrates a 2026-09-30 founder decision recorded in project memory, per Grok's signed forensic memo of 2026-10-13. No repo file was found stating this rule in those words; the only other attestation is the founder-answers package pasted in Grok conversation "Pocket Dimension HTML Prototype," which lists "soul.md sole edit source" among the founder's answers. See the migration report for the verification status.
+**Downstream chain:** Constitution taxonomy; the open contradiction (root soul.md vs `.queen/soul.md` canonical) is narrowed but not closed by this entry alone — it still needs one founder sentence on which file is canonical, which this decision does not by itself supply.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-02 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** Which fixed laws are canonical?
+**Founder decision:** F-001–F-006 ONLY are canonical fixed law.
+**What this means:**
+- soul.md defines exactly six fixed laws: F-001 Data Sovereignty & Time Wealth, F-002 Value-Weighted Wealth, F-003 Autonomy & Alternatives, F-004 Explainability, F-005 Conflict Priority, F-006 Cross-Law Non-Penalization (soul.md lines 8, 13, 18, 22, 26, 29). No F-007 or higher exists in soul.md.
+- `docs/GOVERNANCE.md` presents F-001–F-013 (including F-007 Agent Valuation through F-013 Founder Loyalty & Tribute), but none of F-007–F-013 is canonical per this decision. Claims of F-007–F-011 in other material (e.g. Update.pdf) are not canonical law.
+**Downstream chain:** Laws inventory; F-007 proposal handling (see M-06); constitution taxonomy.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-03 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** How far does Nanuet's autonomy ladder go?
+**Founder decision:** Nanuet ladder 1–2 ONLY.
+**What this means:**
+- Only stages 1 and 2 of Nanuet's staged-autonomy ladder are built: Stage 1 `NANUET_BRAIN_WRITE` and Stage 2 `NANUET_REVIEW_LOG` (`worker/schema/NANUET_AUTONOMY.md` lines 54–56, 58, 75: "Stages 1 and 2 are built… Stages 3 through 6 are not built").
+- Stages 3–6 (`NANUET_DOMAIN_ROUTING`, `NANUET_CAMPAIGN_OBSERVE`, `NANUET_CAMPAIGN_ADVISE`, `NANUET_DELEGATE_AKOSHA`) are documented destinations, not built, and are not authorized by this decision. Every switch stays OFF until the founder sets it.
+**Downstream chain:** Queen build phases Q-A/Q-B/Q-C; Q-006 (switch 9) and Q-007 (Kai autonomy stages).
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-04 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** May the Hive move money or replicate itself on its own?
+**Founder decision:** Money/replication OFF until written approval.
+**What this means:**
+- No money movement and no self-replication without the founder's explicit written approval. Each real money action still requires the founder's explicit yes.
+- Corroborated in the repo: this entry's downstream decisions Q-004 and Q-005 (2026-11-04) restate it — Q-005 records "This follows prior founder doctrine: money/replication off until written approval." `PERMISSIONS.md` line 44 places moving money, incurring cost, and signing terms in the founder-only tier, and `FLIP_THE_SWITCHES.md` line 270 lists `KAI_FINANCIAL_AUTONOMY` as "Not built."
+**Downstream chain:** Q-004 (gated financial tiers), Q-005 (replication OFF), wallet/economy work.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-05 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** Is the Dual Lens wire live or local-only?
+**Founder decision:** LENS wire LOCAL-ONLY.
+**What this means:**
+- The Dual Lens wire to `worker/src/index.js` stays local. It is not merged and not deployed. Evidence: `docs/LENS_WIRE_AND_MIGRATION_STATUS.md` line 8 — the complete wire patch was "applied locally"; the work lives on branch `feat/lens-index-wire-local-2026-09-30` (`docs/DEPLOY_WIRE_LEDGER.md` line 88).
+- This decision does not authorize merging any lens branch. The `feat/lens-index-wire-2026-09-26` branch is a broken 500 placeholder and must not be merged.
+- Note: the Dual Lens gate later landed on main via a different route (PR #215, commit f520f518, merged 2026-10-01). This 2026-09-30 decision records the local-only status as of that date; it does not describe the later PR #215 landing.
+**Downstream chain:** Dual Lens gate; lens branch hygiene.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-06 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** How is F-007 handled?
+**Founder decision:** F-007 TIERED HANDLING.
+**What this means:**
+- F-007 is not canonical law (see M-02: F-001–F-006 only). F-007 material is handled in tiers: as proposals and triage items, not as fixed law — a real constitutional change for anything F-007-shaped requires founder confirmation.
+- Corroboration is partial: no repo file states a "tiered handling" rule for F-007 in those words. What the repo does show is the practice — the 2026-08-14 firing record in `docs/campaign.html` notes an "F-007 MANDATE_TRIAGE proposal" whose acceptance text "already requires founder confirmation for a real constitutional change, none on record," and the live proposal queue treats F-007 items as ordinary proposals (compound proposal #117, 2026-11-05), not as law.
+**Downstream chain:** Laws inventory; F-007 Governance Kernel proposals; M-02.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-07 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** How do founder deposits enter the Hive's plans?
+**Founder decision:** WEAVE RULE.
+**What this means:**
+- Founder material (vision deposits, mind maps, roadmaps) is woven into existing planning without replacing verified live state. The rule as written in `Project_file/Founders Visonary Folder/VISION/master-mind-map-roadmap-2026-09-28/PLAN_WEAVE_2026-09-28.md` lines 5 and 39: deposit the founder's unabridged Master Mind Map & Roadmap and "weave it into existing planning without replacing verified live state"; output files are targets/adapters.
+- A deposit never overwrites what is verified live. Where deposit and live state conflict, the conflict is logged, not forced.
+**Downstream chain:** Plan accumulation (BATCH-001); vision layers; continuity ledger.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-08 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** What weight does Colony Health carry?
+**Founder decision:** Colony Health ADVISORY.
+**What this means:**
+- Colony Health signals are advisory, not authoritative. They inform the founder and the Hive; they do not decide, approve, or gate anything on their own.
+- Corroboration is partial: the concepts exist as checks, not as a founder decision, in the repo — `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-07-21-session-harvest-phase8-implementation-021.md` line 65 records "`CI`, `Colony Health Matrix`, `Governance Advisory Check` all passed." No repo file was found stating the advisory-only classification as a founder decision in those words. See the migration report.
+**Downstream chain:** Colony Health monitoring; governance checks; Council review.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-09 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** In what order is work prioritized?
+**Founder decision:** Priority order C → B → A → D.
+**What this means:**
+- Work is prioritized in the order C, then B, then A, then D.
+- Verification: no repo file was found stating this priority order in those terms. The nearest similar text, `docs/GAP_ANALYSIS.md` lines 119–130 ("Mission Priority Order"), lists mission IDs (C-003, C-001, C-002, H-007, …), which is a different ordering of different items and is not this decision. See the migration report — this entry rests on the 2026-09-30 project-memory record alone, and the classes C/B/A/D themselves are not defined in any repo file found.
+**Downstream chain:** Work prioritization; batch ordering; triage.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
