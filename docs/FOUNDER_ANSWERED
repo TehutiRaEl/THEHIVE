@@ -130,3 +130,19 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Activation/connection as a live venture loop is still pending proof (cockpit + one venture loop proven) — this decision records existence, not live activation.
 **Downstream chain:** Federation scope, public-repo policy.
 **Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-009 — DECIDED 2026-11-04
+
+**Question (as queued):** Five approved-unactioned proposals (#1, #5, #6, #7, #8) — triage: action, reject, or re-queue?
+**Founder decision:** TRIAGE PASS COMPLETED — one call per proposal, decided one at a time 2026-11-04.
+**Live pull before triage:** Proposals pulled read-only from production https://thehive.sovereignhive.workers.dev/v11/proposals?limit=50&offset=100 on 2026-11-04 ~17:09 PST. All five showed status approved, actioned_at null at pull time. Workspace triage sheet: ~/workspace/q009-triage-sheet-live-2026-11-04.md (this record does not claim live actioned_at stamps were updated — those are follow-up implementation steps).
+**Per-proposal calls:**
+- #1 Create the "venture" colony repository — CLOSED as actioned by existence. Repo TehutiRaEl/venture already exists (see Q-008, commit 698b305c); no second repo.
+- #5 Build free-API / LLM-gateway discovery (Tier-2, propose-only) — ACTION: build it, propose-only. Search/evaluate only; each candidate as its own proposal; founder approves before anything is wired in.
+- #6 Venture: book-merch dropshipping + faceless multi-platform social — ACTION: start it under Q-004 Tier 1. No real account, post, or dollar without a further founder yes.
+- #7 Prioritize Approved Proposals — CLOSED as actioned by this triage. This pass is the prioritization it asked for.
+- #8 Assign Work on Approved Proposals — CLOSED as actioned by this triage. Assignments made: #1 closed, #5 actioned, #6 actioned.
+**Downstream chain:** Proposal UX trust, Queen scoring credibility.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.

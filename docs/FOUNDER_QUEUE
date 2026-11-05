@@ -22,19 +22,3 @@ Ranked roughly smallest decision-cost first where known.
 **Downstream chain:** Frontend audit scope, docs links, “Demo Mode” copy  
 
 **Status:** open
-
----
-
-## Q-009
-
-**Question:** Five approved-unactioned proposals (#1, #5, #6, #7, #8) — triage: action, reject, or re-queue?  
-**Raised:** campaign / hive_proposals  
-**Source link:** production `hive_proposals` + campaign  
-
-**Recommendation (if any):** One triage pass; close or action each; stop “approved forever.”  
-**Reasoning:** Approved-without-action dilutes the meaning of approval.  
-
-**Cost to decide:** 20–40 minutes  
-**Downstream chain:** Proposal UX trust, Queen scoring credibility  
-
-**Status:** open
