@@ -6,19 +6,3 @@ When decided, move the entry to `docs/FOUNDER_ANSWERED.md` with call + date.
 Ranked roughly smallest decision-cost first where known.
 
 **Status legend:** open | blocked-waiting | partial
-
----
-
-## Q-010
-
-**Question:** Is the frontend canonical resolved (React Command Center as the one surface)?  
-**Raised:** ~2026-08 campaign / full-plan frontend debates  
-**Source link:** campaign / full-plan frontend tabs  
-
-**Recommendation (if any):** Treat React Command Center path as practical canon; archive competing “which UI is real” threads.  
-**Reasoning:** Live product traffic and docs point at Worker-served app; competing surfaces create dual maintenance.  
-
-**Cost to decide:** 5 minutes (yes/no confirmation)  
-**Downstream chain:** Frontend audit scope, docs links, “Demo Mode” copy  
-
-**Status:** open

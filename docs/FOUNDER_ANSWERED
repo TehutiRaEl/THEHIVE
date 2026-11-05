@@ -146,3 +146,17 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - #8 Assign Work on Approved Proposals — CLOSED as actioned by this triage. Assignments made: #1 closed, #5 actioned, #6 actioned.
 **Downstream chain:** Proposal UX trust, Queen scoring credibility.
 **Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-010 — DECIDED 2026-11-04
+
+**Question (as queued):** Is the frontend canonical resolved (React Command Center as the one surface)?
+**Founder decision:** YES — React Command Center is canonical.
+**What this means:**
+- React Command Center is the one, practical canonical frontend surface.
+- Competing "which UI is real" threads are to be archived, not treated as co-canonical.
+- This sets frontend audit scope, docs links, and "Demo Mode" copy to follow the React Command Center surface.
+- This decision resolves the canonical-frontend question; it does not claim all competing surfaces are deleted, nor that the Command Center is verified-live at any particular build hash.
+**Downstream chain:** Frontend audit scope, docs links, "Demo Mode" copy.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
