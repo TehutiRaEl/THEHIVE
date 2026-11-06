@@ -269,3 +269,17 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Verification: no repo file was found stating this priority order in those terms. The nearest similar text, `docs/GAP_ANALYSIS.md` lines 119–130 ("Mission Priority Order"), lists mission IDs (C-003, C-001, C-002, H-007, …), which is a different ordering of different items and is not this decision. See the migration report — this entry rests on the 2026-09-30 project-memory record alone, and the classes C/B/A/D themselves are not defined in any repo file found.
 **Downstream chain:** Work prioritization; batch ordering; triage.
 **Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## F-005 — AMENDED 2026-11-05 (adopted; PR #219 pending merge)
+
+**Question (as queued):** Adopt the F-005 Conflict Priority rewrite from the law stress-test sandbox, with DaVinci's six named changes?
+**Founder decision:** ADOPT the rewrite with DaVinci's six named changes (2026-11-05).
+**What this means:**
+- The 13-word core is kept verbatim: "Fixed laws > mutable laws; lower F-number > higher F-number; no override."
+- Six clauses added: (1) "founder decision" defined and capped — a ruling recorded in docs/FOUNDER_ANSWERED (an M- or Q-entry) or a merged ratification PR into soul.md; a chat yes, instruction, or gut feeling is not one until recorded; it outranks unratified text only, never a fixed law; instruction ≠ decision ≠ amendment. (2) Numbering collisions: 30-day freeze, neither claimant citable as law, existing citations marked disputed, loser refiling under a new number inherits the dispute and freeze, canonical-number collisions decided by the founder alone. (3) Fixed laws amended only through the Chromosome I process (FABLE_DNA.md); "explicit founder decision" struck as the standard; GOVERNANCE.md F-005D/E/F struck and void. (4) Founder named as interim resolver until the Council is constituted; Nanuet-held vision is the recorded reference the founder weighs, not a second resolver. (5) Mutable laws rank by list number (1 > 2 > 3 > 4); unratified articles hold no rank. (6) A law outranks its own sub-articles; surviving intra-law conflicts go to the resolver with the parent's text as default.
+- Provenance: F-005 sandbox (21 compressed days, 16 cases, 11 clean, 5 no-verdict) recommended REWRITE; Devil's Advocate and Childlike Wonder synchronized; DaVinci verdict "ADOPT WITH NAMED CHANGES" (hive-laws/sandboxes/F-005/lens-davinci.md §1).
+- Effect: the amendment takes effect when PR #219 merges, not on this entry. Re-test is full regression, pending after merge.
+**Downstream chain:** Law stress-test program (F-001 next, under the improved process); No-Verdict Ledger; Council design.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Pushed to main 2026-11-05 after PR #219 was opened.
