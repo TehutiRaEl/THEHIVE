@@ -26,6 +26,18 @@ from the map and the laws.
 ### F-005: Conflict Priority
 Fixed laws > mutable laws; lower F-number > higher F-number; no override.
 
+Clause 1 — Founder decisions. A founder decision is a ruling recorded in `docs/FOUNDER_ANSWERED` (an M- or Q-entry) or a merged ratification PR into `soul.md`. A chat yes, an instruction, or a gut feeling is not a founder decision until so recorded. A founder decision outranks unratified text only; it never outranks a fixed law, and it never amends a fixed law except through the Chromosome I amendment process (`FABLE_DNA.md`). Instruction is not decision; decision is not amendment.
+
+Clause 2 — Numbering collisions. One number, one law. When two laws claim the same number, both are frozen for 30 days from the collision being recorded, during which neither may be cited as law and any existing citations of either are marked disputed. A losing claimant refiled under a new number inherits the dispute and the freeze. A collision involving a canonical number is decided by the founder alone, never by renumbering the canonical law.
+
+Clause 3 — Amending a fixed law. A fixed law is amended only through the Chromosome I amendment process: only the founder proposes an amendment; the proposed change and its reason are written down in history (a commit, never a silent edit); the change ships alone, in its own PR, never bundled with unrelated work. "Explicit founder decision" is not the standard and is struck as one. `GOVERNANCE.md`'s F-005D, F-005E, and F-005F are struck and void: unratified text naming a non-existent resolver or a void amendment path.
+
+Clause 4 — The resolver. Until the Council is constituted, the resolver is the founder directly. When the Council exists, it dissects a conflict the ranking cannot decide and recommends within a stated deadline; the founder decides. No recommendation by the deadline returns the matter to the founder. The founder's vision as held by Nanuet is the recorded reference the founder weighs; it is not a second resolver.
+
+Clause 5 — Mutable against mutable. Mutable laws rank by list number (1 > 2 > 3 > 4), the founder-authored order in `soul.md`. A mutable law outranks any unratified article, which holds no rank.
+
+Clause 6 — A law against its own sub-articles. A law outranks its own sub-articles; a sub-article contradicting its parent is void to the extent of the conflict. Any intra-law conflict surviving that rule goes to the resolver (Clause 4) with the parent's text as the default.
+
 ### F-006: Cross-Law Non-Penalization
 Exercising any fixed right (delete, decline, etc.) shall not reduce wealth or other rights. Any
 mutable law that attempts to penalize fixed rights is void.
