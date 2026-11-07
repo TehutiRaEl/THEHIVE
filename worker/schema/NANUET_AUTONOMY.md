@@ -93,16 +93,28 @@ because there is nothing to write.
 
 ---
 
-### Stage 3 — `NANUET_DOMAIN_ROUTING` · NOT BUILT (Phase Q-B)
+### Stage 3 — `NANUET_DOMAIN_ROUTING` · BUILT (Phase Q-B, QB-2)
 
-**What it would do:** run each proposal through `hive-conductor`'s `domain_router.py` so she
-learns which real domain it touches (edge-backend / frontend / colonies / governance /
-strategy) instead of scoring it domain-blind.
+**What it does:** run each proposal through the ported hive-conductor domain
+router (`worker/src/index.js` `routeProposalDomain()`, ported from
+`.claude/skills/hive-conductor/scripts/domain_router.py`) so she learns which
+real domain it touches (edge-backend / frontend / colonies / governance /
+strategy) instead of scoring it domain-blind. Also records a vision verdict
+(`auto_approvable` + hard-category override) against `FOUNDERS_VISION.md`.
 
-**Turn it on:** not a variable flip today — Phase Q-B has to be built first.
+**Turn it on:** Cloudflare dashboard -> Workers & Pages -> thehive -> Settings
+-> Variables and Secrets -> add plain variable `NANUET_DOMAIN_ROUTING` = "on"
+-> Deploy. Turn on stage 2 first or nothing is logged; stage 1 first or
+nothing is written. A separate founder decision each time — building the stage
+does not turn it on.
 
-**Risk:** a second reasoning pass per proposal, so it costs tokens. Still produces only a
-score and a label; no action.
+**Risk:** the ported keyword router costs zero tokens (pure function, no
+`generate()` call). It produces only a domain label and a vision verdict — no
+action, and it can never change a verdict: routing runs after the verdict,
+inside the log try/catch. The vision override is a keyword guard, not a proof:
+it makes a false auto-approvable unlikely and detectable, not impossible.
+
+**Requires:** stage 2.
 
 ---
 

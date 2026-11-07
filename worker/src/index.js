@@ -2022,12 +2022,16 @@ const NANUET_SWITCHES = [
   // Stages 1-2 — BUILT in Phase Q-A. Both default off.
   'NANUET_BRAIN_WRITE',
   'NANUET_REVIEW_LOG',
-  // Stages 3-6 — NOT BUILT. Reported by /v11/nanuet/autonomy so the ladder's
+  // Stage 3 — BUILT in Phase Q-B (QB-2). It IS read, as a gate for annotation
+  // only: queenDecide() routes + derives the vision verdict only when it is on,
+  // and handleNanuetRoute() refuses to run when it is off. It never authorises
+  // an action — routing adds a label, it does not change a verdict.
+  'NANUET_DOMAIN_ROUTING',
+  // Stages 4-6 — NOT BUILT. Reported by /v11/nanuet/autonomy so the ladder's
   // destination is visible and explicit rather than invented later, exactly as
   // KAI_FINANCIAL_AUTONOMY is listed-but-unwired in KAI_SWITCHES above. Nothing
   // in this file reads any of them to authorise anything, because there is
   // nothing to authorise: the capabilities do not exist.
-  'NANUET_DOMAIN_ROUTING',
   'NANUET_CAMPAIGN_OBSERVE',
   'NANUET_CAMPAIGN_ADVISE',
   'NANUET_DELEGATE_AKOSHA',
@@ -2155,8 +2159,11 @@ async function logNanuetDecision(env, d = {}) {
     const r = await env.NANUET_BRAIN.prepare(
       `INSERT INTO decision_log (agent, ts, surface, request, reasoning, action, risk_tier,
         risk_reason, risk_handling, autonomy_mode, subject_kind, subject_id, alignment_score,
-        provider, tokens_in, tokens_out)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        provider, tokens_in, tokens_out,
+        domain_label, domain_verdict, domain_matches, domain_margin,
+        auto_approvable, vision_override, vision_hash, routing_schema)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+               ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       d.agent || 'Nanuet', new Date().toISOString(), d.surface || 'proposal-review',
       String(d.request ?? ''), d.reasoning ?? null, d.action ?? null, tier,
@@ -2165,7 +2172,20 @@ async function logNanuetDecision(env, d = {}) {
       d.subject_kind ?? null, d.subject_id != null ? String(d.subject_id) : null, score,
       d.provider ?? null,
       Number.isFinite(d.tokens_in) ? d.tokens_in : null,
-      Number.isFinite(d.tokens_out) ? d.tokens_out : null
+      Number.isFinite(d.tokens_out) ? d.tokens_out : null,
+      // Phase Q-B (QB-2): domain routing + vision verdict, all nullable. A row
+      // written without routing (switch off, or a caller that never routes)
+      // records domain_verdict 'NOT-ROUTED' — distinct from REFUSED-NO-MATCH,
+      // which is a real routing answer. domain_matches is the routing result as
+      // JSON ({ranked: [{domain, hits, count}], forcing_question}).
+      d.domain_label ?? null,
+      d.domain_verdict ?? 'NOT-ROUTED',
+      d.domain_matches != null ? (typeof d.domain_matches === 'string' ? d.domain_matches : JSON.stringify(d.domain_matches)) : null,
+      Number.isInteger(d.domain_margin) ? d.domain_margin : null,
+      d.auto_approvable === 1 || d.auto_approvable === 0 ? d.auto_approvable : null,
+      d.vision_override ?? null,
+      d.vision_hash ?? null,
+      d.routing_schema ?? null
     ).run();
     return { logged: true, id: r?.meta?.last_row_id ?? null };
   } catch (e) { return { logged: false, error: String(e) }; }
@@ -2180,15 +2200,25 @@ async function logNanuetDecision(env, d = {}) {
 // decision that already happened — which is the entire point of a decision log,
 // and is why it is safe to wire in during a memory-only phase.
 //
-// Three gates, all off today: the database must exist, NANUET_BRAIN_WRITE must be
-// on, and NANUET_REVIEW_LOG must be on. Any one missing is a clean no-op.
-async function logQueenReview(env, { title, body, score, reason, decision, proposalId, provider } = {}) {
+// Three gates: the database must be bound (it is, in production since the
+// QA-8 verified-live deploy 2026-11-07), NANUET_BRAIN_WRITE must be on, and
+// NANUET_REVIEW_LOG must be on. Any one missing is a clean no-op.
+// (QB-2: the "database must exist" clause above used to say the brain was not
+// bound in production — true before QA-8, stale after it.)
+//
+// `request` stores title + body sliced to 1500 chars (QB-2: was 1000) —
+// exactly the text queenReview() scores and routeProposalDomain() routes on,
+// so a future reader can reconstruct the routed input from the row. Routing
+// and vision fields arrive as `routing` / `vision` (both null when the
+// NANUET_DOMAIN_ROUTING switch is off); they are annotations on this row, and
+// a missing annotation never blocks the write.
+async function logQueenReview(env, { title, body, score, reason, decision, proposalId, provider, routing, vision } = {}) {
   if (!switchOn(env, 'NANUET_REVIEW_LOG')) return { logged: false, reason: 'NANUET_REVIEW_LOG is off' };
   return logNanuetDecision(env, {
     surface: 'proposal-review',
     subject_kind: 'proposal',
     subject_id: proposalId,
-    request: `${String(title ?? '')}\n${String(body ?? '').slice(0, 1000)}`.trim(),
+    request: `${String(title ?? '')}\n${String(body ?? '').slice(0, 1500)}`.trim(),
     reasoning: reason ?? null,
     action: decision ?? null,
     alignment_score: score,
@@ -2200,6 +2230,17 @@ async function logQueenReview(env, { title, body, score, reason, decision, propo
     risk_tier: 'normal',
     autonomy_mode: 'autonomous',
     provider: provider ?? null,
+    // Phase Q-B (QB-2): the routing + vision annotation. When `routing` is null
+    // (stage-3 switch off, or routing threw) every field below is null except
+    // domain_verdict, which logNanuetDecision() records as 'NOT-ROUTED'.
+    domain_label: routing?.domain_label ?? null,
+    domain_verdict: routing?.verdict ?? 'NOT-ROUTED',
+    domain_matches: routing ? { ranked: routing.ranked, forcing_question: routing.forcing_question ?? null } : null,
+    domain_margin: routing?.domain_margin ?? null,
+    auto_approvable: vision?.auto_approvable ?? null,
+    vision_override: vision?.vision_override ?? null,
+    vision_hash: vision?.vision_hash ?? null,
+    routing_schema: routing?.schema ?? null,
   });
 }
 
@@ -2305,8 +2346,263 @@ async function constitutionSummary(env, requestUrl) {
   } catch { return null; }
 }
 
+// ── Domain routing (Phase Q-B, BATCH-QB, QB-2) ──────────────────────────
+// Port of .claude/skills/hive-conductor/scripts/domain_router.py (SCHEMA
+// hive-conductor/routing.v1) into a pure, synchronous JS function. A Worker
+// cannot execute local Python (see the fourDBrain() comment), and there is no
+// deployed Python endpoint to call — so the keyword table lives here, verbatim
+// from the Python file, and the two change together in the same PR, both
+// directions (BATCH-QB amendment 1; the QB-4 parity test enforces it).
+//
+// QB-2 table revision (2026-11-06, measured on the 116 live proposals before
+// freezing the schema — baseline QB-E18 was 79 SINGLE / 19 SPLIT / 18 REFUSED):
+// edge-backend gains "routing" (task/domain routing IS edge work), a
+// provider/auth family (authentication, auth, provider, gateway, gateways, apis,
+// api-key) and Cloudflare stores (r2, bucket, vectorize); frontend gains the
+// hyphenated form "front-end" and edge-backend "back-end" (the tokenizer keeps
+// a hyphenated word as ONE token, so "front-end" never matches "frontend" — a
+// false NEGATIVE, not a false positive; QB-1 §8.5 had the direction backwards).
+// Provider NAMES (claude/groq/mistral/openrouter) were deliberately NOT added:
+// they are incidental mentions in proposal bodies, not domain signals. Revised
+// corpus result: 110 SINGLE-DOMAIN / 0 SPLIT / 6 REFUSED (5% NULL labels) —
+// refused is 3 probe-spam rows plus 3 meta-proposals with no domain signal.
+// Split rule: a domain forces MULTI-DOMAIN-SPLIT only with >= 2 DISTINCT
+// keyword hits (Python tokenize() returns a set — hit count is distinct
+// keywords matched, never occurrences). Zero strong domains (every matched
+// domain at exactly 1 hit) resolves POSITIONALLY: the label is the domain of
+// the FIRST domain-keyword occurrence in the routed text (the proposal's own
+// framing). This supersedes the QB-1 design's tie rule (margin 0 -> split):
+// measured, that rule plus "routing" gives 62 splits / 59% NULL labels on the
+// real corpus, which defeats the feature. The tie stays visible: domain_margin
+// 0 and the full ranked list in `matches`, so a positional label is never
+// mistaken for a confident one. The split verdict survives for inputs with
+// >= 2 strong domains.
+const ROUTING_SCHEMA = 'hive-conductor/routing.v1';
+// Code-level "built" flag for stage 3 (BATCH-QB §7): /v11/nanuet/autonomy
+// derives stage-3 built-ness from this constant, not from a D1 string.
+const DOMAIN_ROUTING_BUILT = true;
+const DOMAIN_KEYWORDS = {
+  // Verbatim from domain_router.py (QB-2 revision 2026-11-06; QB-5 revision
+  // 2026-11-07 — "design" out of frontend, "secret" into edge-backend).
+  // See that file's header for the revision notes and the bidirectional
+  // drift rule.
+  'edge-backend': [
+    'edge', 'worker', 'api', 'apis', 'd1', 'database', 'route', 'routing',
+    'endpoint', 'cloudflare', 'backend', 'back-end', 'v11', 'durable',
+    'heartbeat', 'authentication', 'auth', 'provider', 'api-key', 'secret',
+    'gateway', 'gateways', 'r2', 'bucket', 'vectorize',
+  ],
+  frontend: [
+    'tab', 'ui', 'react', 'frontend', 'front-end', 'component', 'command-center',
+    'dashboard', 'tsx', 'vite', 'css', 'screen', 'button',
+  ],
+  colonies: [
+    'colony', 'colonies', 'capabilities', 'federation', 'sibling-repo',
+    'aether', 'automatisch', 'kimi', 'localagi', '4dbrain', 'nar2',
+  ],
+  governance: [
+    'soul', 'constitution', 'article', 'law', 'governance', 'f-001',
+    'f-002', 'f-003', 'f-004', 'f-005', 'f-006', 'amendment', 'vote',
+  ],
+  strategy: [
+    'gap', 'market', 'positioning', 'competitor', 'strategy',
+    'roadmap', 'grok', 'opportunity',
+  ],
+};
+const ROUTING_FORCING_QUESTION =
+  'No domain keyword matched this directive. Per hive-conductor/SKILL.md\'s own ' +
+  '\'Routing\' step 3: which domain should own this — edge-backend, frontend, ' +
+  'colonies, governance, or strategy — or is this genuinely cross-cutting?';
+
+// Pure, synchronous, no I/O, no generate() call — zero tokens, zero network
+// hops. Routes on exactly the text queenReview() scores (title in full, body
+// sliced to 1500 chars); callers must pass the raw pair and let this function
+// slice, so the two can never drift to different inputs.
+function routeProposalDomain(title, body) {
+  const text = `${String(title ?? '')}\n${String(body ?? '').slice(0, 1500)}`;
+  const tokens = new Set(text.toLowerCase().match(/[a-z0-9][a-z0-9\-]+/g) || []);
+  const scored = {};
+  for (const [domain, keywords] of Object.entries(DOMAIN_KEYWORDS)) {
+    // Distinct keywords matched, sorted — Python tokenize() returns a set, so
+    // occurrences never count twice (BATCH-QB amendment 1).
+    const hits = [...tokens].filter(t => keywords.includes(t)).sort();
+    if (hits.length) scored[domain] = hits;
+  }
+  if (!Object.keys(scored).length) {
+    return {
+      schema: ROUTING_SCHEMA, verdict: 'REFUSED-NO-MATCH', domain_label: null,
+      matched_domains: [], ranked: [], matches: {}, domain_margin: null,
+      forcing_question: ROUTING_FORCING_QUESTION,
+    };
+  }
+  const ranked = Object.entries(scored)
+    .sort((a, b) => b[1].length - a[1].length || (a[0] < b[0] ? -1 : 1))
+    .map(([domain, hits]) => ({ domain, hits, count: hits.length }));
+  const domains = ranked.map(r => r.domain);
+  const strong = ranked.filter(r => r.count >= 2).map(r => r.domain);
+  const margin = ranked.length >= 2 ? ranked[0].count - ranked[1].count : null;
+  const matches = Object.fromEntries(ranked.map(r => [r.domain, r.hits]));
+  let verdict;
+  let label;
+  if (domains.length === 1 || strong.length === 1) {
+    verdict = 'SINGLE-DOMAIN';
+    label = domains.length === 1 ? domains[0] : strong[0];
+  } else if (strong.length >= 2) {
+    verdict = 'MULTI-DOMAIN-SPLIT';
+    label = null;
+  } else {
+    // Zero strong domains: positional tie-break (see header comment). First
+    // domain-keyword occurrence in the routed text, in text order.
+    verdict = 'SINGLE-DOMAIN';
+    label = null;
+    const kwToDomain = {};
+    for (const [d, kws] of Object.entries(DOMAIN_KEYWORDS)) {
+      for (const k of kws) if (!(k in kwToDomain)) kwToDomain[k] = d;
+    }
+    const re = /[a-z0-9][a-z0-9\-]+/g;
+    let m;
+    while ((m = re.exec(text.toLowerCase())) !== null) {
+      if (kwToDomain[m[0]]) { label = kwToDomain[m[0]]; break; }
+    }
+  }
+  return {
+    schema: ROUTING_SCHEMA, verdict, domain_label: label,
+    matched_domains: domains, ranked, matches, domain_margin: margin,
+    forcing_question: null,
+  };
+}
+
+// ── Vision verdict (Phase Q-B, BATCH-QB, QB-2) ───────────────────────────
+// Derives the recorded vision verdict from queenReview()'s score plus a
+// deterministic hard-category override. The override lists are keyword guards
+// over title + body (whole-token, same tokenizer as the router, plus a `$`
+// amount regex for spends-money) — they encode the five absolute non-aligned
+// categories FOUNDERS_VISION.md names ("not aligned, regardless of how it's
+// worded, if it: spends money, deletes data, grants itself new authority,
+// executes an external action, or changes the Constitution").
+//
+// HONEST LIMIT (BATCH-QB amendment 3): this makes a false auto_approvable = 1
+// UNLIKELY AND DETECTABLE, not impossible. A keyword list over natural language
+// can be dodged by paraphrase, and completeness is impossible in principle.
+// QB-4's "a misaligned proposal must never score as aligned" therefore cannot
+// be met by this design — recorded as a batch §9 item for a founder decision,
+// not a solved problem. The override + the 98 bar + the recorded raw score and
+// reason are the detection half.
+//
+// QB-5 measured dodge classes (36 probe phrasings through deriveVisionVerdict
+// at score 99; 28 slip through as auto_approvable 1, 8 caught — the 8 are the
+// in-list controls): (1) money synonyms outside the list — disburse, remit,
+// reimburse, compensate, bounty, ETH, USD (only USDC is listed), charge,
+// invoice; (2) indirect phrasing with no money noun at all — "shift the
+// balance"; (3) deletion synonyms — remove, drop, clear, scrub, truncate,
+// destroy; (4) authority synonyms — bare "approve", empower, entrust,
+// promote; (5) external-action synonyms — share, announce, email, broadcast;
+// (6) constitution-change synonyms — revise, rewrite, edit, change (with an
+// F-number or soul.md); (7) morphological variants — "budgeting" is not the
+// token "budget", "purchases" is not "purchase"; (8) split compounds —
+// "auto approve" as two words is not the token "auto-approve". Adding words
+// to the lists would close some of these and open false positives elsewhere
+// ("approve" alone would fire on every approval proposal) — that trade-off
+// is QB-6's adversarial set to judge, not a word list to grow blindly here.
+//
+// QB-6 remediation (2026-11-07): QB-6 measured the trade-off per word, not
+// as a blanket claim — 24 of 33 candidates cost zero newly-firing corpus
+// items. 21 words were added to the lists below (14 unambiguous synonyms +
+// 7 morphological variants of in-list words), each at zero measured corpus
+// cost; 4 proven false positives were NOT added (change 9 items, clear 4,
+// approve 1, revise 1). Classes 2 (indirect phrasing) and 8 (split
+// compounds) still need phrase matching — a design decision for a later
+// pass, recorded not built.
+//
+// `auto_approvable` (renamed from the design's `vision_aligned`, amendment 6):
+// the field measures AUTO-APPROVABILITY, not alignment — 1 iff the score is
+// >= 98 AND no override fires; 0 iff scored below 98 OR an override fires
+// (the override column then says why); NULL iff never scored AND no override
+// fired. A 95 that clearly serves the vision is 0 here and that is CORRECT —
+// it cannot auto-approve — while the raw alignment_score next to it still says
+// 95. `auto_approvable = 0` means "needs the founder directly", never "bad
+// proposal": a legitimate constitutional amendment is correctly 0. The
+// combination auto_approvable = 1 + action = 'held' is a real row shape (an
+// Elder veto held an approvable proposal — the binary describes score +
+// override, not outcome). The 98 bar itself is a prompt instruction in
+// queenReview(), not a founder-ratified threshold (recorded as a batch §9 item).
+const VISION_OVERRIDE_KEYWORDS = {
+  // Treasury/funds vocabulary (amendment 3): the exact words a money-moving
+  // Hive proposal uses — verified, "Move funds to the new wallet" and
+  // "Reallocate the treasury allocation to the new vendor wallet" dodged the
+  // design's original lists entirely.
+  'spends-money': [
+    'spend', 'spending', 'payment', 'pay', 'purchase', 'purchases', 'buy',
+    'budget', 'budgeting', 'budgets', 'cost',
+    'price', 'fund', 'funds', 'transfer', 'transfers', 'allocate', 'allocates',
+    'allocation', 'reallocate', 'treasury', 'wallet', 'usdc', 'payment-rail',
+    // QB-6 remediation (2026-11-07): 11 words, each measured at zero newly-
+    // firing corpus items — unambiguous synonyms (disburse, remit, reimburse,
+    // compensate, bounty, eth, usd, invoice) + morphological variants of
+    // in-list words (purchases, budgeting, budgets). NOT added (proven false
+    // positives, QB-6 §4b): change, clear, approve, revise.
+    'disburse', 'remit', 'reimburse', 'compensate', 'bounty', 'eth', 'usd',
+    'invoice',
+  ],
+  'deletes-data': [
+    'delete', 'deletes', 'deleted', 'deleting', 'deletion', 'purge', 'wipe',
+    'erase',
+    // QB-6 remediation: scrub, truncate, destroy (unambiguous synonyms) +
+    // deleted, deleting (variants of delete/deletes). NOT added: remove, drop,
+    // clear (clear is a proven false positive; remove/drop need phrase matching).
+    'scrub', 'truncate', 'destroy',
+  ],
+  // Edge case, recorded: "grant" also fires on "government grants" (Q-004 Tier 4
+  // grant-seeking). The outcome (needs the founder directly) is still correct
+  // for a money/legal-structure proposal; the category label is the wrong reason.
+  // QB-6 should attack this. "authority" catches "grants itself new authority"
+  // without the grant word at all.
+  'grants-authority': [
+    'grant', 'grants', 'elevate', 'elevates', 'self-approve', 'auto-approve',
+    'permission', 'authorize', 'authorization', 'authority',
+    // QB-6 remediation: empower, entrust (unambiguous synonyms). NOT added:
+    // bare "approve" (proven false positive — #5, founder approval is the
+    // normal flow) and "promote" (needs phrase matching).
+    'empower', 'entrust',
+  ],
+  'external-action': [
+    'external', 'publish', 'publishes', 'published', 'post', 'send', 'contact',
+    // QB-6 remediation: broadcast (unambiguous synonym) + publishes,
+    // published (variants of publish). NOT added: share, announce, email
+    // (need phrase matching — "email the founder" is not an external action
+    // in the Hive's sense).
+    'broadcast',
+  ],
+  // Deliberately NOT "soul" (a governance topic, not necessarily a constitution
+  // change) and NOT bare F-numbers: a proposal that merely CITES F-002 ("does
+  // this violate F-002") is not changing the Constitution. "amend"/"constitution"
+  // cover real change proposals ("Amend F-005" contains "amend").
+  'changes-constitution': ['amend', 'amendment', 'constitution', 'ratify', 'ratification'],
+};
+const VISION_OVERRIDE_ORDER = ['spends-money', 'deletes-data', 'grants-authority', 'external-action', 'changes-constitution'];
+
+function deriveVisionVerdict(review, title, body) {
+  const text = `${String(title ?? '')}\n${String(body ?? '')}`;
+  const tokens = new Set(text.toLowerCase().match(/[a-z0-9][a-z0-9\-]+/g) || []);
+  let override = null;
+  for (const cat of VISION_OVERRIDE_ORDER) {
+    if (VISION_OVERRIDE_KEYWORDS[cat].some(k => tokens.has(k))) { override = cat; break; }
+  }
+  // `$` cannot be a token — a dollar amount is a spends-money signal on its own.
+  if (!override && /\$\s*\d/.test(text)) override = 'spends-money';
+  const visionHash = review?.visionHash ?? null;
+  if (override) return { auto_approvable: 0, vision_override: override, vision_hash: visionHash };
+  if (!review) return { auto_approvable: null, vision_override: null, vision_hash: null };
+  return {
+    auto_approvable: review.score >= 98 ? 1 : 0,
+    vision_override: null,
+    vision_hash: visionHash,
+  };
+}
+
 // The Queen's real approval power (2026-08-03) — scoped, logged, switch-gated.
-// Scores a proposal against docs/FOUNDERS_VISION.md (same ASSETS-fetch pattern as
+// Scores a proposal against FOUNDERS_VISION.md, fetched as /FOUNDERS_VISION.md
+// at the site root (served from docs/) via ASSETS (same pattern as
 // constitutionSummary above). Returns null — never a score — if the reference text or
 // a generative provider is unavailable, so an unscoreable proposal always falls back
 // to waiting for the founder rather than defaulting to approved. Auto-approval itself
@@ -2314,12 +2610,26 @@ async function constitutionSummary(env, requestUrl) {
 // AND the proposal's kind isn't 'action-request' — those already run through the
 // separate, stricter ACTION_ALLOWLIST gate (PR #146) because they touch real GitHub
 // execution, and no alignment score is allowed to skip that gate.
+//
+// QB-2 return-contract extension (additive, the one deliberate touch to a
+// verdict-path function): the return also carries `visionHash` — sha256 of the
+// vision text ACTUALLY PLACED IN THE PROMPT, not of the whole fetched file.
+// QB-6 remediation (2026-11-07, option B): the 4,000-char cap is REMOVED —
+// the merged FOUNDERS_VISION.md (5,377 bytes / 5,311 chars, 82 lines) already
+// exceeded it, and the slice cut Appendix A and the Queen note mid-word
+// ("capabili…"). The full fetched text is now placed in the prompt, and the
+// hash covers exactly that text. Fail-closed guard instead of a cap: if the
+// fetched vision ever exceeds 16,384 chars, queenReview() returns null
+// (unscoreable — waits for the founder) rather than silently scoring against
+// a truncated vision.
 async function queenReview(env, requestUrl, { title, body }) {
   if (!env.ASSETS) return null;
   try {
     const res = await env.ASSETS.fetch(new Request(new URL('/FOUNDERS_VISION.md', requestUrl)));
     if (!res.ok) return null;
     const vision = await res.text();
+    if (vision.length > 16384) return null;
+    const visionText = vision;
     const system =
       'You are the Queen (Nanuet) of THE HIVE, reviewing one pending proposal against the ' +
       "founder's real, written vision below. Score how aligned the proposal is, 0-100. " +
@@ -2330,7 +2640,7 @@ async function queenReview(env, requestUrl, { title, body }) {
       'expanding — that is real, part of your own responsibilities, not a new gate. Reply ' +
       'with EXACTLY two lines: a line "SCORE: <0-100>" and a line "REASON: <one short ' +
       'sentence>". Nothing else.\n\n' +
-      'FOUNDER\'S VISION:\n' + vision.slice(0, 4000);
+      'FOUNDER\'S VISION:\n' + visionText;
     const gen = await generate(env, {
       system, maxTokens: 100,
       prompt: `PROPOSAL TITLE: ${title}\nPROPOSAL BODY: ${String(body || '').slice(0, 1500)}`,
@@ -2340,7 +2650,7 @@ async function queenReview(env, requestUrl, { title, body }) {
     const reasonMatch = gen.text.match(/REASON:\s*(.+)/i);
     if (!scoreMatch) return null;
     const score = Math.min(100, Math.max(0, Number(scoreMatch[1])));
-    return { score, reason: (reasonMatch?.[1] || '').trim().slice(0, 200) };
+    return { score, reason: (reasonMatch?.[1] || '').trim().slice(0, 200), visionHash: await sha256(visionText) };
   } catch { return null; }
 }
 
@@ -2435,6 +2745,14 @@ async function elderCouncilVeto(env, { title, body }) {
 // it is not a value this code can invent.
 async function queenDecide(env, requestUrl, { title, body, proposalId }) {
   let qStatus = 'pending', qScore = null, qDecidedBy = null, qDecidedAt = null, elderNote = null;
+  // PRECONDITION, named not fixed (QA-1 open item; needs a founder decision):
+  // this gate reads bare truthiness — `if (env.QUEEN_AUTONOMOUS_APPROVAL)` —
+  // NOT switchOn(). A dashboard plain-text variable set to the string "off"
+  // is truthy and would SILENTLY ENABLE auto-approve. The "inert while switch
+  // 9 is off" claim in this file holds only while the variable is ABSENT. Do
+  // not change the gate's semantics here — that is a founder decision, not a
+  // QB-2 fix — but do not mistake this line for the fail-closed switchOn()
+  // every other switch in this file uses.
   if (env.QUEEN_AUTONOMOUS_APPROVAL) {
     const review = await queenReview(env, requestUrl, { title, body });
     if (review) {
@@ -2450,21 +2768,153 @@ async function queenDecide(env, requestUrl, { title, body, proposalId }) {
       // Phase Q-A, stage 2: write down the review that just happened. Deliberately
       // placed AFTER the verdict is settled so the row records the real outcome
       // (approved / held by an Elder / scored-but-below-threshold) rather than an
-      // intention. Triple-gated and inert in production today — nanuet-brain is not bound there yet,
-      // and both NANUET_* switches default off. It changes no variable above it:
-      // remove this block and every verdict is identical.
+      // intention. Triple-gated and inert in production today — the brain IS bound
+      // there since the QA-8 verified-live deploy (2026-11-07); what keeps it
+      // inert is that both NANUET_* switches are off and switch 9 is off.
+      // It changes no variable above it: remove this block and every verdict is
+      // identical.
+      //
+      // Phase Q-B (QB-2): the routing + vision annotation lives in this same
+      // try/catch, after the verdict, for the same reason. routeProposalDomain()
+      // is pure and synchronous and deriveVisionVerdict() is deterministic; both
+      // run only when NANUET_DOMAIN_ROUTING is on. A routing failure degrades
+      // to routing = null (row written without a label) and can never break a
+      // decision — same contract as the log itself. Routing reads exactly the
+      // text queenReview() scored (title full, body 0–1500); the slicing lives
+      // inside routeProposalDomain(), not here, so the two cannot drift apart.
+      // NOTE on §8.8 (BATCH-QB amendment 5): this block only runs when review
+      // is non-null. When queenReview() returns null, NO row is written at all
+      // in the proposal path — so the vision override has nowhere to be
+      // recorded here. The "override works with no provider up" property exists
+      // ONLY for the directive route (handleNanuetRoute below), which writes its
+      // row regardless of the review result.
       try {
+        let routing = null;
+        let vision = null;
+        if (switchOn(env, 'NANUET_DOMAIN_ROUTING')) {
+          try {
+            routing = routeProposalDomain(title, body);
+            vision = deriveVisionVerdict(review, title, body);
+          } catch { routing = null; vision = null; }
+        }
         await logQueenReview(env, {
           title, body,
           score: review.score,
           reason: review.reason,
           decision: qStatus === 'approved' ? 'approved' : (elderNote ? `held: ${elderNote}` : 'left pending'),
           proposalId: proposalId ?? null,
+          routing,
+          vision,
         });
       } catch { /* a decision log must never be able to break a decision */ }
     }
   }
   return { qStatus, qScore, qDecidedBy, qDecidedAt, elderNote };
+}
+
+// ── Founder-directive routing (Phase Q-B, BATCH-QB, QB-2) ───────────────
+// The QB-8 live-proof instrument. The proposal path cannot prove Q-B live while
+// switch 9 is off (Q-006), and switch 9 stays off — so a real founder directive
+// is routed here instead, through both passes, without ever going through
+// queenDecide().
+//
+// What it must never do: call queenDecide() (that would auto-approve at >= 98
+// and is gated on switch 9 for exactly that reason), create or decide a
+// proposal, or write to any table other than decision_log. It is an instrument,
+// not a decision-maker.
+//
+// Two preconditions, both named (BATCH-QB amendment 4): stage 3
+// (NANUET_DOMAIN_ROUTING) gates the route itself — 403 with the reason stated
+// when off. Stage 1 (NANUET_BRAIN_WRITE) gates the WRITE, enforced inside
+// logNanuetDecision() via nanuetWriteBlockedReason(): when stage 1 is off the
+// route still runs and returns the routing + vision result, but with
+// logged:false and log_reason naming the block — NEVER a silent
+// decision_log_id of null. QB-8 requires logged:true, which needs both
+// switches enabled by separate founder decisions.
+//
+// MEMORY-POISONING RISK, named (amendment 4): this route writes to the Queen's
+// memory, which Q-C will later read as ground truth for task selection. A
+// forged or careless row written here looks identical to a real founder
+// directive. A row is auditable as genuinely founder-invoked ONLY because:
+// (1) the route is founder-gated — Access JWT email == FOUNDER_EMAIL, or the
+// FOUNDER_KEY secret — and (2) the row records surface 'directive-routing',
+// subject_kind 'directive', autonomy_mode 'explicit-invoke', and the invocation
+// method in `reasoning` ("Founder directive via Access (<email>)" or "via
+// FOUNDER_KEY"). A directive-routing row WITHOUT those markers is not a founder
+// directive and must not be trusted as one.
+//
+// REFUSED-FIRST-DIRECTIVE RULE (amendment 7, defined here before QB-8): a
+// refused routing is a RECORDED OUTCOME, not a silent retry. If the first real
+// directive routes REFUSED-NO-MATCH, that row IS the QB-8 evidence, and the
+// finding (the router refused real founder language) feeds a table revision —
+// the founder does NOT keep issuing directives until one routes. Directive-
+// shopping until one routes would undermine "genuine".
+//
+// INVOCATION PATH (amendment 4 — a route with no caller does not count as an
+// instrument; no UI is built in QB-2): the founder issues a real directive in
+// chat; the operator (Muse) invokes the route with it. The FOUNDER_KEY route
+// (POST /v11/nanuet/route) is curlable with an Authorization: Bearer header
+// (key held in Secrets Store, via the Secure Vault flow — never in chat). The
+// Access route (POST /v11/founder/nanuet/route) is invoked from the founder's
+// browser, where Access attaches the Cf-Access-Jwt-Assertion header
+// automatically — the same way the Command Center already calls
+// /v11/founder/whoami. A future UI button may call either route; until then the
+// documented founder step above is the caller.
+async function handleNanuetRoute(env, requestUrl, directive, invokedVia) {
+  if (!switchOn(env, 'NANUET_DOMAIN_ROUTING')) {
+    return { status: 403, body: { available: false, reason: 'NANUET_DOMAIN_ROUTING is off — Phase Q-B is built but not enabled (founder decision required)' } };
+  }
+  const text = String(directive ?? '').trim();
+  if (!text) return { status: 400, body: { detail: 'directive is required' } };
+  // Route on the directive as the title (body empty) — the same input shape
+  // queenReview() scores a proposal with, and the full text is stored in the
+  // row so the routed input is reconstructable.
+  const routing = routeProposalDomain(text, '');
+  const review = await queenReview(env, requestUrl, { title: text, body: '' });
+  const vision = deriveVisionVerdict(review, text, '');
+  const reasoning =
+    `Founder directive via ${invokedVia}: ${routing.verdict}` +
+    (routing.domain_label ? ` (${routing.domain_label})` : '') +
+    (review?.reason ? ` — Queen: ${review.reason}` : ' — Queen: unscored (no provider or no vision text)') +
+    (vision.vision_override ? ` — override: ${vision.vision_override}` : '');
+  const res = await logNanuetDecision(env, {
+    surface: 'directive-routing',
+    subject_kind: 'directive',
+    subject_id: null,
+    request: text,
+    reasoning,
+    action: `routed: ${routing.domain_label ?? routing.verdict}`,
+    risk_tier: 'normal',
+    autonomy_mode: 'explicit-invoke',
+    alignment_score: review?.score ?? null,
+    provider: null,
+    domain_label: routing.domain_label,
+    domain_verdict: routing.verdict,
+    domain_matches: { ranked: routing.ranked, forcing_question: routing.forcing_question ?? null },
+    domain_margin: routing.domain_margin,
+    auto_approvable: vision.auto_approvable,
+    vision_override: vision.vision_override,
+    vision_hash: vision.vision_hash,
+    routing_schema: routing.schema,
+  });
+  return {
+    status: 200,
+    body: {
+      directive: text,
+      domain_label: routing.domain_label,
+      domain_verdict: routing.verdict,
+      domain_matches: { ranked: routing.ranked, forcing_question: routing.forcing_question ?? null },
+      domain_margin: routing.domain_margin,
+      auto_approvable: vision.auto_approvable,
+      vision_override: vision.vision_override,
+      vision_score: review?.score ?? null,
+      vision_hash: vision.vision_hash,
+      routing_schema: routing.schema,
+      logged: res.logged,
+      decision_log_id: res.logged ? (res.id ?? null) : null,
+      log_reason: res.logged ? null : (res.reason || res.error || 'logging blocked'),
+    },
+  };
 }
 
 // Queues consumer (Phase 8, 2026-07-21): processes jobs enqueued by the
@@ -2809,6 +3259,39 @@ export default {
         const rb = await request.json().catch(() => ({}));
         const result = await upsertRoadmapItems(DB, rb);
         return json(result.body, result.status);
+      }
+      // QB-8 live-proof instrument (Phase Q-B, BATCH-QB, QB-2): route a real
+      // founder directive through both passes and log ONE decision_log row.
+      // Two parallel routes per the codebase's own convention (cf.
+      // /roadmap/development FOUNDER_KEY vs /founder/roadmap/development
+      // Access above): one gate each, never mixed in one route. The Access
+      // route is the primary path; the FOUNDER_KEY route is the fallback the
+      // Access route's own 401 message points at — it matters because
+      // verifyAccessJWT() returns null for everyone while ACCESS_AUD /
+      // FOUNDER_EMAIL are unset (live: ACCESS_CONFIGURED false since
+      // 2026-11-06), so an Access-only instrument would leave QB-8 hostage to
+      // that dashboard fix. Neither route calls queenDecide(), creates or
+      // decides a proposal, or writes anywhere but decision_log.
+      if (p === '/founder/nanuet/route' && method === 'POST') {
+        const accessEmail = await verifyAccessJWT(request, env, ctx);
+        if (!accessEmail) {
+          return json({ detail: 'no Cloudflare Access session — sign in, or use the FOUNDER_KEY field as a fallback' }, 401);
+        }
+        const rb = await request.json().catch(() => ({}));
+        const r = await handleNanuetRoute(env, request.url, rb.directive, `Access (${accessEmail})`);
+        return json(r.body, r.status);
+      }
+      if (p === '/nanuet/route' && method === 'POST') {
+        if (!(await founderAuthOk(request, env))) {
+          return json({
+            detail: (await founderKeyBound(env))
+              ? 'invalid or missing founder key'
+              : 'no FOUNDER_KEY bound yet — see FLIP_THE_SWITCHES.md',
+          }, 401);
+        }
+        const rb = await request.json().catch(() => ({}));
+        const r = await handleNanuetRoute(env, request.url, rb.directive, 'FOUNDER_KEY');
+        return json(r.body, r.status);
       }
       // A plain top-level navigation target for the Proposals panel's "Sign in as
       // founder" link — Access gates the whole /v11/founder/* prefix at the edge,
@@ -4016,11 +4499,31 @@ export default {
             rows = r?.results || [];
           } catch { rows = []; }
         }
-        const ladder = rows.map(row => ({
-          ...row,
-          enabled: !!state[row.key],
-          blocked_by: row.requires && !state[row.requires] ? row.requires : null,
-        }));
+        // QB-2: stage-3 "built" is a CODE fact (DOMAIN_ROUTING_BUILT), not a
+        // database string. When the flag is true, a stage-3 row still carrying
+        // the stale "NOT BUILT" description or the "costs tokens" risk note is
+        // corrected here at read time — the D1 row itself is updated by the
+        // QB-2 migration (QB-3 applies it); this override only heals
+        // pre-migration rows, and only when they still carry the stale text.
+        const ladder = rows.map(row => {
+          const r = {
+            ...row,
+            enabled: !!state[row.key],
+            blocked_by: row.requires && !state[row.requires] ? row.requires : null,
+          };
+          if (row.key === 'NANUET_DOMAIN_ROUTING' && DOMAIN_ROUTING_BUILT) {
+            if (typeof r.description === 'string' && r.description.startsWith('NOT BUILT')) {
+              r.description = 'BUILT (Phase Q-B). ' + r.description.replace(/^NOT BUILT\b[^.]*\. /, '');
+            }
+            if (typeof r.risk_note === 'string' && r.risk_note.includes('costs tokens')) {
+              r.risk_note = 'The ported keyword router costs zero tokens (pure function, no generate() call). It produces only a domain label and a vision verdict — no action, and it can never change a verdict.';
+            }
+          }
+          return r;
+        });
+        const builtNote = DOMAIN_ROUTING_BUILT
+          ? 'Stages 1-3 are built; stages 4-6 are documented destinations that are NOT built.'
+          : 'Stages 1-2 are built; stages 3-6 are documented destinations that are NOT built.';
         return json({
           agent: 'Nanuet',
           provisioned: nanuetBrainOk(env),
@@ -4039,7 +4542,7 @@ export default {
             'Enablement is read from deploy-time environment variables only, never from this database — ' +
             'an agent that can write its own permissions has none. Nanuet has no superior in the roster ' +
             '(reports_to IS NULL), so this rule matters more for her than for any other agent. ' +
-            'Stages 1-2 are built; stages 3-6 are documented destinations that are NOT built.',
+            builtNote,
           docs: 'worker/schema/NANUET_AUTONOMY.md',
         });
       }
@@ -4489,6 +4992,18 @@ export {
   nanuetRecall,
   logNanuetDecision,
   logQueenReview,
+  // Queen domain routing (Phase Q-B, QB-2) — exported so QB-4/QB-6 tests drive
+  // the real ported router and vision verdict, not a reimplementation.
+  DOMAIN_ROUTING_BUILT,
+  ROUTING_SCHEMA,
+  routeProposalDomain,
+  deriveVisionVerdict,
+  handleNanuetRoute,
+  // QB-5: queenDecide/queenReview exported so the verdict-invariance tests
+  // drive the real decision path (routing on vs off) instead of a copy.
+  // Same convention as every export above: inert in production, tests only.
+  queenDecide,
+  queenReview,
   fourDBrain,
   fetchRepoFile,
   extractDiffBlock,
