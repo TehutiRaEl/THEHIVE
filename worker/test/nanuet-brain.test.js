@@ -124,7 +124,7 @@ describe('nanuetBrainOk / nanuetWriteBlockedReason — unprovisioned is a first-
   test('an absent database is reported as NOT PROVISIONED, not as a switch problem', () => {
     const reason = nanuetWriteBlockedReason({ NANUET_BRAIN_WRITE: 'on' });
     assert.match(reason, /not provisioned/i);
-    assert.match(reason, /does not exist/i);
+    assert.match(reason, /not bound/i);
   });
 
   test('a bound database with the switch off names the SWITCH, not the database', () => {
@@ -355,7 +355,7 @@ describe('logNanuetDecision — the high-risk explanation is enforced in code, n
     assert.equal(env.NANUET_BRAIN.writes.length, 0);
   });
 
-  test('nothing is written when the database does not exist', async () => {
+  test('nothing is written when the database is not bound', async () => {
     const r = await logNanuetDecision({ NANUET_BRAIN_WRITE: 'on' }, { request: 'x' });
     assert.equal(r.logged, false);
     assert.match(r.reason, /not provisioned/i);
@@ -441,7 +441,7 @@ describe('GET /v11/nanuet/brain — honest about an unprovisioned database', () 
     assert.equal(b.write_enabled, false);
     assert.equal(b.review_log_enabled, false);
     assert.equal(b.counts, null);
-    assert.match(b.note, /wrangler d1 create nanuet-brain/);
+    assert.match(b.note, /not bound/i);
     assert.match(b.note, /nanuet-brain\.sql/);
   });
 
@@ -550,12 +550,14 @@ describe('GET /v11/nanuet/autonomy — the ladder, with nothing on', () => {
 // ─────────────────────────────────────────────────────────────────────────
 // The stubs above cannot catch this class of bug, and that is the point.
 //
-// nanuet-brain does not exist, so not one statement in this build has ever run
-// against a real database. A D1 stub accepts any SQL and any number of bound
-// arguments, so a column that the schema does not have, or a bind() arity that
-// does not match its placeholders, would pass every test above and fail only on
-// the founder's first real request — after the truth-level claim was already
-// made. These read the real source and the real schema and compare them.
+// nanuet-brain exists now (created 2026-11-05, QA-2) but no statement in this
+// build has run against the PRODUCTION database yet — the staging round-trip
+// (QA-6) proved the SQL against a test database only. A D1 stub accepts any SQL
+// and any number of bound arguments, so a column that the schema does not have,
+// or a bind() arity that does not match its placeholders, would pass every test
+// above and fail only on the founder's first real request — after the
+// truth-level claim was already made. These read the real source and the real
+// schema and compare them.
 describe('code/schema agreement — the check a stub cannot make', () => {
   const src = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8');
   const schema = readFileSync(new URL('../schema/nanuet-brain.sql', import.meta.url), 'utf8');
@@ -629,14 +631,20 @@ describe('code/schema agreement — the check a stub cannot make', () => {
     }
   });
 
-  test('wrangler.jsonc does NOT bind NANUET_BRAIN — the database does not exist and a live binding would fail the deploy', () => {
+  test('wrangler.jsonc DOES bind NANUET_BRAIN to the database QA-2 created — binding before the database existed would have failed the deploy', () => {
     const wrangler = readFileSync(new URL('../../wrangler.jsonc', import.meta.url), 'utf8');
     const uncommented = wrangler
       .split('\n')
       .filter(l => !l.trim().startsWith('//'))
       .join('\n');
-    assert.equal(uncommented.includes('NANUET_BRAIN'), false,
-      'an active D1 binding to a database that does not exist fails the deploy and takes the live Queen down');
-    assert.ok(wrangler.includes('NANUET_BRAIN'), 'the commented block with the founder steps must still be there');
+    // QA-2-before-QA-3 is a safety order, not a preference: the binding is only
+    // safe because the database exists. This test guards the wired state, not the
+    // old unprovisioned one — if the id below ever changes, update it here too.
+    assert.ok(uncommented.includes('NANUET_BRAIN'),
+      'the binding must be active: QA-2 created nanuet-brain, this branch wires it');
+    assert.ok(uncommented.includes('b1928270-d469-4cf5-aa10-0902d89cf345'),
+      'the binding must carry the real database_id from QA-2, not the placeholder');
+    assert.ok(wrangler.includes('ACTIVATION'), 'the activation record with the founder steps must still be there');
   });
 });
+

@@ -1995,9 +1995,11 @@ async function logTrainingSample(env, t) {
 // a decision/outcome log and a staged-autonomy ladder, and "the same for Nanuet
 // later, when work on the Queen resumes." This is that resumption.
 //
-// THE DATABASE DOES NOT EXIST YET, and only the founder can create it. So every
-// function here has to degrade honestly rather than crash — with NANUET_BRAIN
-// unbound (which is the state today, in production, right now) each one returns
+// THE DATABASE NOW EXISTS (created 2026-11-05, QA-2) and the binding ships
+// with this branch, but production is not bound yet — it goes live on deploy.
+// So every function here has to degrade honestly rather than crash — with
+// NANUET_BRAIN unbound (which is the state today, in production, right now)
+// each one returns
 // a clear "not provisioned" result and the Queen behaves exactly as she does
 // today. Schema and the founder's exact provisioning commands:
 // worker/schema/nanuet-brain.sql. Ladder: worker/schema/NANUET_AUTONOMY.md.
@@ -2054,7 +2056,7 @@ function nanuetAutonomyState(env) {
 // 45's bug (two different facts reported as one).
 function nanuetWriteBlockedReason(env) {
   if (!nanuetBrainOk(env)) {
-    return 'nanuet-brain is not provisioned — the D1 database does not exist yet (founder-only: see worker/schema/nanuet-brain.sql)';
+    return 'nanuet-brain is not provisioned — the D1 database is not bound in this deployment (created 2026-11-05, QA-2; founder-only: see worker/schema/nanuet-brain.sql)';
   }
   if (!switchOn(env, 'NANUET_BRAIN_WRITE')) return 'NANUET_BRAIN_WRITE is off';
   return null;
@@ -2448,7 +2450,7 @@ async function queenDecide(env, requestUrl, { title, body, proposalId }) {
       // Phase Q-A, stage 2: write down the review that just happened. Deliberately
       // placed AFTER the verdict is settled so the row records the real outcome
       // (approved / held by an Elder / scored-but-below-threshold) rather than an
-      // intention. Triple-gated and inert today — nanuet-brain does not exist yet,
+      // intention. Triple-gated and inert in production today — nanuet-brain is not bound there yet,
       // and both NANUET_* switches default off. It changes no variable above it:
       // remove this block and every verdict is identical.
       try {
@@ -3984,10 +3986,9 @@ export default {
           } catch (e) { st.error = String(e); }
         } else {
           st.note =
-            'nanuet-brain does not exist yet. Creating it is founder-only and costs one of the ' +
-            'account\'s 10 D1 slots: `npx wrangler d1 create nanuet-brain`, then ' +
-            '`npx wrangler d1 execute nanuet-brain --remote --file=worker/schema/nanuet-brain.sql`, ' +
-            'then uncomment the NANUET_BRAIN block in wrangler.jsonc with the real database_id and deploy. ' +
+            'nanuet-brain is not bound in this deployment. The database exists (created 2026-11-05, QA-2); ' +
+            'binding it is founder-only: uncomment the NANUET_BRAIN block in wrangler.jsonc with the real ' +
+            'database_id and deploy (schema: worker/schema/nanuet-brain.sql). ' +
             'Until then every read and write here is a clean no-op and Nanuet behaves exactly as she does today.';
         }
         return json({
