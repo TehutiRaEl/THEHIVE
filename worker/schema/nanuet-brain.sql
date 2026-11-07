@@ -75,6 +75,16 @@ CREATE INDEX IF NOT EXISTS idx_memories_vector_id  ON memories(vector_id);
 --                     back to the thing it decided rather than free-floating
 --   alignment_score — queenReview()'s real 0-100 score against FOUNDERS_VISION.md
 --
+-- Phase Q-B (QB-2) adds EIGHT more additive, nullable columns — domain_label,
+-- domain_verdict, domain_matches, domain_margin, auto_approvable,
+-- vision_override, vision_hash, routing_schema — for the same reason the first
+-- three exist: a domain label or a vision verdict stuffed into a free-text
+-- column would be unqueryable. `auto_approvable` measures AUTO-APPROVABILITY,
+-- not alignment (1 iff score >= 98 and no override fired; 0 means "needs the
+-- founder directly", never "bad proposal"). The migration file
+-- worker/schema/nanuet-brain-domain-routing-columns.sql carries the same eight
+-- columns as ALTER TABLEs for the live database created before this change.
+--
 -- risk_tier/risk_reason/risk_handling exist because the founder asked for exactly
 -- this by name for Kai El: for high-risk items the agent must write out *why* it
 -- is high-risk and *how* to handle it, not merely flag it. The same rule applies
@@ -98,6 +108,14 @@ CREATE TABLE IF NOT EXISTS decision_log (
   subject_kind    TEXT,            -- Queen-specific: proposal | campaign-task | directive
   subject_id      TEXT,            -- Queen-specific: the id of the thing judged
   alignment_score INTEGER,         -- Queen-specific: queenReview()'s 0-100 score
+  domain_label    TEXT,            -- Phase Q-B (QB-2): single domain, only when domain_verdict is SINGLE-DOMAIN; NULL otherwise, never a guess
+  domain_verdict  TEXT,            -- Phase Q-B (QB-2): SINGLE-DOMAIN | MULTI-DOMAIN-SPLIT | REFUSED-NO-MATCH | NOT-ROUTED
+  domain_matches  TEXT,            -- Phase Q-B (QB-2): routing result as JSON {ranked: [{domain, hits, count}], forcing_question}
+  domain_margin   INTEGER,         -- Phase Q-B (QB-2): top domain hit count minus second; 0 on an exact tie; NULL when fewer than two domains matched
+  auto_approvable INTEGER,         -- Phase Q-B (QB-2): 1 iff score >= 98 and no vision override fired; 0 iff scored below 98 or overridden; NULL iff never scored and no override. Measures AUTO-APPROVABILITY, not alignment.
+  vision_override TEXT,            -- Phase Q-B (QB-2): spends-money | deletes-data | grants-authority | external-action | changes-constitution, or NULL
+  vision_hash     TEXT,            -- Phase Q-B (QB-2): sha256 of the vision text actually placed in the queenReview() prompt
+  routing_schema  TEXT,            -- Phase Q-B (QB-2): hive-conductor/routing.v1
   outcome         TEXT,            -- NULL until known; filled in later, never guessed
   outcome_at      TEXT,
   provider        TEXT,            -- which LLM actually answered (task 45's real data)
@@ -169,7 +187,7 @@ CREATE TABLE IF NOT EXISTS autonomy_registry (
 -- database does not exist. When the founder creates it, this whole file is what
 -- gets applied (command at the bottom).
 --
--- Stages 1-2 are BUILT (Phase Q-A, this file's own commit). Stages 3-6 are
+-- Stages 1-3 are BUILT (1-2 Phase Q-A, 3 Phase Q-B, QB-2). Stages 4-6 are
 -- documented destinations only, NOT BUILT — the same honest pattern Kai El's
 -- stage 7 (KAI_FINANCIAL_AUTONOMY) uses: the ladder's shape is stated up front so
 -- it is explicit rather than assumed, and each unbuilt row says so in its own
@@ -186,9 +204,9 @@ INSERT OR REPLACE INTO autonomy_registry (key, stage, title, description, turn_o
  'Same dashboard path -> NANUET_REVIEW_LOG = "on" -> Deploy. Turn on stage 1 first or nothing is written.',
  'A review only happens at all when the pre-existing QUEEN_AUTONOMOUS_APPROVAL switch (FLIP_THE_SWITCHES.md switch 9) is on. This switch does not turn that one on and cannot. With switch 9 off, this writes nothing because there is nothing to write.', 'NANUET_BRAIN_WRITE'),
 ('NANUET_DOMAIN_ROUTING', 3, 'Route what she reviews to the right domain',
- 'NOT BUILT — Phase Q-B. Would run each proposal through hive-conductor''s domain_router.py to learn which real domain (edge-backend/frontend/colonies/governance/strategy) it touches, instead of the current domain-blind score.',
- 'Not a variable flip today: Phase Q-B has to be built first. This row exists so the ladder''s next rung is explicit rather than invented later.',
- 'Adds a second reasoning pass per proposal, so it costs tokens. Still produces only a score and a label — no action.', 'NANUET_REVIEW_LOG'),
+ 'BUILT (Phase Q-B, QB-2). Runs each proposal through the ported hive-conductor domain router (worker/src/index.js routeProposalDomain) to learn which real domain (edge-backend/frontend/colonies/governance/strategy) it touches, instead of the current domain-blind score. Also records a vision verdict (auto_approvable + hard-category override) against FOUNDERS_VISION.md.',
+ 'Cloudflare dashboard -> Workers & Pages -> thehive -> Settings -> Variables and Secrets -> add plain variable NANUET_DOMAIN_ROUTING = "on" -> Deploy. Turn on stage 2 first or nothing is logged; stage 1 first or nothing is written.',
+ 'The ported keyword router costs zero tokens (pure function, no generate() call). It produces only a domain label and a vision verdict — no action, and it can never change a verdict: routing runs after the verdict, inside the log try/catch.', 'NANUET_REVIEW_LOG'),
 ('NANUET_CAMPAIGN_OBSERVE', 4, 'Read the campaign queue and say what she would pick',
  'NOT BUILT — Phase Q-C tier 1. Would read the task queue and write her own read of it — which task she would pick next and why — into this decision log. Visible to the founder; changes nothing about how the daily firing actually runs.',
  'Not a variable flip today: Phase Q-C tier 1 has to be built first, and Phase Q-C is not authorised. Listed so the destination is stated, not assumed.',
