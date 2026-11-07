@@ -606,6 +606,8 @@ describe('code/schema agreement — the check a stub cannot make', () => {
   test('the Queen-specific columns are present in the schema, not just in the code', () => {
     const cols = schemaColumns('decision_log');
     for (const c of ['subject_kind', 'subject_id', 'alignment_score']) assert.ok(cols.includes(c), c);
+    // Phase Q-B (QB-2): domain routing + vision verdict columns.
+    for (const c of ['domain_label', 'domain_verdict', 'domain_matches', 'domain_margin', 'auto_approvable', 'vision_override', 'vision_hash', 'routing_schema']) assert.ok(cols.includes(c), c);
   });
 
   test('autonomy_registry has NO enabled column — an agent that writes its own permissions has none', () => {
@@ -624,8 +626,10 @@ describe('code/schema agreement — the check a stub cannot make', () => {
     }
   });
 
-  test('the ladder seed marks stages 3-6 as NOT BUILT rather than as working switches', () => {
-    for (const k of ['NANUET_DOMAIN_ROUTING', 'NANUET_CAMPAIGN_OBSERVE', 'NANUET_CAMPAIGN_ADVISE', 'NANUET_DELEGATE_AKOSHA']) {
+  test('the ladder seed marks stage 3 as BUILT (Phase Q-B, QB-2) and stages 4-6 as NOT BUILT', () => {
+    const built = /'NANUET_DOMAIN_ROUTING'[\s\S]{0,600}?BUILT \(Phase Q-B/.test(schema);
+    assert.ok(built, "stage 3's seeded description must say BUILT (Phase Q-B)");
+    for (const k of ['NANUET_CAMPAIGN_OBSERVE', 'NANUET_CAMPAIGN_ADVISE', 'NANUET_DELEGATE_AKOSHA']) {
       const row = new RegExp(`'${k}'[\\s\\S]{0,600}?NOT BUILT`).test(schema);
       assert.ok(row, `${k}'s seeded description must say NOT BUILT`);
     }

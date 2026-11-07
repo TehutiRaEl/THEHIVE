@@ -85,6 +85,19 @@ python3 .claude/skills/hive-conductor/scripts/domain_router.py --directive "<fou
 3. No clear match (`REFUSED-NO-MATCH`, exit 3) → the script prints a forcing question; ask the
    founder one question with a recommended lane, don't guess.
 
+**Keyword table — where it lives and how it changes (QB-2, 2026-11-06):** the
+authoritative table is `DOMAIN_KEYWORDS` in `domain_router.py` (revised 2026-11-06
+against the 116 live proposals: routing + provider/auth + Cloudflare-store
+keywords added; hyphenated forms `front-end`/`back-end` added because the
+tokenizer keeps a hyphenated word as ONE token). The Worker carries a JS port of
+the same table (`worker/src/index.js` `DOMAIN_KEYWORDS` / `routeProposalDomain`).
+**Drift rule, bidirectional:** the Python table and the JS port change together,
+in the same PR, both directions — a change to either without the other breaks the
+QB-4 parity test. The split rule: a domain forces `MULTI-DOMAIN-SPLIT` only with
+≥ 2 distinct keyword hits; zero strong domains resolve to the domain of the
+first domain-keyword occurrence in the text (positional tie-break, margin 0,
+full ranked list preserved so the tie stays visible).
+
 ## The manifest gap this closes (2026-08-18)
 
 A `plan-reality-audit`-style check found this skill's own "Quick start" step 1
