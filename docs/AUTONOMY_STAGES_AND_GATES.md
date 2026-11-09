@@ -1,4 +1,4 @@
-# Autonomy Stages and Gates — DRAFT (workspace-only, NOT ratified)
+# Autonomy Stages and Gates — DRAFT (repo design doc, NOT ratified)
 
 **Status:** Draft, 2026-11-09. Proposed repo design doc. Not Hive law, not a charter
 change, not a ratification of anything. Nothing in this file authorizes a
