@@ -16,6 +16,13 @@
 
 ## 📋 THE RULES
 
+0. **Preamble First (founder rule, 2026-11-10):**
+   - Before any edit, commit, push, PR, workflow dispatch, trigger/timer, or agent spawn,
+     tell the founder in plain language: what, why, how, why it is necessary, the projected
+     improvement, and cost/risk
+   - Consequential work also waits for an explicit go-ahead
+   - Full rule: `.claude/skills/preamble-gate/SKILL.md`
+
 1. **Discover First, Execute Second:**
    - Before starting any significant task, list all available skills
    - Read the relevant skill files before beginning work

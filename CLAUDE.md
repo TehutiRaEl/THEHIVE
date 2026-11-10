@@ -79,6 +79,19 @@ runs immediately, no `npm install`.
 
 ## Standing session defaults
 
+- **Preamble before any work.** (Founder rule, 2026-11-10.) No AI works in this repo until it
+  has told the founder, in plain language, the **what, why, how, necessity and projected
+  improvement** of what it is about to do, plus cost and risk (cost froze the hive once).
+  Read-only investigation is exempt; any edit, commit, push, PR, workflow dispatch,
+  scheduled trigger/timer, or agent spawn is not. Consequential work (governance, security,
+  money, CI/triggers, rewriting history, multi-agent fan-out) additionally waits for the
+  founder's go-ahead, and an approval covers only the steps it described. Write it in full
+  plain sentences, not caveman compression. Canonical rule and how to verify:
+  `.claude/skills/preamble-gate/SKILL.md`. Delivered by this bullet, `AGENTS.md`,
+  `.claude/INSTRUCTIONS.md`, `.mistral/INSTRUCTIONS.md` and a `UserPromptSubmit` hook
+  (`.claude/hooks/preamble-reminder.sh`); `tests/unit/test_preamble_gate.py` fails if any of
+  that is unplugged. **Honest limit:** this is a rule plus a reminder -- nothing mechanically
+  blocks an AI that ignores it.
 - **Always-on caveman.** Full caveman mode (`.claude/skills/caveman/SKILL.md`, intensity
   `full`) is this founder's default communication style from the start of every session —
   not opt-in per-session, not something to wait for a trigger phrase to activate. Caveman's
