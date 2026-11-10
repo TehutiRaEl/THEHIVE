@@ -5,10 +5,9 @@ Complements the existing ConstitutionChecker (TITLE IX–XVI laws).
 """
 
 import threading
-import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 
 from backend.core.db import get_db
 
@@ -52,17 +51,22 @@ class ConstitutionalValidator:
     """
 
     _log_lock = threading.Lock()
-    _cache: Dict[str, Tuple["ValidationResult", float]] = {}
-    CACHE_TTL = 5.0  # seconds — short TTL since context can change
+
+    # Deliberately NO result cache. validate() used to cache every ALLOW keyed on the
+    # action string alone, but every F-check reads `context`, so one benign call excused
+    # any later violating call with the same action name for 5 seconds -- F-005's
+    # override_fixed_law flag included. The dict was class-level, so it leaked across
+    # callers (one user's allowed call excused another's violation), and the early return
+    # skipped _log(), so bypassed calls left no audit row. The six checks are a few dict
+    # lookups; nothing here is worth caching, and a gate that enforces fixed law must judge
+    # every call on its own inputs. Regression guard: tests/unit/test_validator.py
+    # ::TestAllowNeverExcusesLaterViolation. Background:
+    # .claude/skills/devils-advocate-audit/FABLE_SWEEP_2026-08-19.md. If a cache is ever
+    # reintroduced it must key on the action AND the full context, and those tests must
+    # still pass.
 
     def validate(self, action: str, context: Dict[str, Any]) -> ValidationResult:
         """Evaluate an action against all fixed laws. Returns on first violation."""
-        # Cache lookup (keyed by action only — context may vary)
-        cache_key = action
-        cached = self._cache.get(cache_key)
-        if cached and (time.monotonic() - cached[1]) < self.CACHE_TTL:
-            return cached[0]
-
         checks = [
             self._check_f001,
             self._check_f002,
@@ -83,7 +87,6 @@ class ConstitutionalValidator:
             action=action, severity="info",
         )
         self._log(action, context.get("user_id", "system"), result)
-        self._cache[cache_key] = (result, time.monotonic())
         return result
 
     def validate_batch(self, actions: List[str], context: Dict[str, Any]) -> List[ValidationResult]:
