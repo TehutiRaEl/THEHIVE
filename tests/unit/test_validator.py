@@ -2,7 +2,6 @@
 Unit tests for ConstitutionalValidator — F-001 through F-006.
 Tests are written against the actual action names and context shapes in validator.py.
 """
-import time
 import pytest
 from unittest.mock import patch, MagicMock
 
@@ -42,7 +41,6 @@ class TestF001DataSovereignty:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "data_delete",
                 {"user_id": "alice", "delete_rate_last_hour": 3, "rationale": "user request"},
@@ -54,7 +52,6 @@ class TestF001DataSovereignty:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "data_delete",
                 {"user_id": "alice", "delete_rate_last_hour": 10},
@@ -66,7 +63,6 @@ class TestF001DataSovereignty:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "read_memory",
                 {"user_id": "alice"},
@@ -82,7 +78,6 @@ class TestF002WealthFormula:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "change_wealth_formula",
                 {"user_id": "admin", "retroactive": False, "rationale": "updating formula"},
@@ -93,7 +88,6 @@ class TestF002WealthFormula:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "change_wealth_formula",
                 {"user_id": "admin", "retroactive": True, "rationale": "fix past error"},
@@ -109,7 +103,6 @@ class TestF003Autonomy:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate("force_workflow", {"user_id": "operator"})
         assert result.allowed is False
         assert result.violated_law == "F-003"
@@ -118,7 +111,6 @@ class TestF003Autonomy:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "decline_workflow",
                 {"user_id": "agent-1", "decline_rate_last_hour": 5},
@@ -129,7 +121,6 @@ class TestF003Autonomy:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "decline_workflow",
                 {"user_id": "agent-1", "decline_rate_last_hour": 10},
@@ -145,7 +136,6 @@ class TestF004Explainability:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "assign_task",
                 {"user_id": "lead", "rationale": "skill match"},
@@ -156,7 +146,6 @@ class TestF004Explainability:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "assign_task",
                 {"user_id": "lead"},  # no rationale
@@ -168,7 +157,6 @@ class TestF004Explainability:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             # "modify_config" contains keyword "modify"
             result = v.validate("modify_config", {"user_id": "admin"})
         assert result.allowed is False
@@ -178,7 +166,6 @@ class TestF004Explainability:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate("read_metrics", {"user_id": "monitor"})
         assert result.allowed is True
 
@@ -190,7 +177,6 @@ class TestF005ConflictPriority:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "read_metrics",
                 {"user_id": "user-1", "override_fixed_law": True},
@@ -202,7 +188,6 @@ class TestF005ConflictPriority:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "read_metrics",
                 {"user_id": "user-1", "mutable_law_override": True},
@@ -214,7 +199,6 @@ class TestF005ConflictPriority:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "read_metrics",
                 {"user_id": "u", "override_fixed_law": True},
@@ -225,7 +209,6 @@ class TestF005ConflictPriority:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate("read_metrics", {"user_id": "u"})
         assert result.violated_law != "F-005"
 
@@ -238,7 +221,6 @@ class TestF006NonPenalization:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "data_delete",
                 {"user_id": "alice", "apply_wealth_penalty": True,
@@ -251,7 +233,6 @@ class TestF006NonPenalization:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "data_delete",
                 {"user_id": "alice", "delete_rate_last_hour": 1, "rationale": "user request"},
@@ -262,7 +243,6 @@ class TestF006NonPenalization:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate(
                 "data_delete",
                 {"user_id": "alice", "apply_wealth_penalty": True,
@@ -278,7 +258,6 @@ class TestValidationResult:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             result = v.validate("read_metrics", {"user_id": "test-agent"})
         assert hasattr(result, "allowed")
         assert hasattr(result, "violated_law")
@@ -290,7 +269,6 @@ class TestValidationResult:
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
             results = v.validate_batch(
                 ["read_metrics", "read_metrics"],
                 {"user_id": "a"},
@@ -324,22 +302,109 @@ class TestValidationResult:
         assert "rationale" in d
 
 
-# ── TTL cache ─────────────────────────────────────────────────────────────
+# ── A prior ALLOW must never excuse a later violation ──────────────────────
+#
+# Regression guard for a CRITICAL bug found by the 2026-08-19 fable-debugger sweep
+# (.claude/skills/devils-advocate-audit/FABLE_SWEEP_2026-08-19.md). validate() used to
+# cache every ALLOW keyed on the action string alone, while all six F-checks read
+# `context`. One benign call therefore opened a 5-second window in which the same action
+# name was waved through whatever its context said -- F-005's override_fixed_law flag
+# included. The cache was a class attribute, so it leaked across callers (one user's
+# allowed call excused another user's violating one), and the early return skipped
+# _log(), so bypassed calls left no audit row either.
+#
+# The older tests in this file never saw it because nearly every one of them called
+# `v._cache.clear()` first, which erased the exact state the bug lives in. These tests
+# deliberately NEVER reset any shared state between the two calls.
 
-class TestValidatorCache:
-    def test_cache_populated_after_first_call(self):
+_BYPASS_CASES = [
+    pytest.param(
+        "data_delete",
+        {"user_id": "alice", "delete_rate_last_hour": 3, "rationale": "user request"},
+        {"user_id": "bob", "delete_rate_last_hour": 9999, "rationale": "user request"},
+        "F-001", id="F-001-delete-rate",
+    ),
+    pytest.param(
+        "change_wealth_formula",
+        {"user_id": "alice", "retroactive": False, "rationale": "prospective only"},
+        {"user_id": "bob", "retroactive": True, "rationale": "prospective only"},
+        "F-002", id="F-002-retroactive",
+    ),
+    pytest.param(
+        "decline_workflow",
+        {"user_id": "alice", "decline_rate_last_hour": 1},
+        {"user_id": "bob", "decline_rate_last_hour": 10},
+        "F-003", id="F-003-decline-rate",
+    ),
+    pytest.param(
+        "assign_task",
+        {"user_id": "alice", "rationale": "balancing load"},
+        {"user_id": "bob"},
+        "F-004", id="F-004-missing-rationale",
+    ),
+    pytest.param(
+        "read_metrics",
+        {"user_id": "alice"},
+        {"user_id": "bob", "override_fixed_law": True},
+        "F-005", id="F-005-override-flag",
+    ),
+    pytest.param(
+        "read_metrics",
+        {"user_id": "alice"},
+        {"user_id": "bob", "mutable_law_override": True},
+        "F-005", id="F-005-mutable-law-override",
+    ),
+    pytest.param(
+        "decline_workflow",
+        {"user_id": "alice", "decline_rate_last_hour": 0},
+        {"user_id": "bob", "decline_rate_last_hour": 0, "apply_wealth_penalty": True},
+        "F-006", id="F-006-wealth-penalty",
+    ),
+]
+
+
+class TestAllowNeverExcusesLaterViolation:
+    @pytest.mark.parametrize("same_instance", [True, False],
+                             ids=["same-instance", "fresh-instance"])
+    @pytest.mark.parametrize("action,benign,violating,law", _BYPASS_CASES)
+    def test_violation_after_allow_is_still_denied(
+        self, action, benign, violating, law, same_instance
+    ):
+        with patch("backend.core.validator.get_db", return_value=_mock_db()):
+            from backend.core.validator import ConstitutionalValidator
+            v1 = ConstitutionalValidator()
+            first = v1.validate(action, benign)
+            v2 = v1 if same_instance else ConstitutionalValidator()
+            second = v2.validate(action, violating)
+        assert first.allowed is True, "precondition: the benign call must itself be allowed"
+        assert second.allowed is False, (
+            f"{law} bypassed: '{action}' was allowed with violating context "
+            f"after an earlier allowed call with the same action name"
+        )
+        assert second.violated_law == law
+
+    def test_alternating_allow_and_violation_each_judged_on_its_own_context(self):
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
-            v.validate("read_metrics", {"user_id": "cache-test"})
-        assert "read_metrics" in v._cache
+            for _ in range(5):
+                assert v.validate("read_metrics", {"user_id": "a"}).allowed is True
+                bad = v.validate("read_metrics", {"user_id": "a", "override_fixed_law": True})
+                assert bad.allowed is False and bad.violated_law == "F-005"
 
-    def test_cache_not_populated_on_violation(self):
+    def test_a_denial_does_not_block_a_later_corrected_call(self):
         with patch("backend.core.validator.get_db", return_value=_mock_db()):
             from backend.core.validator import ConstitutionalValidator
             v = ConstitutionalValidator()
-            v._cache.clear()
-            v.validate("force_workflow", {"user_id": "cache-test"})
-        # Violations should NOT be cached (action may be retried with corrected context)
-        assert "force_workflow" not in v._cache
+            assert v.validate("assign_task", {"user_id": "a"}).allowed is False
+            assert v.validate("assign_task", {"user_id": "a", "rationale": "fixed"}).allowed is True
+
+    def test_every_call_is_audit_logged_including_repeats_of_the_same_action(self):
+        conn = _mock_db()
+        with patch("backend.core.validator.get_db", return_value=conn):
+            from backend.core.validator import ConstitutionalValidator
+            v = ConstitutionalValidator()
+            v.validate("read_metrics", {"user_id": "a"})
+            v.validate("read_metrics", {"user_id": "b", "override_fixed_law": True})
+        inserts = [c for c in conn.execute.call_args_list if "constitution_log" in str(c)]
+        assert len(inserts) == 2, "a repeated action name must not skip the audit log"
