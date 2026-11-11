@@ -25,6 +25,8 @@ CAMPAIGN 6 (Legal Fence) — runs alongside all
     ↓
 CAMPAIGN 7 (Full Autonomy)
     ↓
+CAMPAIGN 8 (The Game)
+    ↓
 RETURN CAMPAIGN (Lessons feed next cycle)
 ```
 
@@ -119,6 +121,24 @@ wrangler vectorize create thehive-vectors --dimensions=768 --metric=cosine
 **Tier:** 6–7 · self_modify · self_repair · self_reproduce · queen_presence (absorb → sync HOARD)
 
 **Exit gate:** Runs without constant intervention; founder supplies vision.
+
+---
+
+## CAMPAIGN 8: THE GAME — the gamified form
+
+**Added by founder decision 2026-11-11 (cross-reference Q2) — not part of the original 2026-09-28 road map text.**
+
+**Tier:** Later — after Full Autonomy · **Status:** Far-ahead planning, not live.
+
+**Goal:** The gamified expression of the federated AI Nation — the commercial game studio form of the Hive. The game is the Nation made playable as a world.
+
+**Plan:** Unity first, then Unreal, per the July 15 Unity plan (`Project_file/Founders Visonary Folder/MODIFICATIONS/unity-migration-unreal-engine-architecture-plan`); 1,000+ players. The game's own phase timing (Unity MMORPG, then Unreal AAA, then metaverse expansion) is the game's timeline, to be set when the game form begins — it is not the Hive's current schedule.
+
+**Team:** 101 roles with a $3.7M–$7.56M budget for Campaign 8 (per idea#1.md, 2026-07-15) — the current Hive runs on five AI seats plus the founder (per TEAM_CHARTERS.md, 2026-07-10/18). The two team sizes are for different phases, not in conflict.
+
+**Navigation:** The floating menu hub (`Project_file/Founders Visonary Folder/MODIFICATIONS/floating-menu-hub`, 2026-07-15; also `canvases/thehive-floating-menu/CANVAS.md`) is the visual prototype for the game form's navigation surface — not the current Hive's navigation, and not to be wired into the live app.
+
+**Exit gate:** The gamified form is live; the Nation is playable as a world.
 
 ---
 
