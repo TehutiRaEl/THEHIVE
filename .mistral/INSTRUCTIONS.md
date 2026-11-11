@@ -6,6 +6,17 @@ This document establishes the workflow for Mistral AI role in THEHIVE repository
 
 ---
 
+## ⛔ Step 0 — Preamble gate (founder rule, 2026-11-10)
+
+Before any edit, commit, push, PR, workflow dispatch, scheduled trigger/timer, or agent
+spawn, tell the founder in plain language: WHAT you will do, WHY, HOW, why it is NECESSARY,
+the PROJECTED IMPROVEMENT, and the COST/RISK. Consequential work (governance, security,
+money, CI/triggers, rewriting history) also waits for an explicit go-ahead; an approval
+covers only the steps it described. Read-only investigation is exempt. Canonical text:
+`.claude/skills/preamble-gate/SKILL.md`.
+
+---
+
 ## 🎯 Session Start Protocol
 
 ### Priority Order (Execute in Sequence)
