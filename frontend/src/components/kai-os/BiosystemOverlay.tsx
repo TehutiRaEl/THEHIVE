@@ -13,7 +13,8 @@ const V11 = `${API_BASE_URL || ''}/v11`;
  * Biosystem Architecture overlay — LIVE against Hive Queen /v11.
  * The legacy atlas (docs/biosystem.html, JASPER-era localhost:8080 demo)
  * was retired in Phase B0 (2026-11-11): archived at
- * .archive/biosystem.html, tab + iframe removed. The atlas concepts are
+ * Project_file/Founders Visonary Folder/ARCHIVE/biosystem.html,
+ * tab + iframe removed. The atlas concepts are
  * rebuilt properly per the Biosystem Reverse-Engineering Blueprint
  * (~/workspace/hive-batches/BIOSYSTEM_REVERSE_ENGINEERING_BLUEPRINT.md).
  */
@@ -121,7 +122,8 @@ export default function BiosystemOverlay({ active, onClose }: BiosystemOverlayPr
             Primary biosystem surface reads the <strong className="text-slate-200">Hive Queen Worker</strong>{' '}
             at <code className="text-cyan-glow">/v11</code>. There is no separate JASPER process to start.
             The legacy 72-system atlas page was retired in Phase B0 (archived at
-            .archive/biosystem.html) and its concepts are rebuilt properly per the
+            Project_file/Founders Visonary Folder/ARCHIVE/biosystem.html) and its
+            concepts are rebuilt properly per the
             Biosystem Reverse-Engineering Blueprint.
           </p>
 
