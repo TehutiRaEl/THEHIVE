@@ -220,12 +220,8 @@ const API: React.FC = () => {
               <p>POST /v11/auth/token with {'{"agent_name": "ui-client"}'}</p>
             </div>
             <div className="docs-card">
-              <h3>Real-time Events</h3>
-              <p>GET /v11/feed (SSE, no auth required)</p>
-            </div>
-            <div className="docs-card">
               <h3>Base URL</h3>
-              <p>http://localhost:8000 (configurable via VITE_API_BASE_URL)</p>
+              <p>Same-origin — /v11 on this Worker (VITE_API_BASE_URL overrides in local dev)</p>
             </div>
           </div>
         </section>

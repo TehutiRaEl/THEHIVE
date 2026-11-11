@@ -4,9 +4,11 @@ import KaiChatBox from '../../KaiChatBox';
 import ColonyZoomPanel from '../../ColonyZoomPanel';
 import ColonyGrid from '../../ColonyCard/ColonyGrid';
 import { useHiveData } from '../../../hooks/useHiveData';
+import type { ColonyId } from '../../../types';
 
 const WORLD: React.FC = () => {
   const [showColonyPanel, setShowColonyPanel] = useState(false);
+  const [selectedColony, setSelectedColony] = useState<ColonyId | null>(null);
   const hive = useHiveData();
 
   return (
@@ -66,7 +68,7 @@ const WORLD: React.FC = () => {
 
         <section className="world-map">
           <h2>Colonies <span style={{ opacity: 0.6, fontSize: 13 }}>(federation roster, live status via /v11/debug/colony-ping)</span></h2>
-          <ColonyGrid />
+          <ColonyGrid onSelect={(id) => { setSelectedColony(id); setShowColonyPanel(true); }} />
         </section>
 
         <section className="world-events">
@@ -91,7 +93,7 @@ const WORLD: React.FC = () => {
               <button className="modal-close" onClick={() => setShowColonyPanel(false)}>
                 &times;
               </button>
-              <ColonyZoomPanel />
+              <ColonyZoomPanel colonyId={selectedColony} onClose={() => { setShowColonyPanel(false); setSelectedColony(null); }} />
             </div>
           </div>
         )}

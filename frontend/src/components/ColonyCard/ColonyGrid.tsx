@@ -1,10 +1,12 @@
 import colonies from '../../data/colonies';
 import useColonyPing from '../../hooks/useColonyPing';
 import ColonyCard from './ColonyCard';
+import type { ColonyId } from '../../types';
 
 // Grid of the 6 real federation colonies (roster mirrors GET /v11/debug/colony-ping),
 // each card backed by the manifest's static fields plus a live ping for status.
-export default function ColonyGrid() {
+// onSelect (when given) opens the colony drill-down panel for the clicked card.
+export default function ColonyGrid({ onSelect }: { onSelect?: (id: ColonyId) => void }) {
   const { byName, lastVerified, loading, error } = useColonyPing();
 
   return (
@@ -23,6 +25,7 @@ export default function ColonyGrid() {
             lastVerified={lastVerified}
             pingLoading={loading}
             pingError={error}
+            onClick={onSelect ? () => onSelect(colony.id) : undefined}
           />
         ))}
       </div>

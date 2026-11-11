@@ -831,7 +831,7 @@ const ROADMAP_SEED = [
   ['in_progress', 'Backend test-coverage sweep', 'active', '51% → climbing',
    'Started at 46%, CI floor locked at 45% so it can only grow. One real production bug found so far: WalletManager.credit() was raising sqlite3.ProgrammingError on every SOUL grant/tip/payout — fixed.'],
   ['backlog', 'Dynamic COLONY_BASE_URLS', 'backlog', 'confirmed pending',
-   'Still a hardcoded frontend/src/utils/constants.ts map — every colony URL change is a manual edit. /v11/hive/status already returns all colony URLs with health; wiring it up is a small, real task.'],
+   'Still a hardcoded frontend/src/utils/constants.ts map — every colony URL change is a manual edit. (Corrected 2026-11-10: /v11/hive/status does NOT exist — no handler serves it; colony status comes from GET /v11/debug/colony-ping. Wiring the panel to colony-ping is the real task — frontend rewire, Nov 2026.)'],
   ['backlog', 'Worldbuilding Guild UI', 'backlog', 'confirmed pending',
    'Backend stub exists (backend/guilds/worldbuilding_guild.py, disabled), zero frontend surface — world creation form, token supply, zone editor never built.'],
   ['backlog', 'Agent genome viewer + arena cross-breed UI', 'backlog', 'confirmed pending',

@@ -1,20 +1,32 @@
 import type { ColonyId, TabId } from '../types'
 
+// Colony base URLs — deliberately empty. The colonies have no separate HTTP
+// origin to call: colony status comes from the live Worker itself,
+// GET /v11/debug/colony-ping (same-origin), not from each colony's own
+// server. The old localhost map (THEHIVE :8080, NAR2 :8000, …) pointed at
+// the dead Jasper backend and made every colony read "offline". Kept as a
+// record keyed by ColonyId so callers can look a colony up by id; the value
+// is '' (same-origin) for every colony.
 export const COLONY_BASE_URLS: Record<ColonyId, string> = {
-  THEHIVE: 'http://localhost:8080',
-  NAR2: 'http://localhost:8000',
-  '4DBRAIN': 'http://localhost:8001',
-  aether: 'http://localhost:3000',
-  automatisch: 'http://localhost:3001',
-  'Kimi-K2': 'http://localhost:8002',
-  LocalAGI: 'http://localhost:8081',
+  THEHIVE: '',
+  NAR2: '',
+  '4DBRAIN': '',
+  aether: '',
+  automatisch: '',
+  'Kimi-K2': '',
+  LocalAGI: '',
   freeCodeCamp: '',
   'free-programming-books': '',
   'build-your-own-x': '',
 }
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8080' : '')
-export const WS_URL = import.meta.env.VITE_ARENA_WS_URL || 'ws://localhost:8080'
+// Same-origin by default: the Worker serves /v11 on the same origin as the
+// app, so '' is the live value in production. In local dev, set
+// VITE_API_BASE_URL to the live Worker origin (see frontend/README.md) —
+// without it, dev reads same-origin and the Vite dev server has no /v11,
+// so the app reads OFFLINE. Never fall back to localhost: the Jasper
+// backend that used to answer there runs nowhere now.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 export interface TabDef {
   id: TabId
