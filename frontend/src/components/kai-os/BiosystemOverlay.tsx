@@ -11,13 +11,15 @@ const V11 = `${API_BASE_URL || ''}/v11`;
 
 /**
  * Biosystem Architecture overlay — LIVE against Hive Queen /v11.
- * Legacy docs/biosystem.html (JASPER-era localhost:8080 demo) is still
- * reachable via "Open legacy atlas" but is no longer the primary surface.
+ * The legacy atlas (docs/biosystem.html, JASPER-era localhost:8080 demo)
+ * was retired in Phase B0 (2026-11-11): archived at
+ * .archive/biosystem.html, tab + iframe removed. The atlas concepts are
+ * rebuilt properly per the Biosystem Reverse-Engineering Blueprint
+ * (~/workspace/hive-batches/BIOSYSTEM_REVERSE_ENGINEERING_BLUEPRINT.md).
  */
 export default function BiosystemOverlay({ active, onClose }: BiosystemOverlayProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(active, panelRef);
-  const [tab, setTab] = useState<'live' | 'legacy'>('live');
   const [llm, setLlm] = useState<Record<string, unknown> | null>(null);
   const [agents, setAgents] = useState<unknown[] | null>(null);
   const [proposals, setProposals] = useState<{ pending?: number; total?: number } | null>(null);
@@ -66,9 +68,9 @@ export default function BiosystemOverlay({ active, onClose }: BiosystemOverlayPr
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
-    if (tab === 'live') load();
+    load();
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, onClose, tab, load]);
+  }, [active, onClose, load]);
 
   if (!active) return null;
 
@@ -93,29 +95,6 @@ export default function BiosystemOverlay({ active, onClose }: BiosystemOverlayPr
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => setTab('live')}
-            className={`px-2 py-1 rounded text-[10px] uppercase tracking-wider border ${
-              tab === 'live'
-                ? 'border-cyan-glow/50 text-cyan-glow bg-void-800'
-                : 'border-white/10 text-slate-500'
-            }`}
-          >
-            Live
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('legacy')}
-            className={`px-2 py-1 rounded text-[10px] uppercase tracking-wider border ${
-              tab === 'legacy'
-                ? 'border-amber-400/40 text-amber-300 bg-void-800'
-                : 'border-white/10 text-slate-500'
-            }`}
-            title="Legacy 72-system atlas HTML (was JASPER-oriented)"
-          >
-            Legacy atlas
-          </button>
-          <button
-            type="button"
             onClick={onClose}
             aria-label="Close Biosystem"
             className="h-8 w-8 grid place-items-center rounded-lg bg-void-800 border border-white/10 text-slate-300 hover:text-cyan-glow hover:border-cyan-glow/40"
@@ -125,14 +104,7 @@ export default function BiosystemOverlay({ active, onClose }: BiosystemOverlayPr
         </div>
       </div>
 
-      {tab === 'legacy' ? (
-        <iframe
-          src="/biosystem.html"
-          title="Sovereign Hive — Legacy Biosystem Atlas"
-          className="flex-1 w-full border-0 bg-void-black"
-        />
-      ) : (
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 max-w-3xl mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 max-w-3xl mx-auto w-full">
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-display text-gold text-lg tracking-wide">Body of the Hive — live</h2>
             <button
@@ -148,7 +120,9 @@ export default function BiosystemOverlay({ active, onClose }: BiosystemOverlayPr
           <p className="text-slate-400 text-sm leading-relaxed">
             Primary biosystem surface reads the <strong className="text-slate-200">Hive Queen Worker</strong>{' '}
             at <code className="text-cyan-glow">/v11</code>. There is no separate JASPER process to start.
-            Legacy atlas (72-system HTML) remains under "Legacy atlas" for the older map.
+            The legacy 72-system atlas page was retired in Phase B0 (archived at
+            .archive/biosystem.html) and its concepts are rebuilt properly per the
+            Biosystem Reverse-Engineering Blueprint.
           </p>
 
           {err && (
@@ -198,7 +172,6 @@ export default function BiosystemOverlay({ active, onClose }: BiosystemOverlayPr
             docs/ACCESS_BIOSYSTEM_STATUS_2026-09-20.md).
           </p>
         </div>
-      )}
     </div>
   );
 }
