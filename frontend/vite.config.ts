@@ -26,16 +26,9 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-      },
-      '/ws': {
-        target: 'ws://localhost:8000',
-        ws: true,
-      },
-    },
+    // No dev proxy: nothing in src/ calls /api or /ws (the socket uses
+    // /v11/ws, same-origin). The old proxy pointed at Jasper-era localhost
+    // ports that run nowhere.
   },
   build: {
     outDir: 'dist',
@@ -68,10 +61,10 @@ export default defineConfig({
     // http://localhost:8000 — on a visitor's phone that fetched their own non-existent
     // localhost, making the whole app read OFFLINE / 0 agents (PR_LESSONS: a build-time
     // constant silently breaking the shipped result). Empty = talk to whatever origin
-    // serves the app (the Worker, where /v11 is live). Dev still gets localhost via the
-    // import.meta.env.DEV branch in constants.ts.
+    // serves the app (the Worker, where /v11 is live). Dev sets VITE_API_BASE_URL to
+    // the live Worker origin (see frontend/README.md); without it, dev reads
+    // same-origin and the Vite dev server has no /v11.
     'import.meta.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || ''),
-    'import.meta.env.VITE_ARENA_WS_URL': JSON.stringify(process.env.VITE_ARENA_WS_URL || 'ws://localhost:3001'),
     'import.meta.env.VITE_SENTRY_DSN': JSON.stringify(process.env.VITE_SENTRY_DSN || ''),
   },
 })

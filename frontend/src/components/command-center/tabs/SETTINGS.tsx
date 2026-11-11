@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
 import { useUIStore } from '../../../stores/uiStore';
+import { API_BASE_URL } from '../../../utils/constants';
 
 interface Setting {
   id: string;
@@ -197,18 +198,17 @@ const SETTINGS: React.FC = () => {
               <h3>Application</h3>
               <p><strong>Name:</strong> Sovereign Hive Command Center</p>
               <p><strong>Version:</strong> 1.0.0</p>
-              <p><strong>Build:</strong> 2026-07-10</p>
             </div>
             <div className="system-card">
               <h3>Environment</h3>
-              <p><strong>Mode:</strong> Development</p>
-              <p><strong>API Base:</strong> http://localhost:8000</p>
-              <p><strong>Debug:</strong> Enabled</p>
+              <p><strong>Mode:</strong> {import.meta.env.DEV ? 'Development' : 'Production'}</p>
+              <p><strong>API Base:</strong> {API_BASE_URL || 'same-origin (/v11 on this Worker)'}</p>
+              <p><strong>Branch:</strong> main</p>
             </div>
             <div className="system-card">
               <h3>Dependencies</h3>
               <p><strong>React:</strong> 18.2.0</p>
-              <p><strong>TypeScript:</strong> 5.2.2</p>
+              <p><strong>TypeScript:</strong> 5.3.3</p>
               <p><strong>Vite:</strong> 5.0.8</p>
             </div>
           </div>
@@ -219,7 +219,6 @@ const SETTINGS: React.FC = () => {
           <div className="about-card">
             <h3>Sovereign Hive Command Center</h3>
             <p>Frontend Builder - Mistral</p>
-            <p>Branch: mistral/frontend-command-center</p>
             <p>© 2026 TehutiRaEl</p>
           </div>
         </section>
