@@ -136,6 +136,8 @@ wrangler vectorize create thehive-vectors --dimensions=768 --metric=cosine
 
 **Team:** 101 roles with a $3.7M–$7.56M budget for Campaign 8 (per idea#1.md, 2026-07-15) — the current Hive runs on five AI seats plus the founder (per TEAM_CHARTERS.md, 2026-07-10/18). The two team sizes are for different phases, not in conflict.
 
+**Navigation:** The floating menu hub (`Project_file/Founders Visonary Folder/MODIFICATIONS/floating-menu-hub`, 2026-07-15; also `canvases/thehive-floating-menu/CANVAS.md`) is the visual prototype for the game form's navigation surface — not the current Hive's navigation, and not to be wired into the live app.
+
 **Exit gate:** The gamified form is live; the Nation is playable as a world.
 
 ---
