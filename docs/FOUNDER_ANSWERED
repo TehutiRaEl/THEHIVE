@@ -283,3 +283,16 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Effect: the amendment takes effect when PR #219 merges, not on this entry. Re-test is full regression, pending after merge.
 **Downstream chain:** Law stress-test program (F-001 next, under the improved process); No-Verdict Ledger; Council design.
 **Recorded by:** Muse, at founder direction, 2026-11-05. Pushed to main 2026-11-05 after PR #219 was opened.
+
+---
+
+## Truth hierarchy — RATIFIED 2026-11-11
+
+**Question (as queued):** Production > code > plan > narrative — proposed in the 2026-10-12 batch plan, not yet founder-ratified. Ratify it, or state a different order?
+**Founder decision:** RATIFY as proposed, with two clarifications (2026-11-11).
+**What this means:**
+- The order is production > code > plan > narrative. Production (what is actually live) outranks code (what is in the repo), which outranks plan (what is written in plans/docs), which outranks narrative (what is said about it).
+- When levels disagree, the higher level wins and the lower level gets corrected — never the reverse. If the narrative says it is done but production says otherwise, the narrative gets fixed, not the system.
+- A founder decision is a recorded fact about intent, not about state. It guides what production should be, but it does not override what production is. Deciding something is done does not make it done; only the live system does that.
+**Downstream chain:** Evidence-first discipline; the 20-rung done ladder (verified-live); cross-reference drift findings; all future disagreements between live state, code, plan, and narrative.
+**Recorded by:** Muse, at founder direction, 2026-11-11. Cross-reference Q6.
