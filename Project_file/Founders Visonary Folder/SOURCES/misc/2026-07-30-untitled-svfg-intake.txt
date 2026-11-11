@@ -1,0 +1,130 @@
+=== Untitled document (2026-07-30) ===
+=== Drive ID: 1DmUB8Xk3ekIIlPQjkUswk1RQvZAH1mvzWAY16Bn1Lw4 ===
+
+
+---
+Founder Answers — The Intake Form
+
+> **Status:** Operational — living canon · **Last reviewed:** 2026-07-12 (created) · **Amend via:** the founder fills fields; the session transcribes chat answers here
+
+> **How to use this file:** every input the engine has asked for and not yet received lives here as a fillable field. Edit it directly on GitHub — open the file, tap the pencil icon, type your answers after each `➡️ ANSWER:` marker, commit to this same branch (`claude/sovereign-imagination-fable5-cne3ss`) — or just answer in chat and the session writes it in for you. Fill any field, skip any field: partial answers move the machine. Nothing here is a test; raw, messy, voice-memo-transcript answers are perfect.
+
+---
+
+## Section 1 — Decisions (these block the most)
+
+### D5 — Your hours ⚠️ THE single blocking input
+The plan's only capital is your time. Every timeline in the roadmap and task tree is conditional until this is a number.
+- Hours per week you can give SVFG:
+  ➡️ ANSWER: 20
+- Is SVFG your main build or a parallel one?
+  ➡️ ANSWER:one of many
+
+### First spend — confirm or override
+The resequenced plan points the first ~$400–$500 at one flat-fee attorney session + LLC formation *before* the domain (the shield before the sign — dissection F5/C5).
+- "Confirmed" — or your override:
+  ➡️ ANSWER: confirmed
+
+### Corridor — confirm or override
+Current canon: the China commitment is day-one, executed only through merchant-grade licensed rails; the personal-account micro-remittance pattern is prohibited (it puts account-freeze risk on the freelancer); simpler corridors carry first-mile volume. One sentence from you amends it.
+- "Confirmed" — or your override:
+  ➡️ ANSWER: the goal is to get the vast asian market of freelancers the opportunity to privately contract right from their desk doing work from overseas contracting directly with the app from their on jurisdiction so they will have to adhere to all of those specificities laws and requirements and the app or its creators will be held liable for or accountable for. 
+
+### Brand assumptions — correct anything wrong (from brand-brief §9)
+- The mark reads as **SoVereign ForGe** (S·V from SoVereign, F·G from ForGe). Right or wrong?
+  ➡️ ANSWER:right 
+- Anything else in the founding brief's assumptions to correct:
+  ➡️ ANSWER: none that i can see
+
+---
+
+## Section 2 — The Roster (1% of 100 people, not 100% of you)
+
+Your staffing law: small asks, many people. Every position below is scoped to a "1%" ask — one conversation, one intro, one task, one session. List names, or just contexts ("my cousin's roommate does logos," "a guy from my old job in Shenzhen") — the engine turns contexts into outreach.
+
+> **The guardrail (dissection F7):** until the LLC exists, every contributor is either a paid contractor or an unpaid favor — no equity, no revenue-share promises, nothing deferred. Promises of ownership in a company that doesn't exist yet are promises of nothing, and they create personal liability. The posse compensation models unlock the day the entity does.
+
+### Position 1 — Interviewees (need 10–20 · ask: one 30-minute conversation)
+Freelancers you know (any country, any skill) and people with ideas who never built them. They seed the demand research AND the pilot pipeline.
+➡️ NAMES/CONTEXTS:Chinese freelancers are people i know of but i have no direct contact with any at the moment of 
+
+### Position 2 — Pilot clients (need 3–5 · ask: one real project, $100–$500 of their own budget)
+People with a real small project who'd let the Forge orchestrate it — the Project-#2 Test runs on them.
+➡️ NAMES/CONTEXTS: N/a
+
+### Position 3 — Freelancer bench, design & digital (need 3–5 · ask: paid per task)
+Designers, web builders, digital makers whose work you'd vouch for — the supply side of the first vertical.
+➡️ NAMES/CONTEXTS: N/a
+
+### Position 4 — Attorney (need 1 · ask: one flat-fee session, ~$300–$500)
+Any lawyer you know or can be introduced to — the session covers pilot-phase licensing, classification, and the advisory disclaimer. If you know no one, answer "find one" and the engine shortlists options in your state.
+➡️ ANSWER:
+
+### Position 5 — China-side scouts (need 1–3 · ask: conversations only, for now)
+Anyone in or connected to the Chinese freelance/sourcing ecosystem — freelancers, sourcing agents, students, family, anyone.
+➡️ NAMES/CONTEXTS:
+
+### Position 6 — Amplifiers (need as many as exist · ask: one share or one intro)
+People who'd repost the launch, forward the waitlist link, or make one introduction when asked once.
+➡️ NAMES/CONTEXTS:
+
+### Positions I haven't thought of
+People you know whose skills don't fit the boxes above but feel relevant:
+➡️ NAMES/CONTEXTS:
+
+---
+
+## Section 3 — Brand Raw Material
+
+### B1 — Visual references (need 5–15 + 2–3 anti-references)
+Links or image descriptions of brands, sites, products with the *feel* the Sovereign Forge should have — and a few with the feel it must never have. Paste links, or describe ("matte black and ember orange, industrial, nothing pastel").
+➡️ REFERENCES:it should look and feel like yet be the evolutionary version of https://myspace.com/   https://www.fiverr.com/ it should be its on search engine like  google.com and specific like https://selfwork.com/  i like the alibaba colors along with chase colors  i like #13 below
+➡️ ANTI-REFERENCES:https://x.com/  https://www.indeed.com/ https://www.linkedin.com/ 
+
+### B2 — Voice references
+Writing, speeches, lyricists, brands that sound the way the Keeper should sound.
+➡️ ANSWER:
+
+### B3 — Your story (any raw form)
+Why this. Why you. What forged it. Voice-memo transcript, bullet points, one paragraph — anything. This becomes the founder narrative on the About page and in every pitch.
+➡️ ANSWER: well someone had to do it that wasn't just trying to make a quick buck and still think they can “change the world” carrying the little faith humanity had left to do good. 
+
+### B4 — Existing assets
+Logos, sketches, names you've bought, old decks, prior docs — anything already made, so nothing gets wasted.
+➡️ ANSWER: none yet
+
+### B5 — Collected links
+Competitor or inspiration links you've been saving.
+➡️ ANSWER: freelancer websites any and all of them are my competitors, yet why has nobody firmly established this market instead of farming people for cheap work and quality goods that must change and provide value back to the ones who create and build aka FREELANCE
+
+---
+
+## Section 4 — Access & Accounts
+
+### A1 — The main branch
+Say "create main" and the repo gets a `main` branch initialized from current work, unlocking PR-based review flow.
+➡️ ANSWER: create main
+
+### A2 — Domain preference (purchased only *after* the shield, per the resequenced plan)
+Which do you want when the time comes: sovereignforge.com / svfg.com / .ai / .io / other?
+➡️ ANSWER:SVFG.ai
+
+### O4 — Connector accounts
+Confirm your Canva, Notion, and Slack connectors (claude.ai → Settings → Connectors) are signed into the accounts you want SVFG's assets landing in.
+➡️ ANSWER (confirmed / needs switching):
+
+### O7 — The weekly research routine
+Approve a scheduled weekly market-researcher run that updates the evidence ledger and flags competitor moves between sessions.
+➡️ ANSWER (yes / no / later): yes but,later
+
+---
+
+## Section 5 — Anything Else
+
+Anything you want the engine to know, build, research, or stop doing — free space.
+➡️ ANSWER:
+
+---
+
+*When any field gains an answer, the session folds it into the canon: D5 collapses the task-tree timelines to one, Section 2 names become the outreach list, B1/B3 start the brand design pipeline in Canva, A1 restructures the repo. One file in, the whole machine moves.*
+
