@@ -1,4 +1,5 @@
 # The Founder's Vision — reference text for the Queen's alignment review
+**Version: v1.1 (2026-11-11)**
 
 > **Status: first draft**, distilled from confirmed session directives plus `soul.md` and
 > `FABLE_DNA.md`'s existing doctrine — not yet the full "beginning to monetization"
@@ -6,6 +7,13 @@
 > so the Queen's auto-approve scoring (`FLIP_THE_SWITCHES.md` switch 9) has something
 > real and explicit to measure against, rather than nothing. Revise this file directly —
 > it is meant to be edited by the founder, not treated as finished.
+
+## Changelog
+
+**Versioning rule:** major = a reframing of what the product is; minor = a clarification or addition.
+
+- **v1.1 (2026-11-11):** the product is one thing in phases — the federated AI Nation is the core; the commercial game studio is its gamified form (later, Campaign 8 on the full road map); the cockpit is the founder's control room (now, the current frontend's basis). Resolves the "two Hives, one name" drift. Campaign 8 added to the road map (Unity first, then Unreal; 1,000+ players; 101 roles, $3.7M–$7.56M; floating menu hub as the visual prototype for its navigation). Team: now five AI seats + the founder; later (Campaign 8) 101 roles. (Founder decisions 2026-11-11, cross-reference Q1–Q4.)
+- **v1.0 (2026-11-06):** first draft — distilled from confirmed session directives plus soul.md and FABLE_DNA.md's existing doctrine.
 
 ## What the hive is for
 
