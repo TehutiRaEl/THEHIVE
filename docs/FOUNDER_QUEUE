@@ -6,3 +6,195 @@ When decided, move the entry to `docs/FOUNDER_ANSWERED.md` with call + date.
 Ranked roughly smallest decision-cost first where known.
 
 **Status legend:** open | blocked-waiting | partial
+
+---
+
+## Q-011 — Commune gating (open)
+
+**Question:** `POST /v11/command_text` (Commune with Kai El) is LIVE and UNAUTHENTICATED (30/min/IP rate limit only). Gate it — (a) a Cloudflare Access app on the route, or (b) in-handler founder auth?
+**Context:** Asked 2026-11-10, unanswered. Caveat: ACCESS_CONFIGURED is false live, so (a) cannot be proven until Access re-checks true; (b) does not depend on Access. The audit's probe filed proposal #120 through this path. Gating is Queen work (Q-C), not the biosystem rebuild.
+**Status:** open.
+
+---
+
+## Q-012 — Switch-9 truthiness fix timing (open)
+
+**Question:** `worker/src/index.js:2756` reads `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness (any non-empty string counts as on). Fix it now (draft the fix), or park it until after BATCH-QZ?
+**Context:** Asked 2026-11-10, unanswered. Must be fixed before switch 9 is ever touched. Q-006 keeps switch 9 OFF until the Queen passes the done ladder, and even then never skips the action-request gate.
+**Status:** open.
+
+---
+
+## Q-013 — Proposal #120 (open)
+
+**Question:** Proposal #120 (filed 2026-11-09 by the handoff audit's own probe through the unauthenticated Kai El chat path) — reject it as an audit artifact, leave it pending, or decide it on its merits?
+**Context:** Asked 2026-11-10, unanswered. Compound proposal #117 (88 clones) is also live and pending for Mac. Cleanup of the remaining pending clones is STOPPED by Mac (2026-11-05) — do not resume without a new explicit instruction.
+**Status:** open.
+
+---
+
+## Q-014 — Tier 1 lore beats (open)
+
+**Question:** Tier 1 lore beats — Rank 1 + per-Short pairings/beats + Codex sections (candidate pack in the Tier 1 goal's files)?
+**Context:** Asked 2026-11-10, unanswered. Gates all scripting toward the first $1,000 (due Sun Nov 22, 2026). Do not re-ask without a new fact.
+**Status:** open.
+
+---
+
+## Q-015 — SOURCES: revive as a durable habit, or retire it? (open)
+
+**Question:** Revive SOURCES as a durable habit (with a rule/check that makes it stick), or retire it in favour of the direct-to-folders path? And where does the "superseded" note for the three August notes live — a line in `SOURCES/README.md` or the cross-reference addendum?
+**Context:** Asked 2026-11-11 (Q7 follow-up), unanswered. Root cause (investigated 2026-11-11): SOURCES stopped 2026-08-08 because it was a session-local habit, never a durable rule — used exactly three times, all inside one session; when that session ended, the habit died. Since the follow-up was asked, Mac has been actively building SOURCES up (Map, Controller, audit, batch, S1–S4) — but the formal revive/retire decision and the README update are still unmade. BATCH-SOURCES S5 (ambiguities) and S7 (README update + Map placement) are gated by this decision.
+**Status:** open.
+
+---
+
+## Q-016 — Commerce Lens Q3: one engine or several? (open)
+
+**Question:** Is the Commerce Lens one engine or several?
+**Context:** Asked 2026-11-10, unanswered. Q1 (what makes it quantum) answered; Q2 (the Lens sees through all three lenses at once) settled. Then Q4–Q7 (deal pipeline; legal prerequisites; churn + scale; Lens ↔ Mogul). Then deferred: the Mogul mechanism, then Sufi practice. Muse's perspectives use the Cyborg lens (commanded).
+**Status:** open.
+
+---
+
+## Q-017 — Constitution-overwrite trap: which option? (open)
+
+**Question:** The constitution-overwrite trap is ARMED, NOT defused. Which option: (A) disarm (remove triggers / `if: false`), (B) make the sync lossless, (C) reverse direction (root canonical), (D) delete the workflow + script, (E) make it propose via PR, or (F) leave it armed?
+**Context:** Two files claim to be the constitution (root `soul.md`, 89 lines, F-001–F-006 + F-005's nine clauses; vs `.queen/soul.md`, 25 lines, six unrelated one-liners). `constitution-receive.yml` copies `.queen/soul.md` over root `soul.md` and pushes to `main` on any push touching `.queen/soul.md` or a manual Run click. `constitution-sync.yml` is NOT a defence (it trusts whatever root `soul.md` currently says and would bless a bad hash). Do NOT change the workflow, `soul.md`, or `.queen/soul.md`. Biggest unknown: whether branch protection on `main` would block the bot's direct push (Mac's check in GitHub → Settings → Branches/Rules).
+**Status:** open.
+
+---
+
+## Q-018 — Biosystem Decision 3: Substantia Nigra's group (open)
+
+**Question:** Substantia Nigra is the 23rd brain system, in NO group (16th entry in the brain array, in none of the 7 `BRAIN_GROUPS`). Which group does it belong to?
+**Context:** Needed at B1 (the next biosystem phase). Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled). The atlas needs a group for it.
+**Status:** open.
+
+---
+
+## Q-019 — Biosystem Decision 9: brain routes and the ping route (open)
+
+**Question:** Exclude brain routes from B2, and prefer `/colony/*` over `/debug/colony-ping`?
+**Context:** Needed at B2 (when G1 `GET /v11/biosystem/status` is built). Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled).
+**Status:** open.
+
+---
+
+## Q-020 — Biosystem Decision 7: frontend test runner (open)
+
+**Question:** Which frontend test runner for B4?
+**Context:** Needed at B4 (front-end tests: every panel under success, empty, 401, 429, 500, timeout). There is no front-end test runner today. Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled).
+**Status:** open.
+
+---
+
+## Q-021 — Biosystem Decision 5: lens sources (open)
+
+**Question:** Where do the lens sources live? The Cyborg/JARVIS/Alfred framework + the KAI EL hybrid lens live in the founder's record, NOT the repo. Do they go in the repo, and where?
+**Context:** Needed at B6 (lens-state display, G4). Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled). The hybrid lens (Mind: Childlike Wonder + Devil's Advocate, hemisync activates DaVinci; Soul: Jarvis; Spirit: Cyborg; Body: Alfred) is founder architecture, non-negotiable — but its framework lives in the founder's record, not the repo.
+**Status:** open.
+
+---
+
+## Q-022 — Biosystem Decision 8: ConstitutionViewer / GOVERNANCE.md (open)
+
+**Question:** Is the ConstitutionViewer / GOVERNANCE.md in scope for the biosystem rebuild, or separate?
+**Context:** Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled). `docs/GOVERNANCE.md` presents F-007–F-013 with zero founder ratification — they are NOT law. The constitution view (G2) serves `soul.md` F-001–F-006 only.
+**Status:** open.
+
+---
+
+## Q-023 — Rewire Q2: command-center.html — retire or rewire? (open)
+
+**Question:** `docs/command-center.html` — retire the page (keep the purposes) or rewire it into the live app?
+**Context:** Gated by cross-reference Q10/Q11. The purpose map (2026-11-11) recommends retire-the-page-keep-the-purposes: the page was the one screen from which the founder runs the Hive (never a separate site); 26 sections, 17 with a live Worker route, 20 covered at least in part by a live-app panel, 11 missing purposes (biggest: the world-as-place). Retiring it retires a build, not the purpose. Needs Mac's explicit yes. The biosystem half of Q2 is decided + done (B0, PR #229).
+**Status:** open.
+
+---
+
+## Q-024 — Rewire Q3: dead code — delete or DEAD_CODE.md? (open)
+
+**Question:** Dead code — delete it (Tier 3, founder-gated) or keep it with a `DEAD_CODE.md` note?
+**Context:** Not yet asked in the question format. The dead set includes: three orphan React components (`ConstitutionVisualizer`, `MemoryGraphEnhanced`, `MissionTimeline` — zero importers; `ConstitutionVisualizer` hardcodes laws not in `soul.md`, e.g. "C-4 No Human Veto"), ~17 API functions pointing at routes that do not exist (six `/genesis/*`, three `/constitution*`, `/memory/graph`, `/governance/vote`, `/governance/status`, `/dream/status`, `/colony/capabilities`, `/agents/reproduce`, `/hive/status`, + more), and stale display labels. Framed for the founder 2026-11-11 (Claude's return): what it is (leftovers from the FastAPI era), its purpose (none today), what it will change (deleting removes them; listing keeps and labels them).
+**Status:** open.
+
+---
+
+## Q-025 — Gateway Q-G1–Q-G4 (open)
+
+**Question:** (G1) Which of the three "gateways" — the Worker route, the Cloudflare AI Gateway `thehive`, or the gateway console page? (G2) Confirm the gateway's purpose + the DeepCrawl relay. (G3) Standalone vs wire vs preset + BYO keys?
+**Context:** Not yet asked one at a time. The `thehive` AI Gateway (created 2026-11-06) is referenced nowhere in the repo and used by nothing. The gateway console is a standalone BYO-key chat client with zero Worker calls. Overlaps cross-reference Q13–Q15.
+**Status:** open.
+
+---
+
+## Q-026 — Stages-and-gates: auto-flip, A3–A5, N (open)
+
+**Question:** (a) The auto-flip proposal — should any switch flip automatically once gates are met, or does every flip need the founder's explicit yes? (b) Define autonomy stages A3–A5. (c) Set N (the threshold/count the stages-and-gates doc leaves open)?
+**Context:** `docs/AUTONOMY_STAGES_AND_GATES.md` is on main as a draft, not ratified (PR #224, merged 2026-11-10). Hard rule today: NO switch flips automatically — auto-flip is Mac's proposal requiring a founder decision (it contradicts Q-006/Q-007 until he changes them). Proof taxonomy: 16 types, including necessity (Gate 0) and founder alignment (confirmed by the founder himself; cannot be automated away).
+**Status:** open.
+
+---
+
+## Q-027 — Tier 1 niche (open)
+
+**Question:** Which faceless-social niche for Tier 1? (Rank 1 candidate: esoteric/mystery lore as cinematic AI story shorts + monthly long-form movie, $7–$15 "Crossroads Codex" PDF + pre-order as week-1 product.)
+**Context:** From the completeness audit (2026-11-10): the niche decision is Mac's. Gates all scripting toward the first $1,000 (due Sun Nov 22, 2026). Related: Q-014 (Tier 1 lore beats).
+**Status:** open.
+
+---
+
+## Q-028 — Jasper disposition (open)
+
+**Question:** Jasper — legacy (leave it as archive), NAR2 rename, or restore?
+**Context:** Open since the Jasper dissection. Jasper v7 was a standalone FastAPI swarm backend (port 8080); its v10 code sits in repo `backend/` (System A, runs nowhere); `.archive/jasper_v10_complete.py` is in the repo; NAR2 is the Security colony name. "Jasper = Solomon = NAR2" is contradicted — Solomon is a distinct live Worker agent. The MUSE folder audit found 42 Jasper items that need review (goal: Jasper missing-items review).
+**Status:** open.
+
+---
+
+## Q-029 — Muur restitution goal (open)
+
+**Question:** The Muur restitution goal (Heirs of Turner) — is it a Hive mission or not?
+**Context:** Claimed in a cross-AI handoff brief, not in the record. The full repo audit (107 claims, 2026-11-09) found it is NOT decided. Needs Mac's decision.
+**Status:** open.
+
+---
+
+## Q-030 — spore.html home (open)
+
+**Question:** spore.html (54 KB bug-bounty tool) — does it go in a repo or stay standalone?
+**Context:** Not in the record/repo. Mac's call. A live test needs SECRET_PHRASE + an API key via the Secure Vault flow.
+**Status:** open.
+
+---
+
+## Q-031 — "Seer + Gate" fix package (open)
+
+**Question:** The "Seer + Gate" fix package — where does it live, or treat it as unverified?
+**Context:** Claimed in a handoff brief, not in the record. The Seer gate itself is confirmed wired by two independent checks. Mac to say where the package lives or treat it as unverified.
+**Status:** open.
+
+---
+
+## Q-032 — Skill audit: remaining 368 files (open)
+
+**Question:** Go-ahead for the remaining 368 SKILL.md files (the whole-Hive skill audit covered `.claude/skills/` — 85 skills: 16 whole, 60 skill-only, 7 stale-broken, 2 duplicate — but 368 more SKILL.md files were not started)? And per-item adoption decisions?
+**Context:** Needs Mac's go. The charter depends on review-pr and ux-review, which cannot run as written, and graph-MCP is 6 broken of 7.
+**Status:** open.
+
+---
+
+## Q-033 — TAU rulings: Kappius spelling, subtitle collision, Book 2–4 titles (open)
+
+**Question:** (a) Kappius spelling — the repo uses "Kappius" (one s); "Kassppius" appears nowhere in the repo. Which is canonical? (b) Subtitle collision — "The Last Breath Before Dawn" is attached to two books (Book 1 Crossroads of Fate, and the log also attaches it to the 4th book). Which holds it? (c) Where do the Book 2–4 titles come from?
+**Context:** TAU repo (TehutiRaEl/-TAU-THE-ATHERIAN-UNIVERSE-). No 4-book series exists in the repo as titles/order/folders. Book 1 = Crossroads of Fate: The Last Breath Before Dawn (only book in progress now). The 4th book is The Kappius Chronicles (a standalone). Finale = Book 4's ending, NOT a 5th book.
+**Status:** open.
+
+---
+
+## Q-034 — "How THEHIVE will use the TAU repo" doc (open)
+
+**Question:** The only novel-related thing that belongs in THEHIVE is a doc on how the Hive repo will use the TAU repo (a usage/interface description). What should it say, and where does it live?
+**Context:** Founder ruling 2026-11-11: any and all novel material goes directly into the TAU repo; the only thing, novel-wise, that belongs in THEHIVE is how the Hive repo will use the TAU repo. Pending Mac's direction.
+**Status:** open.
