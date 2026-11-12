@@ -4,6 +4,8 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 
 *(Empty at creation 2026-10-13 — no formal moves yet this session.)*
 
+*Addendum 2026-11-11: this file now holds 24 decided entries (Q-001–Q-010, M-01–M-09, F-005, Truth hierarchy, Q-B1, G1–G4, Tier 1 goals). The "Empty at creation" line above is the original creation note, kept for provenance — it is not a claim about the file's current state.*
+
 ---
 
 ## Q-001 — DECIDED 2026-11-04
@@ -296,3 +298,47 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - A founder decision is a recorded fact about intent, not about state. It guides what production should be, but it does not override what production is. Deciding something is done does not make it done; only the live system does that.
 **Downstream chain:** Evidence-first discipline; the 20-rung done ladder (verified-live); cross-reference drift findings; all future disagreements between live state, code, plan, and narrative.
 **Recorded by:** Muse, at founder direction, 2026-11-11. Cross-reference Q6.
+
+---
+
+## Q-B1 — DECIDED 2026-11-10
+
+**Question (as queued):** The legacy biosystem page (`docs/biosystem.html`, 17,344 lines, two copies pasted together) — retire it, or rewire it?
+**Founder decision:** RETIRE the legacy page — as STEP 1 of reverse engineering, NOT abandonment.
+**What this means:**
+- The page's purpose (a living biosystem view) stays; the page itself goes. Everything the founder built in the bio hive system is for the Hive; it was never built and wired into the Hive properly, so it gets planned and blueprinted/mapped out to be done properly (the reverse-engineering blueprint + build plan, phases B0–B8).
+- B0 (retire) was built and merged as PR #229 (2026-11-11): the Legacy atlas tab was removed from the React overlay, and `docs/biosystem.html` was moved to the archive (`Project_file/Founders Visonary Folder/ARCHIVE/biosystem.html`, outside `docs/` so the Worker will not serve it, content unchanged). Live check: `/biosystem.html` returns 404.
+- The 72 systems are NOT yet rewired into the live app. That is phases B1–B8, each needing its own go-ahead + preamble. An audit never authorizes the build that follows it.
+**Downstream chain:** Biosystem reverse-engineering blueprint; biosystem build plan (B0–B8); gates G1–G4 (see below); the 72-system atlas; the command-center purpose map.
+**Recorded by:** Muse, at founder direction, 2026-11-11. Decided in chat 2026-11-10; recorded here 2026-11-11 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## G1–G4 — APPROVED 2026-11-11 (biosystem gates, by name)
+
+**Question (as queued):** Four new Worker endpoints for the biosystem rebuild — approve each by name?
+**Founder decision:** APPROVED, all four, by name (2026-11-11).
+**What this means:**
+- **G1** `GET /v11/biosystem/status` — the 72-system atlas (one call returning the living systems of the Hive with real status). Built at B2. Until it exists, the atlas is a static map fed by the routes that already exist; **do not fake per-system numbers**.
+- **G2** `GET /v11/constitution` — serves `soul.md` F-001–F-006 for the constitution view. Built at B3. It validates against soul.md F-001–F-006, never against the 12 Jasper-era articles in the old page.
+- **G3** `GET /v11/biosystem/resonance` (optional) — the hive-coherence reading, derived from `GET /v11/pulse`. Built at B6. `/pulse` returns timestamped actions only, so the reading can be heartbeat regularity at most unless a richer source is named.
+- **G4** `GET /v11/lens/state` (optional) — the lens-state display (which lens is active + the hemisync state). Built at B6. No drug-mode numbers.
+- A gate approval is a yes to building that one door at its phase, not to the whole phase. Each phase still needs its own go-ahead + preamble.
+**Downstream chain:** Biosystem build plan (B2, B3, B6); the 72-system atlas; the constitution view; the lens-state display; the coherence reading.
+**Recorded by:** Muse, at founder direction, 2026-11-11. Approved in chat 2026-11-11, by name; recorded here 2026-11-11 so the approvals count as founder decisions under soul.md F-005 Clause 1.
+
+---
+
+## Tier 1 goals — DECIDED 2026-11-10
+
+**Question (as queued):** Q-004 Tier 1 income — what are the goals, the order, and the survival number?
+**Founder decision:** DECIDED (2026-11-10), as follows.
+**What this means:**
+- **Short:** first $1,000 by Sun Nov 22, 2026. **Medium:** $10,000/month with AI by end of February 2027 (Sun Feb 28, 2027). **Long:** control of all the hardware on local infrastructure Mac owns. Each goal nests its own short/medium/long (fractal).
+- **Order:** (1) faceless social media first (as practice), (2) dropshipping second (because the platform moves money and the Hive never touches it). Start A0/A1 (Mac approves every post/action); A2 only in a bounded envelope.
+- **The book is what Tier 1 FUNDS** (100% control/rights, funded fully before any franchise decision) — the pyramid is NOT centered on the book. Proof ladder: $1,000 → book funded → first new tree.
+- **Survival number: $10/month** (computed $7–$8, rounded up; floor $5; safe target $20; current cost $0/month). One verification left: Zapier and Replit plans unknown.
+- **Blitzkrieg:** once germinated, simultaneous launch — animated podcast + dropshipping + faceless social at once. Discord holds the community only after an audience exists.
+- **Method:** NOT limited to reverse engineering — innovative, inventive, creative; legally and lawfully. Q-004 gate stays in force: Mac approves every money move. Risk meter comes down first; 100X ROI as a mindset; the Hive earns a bigger playground by paying for it.
+**Downstream chain:** Q-004 Tier 1 income goal (due 2026-11-22); the Tier 1 pyramid sketch; the goals/milestones map; the survival number; the Tier 1 Income Tracker.
+**Recorded by:** Muse, at founder direction, 2026-11-11. Decided in chat 2026-11-10; recorded here 2026-11-11 so the goals count as founder decisions under soul.md F-005 Clause 1.
