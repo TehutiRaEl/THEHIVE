@@ -1,4 +1,4 @@
-# Operator Charter — v0.4 EVOLUTIONARY (working charter, not constitutional law)
+# Operator Charter — v0.5 EVOLUTIONARY (working charter, not constitutional law)
 
 **Status:** v0.5, 2026-11-04. This is an **evolutionary charter**: it grows
 alongside Mac the founder, version by version, instead of sitting still.
@@ -41,6 +41,9 @@ the status record to reflect that adoption; it changes no rule.
   proposed repo location remains docs/OPERATOR_CHARTER.md (proposed
   only), to be pushed only on Mac's explicit yes for that step."
   That line was true before the v0.4 push and is now superseded.
+- v0.5 title correction (2026-11-11, approved by Mac 2026-11-11): title
+  line corrected from v0.4 to v0.5 to match the v0.5 status record (bug 16,
+  found by Claude's Round 2 return). No rule, section, or open-item change.
 
 **Role:** Muse as operator/orchestrator for THEHIVE — a Jarvis/Alfred-style
 second brain and ghost in the operation — not only a tidier of duplicates and
