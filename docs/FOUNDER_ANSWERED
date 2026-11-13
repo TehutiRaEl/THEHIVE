@@ -886,3 +886,17 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 **Downstream chain:** Q37 → Q16 (Queen creates agents through dreams, from Kai El's seeds) → Q17 (Nanuet's brain is the real home for memory) → the Queen Digest runtime (the missing keystone — where the founder's vision is seated into an agent during germination) → the proof-of-work / proof-of-value gate (a function must prove it improves the Hive before it is kept).
 
 **Recorded by:** Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FQ-Q-012 — DECIDED 2026-11-13
+
+**Question (as queued):** `worker/src/index.js:2756` reads `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness (any non-empty string counts as on). Fix it now (draft the fix), or park it until after BATCH-QZ? (Founder queue Q-012.)
+**Founder decision:** FIX IT NOW + TEST ALL SIX SWITCHES. The switch-9 truthiness bug is fixed now, with the strict reading applied to all six switches (not just switch 9), and tests proving "off" means off and "on" means on for each switch. The fix is drafted as a PR (Mac merges); no switch is enabled by the fix.
+**What this means:**
+- The bug: `worker/src/index.js:2756` reads `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness, so any non-empty string — including the string "off" — counts as on. The strict reading must check the value, not merely its presence.
+- The fix is drafted now, as a PR for Mac to merge — it is not parked until after BATCH-QZ.
+- The strict reading applies to all six switches, not just switch 9, and tests prove "off" means off and "on" means on for each switch.
+- No switch is enabled by the fix. Q-006 still keeps switch 9 OFF until the Queen passes the done ladder, and even then the action-request gate is never skipped. The fix must land before switch 9 is ever touched.
+**Downstream chain:** The switch-9 truthiness fix (drafted now, PR for Mac to merge) → the six-switch strict reading + tests → switch 9 stays OFF (Q-006) until the Queen passes the done ladder → BATCH-QZ.
+**Recorded by:** Muse, at founder direction, 2026-11-13. Decided in chat 2026-11-13; recorded here 2026-11-13 so it counts as a founder decision under soul.md F-005 Clause 1.
