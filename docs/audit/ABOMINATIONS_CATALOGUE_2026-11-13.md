@@ -812,5 +812,5 @@ Each item has four parts, always in this order:
 - PRs: #240 (merged 2026-11-13 — XR-Q1–Q5, XR-Q8–Q33, HITL, FQ-Q-015, FQ-Q-024), #242 (merged 2026-11-13 — XR-Q34–Q37; main tip 9bd58d2cba9c1334534f00b5013bcd59c40c98c0), #244 (OPEN — audit-folder filing), #245 (OPEN — absorption build).
 - Preamble: `~/PREAMBLE.md` (§13–§18, founder directions 2026-11-13, including the 14:39 strengthening order).
 
-**Dated:** 2026-11-13, ~15:00 PST (America/Los_Angeles).
+**Dated:** 2026-11-13, ~14:45 PST (America/Los_Angeles).
 **Next:** Mac ratifies this catalogue (whole or item by item); each OPEN item gets an owner and a date; RESOLVED markings happen only by dated addendum, with the proof cited.
