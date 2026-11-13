@@ -17,14 +17,6 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-012 — Switch-9 truthiness fix timing (open)
-
-**Question:** `worker/src/index.js:2756` reads `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness (any non-empty string counts as on). Fix it now (draft the fix), or park it until after BATCH-QZ?
-**Context:** Asked 2026-11-10, unanswered. Must be fixed before switch 9 is ever touched. Q-006 keeps switch 9 OFF until the Queen passes the done ladder, and even then never skips the action-request gate.
-**Status:** open.
-
----
-
 ## Q-013 — Proposal #120 (open)
 
 **Question:** Proposal #120 (filed 2026-11-09 by the handoff audit's own probe through the unauthenticated Kai El chat path) — reject it as an audit artifact, leave it pending, or decide it on its merits?
