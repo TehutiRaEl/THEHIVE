@@ -9,14 +9,6 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-011 — Commune gating (open)
-
-**Question:** `POST /v11/command_text` (Commune with Kai El) is LIVE and UNAUTHENTICATED (30/min/IP rate limit only). Gate it — (a) a Cloudflare Access app on the route, or (b) in-handler founder auth?
-**Context:** Asked 2026-11-10, unanswered. Caveat: ACCESS_CONFIGURED is false live, so (a) cannot be proven until Access re-checks true; (b) does not depend on Access. The audit's probe filed proposal #120 through this path. Gating is Queen work (Q-C), not the biosystem rebuild.
-**Status:** open.
-
----
-
 ## Q-012 — Switch-9 truthiness fix timing (open)
 
 **Question:** `worker/src/index.js:2756` reads `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness (any non-empty string counts as on). Fix it now (draft the fix), or park it until after BATCH-QZ?
