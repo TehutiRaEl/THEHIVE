@@ -33,9 +33,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      # TEMPORARY (2026-11-11, founder decision): use the default GITHUB_TOKEN
+      # while the PAT is renewed. secrets.PAT is expired/revoked, so checkout
+      # failed on every run since ~Oct 1-19 (F0 / bug 11). The PAT will be
+      # renewed 2026-11-12; this can then be restored, or the GITHUB_TOKEN kept.
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
