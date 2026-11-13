@@ -5,7 +5,7 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 *(Empty at creation 2026-10-13 — no formal moves yet this session.)*
 
 *Addendum 2026-11-11: this file now holds 24 decided entries (Q-001–Q-010, M-01–M-09, F-005, Truth hierarchy, Q-B1, G1–G4, Tier 1 goals). The "Empty at creation" line above is the original creation note, kept for provenance — it is not a claim about the file's current state.*
-*Addendum 2026-11-12: this file now holds 53 decided entries (the 24 above plus XR-Q8–XR-Q33, the HITL approval list, FQ-Q-015, and FQ-Q-024, ratified in this batch).*
+*Addendum 2026-11-12: this file now holds 58 decided entries (the 24 above plus XR-Q1–Q5, XR-Q8–XR-Q33, the HITL approval list, FQ-Q-015, and FQ-Q-024, ratified in this batch).*
 
 ---
 
@@ -343,6 +343,69 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - **Method:** NOT limited to reverse engineering — innovative, inventive, creative; legally and lawfully. Q-004 gate stays in force: Mac approves every money move. Risk meter comes down first; 100X ROI as a mindset; the Hive earns a bigger playground by paying for it.
 **Downstream chain:** Q-004 Tier 1 income goal (due 2026-11-22); the Tier 1 pyramid sketch; the goals/milestones map; the survival number; the Tier 1 Income Tracker.
 **Recorded by:** Muse, at founder direction, 2026-11-11. Decided in chat 2026-11-10; recorded here 2026-11-11 so the goals count as founder decisions under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q1 — DECIDED 2026-11-11 (ratified via PR #230; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** Product identity — is the Hive one product or several? What is the product? (Cross-reference §5, Q1.)
+**Founder decision:** ONE PRODUCT IN PHASES. The federated AI Nation is the core; the commercial game studio is its gamified form (later, Campaign 8); the cockpit is the founder's control room (now).
+**What this means:**
+- The product is one thing in phases — the federated AI Nation is the core; the commercial game studio is its gamified form (later, Campaign 8 on the full road map); the cockpit is the founder's control room (now, the current frontend's basis).
+- Recorded in `docs/FOUNDERS_VISION.md` v1.1 (2026-11-11), SHA 7a921e67.
+- This entry records Q1 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** The product identity; FOUNDERS_VISION.md v1.1; Campaign 8 (the gamified form, later).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #230; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
+
+---
+
+## XR-Q2 — DECIDED 2026-11-11 (ratified via PR #230; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** Unity/Unreal — where does the game engine work belong? (Cross-reference §5, Q2.)
+**Founder decision:** UNITY/UNREAL = CAMPAIGN 8 PLANNING.
+**What this means:**
+- The Unity/Unreal game engine work is Campaign 8 planning (the gamified form, later), not now.
+- This entry records Q2 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** Campaign 8 (the gamified form, later); the game engine work.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #230; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
+
+---
+
+## XR-Q3 — DECIDED 2026-11-11 (ratified via PR #230; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** The 101 roles — are they for Campaign 8 or for now? And the five AI seats? (Cross-reference §5, Q3.)
+**Founder decision:** THE 101 ROLES ARE FOR CAMPAIGN 8. THE FIVE AI SEATS ARE NOW.
+**What this means:**
+- The 101 roles are for Campaign 8 (the gamified form, later).
+- The five AI seats are now (the current Hive).
+- This entry records Q3 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** The 101 roles (Campaign 8); the five AI seats (now); Sentry (Q23 — Kai El uses the 101 roles as the baseline, not the ceiling).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #230; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
+
+---
+
+## XR-Q4 — DECIDED 2026-11-11 (ratified via PR #230; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** The floating menu hub — is it a Campaign 8 prototype or a now feature? (Cross-reference §5, Q4.)
+**Founder decision:** THE FLOATING MENU HUB IS A CAMPAIGN 8 VISUAL PROTOTYPE.
+**What this means:**
+- The floating menu hub is a Campaign 8 visual prototype (the gamified form, later), not a now feature.
+- This entry records Q4 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** Campaign 8 (the gamified form, later); the floating menu hub.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #230; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
+
+---
+
+## XR-Q5 — DECIDED 2026-11-11 (ratified via PR #231; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** Vision versioning — how is the vision document versioned? (Cross-reference §5, Q5.)
+**Founder decision:** OPTION 1. Major version = reframing of what the product is; minor version = clarification/addition.
+**What this means:**
+- The vision document (`docs/FOUNDERS_VISION.md`) is versioned by option 1: a major version change means a reframing of what the product is; a minor version change means a clarification or addition.
+- The vision is at v1.1 (2026-11-11, PR #231).
+- This entry records Q5 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** FOUNDERS_VISION.md versioning (v1.1); Q1 (product identity).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #231 (vision v1.1); recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
 
 ---
 
