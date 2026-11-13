@@ -2244,6 +2244,253 @@ async function logQueenReview(env, { title, body, score, reason, decision, propo
   });
 }
 
+// ── Absorption mechanism (2026-11-13, issue #243) ────────────────────────
+// The founder's go-ahead, 2026-11-13: build the absorption mechanism NOW,
+// starting with the two live routes and the Queen Digest — the bigger version
+// for FOUNDER_ANSWERED (decisions as structured data in Nanuet's brain),
+// staged so the important necessities come first. If the Queen does not have
+// this before her work continues, she will still be incomplete when she is
+// 100% — reading at 100% but not being 100%.
+//
+// Three pieces, in the order they were built:
+//   1. The two live routes — GET /v11/founder/decisions (serves
+//      docs/FOUNDER_ANSWERED via ASSETS, the same pattern queenReview() uses
+//      for the vision file) and GET /v11/ventures (serves the venture
+//      manifest + plans inventory from docs/ventures/manifest.json, a mirror
+//      of TehutiRaEl/venture manifest.yaml — a mirror, not a live GitHub
+//      fetch, because the venture repo is PRIVATE and the Worker holds no
+//      GitHub token, so an unauthenticated raw.githubusercontent.com fetch
+//      would 404 on every call).
+//   2. The Queen Digest — queen_digest in nanuet-brain, written by
+//      writeQueenDigest(), read by readQueenDigest(). Completed work, written
+//      back as learned wisdom, so she does not just read the decisions, she
+//      learns from what was actually done.
+//   3. FOUNDER_ANSWERED as structured data — founder_decisions in
+//      nanuet-brain, parsed by parseFounderDecisions() and written by
+//      syncFounderDecisions(), so the Queen can check the decisions one by
+//      one and Kai El can query them by id.
+//
+// The write paths all go through nanuetWriteBlockedReason(), the same guard
+// nanuetRemember() and logNanuetDecision() already use — a write is blocked
+// (with the reason stated, never a throw) when the brain is not bound or when
+// NANUET_BRAIN_WRITE is off. Nothing here bypasses a switch, and nothing here
+// enables one. The read routes are unauthenticated and read-only, the same
+// posture as /v11/nanuet/brain and /memory/status: the files they serve are
+// already public in the repo, so the routes expose nothing new.
+//
+// Deliberately NOT in this build (separate change, needs its own preamble +
+// go-ahead): repointing constitutionSummary() from docs/GOVERNANCE.md to
+// soul.md. That touches the live constitution path, and the audit (issue
+// #243, finding F-1) names it as the most serious finding — it is the next
+// step, not this one.
+
+// Fetch one docs/ file via the ASSETS binding — the same one-line pattern
+// queenReview() and constitutionSummary() use, factored out so the new
+// routes do not each re-implement the failure shape. Never throws, never
+// fabricates content: a missing binding, a non-200, or a fetch error is
+// reported as {ok:false, reason}, and the caller decides what to say.
+async function fetchAssetsText(env, requestUrl, path) {
+  if (!env?.ASSETS) return { ok: false, reason: 'ASSETS binding not present in this deployment' };
+  const clean = String(path || '').replace(/^\/+/, '');
+  if (!clean) return { ok: false, reason: 'no path given' };
+  try {
+    const res = await env.ASSETS.fetch(new Request(new URL('/' + clean, requestUrl)));
+    if (!res.ok) return { ok: false, reason: `ASSETS returned ${res.status} for /${clean}`, status: res.status };
+    const text = await res.text();
+    return { ok: true, path: '/' + clean, text };
+  } catch (e) { return { ok: false, reason: String(e) }; }
+}
+
+// Parse docs/FOUNDER_ANSWERED into structured decisions. Pure function — no
+// env, no I/O — so it is testable against a fixed fixture and against the
+// real file alike.
+//
+// The file's shape (verified against origin/main, 62 entries, 888 lines):
+// one '## ' header per decision, then the entry body until the next header.
+// The id is the header text before the first em dash — 'Q-001' from
+// 'Q-001 — DECIDED 2026-11-04', 'Truth hierarchy' from 'Truth hierarchy —
+// RATIFIED 2026-11-11'. When a header carries no em dash the whole header
+// is the id. decided_at is the first YYYY-MM-DD in the header, NULL when
+// the header carries no date. The answer is the '**Founder decision:**'
+// line when the entry has one, else the first 500 chars of the body —
+// either way it is a quote of what the entry says, never a summary invented
+// by the parser. The body is the full entry text, truncated to 8000 chars
+// so one long entry cannot bloat a row without bound.
+const FOUNDER_DECISION_BODY_MAX = 8000;
+const FOUNDER_DECISION_ANSWER_MAX = 500;
+
+function parseFounderDecisions(text) {
+  const lines = String(text || '').split('\n');
+  const entries = [];
+  let current = null;
+  const flush = () => { if (current) entries.push(current); current = null; };
+  for (const line of lines) {
+    const h = line.match(/^##\s+(.+?)\s*$/);
+    if (h) {
+      flush();
+      const header = h[1].trim();
+      const id = (header.split('—')[0] || header).trim();
+      const dateMatch = header.match(/\b(20\d\d-\d\d-\d\d)\b/);
+      current = { id, title: header, decided_at: dateMatch ? dateMatch[1] : null, bodyLines: [] };
+      continue;
+    }
+    if (current) current.bodyLines.push(line);
+  }
+  flush();
+  return entries
+    .filter((e) => e.id)
+    .map((e) => {
+      const body = e.bodyLines.join('\n').trim();
+      const dm = body.match(/\*\*Founder decision:\*\*\s*(.+)/);
+      const answer = (dm ? dm[1] : body).trim().slice(0, FOUNDER_DECISION_ANSWER_MAX);
+      return {
+        id: e.id,
+        title: e.title,
+        decided_at: e.decided_at,
+        answer: answer || null,
+        body: body.slice(0, FOUNDER_DECISION_BODY_MAX),
+      };
+    });
+}
+
+// Validate the ventures mirror (docs/ventures/manifest.json) before serving
+// it. A mirror that fails validation is reported, not served half-parsed —
+// a ventures endpoint that silently drops a venture would be worse than one
+// that says it cannot serve the manifest at all.
+function parseVentureManifest(text) {
+  let data;
+  try { data = JSON.parse(String(text || '')); } catch (e) { return { ok: false, reason: 'manifest is not valid JSON: ' + String(e) }; }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return { ok: false, reason: 'manifest is not a JSON object' };
+  if (!Array.isArray(data.ventures)) return { ok: false, reason: 'manifest has no ventures array' };
+  for (const v of data.ventures) {
+    if (!v || typeof v.id !== 'string' || !v.id) return { ok: false, reason: 'a venture entry has no id' };
+    if (!Array.isArray(v.repos)) return { ok: false, reason: `venture ${v.id} has no repos array` };
+    if (typeof v.status !== 'string' || !v.status) return { ok: false, reason: `venture ${v.id} has no status` };
+  }
+  if (!Array.isArray(data.plans)) return { ok: false, reason: 'manifest has no plans array' };
+  return { ok: true, manifest: data };
+}
+
+// Write one Queen Digest entry: completed work, recorded as learned wisdom.
+// Gated by nanuetWriteBlockedReason() — the same guard as every other
+// Nanuet brain write — so a Digest write is blocked (with the reason stated)
+// when the brain is not bound or NANUET_BRAIN_WRITE is off. The `wisdom`
+// column is the point of the table: a row with a summary and no wisdom is a
+// log entry, not a lesson. The writer is expected to fill it whenever the
+// lesson is known, and to leave it NULL — honestly empty — rather than
+// invent one when it is not.
+async function writeQueenDigest(env, entry = {}) {
+  const blocked = nanuetWriteBlockedReason(env);
+  if (blocked) return { stored: false, reason: blocked };
+  const kind = String(entry?.kind || '').trim().slice(0, 80);
+  const summary = String(entry?.summary || '').trim().slice(0, 1000);
+  if (!kind) return { stored: false, error: 'kind is required' };
+  if (!summary) return { stored: false, error: 'summary is required' };
+  try {
+    const r = await env.NANUET_BRAIN.prepare(
+      `INSERT INTO queen_digest (ts, agent, kind, subject_kind, subject_id, summary, wisdom, source)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      new Date().toISOString(),
+      String(entry?.agent || 'Nanuet').slice(0, 80),
+      kind,
+      entry?.subject_kind ? String(entry.subject_kind).slice(0, 80) : null,
+      entry?.subject_id ? String(entry.subject_id).slice(0, 200) : null,
+      summary,
+      entry?.wisdom ? String(entry.wisdom).slice(0, 4000) : null,
+      entry?.source ? String(entry.source).slice(0, 200) : null
+    ).run();
+    return { stored: true, id: r?.meta?.last_row_id ?? null };
+  } catch (e) {
+    // The table does not exist until the migration is applied (see
+    // worker/schema/nanuet-brain-absorption.sql). A missing table is a
+    // deployment fact, not a crash — report it so the caller can say so.
+    return { stored: false, error: String(e) };
+  }
+}
+
+// Read recent Queen Digest entries, newest first. Read-only — it works even
+// when NANUET_BRAIN_WRITE is off, because reading her memory is not writing
+// to it. A missing table is reported as table_missing with the exact step
+// that fixes it, never as an empty list that would read as "she has learned
+// nothing" when the truth is "the table was never created".
+async function readQueenDigest(env, { limit = 50, offset = 0 } = {}) {
+  if (!nanuetBrainOk(env)) {
+    return { entries: [], provisioned: false, note: 'nanuet-brain is not bound in this deployment (created 2026-11-05, QA-2; founder-only: see worker/schema/nanuet-brain.sql)' };
+  }
+  const lim = Math.min(200, Math.max(1, Number(limit) || 50));
+  const off = Math.max(0, Number(offset) || 0);
+  try {
+    const { results } = await env.NANUET_BRAIN.prepare(
+      `SELECT id, ts, agent, kind, subject_kind, subject_id, summary, wisdom, source
+       FROM queen_digest ORDER BY ts DESC, id DESC LIMIT ? OFFSET ?`
+    ).bind(lim, off).all();
+    return { entries: results || [], provisioned: true };
+  } catch (e) {
+    return { entries: [], provisioned: true, table_missing: true, note: 'queen_digest table not present — apply worker/schema/nanuet-brain-absorption.sql to the live nanuet-brain database', error: String(e) };
+  }
+}
+
+// Absorb docs/FOUNDER_ANSWERED into founder_decisions in Nanuet's brain.
+// Fetch via ASSETS, parse with parseFounderDecisions(), upsert every row
+// (INSERT OR REPLACE — re-running after the file gains entries adds the new
+// ones and refreshes changed ones; FOUNDER_ANSWERED is append-only and
+// permanent, so no row is ever deleted by a sync). Dry-run mode parses and
+// reports without writing, so the founder can see what would be absorbed
+// before the brain is written.
+//
+// On success the Digest records the absorption itself: the Queen learning
+// that these decisions are now hers to check one by one. If the Digest
+// write fails the sync still counts — the decisions are the payload, the
+// Digest entry is the receipt, and a missing receipt must not void the
+// delivery.
+async function syncFounderDecisions(env, requestUrl, { dryRun = false } = {}) {
+  const fetched = await fetchAssetsText(env, requestUrl, 'FOUNDER_ANSWERED');
+  if (!fetched.ok) return { synced: false, reason: fetched.reason };
+  const decisions = parseFounderDecisions(fetched.text);
+  const hash = await sha256(fetched.text);
+  if (dryRun) {
+    return { synced: false, dry_run: true, would_sync: decisions.length, ids: decisions.map((d) => d.id), hash, bytes: fetched.text.length };
+  }
+  const blocked = nanuetWriteBlockedReason(env);
+  if (blocked) return { synced: false, reason: blocked, parsed: decisions.length, hash };
+  const ts = new Date().toISOString();
+  let written = 0;
+  let firstError = null;
+  for (const d of decisions) {
+    try {
+      await env.NANUET_BRAIN.prepare(
+        `INSERT OR REPLACE INTO founder_decisions (id, title, decided_at, answer, body, source, synced_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).bind(d.id, d.title, d.decided_at, d.answer, d.body, 'docs/FOUNDER_ANSWERED', ts).run();
+      written++;
+    } catch (e) { if (!firstError) firstError = String(e); }
+  }
+  // Nothing written at all means the sync itself failed (the usual cause is
+  // the table not existing yet — the migration was never applied), not that
+  // the file was empty. Report it as a failed sync, not as a success with
+  // zero rows, or a caller would read "synced:true, written:0" as done.
+  if (written === 0 && firstError) {
+    return { synced: false, reason: firstError, parsed: decisions.length, hash };
+  }
+  let digest = null;
+  try {
+    digest = await writeQueenDigest(env, {
+      kind: 'decision_absorbed',
+      subject_kind: 'founder-decision',
+      subject_id: 'FOUNDER_ANSWERED',
+      summary: `Absorbed ${written} of ${decisions.length} founder decisions from docs/FOUNDER_ANSWERED into founder_decisions.`,
+      wisdom: 'The founder\u2019s recorded decisions are now checkable one by one in my own brain, not only readable as a file. A decision I can query by id is a decision I can actually use.',
+      source: 'POST /v11/founder/decisions/sync',
+    });
+  } catch { digest = null; }
+  return {
+    synced: true, written, parsed: decisions.length, hash, bytes: fetched.text.length,
+    errors: firstError ? [firstError] : [],
+    digest: digest ? { stored: digest.stored, id: digest.id ?? null, reason: digest.reason ?? null } : null,
+  };
+}
+
 // ── The 4DBRAIN bridge ───────────────────────────────────────────────────
 // 4DBRAIN owns the real tesseract/hypercomplex math (tesseract_math/, canonically
 // moved there 2026-07-22). That code is Python under FastAPI; this Worker is
@@ -3588,6 +3835,36 @@ export default {
         await DB.prepare('UPDATE hive_proposals SET diff_check=? WHERE id=?').bind(result.slice(0, 500), id).run();
         return json({ ok: true, id, diff_check: result.slice(0, 500) });
       }
+      // ── Ventures, served (absorption mechanism, 2026-11-13, issue #243) ─────
+      // GET /v11/ventures serves the venture manifest and the business-plans
+      // inventory together — venture wiring Phase 2, approved, not built until
+      // now. The source is docs/ventures/manifest.json, a mirror of
+      // TehutiRaEl/venture manifest.yaml (SHA recorded inside the file) plus
+      // the 23-plan inventory. A mirror, not a live GitHub fetch, because the
+      // venture repo is PRIVATE and the Worker holds no GitHub token — an
+      // unauthenticated raw.githubusercontent.com fetch of a private repo
+      // returns 404, so a live fetch would fail closed on every call and
+      // serve nothing. The mirror's source SHA and date are returned with
+      // every response, so staleness is VISIBLE, not silent: if the venture
+      // repo's manifest.yaml SHA differs, this mirror is stale and needs a
+      // refresh PR. The full plan texts stay in the private venture repo and
+      // are NOT served here — only the inventory.
+      if (p === '/ventures' && method === 'GET') {
+        const fetched = await fetchAssetsText(env, url, 'ventures/manifest.json');
+        if (!fetched.ok) return json({ available: false, reason: fetched.reason });
+        const parsed = parseVentureManifest(fetched.text);
+        if (!parsed.ok) return json({ available: false, reason: parsed.reason });
+        const m = parsed.manifest;
+        return json({
+          available: true,
+          source: m.source || null,
+          ventures: m.ventures,
+          plans: m.plans || [],
+          plans_total_words: m.plans_total_words ?? null,
+          plans_note: m.plans_note || null,
+          hash: await sha256(fetched.text),
+        });
+      }
       // ── Venture capability gaps (2026-08-18) ───────────────────────────────────
       // Kai El's sanctioned "I don't have capability X, need it for Y, considered Z"
       // channel — see venture_capability_gaps table comment in ensureTables().
@@ -4546,6 +4823,108 @@ export default {
           docs: 'worker/schema/NANUET_AUTONOMY.md',
         });
       }
+      // ── Founder knowledge + Queen Digest (absorption mechanism, 2026-11-13, issue #243)
+      // The founder's recorded decisions and questions, served live — the
+      // audit's findings F-2 and F-3 were that these files exist in docs/
+      // and nothing in the live Hive ever reads them. The read routes are
+      // unauthenticated and read-only (same posture as /v11/nanuet/brain):
+      // the files are already public in the repo, so these routes expose
+      // nothing new. The write routes are founder- or token-gated, and every
+      // write also passes nanuetWriteBlockedReason() inside the function it
+      // calls — two gates, not one.
+      //
+      // GET /v11/founder/decisions — the whole file, live, with its hash and
+      // the list of decision ids it contains. GET /v11/founder/decisions/:id
+      // — one decision as structured data from founder_decisions in
+      // Nanuet's brain (the bigger version the founder chose). POST
+      // /v11/founder/decisions/sync — absorb the file into the table
+      // (founder key required; ?dry_run=true parses without writing).
+      // GET /v11/founder/queue — the open questions, same pattern.
+      // GET /v11/nanuet/digest — recent Digest entries, newest first.
+      // POST /v11/nanuet/digest — record one piece of completed work as
+      // learned wisdom (token required).
+      if (p === '/founder/decisions' && method === 'GET') {
+        const fetched = await fetchAssetsText(env, url, 'FOUNDER_ANSWERED');
+        if (!fetched.ok) return json({ available: false, reason: fetched.reason });
+        const decisions = parseFounderDecisions(fetched.text);
+        return json({
+          available: true,
+          source: 'docs/FOUNDER_ANSWERED',
+          hash: await sha256(fetched.text),
+          bytes: fetched.text.length,
+          entries: decisions.length,
+          ids: decisions.map((d) => d.id),
+          content: fetched.text,
+        });
+      }
+      if (p === '/founder/queue' && method === 'GET') {
+        const fetched = await fetchAssetsText(env, url, 'FOUNDER_QUEUE');
+        if (!fetched.ok) return json({ available: false, reason: fetched.reason });
+        return json({
+          available: true,
+          source: 'docs/FOUNDER_QUEUE',
+          hash: await sha256(fetched.text),
+          bytes: fetched.text.length,
+          content: fetched.text,
+        });
+      }
+      if (p === '/founder/decisions/sync' && method === 'POST') {
+        if (!(await founderAuthOk(request, env))) {
+          return json({
+            detail: (await founderKeyBound(env)) ? 'invalid or missing founder key'
+              : 'no FOUNDER_KEY bound yet — nothing can be decided until the founder sets one (see FLIP_THE_SWITCHES.md)',
+          }, 401);
+        }
+        const body = await request.json().catch(() => ({}));
+        const result = await syncFounderDecisions(env, url, { dryRun: body.dry_run === true });
+        return json(result);
+      }
+      const decisionIdMatch = p.match(/^\/founder\/decisions\/(.+)$/);
+      if (decisionIdMatch && method === 'GET') {
+        let id;
+        try { id = decodeURIComponent(decisionIdMatch[1]); } catch { return json({ detail: 'invalid decision id encoding' }, 400); }
+        if (!nanuetBrainOk(env)) {
+          return json({ available: false, reason: 'nanuet-brain is not bound in this deployment (created 2026-11-05, QA-2; founder-only: see worker/schema/nanuet-brain.sql)' });
+        }
+        try {
+          const row = await env.NANUET_BRAIN.prepare(
+            'SELECT id, title, decided_at, answer, body, source, synced_at FROM founder_decisions WHERE id=?'
+          ).bind(id).first();
+          if (!row) return json({ detail: `decision ${id} not found in founder_decisions — run POST /v11/founder/decisions/sync (founder key required) after the migration is applied` }, 404);
+          return json({ available: true, decision: row });
+        } catch (e) {
+          return json({ available: false, reason: 'founder_decisions table not present — apply worker/schema/nanuet-brain-absorption.sql to the live nanuet-brain database', error: String(e) });
+        }
+      }
+      if (p === '/nanuet/digest' && method === 'GET') {
+        const { limit, offset } = pageParams(url, 50, 200);
+        const result = await readQueenDigest(env, { limit, offset });
+        return json({
+          ...result,
+          write_enabled: switchOn(env, 'NANUET_BRAIN_WRITE'),
+          limit, offset,
+        });
+      }
+      if (p === '/nanuet/digest' && method === 'POST') {
+        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        const body = await request.json().catch(() => ({}));
+        const result = await writeQueenDigest(env, {
+          kind: body.kind,
+          subject_kind: body.subject_kind,
+          subject_id: body.subject_id,
+          summary: body.summary,
+          wisdom: body.wisdom,
+          source: body.source || 'POST /v11/nanuet/digest',
+        });
+        if (!result.stored) {
+          // A blocked write is a 409 (the resource exists but the state
+          // forbids it), not a 500: the switch being off is a real,
+          // reportable fact, and a missing kind/summary is a 400.
+          const status = result.reason ? 409 : 400;
+          return json({ stored: false, reason: result.reason || result.error || 'could not store digest entry' }, status);
+        }
+        return json({ ok: true, id: result.id });
+      }
       if (p === '/tier3/status')
         return json({ arena_renderer: { available: true, status: 'Loaded — edge voxel simulation' } });
 
@@ -5010,4 +5389,13 @@ export {
   nextWorkTurnIndex,
   runWorkCycle,
   recordProviderHealth,
+  // Absorption mechanism (2026-11-13, issue #243) — exported so
+  // worker/test/absorption.test.js drives the real functions rather than a
+  // reimplementation, same convention as every export above.
+  fetchAssetsText,
+  parseFounderDecisions,
+  parseVentureManifest,
+  writeQueenDigest,
+  readQueenDigest,
+  syncFounderDecisions,
 };

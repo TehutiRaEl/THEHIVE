@@ -1,0 +1,203 @@
+{
+  "source": {
+    "repo": "TehutiRaEl/venture",
+    "path": "manifest.yaml",
+    "sha": "fddabf84a393b2f8ecd2a0794d7345006f7f0f60",
+    "mirrored_at": "2026-11-13",
+    "mirrored_by": "absorption mechanism build, Phase 1b (issue #243)",
+    "note": "Mirror of the venture manifest + the business-plans inventory. The Worker cannot fetch the venture repo at runtime: it is private, and the Worker holds no GitHub token — so this mirror is the live source for GET /v11/ventures. Refresh by PR whenever the venture manifest changes (the Phase 1 manifest PR updates this file). The source SHA above is how staleness is checked: if the venture repo's manifest.yaml SHA differs, this mirror is stale."
+  },
+  "ventures": [
+    {
+      "id": "svfg",
+      "repos": [
+        "TehutiRaEl/SVFG"
+      ],
+      "real_name": "SVFG — Sovereign Forge",
+      "real_purpose": "The \"Sovereign Imagination Engine\": takes a person's idea, extracted through questions and reality-checked before a dollar moves, and orchestrates a verified human workforce plus an AI agent swarm to make it real. Full doctrine already written (soul, constitution, architecture, legal-reality, an evidence ledger tagging every claim Verified/Unverified/Rejected).",
+      "status": "real_spec_no_code",
+      "notes": "Closest match in this whole manifest for how `venture` itself should be structured — CLAUDE.md boot sequence, docs/ doctrine set, .claude/agents + .claude/skills. Built from a founding hand-off that was dissected by its own harshest critic before becoming doctrine."
+    },
+    {
+      "id": "thecrucible",
+      "repos": [
+        "TehutiRaEl/THECRUCIBLE"
+      ],
+      "real_name": "THE AETHERIAL CRUCIBLE",
+      "real_purpose": "A household device consolidating washer/dryer, crypto mining (Proof-of- Cleanliness), distributed AI compute, and personal banking into one unit. Massive vision library (10 volumes: vision, architecture, contracts, business model, partnerships, implementation, perspectives, monopoly thesis, philanthropy, legacy) — pure doctrine/pitch, zero code.",
+      "status": "real_spec_no_code",
+      "notes": "Largest pure-vision repo of the seven. No `.claude/agents` or `.claude/skills` — a self-contained fact-sheet CLAUDE.md instead of a boot-sequence one, unlike SVFG."
+    },
+    {
+      "id": "v2d",
+      "repos": [
+        "TehutiRaEl/V2D"
+      ],
+      "real_name": "V2D — the Coordination Compiler",
+      "real_purpose": "An AI \"Governance Compiler\": turns plain-language organizational intent into deployable governance rules (JSON-LD/YAML/Python/JS/Solidity/ Markdown), deployable to Discord/Slack/Notion/blockchain. Full backend architecture documented (Node/Express + Python/FastAPI, Postgres, Redis, Temporal, LangChain) — README reads production-ready.",
+      "status": "real_spec_unverified_code",
+      "notes": "Only the README was read this pass — unlike herDao, the actual source tree under this claimed architecture has not yet been checked file-by-file against what main.py-equivalent entrypoints actually import. Needs the same deep-dive herDao got before trusting \"production-ready\" at face value."
+    },
+    {
+      "id": "irl",
+      "repos": [
+        "TehutiRaEl/IRL"
+      ],
+      "real_name": "Forest OS",
+      "real_purpose": "A gamified life-simulation app connecting digital decisions to real-world outcomes (financial literacy, entrepreneurship, community, personal growth) taught through a game. Rust/Dioxus/WASM.",
+      "status": "real_code_partial",
+      "notes": "Level 0 (\"The Gate\") is real, implemented, tested, and verified end-to-end per the repo's own README — the one venture in this manifest that already has genuinely running, verified code, not just a spec. Levels 1-5 documented, not built. Has the terser IRL-style CONSTITUTION.md (5 numbered non-negotiable laws) this manifest's own docs/CONSTITUTION.md is modeled on."
+    },
+    {
+      "id": "dispatcher-dao",
+      "repos": [
+        "TehutiRaEl/herDao",
+        "TehutiRaEl/DispaFrontend"
+      ],
+      "real_name": "Dispatcher DAO",
+      "real_purpose": "A decentralized trucking-logistics OS: AI load-to-driver dispatch matching (LightGBM), real-time Geotab telematics ingestion, deactivation due-process enforcement, WARN Act compliance across federal + state law, an SBA loan eligibility engine, and an ERC-721 TruckNFT with a 45/45/10 equity split.",
+      "status": "real_code_needs_restructure",
+      "notes": "Repo name (herDao) does not match its real content (Dispatcher DAO) — noted, not silently corrected. Deep-dived 2026-08-18: main.py imports api.routers.{auth,drivers,loads,compliance,telematics,wellness,payments, nft_tokens,disputes} — 9 of 14 documented routers have no file anywhere in the repo, and the 5 that do exist sit flat at repo root instead of inside the api/routers/, auth/, ml/models/ package paths their own imports require, so nothing here boots as committed. Verdict: rebuild the shape, keep the content — the logic (LightGBM weights, WARN Act state tables, SBA NAICS risk data, the equity-split contract) is real and detailed. DispaFrontend's src/App.jsx is a self-contained investor-pitch demo with hardcoded sample data and zero real API calls — a sales asset, not a working client for herDao's API. Full findings: ventures/dispatcher-dao/NOTES.md."
+    },
+    {
+      "id": "pipeline369",
+      "repos": [
+        "TehutiRaEl/pipeline369-scraper",
+        "TehutiRaEl/TheCopy"
+      ],
+      "real_name": "Pipeline 369 — the Zero-Capital Arbitrage Engine",
+      "real_purpose": "TheCopy is the real, actively-developed lead-generation and outreach Command Center (v1.3.1 as of 2026-08-14 — the most recently touched of all seven ventures): a LangGraph agent with lead-auditor/outreach-writer/ copywriter/process-lead sub-agents, a GitHub Pages public lead-capture form, a Command Center console. pipeline369-scraper is a free, self-hosted Google Maps lead scraper — its own README says it's the first real implementation of TheCopy's Pipeline/PIPELINE.md \"Phase 1\" targeting spec (reviews_count < 10, avg_rating >= 3.5, website != null), built because that spec only ever described a paid Apify actor.",
+      "status": "real_code_active",
+      "notes": "A real cross-venture dependency confirmed from the scraper's own README, not guessed — this is the clearest \"two repos, one venture\" case of the seven."
+    },
+    {
+      "id": "venture",
+      "repos": [
+        "TehutiRaEl/venture"
+      ],
+      "real_name": "(undefined — this repo)",
+      "real_purpose": "Was empty at first clone (2026-08-18) — no commits, no branch. This scaffold (manifest.yaml, CLAUDE.md, docs/, ventures/) is its genesis commit. Its own real purpose, if any beyond being the Ventures-program map, is not yet defined — ask the founder before assuming one.",
+      "status": "scaffold_genesis",
+      "notes": "This is the meta/index repo itself — the map of the other six, plus the home of the capability-gap protocol and (once built) the sandbox-run record. Not a business venture in the same sense as the other six."
+    }
+  ],
+  "plans": [
+    {
+      "slug": "suit-street-valet",
+      "words": 4609,
+      "path": "plans/suit-street-valet/"
+    },
+    {
+      "slug": "pics-caregiving",
+      "words": 2906,
+      "path": "plans/pics-caregiving/"
+    },
+    {
+      "slug": "zero-money-real-estate",
+      "words": 1242,
+      "path": "plans/zero-money-real-estate/"
+    },
+    {
+      "slug": "pothole-repair-fresno",
+      "words": 2155,
+      "path": "plans/pothole-repair-fresno/"
+    },
+    {
+      "slug": "tuff-n-puff",
+      "words": 1698,
+      "path": "plans/tuff-n-puff/"
+    },
+    {
+      "slug": "energ-records",
+      "words": 1551,
+      "path": "plans/energ-records/"
+    },
+    {
+      "slug": "scopesync",
+      "words": 8156,
+      "path": "plans/scopesync/"
+    },
+    {
+      "slug": "crypto-city",
+      "words": 1123,
+      "path": "plans/crypto-city/"
+    },
+    {
+      "slug": "structura",
+      "words": 12597,
+      "path": "plans/structura/"
+    },
+    {
+      "slug": "dispatcher-dao",
+      "words": 17955,
+      "path": "plans/dispatcher-dao/"
+    },
+    {
+      "slug": "v2d",
+      "words": 15138,
+      "path": "plans/v2d/"
+    },
+    {
+      "slug": "svfg",
+      "words": 40620,
+      "path": "plans/svfg/"
+    },
+    {
+      "slug": "gnos",
+      "words": 31046,
+      "path": "plans/gnos/"
+    },
+    {
+      "slug": "the-aetherial-crucible",
+      "words": 4668,
+      "path": "plans/the-aetherial-crucible/"
+    },
+    {
+      "slug": "app-ideas",
+      "words": 17370,
+      "path": "plans/app-ideas/"
+    },
+    {
+      "slug": "landlords-game",
+      "words": 44833,
+      "path": "plans/landlords-game/"
+    },
+    {
+      "slug": "aetri",
+      "words": 7099,
+      "path": "plans/aetri/"
+    },
+    {
+      "slug": "mogul-bridge",
+      "words": 8076,
+      "path": "plans/mogul-bridge/"
+    },
+    {
+      "slug": "wholesaling-playbook",
+      "words": 4689,
+      "path": "plans/wholesaling-playbook/"
+    },
+    {
+      "slug": "trust-architecture",
+      "words": 1309,
+      "path": "plans/trust-architecture/"
+    },
+    {
+      "slug": "copywriting-launch",
+      "words": 768,
+      "path": "plans/copywriting-launch/"
+    },
+    {
+      "slug": "ai-services-menu",
+      "words": 617,
+      "path": "plans/ai-services-menu/"
+    },
+    {
+      "slug": "zero-capital-arbitrage",
+      "words": 91230,
+      "path": "plans/zero-capital-arbitrage/"
+    }
+  ],
+  "plans_total_words": 321455,
+  "plans_note": "23 business plans in TehutiRaEl/venture under plans/ (from the 2026-11-11 Drive placement; inventory: VENTURE_PLANS_INVENTORY.md). Four relate to ventures already in this manifest (dispatcher-dao, v2d, svfg, the-aetherial-crucible). The full plan texts stay in the private venture repo and are NOT served by this endpoint — only this inventory. Word counts are from the placement inventory. HONEST FLAG: the per-plan counts in that inventory sum to 321,455 words, but the inventory's own stated total is 320,135 — a 1,320-word discrepancy inside the source inventory, not resolved here. plans_total_words above is the computed sum of the listed per-plan counts."
+}
