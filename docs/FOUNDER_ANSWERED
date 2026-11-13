@@ -5,7 +5,7 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 *(Empty at creation 2026-10-13 — no formal moves yet this session.)*
 
 *Addendum 2026-11-11: this file now holds 24 decided entries (Q-001–Q-010, M-01–M-09, F-005, Truth hierarchy, Q-B1, G1–G4, Tier 1 goals). The "Empty at creation" line above is the original creation note, kept for provenance — it is not a claim about the file's current state.*
-*Addendum 2026-11-12: this file now holds 58 decided entries (the 24 above plus XR-Q1–Q5, XR-Q8–XR-Q33, the HITL approval list, FQ-Q-015, and FQ-Q-024, ratified in this batch).*
+*Addendum 2026-11-12: this file now holds 62 decided entries (the 24 above plus XR-Q1–Q5, XR-Q8–XR-Q33, the HITL approval list, FQ-Q-015, FQ-Q-024, and XR-Q34–Q37, ratified in this batch).*
 
 ---
 
@@ -828,3 +828,61 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - The actual wiring work has NOT been executed; it is pending work queued behind Queen 100% unless Mac directs otherwise.
 **Downstream chain:** Q-024 wiring (MissionTimeline first, queued behind Queen 100%); ConstitutionVisualizer fix (read real soul.md); 4DBRAIN (excluded from ventures).
 **Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q34 — Scale: NOT 100,000 agents in one Hive; growth = more HIVES; the breathing method
+
+**Question:** Is 100,000 agents still the target? (Harness file 2026-08-07: 100 agents/colony × 10 colonies/tree × 100 trees. Founder said "Drop the 100k, focus on the 8" on 2026-08-07, then "13 total until next expansion" with "over 100's of agents per colony" as the eventual goal on 2026-08-10.)
+
+**Founder decision:** 100,000 agents crammed into ONE Hive is NOT the target — more agents crashes the system, no matter what the better choice and opportunity provided. The breathing method is the answer: the same methodology used to condense larger LLM models into more compact sizes (from 70 billion parameter models to 20 billion parameter models — those numbers are EXAMPLES, not exact figures; the methodology is model distillation/condensation). The truth is: the bigger the Hive grows, the more HIVES the Hive creates — that way it is not all inside the Hive, but it IS all inside the Hive. The Hive grows by creating MORE HIVES (separate instances, so the system does not crash), all still part of the Hive federation (the forest). The forest grows by adding trees; each tree stays at a proven, stable size (the 8, then 13). The 100k figure is the FOREST's total across all Hives, not one Hive's load.
+
+**What this means:** Scale grows by the breath cycle (expand, then contract) and the monetary gate. A tree proves itself at a stable size before the forest adds another tree. No single Hive is ever asked to hold 100,000 agents.
+
+**Downstream chain:** Q34 → the breathing method (inhale = grow, take in everything; exhale = condense into what is useful, keeping the capability) → the forest model (one tree = one venture/Hive; the Queen owns the entire forest) → Q35 (other Hives study and report back) → the monetary gate (an agent must pay to live; a tree must prove itself before the forest grows another).
+
+**Recorded by:** Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q35 — AUTOMATON: not study-it-alone; study ANYTHING AND EVERYTHING, and report back
+
+**Question:** AUTOMATON — adopt, study, or drop? (Harness file 2026-08-07 proposes reverse-engineering AUTOMATON's "earn or die" loop.)
+
+**Founder decision:** NOT just studying AUTOMATON alone — that would be learning only from Mac and limiting Muse as well. Instead: study ANYTHING and EVERYTHING that has been done. The Hive consistently studies and researches on all prior work, all systems, all approaches, to help the Hive grow and breathe in everything else. The other Hives (created as the Hive grows, per Q34) will be capable of doing it as well when they are alive — they study and research too, and they REPORT BACK (to the Hive/federation). Q35 is a standing practice: continuous study and research of everything done, across all Hives, with reporting back — the breathing method applied to learning (inhale everything, learn from it all).
+
+**What this means:** The Hive already has the "earn or die" idea as the monetary gate + breath cycle (Q16/Q19/Q20); study AUTOMATON for anything it lacks, and study everything else too — Kappius reverse engineering (Q31) is the method. No single source is the limit. The Hive learns from everything, and every Hive in the forest learns and reports back.
+
+**Downstream chain:** Q35 → Q31 (Kappius reverse engineering) → Q34 (more Hives, each studying and reporting back) → the breathing method (inhale everything done, exhale what is useful) → the standing practice of continuous study and research.
+
+**Recorded by:** Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q36 — Constitutional training loop and TITLE XXI/XXII: ADOPT
+
+**Question:** The integration report (2026-08-08, §8.2) proposes adding two new titles to soul.md (TITLE XXI and TITLE XXII) and a constitutional-loss training loop. Still wanted, or AI-generated overreach to be declined in research-to-dna?
+
+**Founder decision:** ADOPT. The proposal as presented is adopted: the constitutional training loop AND TITLE XXI/XXII. The titles go through the Chromosome I process (only the founder proposes; written in history, a commit, never a silent edit; ships alone in its own PR — F-005 Clause 3) and must prove themselves through real work before becoming fixed (per Q28: an amendable law must prove itself before becoming fixed). The training loop is adopted as a build (to be built and tested in the sandbox, with FABLE-5).
+
+**Scope note (open):** Muse's suggestion was split (adopt the loop, decline the titles for now); Mac's one-word answer "Adopt" is recorded as adopting the proposal as presented. If Mac meant only the loop, that correction is open.
+
+**What this means:** The Hive will build and test a constitutional training loop (training models on the EXISTING constitution, F-001–F-006) in the sandbox with FABLE-5. TITLE XXI (The Language Model) and TITLE XXII (The Training Pipeline) enter as amendable laws via Chromosome I, not as fixed law, and become fixed only when proven through real work.
+
+**Downstream chain:** Q36 → Q28 (an amendable law must prove itself before becoming fixed) → F-005 Clause 3 (Chromosome I amendment process) → the sandbox + FABLE-5 (where the training loop is built and tested) → the Queen 100% rule (the build is queued behind Queen 100% unless Mac directs otherwise).
+
+**Recorded by:** Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q37 — Invented names: DECLINE all five; keep the functions that enhance the Hive
+
+**Question:** Who decides the invented names? AYINE, Necromancer, Daemon, ACU, Tesseract QTN appear only in the integration report (2026-08-08) as an AI-generated mythological voice. Any real Hive concepts he endorses, or catalogue as narrative-canon / declined?
+
+**Founder decision:** DECLINE all five names — AYINE, Necromancer, Daemon, ACU, and Tesseract QTN are NOT Hive concepts and are NOT catalogued as narrative-canon. They are declined. The names CAN be rewritten (replaced with better Hive names) in the Hive — the Hive already has better names for the jobs (the Queen, Nanuet's brain, the seed). KEEP all the FUNCTIONS that would enhance the Hive further — but ONLY if they actually improve the Hive, NOT random extra coding that does not do much to help. And work the functions through the founder's vision as it is being seated into the agents in the germination phase and any other earlier phases.
+
+**What this means:** The research (ELI5, 2026-11-12) found: NECROMANCER = Agent Genesis / Daemon Spawner — it CREATES agents (NOT security; Mac's memory of it being security is not in the documents); its function lives on as the QUEEN's agent-creation role (Q16). AYINE = The Brain / Memory Integration — unified memory; its function lives on as NANUET'S BRAIN (D1) / the memory vault (Q17). DAEMON = a small agent with one job, spawned by the Necromancer; its function lives on as the SEED (Q16). ACU = NO definition found anywhere. TESSERACT QTN = NO definition found anywhere (the Tesseract itself is real — Kai El's face, Q21; 4DBRAIN's math — but "QTN" has no meaning). None of the five names are in the Hive's code or soul.md. The functions are real and already live on under better names; the names themselves are declined. Any function kept must pass the quality gate (it actually improves the Hive) and must be worked through the founder's vision as it is seated into agents in germination and earlier phases.
+
+**Downstream chain:** Q37 → Q16 (Queen creates agents through dreams, from Kai El's seeds) → Q17 (Nanuet's brain is the real home for memory) → the Queen Digest runtime (the missing keystone — where the founder's vision is seated into an agent during germination) → the proof-of-work / proof-of-value gate (a function must prove it improves the Hive before it is kept).
+
+**Recorded by:** Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
