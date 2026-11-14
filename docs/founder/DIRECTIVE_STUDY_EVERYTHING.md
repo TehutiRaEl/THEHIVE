@@ -230,7 +230,7 @@ This directive is a **sound excavated extrapolation of the 12 universal laws
 applied in action and proof of work**.
 
 The 12 universal laws are the laws this directive is built from — excavated
-( dug up from the record, from the founder's words, from what the Hive has
+(dug up from the record, from the founder's words, from what the Hive has
 already proven) and extrapolated (carried forward into action, applied in
 real work, proven by proof of work). The directive is what the 12 laws look
 like when they are lived, not just written.
