@@ -2992,15 +2992,16 @@ async function elderCouncilVeto(env, { title, body }) {
 // it is not a value this code can invent.
 async function queenDecide(env, requestUrl, { title, body, proposalId }) {
   let qStatus = 'pending', qScore = null, qDecidedBy = null, qDecidedAt = null, elderNote = null;
-  // PRECONDITION, named not fixed (QA-1 open item; needs a founder decision):
-  // this gate reads bare truthiness — `if (env.QUEEN_AUTONOMOUS_APPROVAL)` —
-  // NOT switchOn(). A dashboard plain-text variable set to the string "off"
-  // is truthy and would SILENTLY ENABLE auto-approve. The "inert while switch
-  // 9 is off" claim in this file holds only while the variable is ABSENT. Do
-  // not change the gate's semantics here — that is a founder decision, not a
-  // QB-2 fix — but do not mistake this line for the fail-closed switchOn()
-  // every other switch in this file uses.
-  if (env.QUEEN_AUTONOMOUS_APPROVAL) {
+  // Switch 9 gate — strict reading (Q-012, founder decision 2026-11-13: FIX IT
+  // NOW + TEST ALL SIX SWITCHES). Read through switchOn(), the same fail-closed
+  // strict reader every other switch in this file uses. Previously this gate
+  // read bare truthiness — `if (env.QUEEN_AUTONOMOUS_APPROVAL)` — and a
+  // dashboard plain-text variable set to the string "off" is truthy, so it
+  // would SILENTLY ENABLE auto-approve (QA-1 open item, named not fixed). Only
+  // an explicit affirmative value ("on", "true", "1", "yes", or boolean true)
+  // opens the gate now. The "inert while switch 9 is off" claim holds for
+  // every value, not only while the variable is ABSENT.
+  if (switchOn(env, 'QUEEN_AUTONOMOUS_APPROVAL')) {
     const review = await queenReview(env, requestUrl, { title, body });
     if (review) {
       qScore = review.score;
@@ -4809,8 +4810,11 @@ export default {
           enabled_now: Object.entries(state).filter(([, v]) => v).map(([k]) => k),
           next_stage: ladder.find(l => !l.enabled) ?? null,
           // Reported, never managed here — see NANUET_PREEXISTING_SWITCHES.
+          // Strict switchOn() only: the old `|| !!env?.[k]` reintroduced the
+          // bare-truthiness bug in the report itself (a var set to "off" read
+          // as on). Q-012, founder decision 2026-11-13.
           pre_existing: Object.fromEntries(
-            NANUET_PREEXISTING_SWITCHES.map(k => [k, switchOn(env, k) || !!env?.[k]])
+            NANUET_PREEXISTING_SWITCHES.map(k => [k, switchOn(env, k)])
           ),
           pre_existing_note:
             'QUEEN_AUTONOMOUS_APPROVAL predates this ladder (FLIP_THE_SWITCHES.md switch 9) and is ' +
