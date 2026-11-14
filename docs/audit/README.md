@@ -33,6 +33,8 @@ qualifies as founder-ordered.
 | `SOURCES_STOP_ROOT_CAUSE.md` | 2026-11-11 | Answers Mac's question (cross-reference Q7, 2026-11-11): why did SOURCES stop on 2026-08-08. Verdict on his session-cutoff hypothesis: unproven as stated. |
 | `F0_BUNDLE_STALE_INVESTIGATION.md` | 2026-11-11 | Investigation proposed to Mac 2026-11-11 and approved by him as one of four proposals the same day. Cause: `pages.yml` fails at `actions/checkout@v4` (PAT), so `docs/app/` never rebuilds. |
 | `CROSS_AI_HANDOFF_RECONCILIATION_2026-11-09.md` | 2026-11-09 | Mac supplied the briefs: he pasted three handover briefs returned from other AIs into the main chat on 2026-11-09 09:24 PST, and Muse reconciled them against the record. 107 claims checked; nothing from the briefs was written into the record. |
+| `HALT_PREREQUISITES_AUDIT_2026-11-13.md` | 2026-11-13 | Ordered by Mac 2026-11-13: a full audit of (a) why he halted everything and (b) the prerequisites for him to lift the halt. Prerequisites P1–P8; Tier 1 explicitly NOT a prerequisite for lifting the halt; lifting the halt is Mac's decision alone when the prerequisites are verified. |
+| `QUEEN_100_AUDIT_2026-11-13.md` | 2026-11-13 | Ordered by Mac 2026-11-13: an audit of what Queen 100% means. Headline: the Queen has a finished foundation with an empty mind (never routed a directive, never logged a review, never remembered a lesson); absorption mechanism + Queen Digest are required for 100%, not optional. |
 
 ## Not filed here — and why
 
