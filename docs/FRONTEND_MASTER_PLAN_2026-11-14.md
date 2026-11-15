@@ -1,4 +1,4 @@
-<!-- Filed into the Hive 2026-11-15 under the founder's automatic-return rule. DRAFT PLAN for the founder's ratification: nothing here is built, merged, deployed, or decided until the founder says so. The halt of 2026-11-13 13:41 PST stands (Q-042). Source drafts were written in a Claude session workspace; this is the filed copy. -->
+<!-- Filed into the Hive 2026-11-15 under the founder's automatic-return rule. DRAFT PLAN for the founder's ratification: nothing here is built, merged, deployed, or decided until the founder says so. The halt of 2026-11-13 13:41 PST stands (Q-042) except for front-end UI/UX work; see Addendum A8. Source drafts were written in a Claude session workspace; this is the filed copy. -->
 
 # THEHIVE Front End — Merged Master Plan v2 (Muse plan + sketch + mockup + Claude plan)
 
@@ -1019,3 +1019,25 @@ Per the ideas README rule 8 (Muse/Claude make technical calls and explain them p
 4. Parked world: parked until the Queen is 100% and the Hive has made $1,000 weekly (A5).
 5. Test runner: Vitest, a technical call (A6).
 6. Terminal: stays in Q-C (A7).
+
+
+---
+
+## Addendum A8 — The halt does not apply to front-end UI/UX work (Mac, 2026-11-14)
+
+**Mac's words, verbatim (the "hot" is the halt):**
+> "A; and the hot isn't applied to any front end user interface, UX work in which you can read the newest open issue to fully grasp why the halt was enacted"
+
+("A" = file the sketch and mockup images in the repo; done as PR #264.)
+
+**Why the halt was enacted (from the newest open issue, #243, read 2026-11-14/15):** the Hive availability audit found the Queen (Nanuet) and Kai El cannot see what they are supposed to know: the founder's decisions and questions are never fetched by the Worker, the live Worker read the non-canonical `docs/GOVERNANCE.md` as its constitution, there was no `GET /v11/ventures` or `/v11/constitution`, and Nanuet's brain was empty. The shared pattern: *a file exists, and nothing in the live system reads it.* That is a Worker and Queen knowledge problem. (Since then: PR #245 added the ventures and decisions routes, and PR #259 added the constitution route.)
+
+**Intake:** CHANGES the plan. It **supersedes every place in this file that says a front-end batch waits for the halt to lift** (the §0 table, the F0 note, the "halt stands" rules inside Appendix A's text, and Addendum A3 to A7 where they say "when the halt lifts"). Those words stay as written, because this file is a record; this addendum is the later instruction and wins (later-wins).
+
+**What it changes:**
+- Batches F1 to F9 (front-end UI/UX: `frontend/` and the `docs/app/` bundle it builds) are **not held by the halt**.
+- **It does not remove any other gate.** The preamble gate still applies to every batch: a plain what / why / how / necessity / improvement / cost and risk, and the founder's go-ahead for consequential work. Never self-merge. Each batch keeps its own dependencies: F4 needs the Q-040 answers and its design doc; F5 needs Q-022 and Q-025; F6 needs the absorption and constitution routes live; F7 needs Q-030; F8 needs Q-041; Kai's real terminal (F6-T) stays in Q-C.
+- **Claude's reading, not yet confirmed:** the exemption is for front-end UI/UX work only. Back-end work stays under the halt, including any new Worker route a front-end batch would want (for example an uptime or activity-rate route). Such a route is raised as its own question first.
+- Q-042 ("Lift the halt?") is unchanged and still open.
+
+**What it means for the order of work:** F1 (wire the orphans; MissionTimeline into the Running Tasks panel first) and F3 (remove the two typed-in circle numbers, the mislabeled counts and the Missions tab's invented fallback missions) are the first batches that can start, each after its own preamble and go-ahead. F3 is the cheapest and most checkable; the live routes it needs already exist. The findings that make them first are in `docs/audit/F0_FRONTEND_AUDIT_MAP_2026-11-14.md`.

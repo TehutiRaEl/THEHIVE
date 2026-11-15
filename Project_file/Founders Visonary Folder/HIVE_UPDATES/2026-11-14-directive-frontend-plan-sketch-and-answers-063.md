@@ -1,9 +1,9 @@
 # HIVE_UPDATE 063 — The front-end plan: sketch, mockup, additions, and the founder's answers
 
 **Date:** 2026-11-14 (founder's words, in chat); archived 2026-11-15
-**Status:** RATIFICATION PENDING — becomes a recorded founder decision when the founder merges the PR that carries this file (see `docs/FOUNDER_ANSWERED` FE-001 to FE-007).
-**Archive kind:** verbatim founder directives (`founder-directive-capture`). Distilled meaning lives in FE-001 to FE-007 and in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md`; this file keeps the words. Typos are the founder's and are kept.
-**The halt of 2026-11-13 13:41 PST stands (Q-042).** Nothing in this file builds, merges, or deploys anything.
+**Status:** RATIFICATION PENDING — becomes a recorded founder decision when the founder merges the PR that carries this file (see `docs/FOUNDER_ANSWERED` FE-001 to FE-008).
+**Archive kind:** verbatim founder directives (`founder-directive-capture`). Distilled meaning lives in FE-001 to FE-008 and in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md`; this file keeps the words. Typos are the founder's and are kept.
+**The halt of 2026-11-13 13:41 PST stands (Q-042) except for front-end UI/UX work (section 6).** Nothing in this file builds, merges, or deploys anything.
 
 The two images the founder sent (the hand sketch and the rendered "Kai EL OS v2.0.1" mockup) are transcribed element by element in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md`, Appendix C. The image files themselves are not in this PR; where they should live is an open question to the founder.
 
@@ -63,10 +63,18 @@ Then, choosing between (a) show "432Hz · Kai's tone (not measured)" and (b) dro
 
 > "Let's go option a"
 
+## 6. Where the images go, and the halt's scope
+
+Asked whether to copy the sketch and mockup image files into the repo (option a: add them in a small separate PR; option b: leave them with the founder), and told that the halt was the cause of earlier hesitation:
+
+> "A; and the hot isn't applied to any front end user interface, UX work in which you can read the newest open issue to fully grasp why the halt was enacted"
+
+("hot" is the founder's typo for "halt".) The images are filed by PR #264. The newest open issue, #243 (the Hive availability audit), says the halt was enacted because the Queen and Kai El cannot see what they are supposed to know; it is a Worker and Queen knowledge problem, not a screen problem. Recorded as `docs/FOUNDER_ANSWERED` FE-008.
+
 ## Open items this directive set created (queued, not forgotten)
 
-1. Every front-end build batch (F1–F9 in the master plan) waits for the halt to lift and for its own go-ahead.
+1. The front-end build batches (F1–F9 in the master plan) are no longer held by the halt (FE-008); each still needs its own preamble and go-ahead, and any new Worker route still waits (the halt covers back-end work).
 2. The "$1,000 weekly" condition for the parked world code has no measurement source yet (the income ledger depends on Q-004 and Q-041). Until a source is named, that condition cannot be checked.
-3. Where the sketch and mockup image files should live in the repo (suggested: `Project_file/Founders Visonary Folder/SOURCES/` with a provenance note). Not yet asked.
+3. The sketch and mockup image files are filed by PR #264 under `Project_file/Founders Visonary Folder/SOURCES/design/`.
 4. The gateway tab's "tiered fallback within limits" wording and the key-handling rule (the founder enters keys; Kai builds the setup screen) are proposals the founder has not yet answered.
 5. The test runner (Vitest) is a technical call made by Claude, per the ideas README rule 8. Setting it up is its own go-ahead.
