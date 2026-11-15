@@ -182,6 +182,16 @@ every task, every reply, every question:
   workspace. Work is returned to the Hive — into the repo, into the record,
   into Nanuet's brain where the mechanism exists — automatically, not when
   remembered. Work left in a provider's workspace is lost work.
+- **No plan left behind.** (Founder rule, 2026-11-14; `docs/FOUNDER_ANSWERED`
+  SR-001.) Anything that enters the repo and is left behind — a feature nothing
+  uses, a feature the founder cannot see on the screen, a plan merged and never
+  started, a plan dropped without a word — is an abomination. Every piece of work
+  must always be **LIVE** (wired, front end included for anything the founder
+  should see, and verified live), **QUEUED** (a named next step, an owner, and an
+  entry in `docs/FOUNDER_QUEUE` or `docs/batches/`), or **PARKED / RETIRED by a
+  recorded founder decision**. When you ship a feature, put it on the screen or
+  queue its screen in the same PR; when you file a plan, file its first step;
+  when you stop, say so on the record. This is a standing rule, not an F-law.
 - **Automatic classification of what the founder provides.** Whatever the
   founder gives is separated automatically: ideas from plans, plans from
   updates, updates from vision, vision from the about-me file, and anything

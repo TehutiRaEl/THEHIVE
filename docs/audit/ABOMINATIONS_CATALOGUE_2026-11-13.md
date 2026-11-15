@@ -814,3 +814,62 @@ Each item has four parts, always in this order:
 
 **Dated:** 2026-11-13, ~14:45 PST (America/Los_Angeles).
 **Next:** Mac ratifies this catalogue (whole or item by item); each OPEN item gets an owner and a date; RESOLVED markings happen only by dated addendum, with the proof cited.
+
+---
+
+## ADDENDUM 2026-11-15 — CATEGORY 8: Orphaned and left-behind work (draft for ratification)
+
+**Ordered by:** Mac (founder), 2026-11-14, in chat — see `docs/FOUNDER_ANSWERED` SR-001 for the verbatim words and the rule. This addendum is **appended**; nothing above it was edited. Counts in the header ("83 items", "seven categories") are the 2026-11-13 figures and are left as written; with this addendum the catalogue has **eight categories and 89 items** (83 + 6 new items, AB-8.01–AB-8.06; AB-8.07 is a cross-reference and is not counted).
+**Status:** DRAFT for the founder's ratification, like the rest of this catalogue. Nothing here is claimed fixed.
+**Method and limits:** Claude's read-only scan, 2026-11-14, of main `71faff1`: every `GET` route in `worker/src/index.js` compared against every call in `frontend/src`, plus the legacy `docs/*.html` pages (debug and admin routes excluded). It matches route strings, so a call assembled at runtime could hide from it. **Each item is UNVERIFIED until Batch F0 re-checks it.** These are findings, not verified-live claims.
+
+**The rule these items are measured against:** every piece of work in the repo is LIVE, QUEUED, or PARKED/RETIRED by recorded founder decision. Work in none of the three is an abomination. For anything the founder should see, "LIVE" includes the front end.
+
+### AB-8.01 — Ventures routes are live and nothing on the screen reads them
+- **What it is:** `GET /v11/ventures`, `/ventures/gaps` and `/ventures/sandbox-runs` serve the venture manifest, but no file in `frontend/src` calls them (only the legacy `command-center.html` and `full-plan.html` mention ventures).
+- **Where it was found:** `worker/src/index.js` (the ventures block, PR #245, merged 2026-11-13); zero references in `frontend/src`. Cross-reference AB-1.06, AB-5.05.
+- **What fixes it:** the Ventures circle (circle 13) and Ventures tab in the 15-circle screen (front-end plan Batch F2/F3).
+- **What proves it is fixed:** the circle renders the live venture count from `/v11/ventures` in the served bundle, verified with a live probe and a committed test.
+- **Status:** OPEN (UNVERIFIED pending F0).
+
+### AB-8.02 — The Queen's brain, autonomy and digest routes are live with no screen
+- **What it is:** `GET /v11/nanuet/brain`, `/nanuet/autonomy`, `/nanuet/digest` exist; the React app calls none of them.
+- **Where it was found:** Worker routes from PRs #221 and #245; zero references in `frontend/src`. Cross-reference AB-1.10, AB-1.14, AB-5.07.
+- **What fixes it:** the Queen circle (circle 15) and the Queen view (Batch F6); the switches panel stays display-only, always OFF.
+- **What proves it is fixed:** the Queen view matches the live `/v11/nanuet/autonomy` and `/nanuet/digest` responses, verified live.
+- **Status:** OPEN (UNVERIFIED pending F0).
+
+### AB-8.03 — The founder's decisions and queue routes are live with no screen
+- **What it is:** `GET /v11/founder/decisions` and `/founder/queue` (behind the Cloudflare Access gate) exist; no front-end file reads them. The founder cannot see his own record in the Command Center.
+- **Where it was found:** Worker routes from PRs #245 and #249; zero references in `frontend/src`. Cross-reference AB-1.03, AB-1.04.
+- **What fixes it:** a founder tab under Settings or Govern (Batch F2/F6).
+- **What proves it is fixed:** the tab shows the live decision and queue counts, verified live behind the gate.
+- **Status:** OPEN (UNVERIFIED pending F0).
+
+### AB-8.04 — Kai El's brain and autonomy routes are read only by a legacy page
+- **What it is:** `GET /v11/kai/brain` and `/kai/autonomy` are called by the legacy `docs/campaign.html` only, not by the React app.
+- **Where it was found:** `worker/src/index.js`; `docs/campaign.html`; zero references in `frontend/src`. Cross-reference AB-1.11.
+- **What fixes it:** surface them on the Kai EL hub of the 15-circle screen (Batch F2).
+- **What proves it is fixed:** the hub shows live Kai brain and autonomy values from the routes, verified live.
+- **Status:** OPEN (UNVERIFIED pending F0).
+
+### AB-8.05 — Jobs, task digest, subsystem health, knowledge, memory search and colony reports have no React screen
+- **What it is:** `GET /v11/jobs`, `/hive/task-digest`, `/health/subsystems`, `/knowledge/status`, `/memory/search` and `/colony/reports` are live; the React app calls none of them (jobs and task-digest appear only in legacy pages). The sketch's Running Tasks panel, the Debugger tile and the Memories circle have nothing behind them today.
+- **Where it was found:** `worker/src/index.js`; zero references in `frontend/src`. Cross-reference the purpose map items 7 and 8 (`docs/COMMAND_CENTER_PURPOSE_MAP.md` §3).
+- **What fixes it:** wire each to its home — Running Tasks (via the orphan `MissionTimeline`, Batch F1), the Debugger tile, the Memories circle, the Hive tab.
+- **What proves it is fixed:** each panel shows live data from its route or says "no data", verified live.
+- **Status:** OPEN (UNVERIFIED pending F0).
+
+### AB-8.06 — The frontend rewire plan and the biosystem build plan were merged and never started
+- **What it is:** `docs/FRONTEND_JASPER_REWIRE_MAP.md` (steps 1–7, PR #228, 2026-11-11) and `docs/BIOSYSTEM_BUILD_PLAN.md` (phases B1–B8; only B0 ran, PR #229) are merged plans with no later `frontend/src` change.
+- **Where it was found:** `git log origin/main -- frontend/src` — last change is PR #229 (2026-11-11). Cross-reference AB-5.14.
+- **What fixes it:** Muse's F0–F9 batch plan folds both in; each step gets a queued batch and the founder's go-ahead.
+- **What proves it is fixed:** each rewire step and biosystem phase is either shipped with a verified-live probe or recorded as parked by the founder.
+- **Status:** OPEN — queued in the front-end master plan; not started (the 2026-11-13 halt stands).
+
+### AB-8.07 — Already catalogued elsewhere (cross-reference only; not double-counted)
+These are the same pattern and already have entries: AB-5.14 (three orphan components and ~17 API functions), AB-5.04 (G2 `GET /v11/constitution`), AB-5.13 (the `thehive` gateway used by nothing), AB-5.03 (Q-C not started), and the Queen batch specs of PR #258 (filed, not started — see `docs/batches/`). Category 8 adds no second entry for them; it records that they are instances of this rule.
+- **Status:** see the cited items.
+
+**Dated:** 2026-11-15 (America/Los_Angeles).
+**Next:** Mac ratifies Category 8 (whole or item by item); each OPEN item gets an owner and a date; RESOLVED markings happen only by dated addendum, with proof cited.
