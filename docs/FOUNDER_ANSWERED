@@ -890,6 +890,50 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 
 ---
 
+## FE-001 to FE-007 — Front-end plan answers, DECIDED 2026-11-14 (recorded 2026-11-15)
+
+*Entered ahead of FQ-Q-011 (rather than at the end of the file) so this PR merges cleanly whichever of the open ratification PRs lands first; every entry carries its own date. The founder's exact words for all seven are archived in `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-11-14-directive-frontend-plan-sketch-and-answers-063.md`. Each was said in chat 2026-11-14 and counts as a founder decision under soul.md F-005 Clause 1 only once this PR is merged by the founder. None of these builds anything; the halt of 2026-11-13 13:41 PST stands (Q-042).*
+
+### FE-001 — The front-end plan: Muse's F0–F9 batch plan is the spine; the sketch and mockup are the target
+
+**Founder's instruction:** use the plan he provided to "extend enhance and improve further upon the plan you already provided me that way this plan I provided you fully is absorbed into the plan you created fully uncensored unabridged untrunucated unabated", with his hand sketch and rendered mockup.
+**What this means:** `docs/FRONTEND_MASTER_PLAN_2026-11-14.md` is the filed plan (Muse's plan verbatim in Appendix A; Claude's earlier prompt verbatim in Appendix B; the sketch and mockup transcribed in Appendix C). The React Command Center (`frontend/`) is the canonical front end (Q-009). Where sources differ, the founder's later words win, then Muse's plan, then Claude's earlier plan; for layout the sketch outranks the mockup; for numbers the live route outranks every picture.
+**Downstream chain:** Batch F0 (`docs/audit/F0_FRONTEND_AUDIT_MAP_2026-11-14.md`); F1–F9.
+
+### FE-002 — The centre graph has 15 circles: Ventures, Treasury (gated), and the Queen with a halo and crown
+
+**Founder's words:** "should be 13 circles. The extra circle is the ventures then there should be another circle as a 14 circle being the treasury and a 15th circle, which should be the top circle Being the queen and which should have a halo around her circle emanating above it like an angel's halo would yet this halo emanates a crown a queen's crown very symbolic of a map to Queen Elizabeth's"
+**What this means:** circle 13 is Ventures (live source `GET /v11/ventures`); circle 14 is Treasury, shown only as "gated — founder decision" and never with a balance until the money decision (Q-004) and the Mogul decision (Q-041) are made; circle 15 is the Queen (Nanuet), at the top, with a halo and a crown drawn as an original design inspired by the silhouette the founder named. Placement of the Queen (above the ring, with Town Hall directly beneath her, versus taking Town Hall's seat) is a proposed default the founder has not yet confirmed.
+
+### FE-003 — SOUL is a later DAO-phase idea; today's SOUL numbers are mock
+
+**Founder's words:** "Soul was an idea from turning the hive into a DAO later on down the line in which the soul was accumulation of each age any individual worth collectively in which it was mock data so that can now be placed later in the full map and full plan"
+**What this means:** no live SOUL figure in the header; the SOUL tab, the roadmap level bars, the SOUL leaderboard call and the Worker's +25 SOUL per arena win are labelled "mock, DAO phase" or leave the screen (nothing deleted). A "DAO / SOUL economy" phase is added to the full map; it touches the constitution's wealth formula (F-002, F-006), so it follows the amendment process in `soul.md`, not a normal build.
+
+### FE-004 — 432 Hz: header shows a labelled tone; the idea is parked
+
+**Founder's choice:** "a then b".
+**What this means:** the header shows "432Hz · Kai's tone (not measured)" and never presents it as a reading; the idea, its repo trail and the research are parked in `docs/founder/ideas/hive-tuned-to-432hz.md` (PR #262). A real "Hive Hz" or a 432 Hz audio tone remain options there.
+
+### FE-005 — The bottom bar keeps only honest tiles
+
+**Founder's choice:** "A" (keep only the honest tiles).
+**What this means:** the bottom bar shows latency and agent count. Uptime returns only if a Worker route for it is later approved. Hive Power, Memory GB, CPU and Temp are dropped; a Cloudflare Worker has no machine to measure.
+
+### FE-006 — The old voxel/gamified world code is PARKED until the Queen is 100% and the Hive has made $1,000 weekly
+
+**Founder's words:** "A, that won't get revisited until the queen is 100% in the hive has made $1000 weekly"
+**What this means:** the 34 files (11,169 lines: `frontend/src/worlds/`, `voxel/`, `xp/`, `avatars/`, `conversation/`), which `frontend/tsconfig.build.json` already excludes from the production build, stay in the repo, parked by founder decision. Revisit trigger: the Queen is 100% **and** the Hive has made $1,000 weekly. **Open detail:** no income ledger exists yet (Treasury and the Mogul are Q-004 / Q-041), so the second condition cannot be measured today; a measurement source must be named, or the trigger can never fire. Under the "No Plan Left Behind" rule, this is the PARKED state with a named revisit trigger.
+
+### FE-007 — Kai's real terminal stays in the Queen's Q-C stage
+
+**Founder's words:** "If it has already been placed in the Queens QC stage then let's keep it there and not try to rush ahead of it"
+**What this means:** this confirms `docs/AUTONOMY_STAGES_AND_GATES.md` (the real terminal is Q-C work). It is not built before Q-A, Q-B and Q-C's own stages. Until then the Hive Terminal panel is display-only and labelled "not connected: waiting on the Queen's Q-C stage". The two-step design in the plan (an authenticated route that dispatches `kai-sandbox-run.yml`, then a paid-plan live shell later) stays the design for when Q-C reaches it; the paid-plan step remains the founder's money decision. This replaces the earlier proposal that the founder's chat words "override" the gates doc; they do not.
+
+**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-14; recorded here 2026-11-15 via a docs-only PR the founder merges.
+
+---
+
 ## FQ-Q-011 — DECIDED 2026-11-13
 
 **Question (as queued):** `POST /v11/command_text` (Commune with Kai El) is LIVE and UNAUTHENTICATED (30/min/IP rate limit only). Gate it — (a) a Cloudflare Access app on the route, or (b) in-handler founder auth? (Founder queue FQ-Q-011.)
