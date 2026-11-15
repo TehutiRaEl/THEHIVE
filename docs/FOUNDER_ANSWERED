@@ -6,7 +6,7 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 
 *Addendum 2026-11-11: this file now holds 24 decided entries (Q-001–Q-010, M-01–M-09, F-005, Truth hierarchy, Q-B1, G1–G4, Tier 1 goals). The "Empty at creation" line above is the original creation note, kept for provenance — it is not a claim about the file's current state.*
 *Addendum 2026-11-12: this file now holds 62 decided entries (the 24 above plus XR-Q1–Q5, XR-Q8–XR-Q33, the HITL approval list, FQ-Q-015, FQ-Q-024, and XR-Q34–Q37, ratified in this batch).*
-*Addendum 2026-11-13: this file now holds 63 decided entries (the 62 above plus FQ-Q-011, recorded in this batch).*
+*Addendum 2026-11-13: this file now holds 64 decided entries (the 63 above plus FQ-Q-012, recorded in this batch).*
 
 ---
 
@@ -899,4 +899,18 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - The three suggestions are part of the decision, applied structurally and formatted: (1) a Commune-path log — every request through the path is logged, so the founder can see if anyone has been knocking at the open door; (2) the Digest memory — the Commune path becomes a founder-only channel that also writes every conversation into Nanuet's brain through the Queen Digest, so the Queen learns from what the founder tells Kai El; (3) per-key rate limiting — limit per founder key, not just per IP address, so even if someone got hold of a key they could not flood the system.
 - The audit's probe filed proposal #120 through the open path — that is the proof the door was open. Gating is Queen work (Q-C), not the biosystem rebuild.
 **Downstream chain:** Commune gating (in-handler founder auth first, then the Access app); Commune-path log; Queen Digest (Commune conversations written into Nanuet's brain); per-key rate limiting; proposal #120 (filed through the open path — see Q-013).
+**Recorded by:** Muse, at founder direction, 2026-11-13. Decided in chat 2026-11-13; recorded here 2026-11-13 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FQ-Q-012 — DECIDED 2026-11-13
+
+**Question (as queued):** `worker/src/index.js:3003` (gate in `queenDecide()`) and `:4813` (reporting leak) read `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness (any non-empty string counts as on). Fix it now (draft the fix), or park it until after BATCH-QZ? (Founder queue Q-012.)
+**Founder decision:** FIX IT NOW + TEST ALL SIX SWITCHES. The switch-9 truthiness bug is fixed now, with the strict reading applied to all six switches (not just switch 9), and tests proving "off" means off and "on" means on for each switch. The fix is drafted as a PR (Mac merges); no switch is enabled by the fix.
+**What this means:**
+- The bug: `worker/src/index.js:3003` (gate in `queenDecide()`) and `:4813` (reporting leak) read `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness, so any non-empty string — including the string "off" — counts as on. The strict reading must check the value, not merely its presence.
+- The fix is drafted now, as a PR for Mac to merge — it is not parked until after BATCH-QZ.
+- The strict reading applies to all six switches, not just switch 9, and tests prove "off" means off and "on" means on for each switch.
+- No switch is enabled by the fix. Q-006 still keeps switch 9 OFF until the Queen passes the done ladder, and even then the action-request gate is never skipped. The fix must land before switch 9 is ever touched.
+**Downstream chain:** The switch-9 truthiness fix (drafted now, PR for Mac to merge) → the six-switch strict reading + tests → switch 9 stays OFF (Q-006) until the Queen passes the done ladder → BATCH-QZ.
 **Recorded by:** Muse, at founder direction, 2026-11-13. Decided in chat 2026-11-13; recorded here 2026-11-13 so it counts as a founder decision under soul.md F-005 Clause 1.
