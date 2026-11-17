@@ -4,10 +4,21 @@ import type { HiveData } from '../../hooks/useHiveData';
 interface GraphNode {
   id: string;
   label: string;
-  count: number | string;
   icon: string;
+  // false = the circle opens nothing yet. It is rendered disabled, so it never
+  // looks like a control that works.
   wired: boolean;
+  // The live number, as text. null = no live source counts this thing yet, and
+  // the circle says "no data". Never a typed-in number, never a different
+  // thing's count under this label.
+  count: string | null;
+  // Plain words: what the number counts, or what the circle still needs.
+  about: string;
 }
+
+// GET /v11/tasks returns one page (the Worker's default page size). When the
+// page is full there may be more tasks than were loaded, so the count gets a "+".
+const TASK_PAGE_SIZE = 20;
 
 interface CenterGraphProps {
   hive: HiveData;
@@ -16,8 +27,17 @@ interface CenterGraphProps {
 }
 
 // The center IS the navigator, per the brief — a connected living web, not
-// scattered bubbles. Every count is a real, live number; nodes without a real
-// backing metric are marked `wired: false` and labeled honestly.
+// scattered bubbles.
+//
+// LIVE DATA ONLY (founder rule): a circle shows a number only when a live
+// Worker route returns the count of exactly the thing the circle names. Today
+// that is two circles: Tasks (/v11/tasks) and Agents (/v11/agents). Every other
+// circle says "no data" and its tooltip names what it still needs. Before this,
+// APIs and Workflows showed typed-in numbers (18 and 8), and Projects, Town
+// Hall, Memories, Dream Logs, Swarms and Skills showed some other thing's count
+// (tasks, the governance log page, the heartbeat page, the agent count).
+// While the Hive is unreachable, every circle says "no data" instead of 0.
+// Guarded by tests/unit/test_frontend_live_data.py.
 //
 // COORDINATE FIX: the connecting lines and the node bubbles used to live in two
 // different coordinate systems — the SVG was square-centered (xMidYMid) while
@@ -27,20 +47,26 @@ interface CenterGraphProps {
 // same rectangle the % positions use — lines now land on their nodes at every
 // viewport shape.
 export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphProps) {
-  const nodes: GraphNode[] = useMemo(() => [
-    { id: 'world', label: 'Projects', icon: '📂', count: hive.tasks.length, wired: true },
-    { id: 'govern', label: 'Core · Town Hall', icon: '🏛', count: hive.governance.length, wired: true },
-    { id: 'dream-logs', label: 'Memories', icon: '🧠', count: hive.pulse.length, wired: true },
-    { id: 'hive', label: 'Swarms', icon: '🐝', count: hive.agents.length, wired: true },
-    { id: 'missions', label: 'Tasks', icon: '✓', count: hive.tasks.filter(t => t.status !== 'completed').length, wired: true },
-    { id: 'dream', label: 'Dream Logs', icon: '🌙', count: hive.pulse.length, wired: true },
-    { id: 'training', label: 'Training', icon: '🎓', count: '—', wired: false },
-    { id: 'arena', label: 'Skills', icon: '⚡', count: hive.agents.length, wired: true },
-    { id: 'sources', label: 'Files', icon: '📁', count: '—', wired: true },
-    { id: 'api', label: 'APIs', icon: '</>', count: 18, wired: true },
-    { id: 'workflows-panel', label: 'Workflows', icon: '🕸', count: 8, wired: true },
-    { id: 'soul', label: 'Agents', icon: '🤖', count: hive.agents.length, wired: true },
-  ], [hive]);
+  const nodes: GraphNode[] = useMemo(() => {
+    const live = hive.online;
+    const openTasks = hive.tasks.filter(t => t.status !== 'completed').length;
+    const tasksCount = live ? `${openTasks}${hive.tasks.length >= TASK_PAGE_SIZE ? '+' : ''}` : null;
+    const agentsCount = live ? String(hive.agents.length) : null;
+    return [
+      { id: 'world', label: 'Projects', icon: '📂', wired: true, count: null, about: 'no live count yet: no route counts projects' },
+      { id: 'govern', label: 'Core · Town Hall', icon: '🏛', wired: true, count: null, about: 'no live count yet: the Town Hall board (/v11/townhall) is not shown on screen yet' },
+      { id: 'dream-logs', label: 'Memories', icon: '🧠', wired: true, count: null, about: "no live count yet: Kai El's memory count (/v11/kai/brain) is not wired to this circle yet" },
+      { id: 'hive', label: 'Swarms', icon: '🐝', wired: true, count: null, about: 'no live count yet: no route counts swarms' },
+      { id: 'missions', label: 'Tasks', icon: '✓', wired: true, count: tasksCount, about: `open tasks among the latest ${TASK_PAGE_SIZE} loaded from /v11/tasks` },
+      { id: 'dream', label: 'Dream Logs', icon: '🌙', wired: true, count: null, about: 'no live count yet: no route counts dream logs' },
+      { id: 'training', label: 'Training', icon: '🎓', wired: false, count: null, about: 'not connected yet: there is no Training panel to open' },
+      { id: 'arena', label: 'Skills', icon: '⚡', wired: true, count: null, about: 'no live count yet: no route counts skills' },
+      { id: 'sources', label: 'Files', icon: '📁', wired: true, count: null, about: 'no live count yet: the file store count is not wired to this circle yet' },
+      { id: 'api', label: 'APIs', icon: '</>', wired: true, count: null, about: 'no live count yet: the Worker does not publish a measured route count' },
+      { id: 'workflows-panel', label: 'Workflows', icon: '🕸', wired: true, count: null, about: 'no live count yet: no route counts workflows' },
+      { id: 'soul', label: 'Agents', icon: '🤖', wired: true, count: agentsCount, about: 'active agents, from /v11/agents' },
+    ];
+  }, [hive]);
 
   const cx = 50, cy = 50;
   const positions = useMemo(() => nodes.map((_, i) => {
@@ -122,18 +148,23 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
         return (
           <button
             key={n.id}
-            onClick={() => onSelect(n.id)}
+            type="button"
+            disabled={!n.wired}
+            onClick={n.wired ? () => onSelect(n.id) : undefined}
+            aria-label={`${n.label}: ${n.count ?? 'no data'}. ${n.about}`}
             className={`absolute z-10 flex flex-col items-center justify-center gap-0 -translate-x-1/2 -translate-y-1/2 rounded-full
-              w-14 h-14 sm:w-20 sm:h-20 border backdrop-blur-xs transition-all hover:scale-110
+              w-14 h-14 sm:w-20 sm:h-20 border backdrop-blur-xs transition-all
               ${n.wired
-                ? 'border-cyan-glow/50 bg-void-800/85 shadow-glow hover:border-cyan-glow'
-                : 'border-white/10 bg-void-800/50 opacity-45'}`}
+                ? 'border-cyan-glow/50 bg-void-800/85 shadow-glow hover:border-cyan-glow hover:scale-110'
+                : 'border-white/10 bg-void-800/50 opacity-45 cursor-not-allowed'}`}
             style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-            title={!n.wired ? `${n.label} — not yet connected` : n.label}
+            title={`${n.label} — ${n.count ?? 'no data'} (${n.about})`}
           >
             <span className="text-[13px] sm:text-base leading-none">{n.icon}</span>
             <span className="text-[8px] sm:text-[10px] font-body text-slate-200 text-center leading-tight px-1">{n.label}</span>
-            <span className="text-[9px] sm:text-[10px] text-cyan-glow font-semibold">{n.count}</span>
+            {n.count !== null
+              ? <span className="text-[9px] sm:text-[10px] text-cyan-glow font-semibold">{n.count}</span>
+              : <span className="text-[8px] sm:text-[9px] text-slate-500">no data</span>}
           </button>
         );
       })}
