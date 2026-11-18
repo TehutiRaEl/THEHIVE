@@ -184,3 +184,15 @@ Main moved after this audit. PR #259 (merged 2026-11-15, main `f0f37b0`) added `
 - §5: of the 16 `services/api.ts` functions that pointed at routes the Worker lacked, `getConstitutionLaws` (`/constitution`) now has a matching route. **15 remain.** `/constitution/soul` and `/constitution/history` still do not exist.
 - §1/§6.1: `ConstitutionVisualizer` can now be given a real source, and the live `ConstitutionViewer` still reads `docs/GOVERNANCE.md`. Both need Batch F1/F5 to re-check the response shape and remove the hardcoded "C-4" law before mounting. This is a note, not a verified-live claim.
 - `frontend/` had no changes between `71faff1` and `f0f37b0` (checked with `git diff --stat`), so every other finding stands.
+
+---
+
+## UPDATE 2026-11-18 (appended; the audit above is unchanged): corrections from the expanded audit
+
+A wider read-only audit (seven auditors, front end and back end) re-checked this map. Three of its claims were wrong or incomplete. Each was verified against main `f0f37b0` before being written here.
+
+1. **§6 item 3 ("Heavy libraries, loaded lazily") is wrong for `three`.** `docs/app/index.html` carries `<link rel="modulepreload" href="/app/assets/three-COIyZYFH.js">`, so browsers fetch the three.js chunk (about 963 KB) on every load of the app. `phaser` (about 1.48 MB) is a dynamic import in `PhaserScene.tsx` and does load on demand. The entry file being small (138 KB) did not mean the page was light.
+2. **`GET /v11/jobs` cannot feed a Running Tasks list.** It is a single-job lookup that requires `?id=` (`worker/src/index.js`, the `/jobs` handler); no route lists jobs. §2 and §4 imply it could back the Running Tasks panel: it cannot, until a list route exists (a back-end change, still halted). `GET /v11/hive/task-digest` does exist (a GET and a founder-key POST) and has no screen.
+3. **Added after the audit: nothing in the Worker writes the `tasks` table.** No `INSERT INTO tasks` exists anywhere under `worker/`. `GET /v11/tasks` therefore returns whatever was put there by hand, probably nothing in production (not verified live: this container cannot reach the Worker). The effect: before F3 (PR #266) the Missions tab showed eight invented sample missions on an empty list; after F3 it says "No data: the Hive task queue is empty", and the Tasks circle will read `0`. Wiring Tasks to something that is really populated is a separate item.
+
+Claims in this map that the expanded audit could not re-run (it was read-only): the committed bundle matches a fresh build of main's source. That check was done in a scratch copy during the original audit (identical file hashes) and stands.
