@@ -7,13 +7,13 @@ small businesses). Source: the working research log kept under the Tier 1 goal
 rules paraphrased in the loop's own words, leads and scorecard carried over as
 recorded. No numbers invented, no text copied from the web sources.
 
-Last synced from the working log: 2026-11-18 ~13:33 PST (through Reviewer
-cycle 35; Learner cycle 35, Scout cycle 34, and Pitcher cycle 37). This is
-the closing sync — feeder cycle 20 of 20. The loop's nominal 20-cycle count
-was already exhausted when the sync began and is now far past it in every
-role (Reviewer 35, Pitcher 37, Learner 35, Scout 34). The working log grew
-while this sync ran (4,136 lines at the final check); Pitcher cycle 37 and
-Reviewer cycle 35 landed during the sync and are included. Note: Scout cycle
+Last synced from the working log: 2026-11-18 ~13:37 PST (through Reviewer
+cycle 36; Learner cycle 36, Scout cycle 35, and Pitcher cycle 38). This is
+feeder cycle 20 of 20, updating the closing sync: the cycle-20 task's own
+filings (Learner 36, Scout 35, Pitcher 38, Reviewer 36) landed after the
+closing sync at ~13:33 PST and are included here. The loop's nominal 20-cycle
+count is far past it in every role (Reviewer 36, Pitcher 38, Learner 36,
+Scout 35). The working log is 4,239 lines at this check. Note: Scout cycle
 26 is stamped ~13:13 PST, after Reviewer cycle 28's ~13:11 PST stamp that
 already covers it — see the flags.
 
@@ -34,41 +34,44 @@ agreed and no outreach goes out until Mac approves the batch and the fee is
 agreed in writing first. No invented numbers, no fake urgency, no invented
 $Cashtag.
 
-## Scorecard (latest, Reviewer cycle 35, 2026-11-18 ~13:33 PST)
+## Scorecard (latest, Reviewer cycle 36, 2026-11-18 ~13:37 PST)
 
 - **Banked: $0.** Goal $1,000 by Sun 2026-11-22 — not reached. Gap $1,000,
   4 days left. At $350/deal the goal needs ~3 closed deals.
 - **Replies: 1 total, 0 new in any review window.** The one reply is Luxura
   Med Spa, via text, pre-rules (soft gatekeeper reply). No Luxura reply exists
-  in Gmail (checked repeatedly, latest ~13:33 PST).
+  in Gmail (checked repeatedly, latest ~13:36 PST).
 - **Wave 1 (sent Mon 2026-11-16):** 3 emails. Cody Dental's email bounced
   (info@codydental.com undeliverable). Tuesday follow-up texts (Birdie, Cody
   cold version, MN Pest) sent by Mac 2026-11-18 ~11:57 PST. Luxura walkthrough
   (Tue 2026-11-17, 5pm PT) outcome still unverified — Mac's message thread
   cannot be read by the loop.
-- **Drafts: 123 rows, 116 distinct, all DRAFT — NOT SENT**, awaiting Mac's
+- **Drafts: 126 rows, 119 distinct, all DRAFT — NOT SENT**, awaiting Mac's
   approval. The binding constraint is sends: the approved-ready batches have
   not gone out yet.
-- **Fees agreed in writing: none.** All 201 distinct Scout leads are
+- **Fees agreed in writing: none.** All 206 distinct Scout leads are
   candidates; no fee agreed on any. (Counted by published phone from the
-  working log — 208 rows for 201 distinct firms; the log's own running chain
-  says 199 distinct — a 2-firm undercount against the phone count, same gap
-  class as before — see integrity flags.)
+  working log — 213 rows for 206 distinct firms; the log's own running chain
+  says 204 distinct — the same 2-firm undercount against the phone count,
+  carried forward — see integrity flags.)
 - **Tokens per dollar: not computable** — $0 banked, no spend tracked in the
-  log. Estimated cumulative token use is roughly ~1,937,000 through Reviewer
-  cycle 35 (no metered counts available); the loop has now spent nearly 1.94
+  log. Estimated cumulative token use is roughly ~1,987,000 through Reviewer
+  cycle 36 (no metered counts available); the loop has now spent nearly 1.99
   million tokens with $0 banked and zero rule-using sends. The cycle-16 task
   cost ~100,000 tokens (8 filings), cycle-17 ~100,000, cycle-18 ~100,000,
-  cycle-19 ~50,000, cycle-20 ~60,000. Reviewer cycles 32–35 carry the
+  cycle-19 ~50,000, cycle-20 ~110,000 across its three rounds (the closing
+  round ~60,000 plus this ~50,000 round — Learner 36, Scout 35, Pitcher 38,
+  Reviewer 36). Reviewer cycles 32–36 carry the
   closing verdict: **the learning loop itself is the cost lane to cut/pause**
   — each further cycle adds ~50,000–60,000 tokens and another untested rule
   while the binding constraint (a sent batch) stays unmet. No new rule can
   pay for itself until a batch goes out; the next dollar of value comes from
   Mac approving a batch, not from another study cycle. Duplicate parallel
   runs remain the largest avoidable cost (see flags).
-- **Geography:** Scout cycles 27–34 expanded beyond Fresno/Clovis into
+- **Geography:** Scout cycles 27–35 expanded beyond Fresno/Clovis into
   Visalia, Hanford, Tulare, Porterville, Madera/Sanger, Reedley/Selma/
-  Kingsburg/Dinuba, and Fowler/Parlier/Kerman/Orange Cove/Lemoore/Coalinga
+  Kingsburg/Dinuba, Fowler/Parlier/Kerman/Orange Cove/Lemoore/Coalinga, and
+  the Firebaugh–Mendota–Huron–Riverdale–Avenal–Corcoran corridor
   — same niches, same 559 area code.
 
 ## Rules
@@ -114,7 +117,7 @@ None yet. **Rules kept: 0.**
   and the wholesaling lane; not a pitch rule, changes no line of the $350
   pitch.
 
-### Untested pitch rules (43)
+### Untested pitch rules (44)
 
 All of these were extracted from web sources and applied in Pitcher drafts,
 but none has been tested by a sent batch yet, because wave 1 was sent before
@@ -698,11 +701,31 @@ the rules were extracted and every Pitcher batch is still draft-only.
     to it. Source: Failurepedia, "Mississippi Bubble: why it failed" (+
     Investopedia on the redemption cap). Learner cycle 35 — a parallel
     filing on the same Mississippi Bubble angle as rule 44 (Learner cycle
-    34); rule 44 is "the demo must be the redemption," rule 45 is the other
-    half of the same collapse: what happens when redemption fails. (Pitcher
-    cycle 37 applies it for the first time and runs the redemption check on
+    34); rule 44 is "the demo must be the redemption," rule 45 is the other    (Pitcher cycle 37 applies it for the first time and runs the redemption check on
     its drafts — every claim is either the loss the owner can already see or
     something the demo shows live, so nothing unredeemable had to be cut —
+    still untested until a sent batch replies.)
+46. **The first true sentence is the halo — a generic opener is the horn.**
+    One strong first impression colours everything the buyer reads after it,
+    and one weak one poisons it: the brain takes the first signal and
+    generalises it across the whole offer instead of judging each line on
+    its own. So the pitch's first line must be one true, specific fact about
+    their business — their name, their trade, the exact call they are
+    losing — because that one true line makes the rest of the message read
+    as if it came from someone who already knows them. A generic opener
+    ("I help businesses grow") does the opposite: it stamps the whole
+    message as spam in the first second, and no good line after it can wash
+    the stamp off. The halo must be earned with a fact, never faked with a
+    claim — a manufactured first impression flips into a horn the moment the
+    buyer spots it. Source: Lead Alchemists, "Guide to The Halo Effect &
+    Horn Effect in Marketing" (Nisbett & Wilson 1977; first impressions
+    solidify within milliseconds); MMS Vegas on the first signal; Lindgaard
+    et al. 2006 on 50-millisecond impressions. Learner cycle 36. Pre-send
+    check it adds: if the first line could have been sent to any business
+    in any city, it is a horn — rewrite it until it could only have been
+    written to this firm. (No Pitcher draft names rule 46 yet — Reviewer
+    cycle 36 flags it for the next batch; the drafts already open with a
+    specific trade line, so only the explicit application is missing —
     still untested until a sent batch replies.)
 
 ### Cut rules
@@ -712,13 +735,14 @@ cannot fire yet: confirmed sends using any rule = 0. Wave 1 was sent before
 these rules were extracted, so it cannot test them, and the Tuesday
 follow-up texts have no recorded link to these rules.
 
-## Verified leads (201 distinct, all candidates, none contacted)
+## Verified leads (206 distinct, all candidates, none contacted)
 
 All Central Valley (559 area code) small businesses that lose customers to
 missed calls and slow follow-up — Fresno/Clovis first, then Visalia, Hanford,
 Tulare, Porterville, Madera/Sanger, Reedley/Selma/Kingsburg/Dinuba, and
 Fowler/Parlier/Kerman/Orange Cove/Lemoore/Coalinga as the Fresno pool
-saturated (Scout cycles 27–34). Verified from published listings and the
+saturated (Scout cycles 27–34), then the Firebaugh–Mendota–Huron–Riverdale–
+Avenal–Corcoran corridor (Scout cycle 35). Verified from published listings and the
 firms' own sites; phone, address, and review counts as published in the
 sources read. No fee agreed in writing for any of them. Readiness is the
 Scout's rating (HIGH / MEDIUM-HIGH / MEDIUM); capacity notes say whether the
@@ -930,6 +954,11 @@ Cody Dental (email bounced), Birdie, MN Pest.
 | 199 | G's Smog and Repair | (559) 846-0220 | 14306 W Whitesbridge Ave, Kerman, CA 93630 | Auto — estimate follow-up; ASE-certified shop; review count not found, capacity unverified | MEDIUM |
 | 200 | Chapas Automotive (owner Hector Luis Chapa) | (559) 626-7625 | 190 E Railroad Ave, Orange Cove, CA 93646 | Auto — estimate follow-up; 20 years in business, ~3 staff; review counts conflict (4.4 / 17 vs 4.94 / 18) — quote the Zaubee figure only | MEDIUM |
 | 201 | Coalinga Dentistry | (559) 935-3435 | 263 E Elm Ave, Coalinga, CA 93210 | Dental — new-patient / appointment follow-up; Saturday hours; 94% recommendation rate from 12 reviews; capacity unverified | HIGH |
+| 202 | Ron's Auto Repair | (559) 659-3795 | 2050 N St, Firebaugh, CA 93622 | Auto — estimate follow-up (4.2 / 31); small single-shop operation, capacity unverified | MEDIUM-HIGH |
+| 203 | GIA Auto Paint & Collision (owner Antonio M. Gonzales) | (559) 659-1234 | 1298 N St Ste C, Firebaugh, CA 93622 | Auto — estimate / missed-call follow-up (4.9 / 42); owner-operated sole proprietorship since at least 2021; second number (559) 296-0178 on own site — verify which reaches the owner | MEDIUM |
+| 204 | Glo Dental | (559) 762-7587 | 933 Whitley Ave, Corcoran, CA | Dental — new-patient / appointment follow-up (5.0 / 3), Saturday hours; small single practice, capacity unverified; Dr. Rushi Panchal is also named at a separate Hanford location — distinct firm/address/phone | HIGH |
+| 205 | Adrian Y. Cho, DDS | (559) 935-2368 | 198 E Elm Ave #103, Coalinga, CA 93210 | Dental — new-patient / appointment follow-up; actively marketing in the community (Nov 17, 2026 Avenal outreach walk); base city ambiguous — BBB lists Coalinga, own posts describe it as Avenal — verify; a commenter reported the main line not working, practice says fixed — verify the number rings; capacity unverified | HIGH |
+| 206 | Car Auto Service | (559) 742-4630 | 3415 W Mount Whitney Ave, Riverdale, CA 93656 | Auto — estimate follow-up (3 reviews); small-town shop, capacity unverified | MEDIUM |
 
 ### Considered and NOT logged
 
@@ -1062,11 +1091,20 @@ spares — both promoted to logged candidates #197 and #200 in Scout cycle
 34), and Cortes Automotive Kerman (Facebook ad only, no review evidence —
 still a spare). Scout cycle 34 held Lemoore Tire & Auto (phone conflict:
 (559) 825-2804 vs (559) 924-5360) and Cortes Automotive Kerman (still a
-spare).
+spare). Scout cycle 35 (Firebaugh–Corcoran corridor) held Pacific Dental
+Mendota (chain location — decision-maker would not control a $350 spend;
+1.0 / 1 review), Thompson Rogelio F DDS Mendota (0 reviews; address shared
+with United Health Centers and other dentists at the same suite — reads as
+a clinic setting, not a standalone small business), Valley Health Team —
+Huron Dental Center (FQHC community health center, not a small-business
+buyer), Marquez Auto Repair Huron (phone conflict: (559) 313-5609 vs
+(559) 945-6507), and California Pest Solutions Corcoran (toll-free
+(877) 729-2528 lead-gen shell — fails the area-code rule, already held in
+Scout cycle 33).
 
-## Pitch drafts (116 distinct, all DRAFT — NOT SENT)
+## Pitch drafts (119 distinct, all DRAFT — NOT SENT)
 
-Pitcher cycles 1–37 wrote 123 draft rows for 116 distinct leads (Body del Sol
+Pitcher cycles 1–38 wrote 126 draft rows for 119 distinct leads (Body del Sol
 and Janzen Dental were drafted twice in cycle 7; Mafi Plastic Surgery and
 The Roofing Crew LLC twice in cycle 8; Armament Coatings & Roofing, Lee's
 Roofing, and Power Auto Repair LLC twice in cycle 25; Pitcher cycle 35 filed
@@ -1146,9 +1184,14 @@ DDS, High Quality Pro Roofing (Reedley/Dinuba) and Selma Sunshine Dental,
 Magallon's Roofing, Viking Pest Solutions (Selma/Kingsburg/Reedley), first
 drafts to use rules 41–43 and the customer-shift line; 36 — Kings Dental
 Group, Parlier Dental Studio, Owji Dental Corporation (Lemoore/Parlier/
-Orange Cove), first drafts to use rule 44; 37 — Parlier Family Dentistry,
+  cycle 37 — Parlier Family Dentistry,
 Coalinga Dentistry, Chapas Automotive (Parlier/Coalinga/Orange Cove), first
-drafts to use rule 45 (redemption check run, nothing unredeemable to cut).
+drafts to use rule 45 (redemption check run, nothing unredeemable to cut);
+38 — Glo Dental, Adrian Y. Cho DDS, Ron's Auto Repair (Corcoran / Coalinga–
+Avenal / Firebaugh), applied rules 1–4, 6–10 and 45 (redemption check run,
+nothing unredeemable to cut); rule 46 (halo — the first true sentence) is
+not named in any draft yet, so the next Pitcher batch should name it
+explicitly (the drafts already open with a specific trade line).
 
 Undrafted and available for the next Pitcher cycle: Diba Med Spa and Brothers
 Carpet Cleaning (Scout cycle 17 — the other three from that batch were
@@ -1181,7 +1224,10 @@ capacity unverified); Touched by an Angel Therapeutic Massage and SEVA Beauty
 cycle 32, cycle-18 task, held); Fowler Family Dentistry and RSM Auto Works
 Inc (Scout cycle 33, held — capacity unverified); Mulligan Automotive and
 G's Smog and Repair (Scout cycle 34, held — MEDIUM readiness, no review
-count found). Note from Scout cycle 17:
+count found); GIA Auto Paint & Collision (Scout cycle 35, held — MEDIUM
+readiness, insurance-driven, plus the phone conflict to verify) and Car Auto
+Service (Scout cycle 35, held — MEDIUM readiness, only 3 reviews, capacity
+unverified). Note from Scout cycle 17:
 the Fresno med-spa pool still yields new names (Cosmo, Diba), and the niche
 set has now widened further to electricians and junk removal (Scout cycle
 18), then to painting, locksmiths, garage doors, moving, detailing,
@@ -1537,11 +1583,24 @@ Cove/Lemoore/Coalinga) once the Fresno/Clovis pool saturated (Scout cycles
   / 113 distinct drafts; cumulative tokens ~1,897,000; closing verdict — the
   loop itself is the cost lane to cut/pause. Reviewer cycle 35 (~13:33 PST,
   second filing for the cycle-19 task) — 0 new replies; kept 0, cut 0; all
-  pitch rules untested; verified totals: 199 distinct candidates per the
-  log's chain (phone count says 201 distinct / 208 rows — see flags), 123
-  draft rows / 116 distinct drafts; cumulative tokens ~1,937,000. The loop
+  pitch rules untested; verified totals: 199 distinct candidates per the  123 draft rows / 116 distinct drafts; cumulative tokens ~1,937,000. The loop
   ends with 0 rule-using sends, $0 banked, and ~1.94M tokens spent — the
   learning is recorded, but it is untested until a batch goes out.
+- **Cycle-20 task, continued (sequential Learner 36, Scout 35, Pitcher 38,
+  Reviewer 36, ~13:33–13:37 PST) — filed after the closing sync:** Learner —
+  the halo effect (rule 46; the first true sentence is the halo, a generic
+  opener is the horn). Scout — the Firebaugh–Mendota–Huron–Riverdale–
+  Avenal–Corcoran corridor, 5 new leads (Ron's Auto Repair, GIA Auto Paint
+  & Collision, Glo Dental, Adrian Y. Cho DDS, Car Auto Service). Pitcher
+  cycle 38 — 3 drafts (Glo Dental, Cho, Ron's), applied rules 1–4, 6–10
+  and 45 with the redemption check run; rule 46 not named in any draft yet.
+  Reviewer cycle 36 (~13:37 PST, third Reviewer filing for the cycle-20
+  task) — 0 new replies; kept 0, cut 0; all pitch rules untested; verified
+  totals: 204 distinct candidates per the log's chain (phone count 206
+  distinct / 213 rows — see flags), 126 draft rows / 119 distinct drafts;
+  cumulative tokens ~1,987,000. The loop is now past its nominal count in
+  every role (Learner 36, Scout 35, Pitcher 38, Reviewer 36) with the same
+  closing verdict: the loop itself is the cost lane to cut/pause.
 
 ## Log-integrity flags (open)
 
@@ -1551,8 +1610,8 @@ Cove/Lemoore/Coalinga) once the Fresno/Clovis pool saturated (Scout cycles
   first Pitcher cycle 7 entry held it for that reason, but the second
   Pitcher cycle 7 entry drafted it anyway, citing 47 years in business. The
   hold is the safer read.
-- **Distinct-candidate total corrected to 201 by phone count (closing sync).** Counting every verified Scout lead row in the working log by published phone gives 201 distinct firms (208 rows; the 7 duplicate rows are Skin.Restored, Sidhu, Body del Sol, Melanie Aesthetic NP, 1AutoCare, Ferrer Precise Painting, and Gilluxe Aesthetics, each re-listed in a second parallel entry). The log's own running chain says 199 distinct after Scout cycle 34 — a 2-firm gap that traces to Scout cycle 20's "117 unique prior" (the synced table counted 119 by phone at that point: 111 + 5 first Scout 19 + 3 second Scout 19). Reviewer cycle 20's "114 distinct" repeats the same omission as the earlier 106 (it never picked up the late duplicate Scout cycle 9 batch of 5). Same class of error as the Scout cycle 16 correction Reviewer cycle 16 made (91 → 96). The rows/distinct confusion also recurs: Scout cycle 25's "149 lead rows" was corrected by Reviewer cycle 27 to 149 distinct / 154 rows, and Scout cycle 26's "154 lead rows" repeats the error — by the log's own method the corrected count after Scout cycle 26 is 154 distinct / 159 rows, while the phone count says 156 distinct firms in 163 rows. The row-count gap Reviewer cycles 29–33 flagged (159-vs-168-vs-173-vs-178-vs-183-vs-188) is now settled as a count: 208 rows is verified by counting the lead-table rows, and the log chain agrees on 208 rows — the remaining gap is distinct-only (201 by phone vs 199 by chain). Reviewer cycle 33's second filing corrected a further double-count: both Scout cycle 32 entries claimed the same 184 distinct / 193 rows base while logging different lead sets, so the true totals at that point were 189 distinct / 198 rows, not 184 / 193; the same error recurred in the Pitcher lane (both Pitcher cycle 35 entries claimed 114 rows from the same 111 base — true total 117 rows / 110 distinct).
-- **Rule-number collisions — resolved, twice more since.** Anchoring was filed as a second rule 12 (Learner cycle 6) and renumbered to 13; social proof was filed as a second rule 14 (Learner cycle 7) and renumbered to 15. Two-wording duplicates count as one rule each: authority (rule 16, Learner cycle 8), peak-end (rule 20, Learner cycle 12), liking (rule 14, late Learner cycle 7 entry). A second collision followed the same pattern: Learner cycle 19 filed two different rules as 27 (1929/Kennedy and Tulip Mania); Reviewer cycle 20 flagged it and Learner cycle 20 adopted the fix — Tulip Mania is now rule 28, Kennedy stays 27. A third collision: the two Learner cycle 24 entries both filed as rule 33 (decision fatigue and the zero-price effect); Reviewer cycle 25 fixed it as 33 decision fatigue / 34 zero-price, confirmed by Reviewer cycle 27. The rule set is now collision-free in this file: rules 1–45, with rules 5 and 17 the lenses only (43 distinct pitch rules, all untested). The working log's own numbering still carries the collisions — Reviewer cycles 33–34 flag two rules numbered 12 (reciprocity and price anchoring) and two numbered 33 (decision fatigue and the zero-price effect) in the log itself; the staging renumbering (anchoring → 13, social proof → 15, decision fatigue 33 / zero-price 34) is what makes this file's numbering clean, and no single rule-count figure from the working log should be treated as verified until its numbering is reconciled there. Two-wording duplicates count as one rule each here as well: the Mississippi Bubble was filed twice in parallel (rules 44 and 45, Learner cycles 34 and 35) but they are two distinct rules — 44 is "the demo must be the redemption," 45 is "a promise that fails at redemption loses trust all at once."
+- **Distinct-candidate total corrected to 206 by phone count (this sync).** Counting every verified Scout lead row in the working log by published phone gives 206 distinct firms (213 rows; the 7 duplicate rows are Skin.Restored, Sidhu, Body del Sol, Melanie Aesthetic NP, 1AutoCare, Ferrer Precise Painting, and Gilluxe Aesthetics, each re-listed in a second parallel entry). The log's own running chain says 204 distinct after Scout cycle 35 — a 2-firm gap that traces to Scout cycle 20's "117 unique prior" (the synced table counted 119 by phone at that point: 111 + 5 first Scout 19 + 3 second Scout 19). Reviewer cycle 20's "114 distinct" repeats the same omission as the earlier 106 (it never picked up the late duplicate Scout cycle 9 batch of 5). Same class of error as the Scout cycle 16 correction Reviewer cycle 16 made (91 → 96). The rows/distinct confusion also recurs: Scout cycle 25's "149 lead rows" was corrected by Reviewer cycle 27 to 149 distinct / 154 rows, and Scout cycle 26's "154 lead rows" repeats the error — by the log's own method the corrected count after Scout cycle 26 is 154 distinct / 159 rows, while the phone count says 156 distinct firms in 163 rows. The row-count gap Reviewer cycles 29–35 flagged (159-vs-168-vs-173-vs-178-vs-183-vs-188-vs-193-vs-198-vs-203-vs-208) is now settled as a count: 213 rows is verified by counting the lead-table rows, and the log chain agrees on 213 rows — the remaining gap is distinct-only (206 by phone vs 204 by chain). Reviewer cycle 33's second filing corrected a further double-count: both Scout cycle 32 entries claimed the same 184 distinct / 193 rows base while logging different lead sets, so the true totals at that point were 189 distinct / 198 rows, not 184 / 193; the same error recurred in the Pitcher lane (both Pitcher cycle 35 entries claimed 114 rows from the same 111 base — true total 117 rows / 110 distinct).
+- **Rule-number collisions — resolved, twice more since.** Anchoring was filed as a second rule 12 (Learner cycle 6) and renumbered to 13; social proof was filed as a second rule 14 (Learner cycle 7) and renumbered to 15. Two-wording duplicates count as one rule each: authority (rule 16, Learner cycle 8), peak-end (rule 20, Learner cycle 12), liking (rule 14, late Learner cycle 7 entry). A second collision followed the same pattern: Learner cycle 19 filed two different rules as 27 (1929/Kennedy and Tulip Mania); Reviewer cycle 20 flagged it and Learner cycle 20 adopted the fix — Tulip Mania is now rule 28, Kennedy stays 27. A third collision: the two Learner cycle 24 entries both filed as rule 33 (decision fatigue and the zero-price effect); Reviewer cycle 25 fixed it as 33 decision fatigue / 34 zero-price, confirmed by Reviewer cycle 27. The rule set is now collision-free in this file: rules 1–46, with rules 5 and 17 the lenses only (44 distinct pitch rules, all untested). The working log's own numbering still carries the collisions — Reviewer cycles 33–34 flag two rules numbered 12 (reciprocity and price anchoring) and two numbered 33 (decision fatigue and the zero-price effect) in the log itself; the staging renumbering (anchoring → 13, social proof → 15, decision fatigue 33 / zero-price 34) is what makes this file's numbering clean, and no single rule-count figure from the working log should be treated as verified until its numbering is reconciled there. Two-wording duplicates count as one rule each here as well: the Mississippi Bubble was filed twice in parallel (rules 44 and 45, Learner cycles 34 and 35) but they are two distinct rules — 44 is "the demo must be the redemption," 45 is "a promise that fails at redemption loses trust all at once."
 - **Duplicate parallel runs (cycles 5–8) and late duplicate filings
   (cycles 8–17) — still happening.** Each role filed twice per cycle under
   duplicate labels in cycles 5–8, roughly doubling token spend (~85,000 per
@@ -1565,8 +1624,7 @@ Cove/Lemoore/Coalinga) once the Fresno/Clovis pool saturated (Scout cycles
   Scout cycle 16, Pitcher cycles 17–18, and Learner cycle 17) kept landing
   after later cycles had already filed. Worth checking whether the workflow
   is spawning each role twice. Cumulative estimated token spend is now
-roughly ~1,937,000 against $0 banked through Reviewer cycle 35 (closing
-sync). The cycle-10 task itself was re-run late
+roughly ~1,987,000 against $0 banked through Reviewer cycle 36. The cycle-10 task itself was re-run late
 (Learner 18, Scout 18, Pitcher 20, second Reviewer filing), adding ~50,000
 tokens for a cycle-10 total of ~100,000 with no new sends or replies. The
 pattern continued through the cycle-15 task: two Scout filings per
@@ -1580,9 +1638,10 @@ filing). The pattern continued through every later task: the cycle-16 task
 (~100,000 tokens, 8 filings), the cycle-17 task (~100,000, 8 filings), the
 cycle-18 task (~100,000, 8 filings), the cycle-19 task (~50,000 for the four
 roles, plus parallel duplicate filings beyond that), and the cycle-20 task
-(~60,000). The duplicate-spawn pattern never stopped — it ran to the end of
-the loop, and Reviewer cycles 32–35 name it the largest avoidable token
-cost in the loop.
+(~110,000 across its three rounds: the closing round ~60,000 plus this
+~50,000 round — Learner 36, Scout 35, Pitcher 38, Reviewer 36). The
+duplicate-spawn pattern never stopped — it ran to the end of the loop, and
+Reviewer cycles 32–36 name it the largest avoidable token cost in the loop.
 - **Conflicting source data, recorded not resolved:** Body del Sol rating
   (4.7 / 142 vs 4.1 / 70); The Med Spa at CVWHA rating (5.0 / 9 vs 4.0 /
   13); A-1 Auto Electric review counts (3.0 / 29 vs 4.1 / 119 vs 4.7 / 66);
@@ -1639,7 +1698,13 @@ conflict ((559) 825-2804 vs (559) 924-5360); Reedley Auto Repair phone
 conflict (listing (559) 429-8515 vs (559) 726-7438 on a uniform); Quality
 AUTO Repair Reedley (same phone at two addresses); Kingsburg Family
 Dentistry phone conflict (place listing (559) 648-9433 vs firm's own
-sign/Facebook (559) 897-2600). No
+sign/Facebook (559) 897-2600). New this sync (Scout cycle 35 / Pitcher
+cycle 38): GIA Auto Paint & Collision phone conflict ((559) 659-1234 vs
+(559) 296-0178 on its own site — verify which reaches the owner); Adrian Y.
+Cho, DDS base city (BBB Coalinga vs own posts Avenal) and verify the number
+rings (a commenter reported the main line not working; the practice says
+fixed); Glo Dental, Adrian Y. Cho, and Ron's Auto Repair capacity
+unverified from listing alone — verify before pitching price. No
 review-based compliment or rating is quoted for these firms in any draft.
 - **Spectrum Health Medical Spa — open-status flag contradicted, not
   resolved.** An earlier listing said "temporarily closed"; Scout cycle 9
@@ -1651,16 +1716,23 @@ review-based compliment or rating is quoted for these firms in any draft.
   already covers Scout cycle 26 and Pitcher cycle 29 in its verified totals.
   The Reviewer verdict is taken as the latest, but the ordering cannot be
   right as stamped — one of the two timestamps is wrong.
+- **Rule 46 has no applying draft yet.** Learner cycle 36 filed the halo
+  rule (the first true sentence is the halo); Pitcher cycle 38 applied
+  rules 1–4, 6–10 and 45 but did not name rule 46. The next Pitcher batch
+  should name it explicitly — the drafts already open with a specific trade
+  line, so only the explicit application is missing. (Rule 38, post-purchase
+  dissonance, likewise has no applying draft, but correctly so: it governs
+  the message after a yes, and no deal has been agreed yet.)
 - **What the loop still needs:** Mac's approval of a Pitcher batch (only
-  then do rules 1–4, 6–16, 18–45 get their first real test); 10 rule-using
+  then do rules 1–4, 6–16, 18–46 get their first real test); 10 rule-using
   sends before the first Cut can fire; outreach cost tracked per send so
   tokens-per-dollar exists once the first dollar lands; the Luxura
   walkthrough outcome, which only Mac can confirm from his own phone; and a
-  stop to the duplicate spawning — the cycle-14 through cycle-18 tasks each
-  cost ~100,000 tokens for re-filings with no new sends or replies.
-- **Closing verdict (Reviewer cycles 32–35): the loop itself is the cost
+  stop to the duplicate spawning — the cycle-14 through cycle-20 tasks each
+  cost ~50,000–100,000 tokens for re-filings with no new sends or replies.
+- **Closing verdict (Reviewer cycles 32–36): the loop itself is the cost
   lane to cut/pause.** The nominal 20-cycle loop ends with 0 rule-using
-  sends, $0 banked, and ~1.94M tokens spent. Each further cycle adds
+  sends, $0 banked, and ~1.99M tokens spent. Each further cycle adds
   ~50,000–60,000 tokens and another untested rule while the binding
   constraint — a sent batch — stays unmet. No new rule can pay for itself
   until a batch goes out; the next dollar of value comes from Mac approving
@@ -1698,15 +1770,18 @@ Watershed Associates (psychological reactance, Brehm 1966); Ecommerce
 Psychology (anticipated regret); MASEconomics (Enron); Kurums (Blockbuster
 vs Netflix); Failurepedia (Long-Term Capital Management 1998; Mississippi
 Bubble 1720); The Boar (Mississippi Bubble).
+Lead Alchemists (halo effect and horn effect); MMS Vegas (halo effect —
+first impressions); Graham Jones (online trust, 50-millisecond impressions).
 Lead verification sources are the firms' own sites and published listings
 named in the working log.
 
-*Feeder sync: cycle 20 of 20 (workflow label) — the closing sync. Working-log state at sync:
-through Reviewer cycle 35 / Learner cycle 35 / Scout cycle 34 / Pitcher
-cycle 37 (2026-11-18 ~13:33 PST; working log 4,136 lines at final check).
-The nominal 20-cycle loop is closed: 0 rule-using sends, $0 banked,
-~1.94M tokens estimated, 43 distinct pitch rules (rules 1–45, lenses 5 and
-17), 201 distinct leads in 208 rows, 123 draft rows / 116 distinct drafts,
-all DRAFT — NOT SENT. The loop's closing verdict (Reviewer cycles 32–35):
+*Feeder sync: cycle 20 of 20 (workflow label) — post-closing update to the
+closing sync. Working-log state at sync: through Reviewer cycle 36 /
+Learner cycle 36 / Scout cycle 35 / Pitcher cycle 38 (2026-11-18 ~13:37 PST;
+working log 4,239 lines at final check). The nominal 20-cycle loop is
+closed: 0 rule-using sends, $0 banked, ~1.99M tokens estimated, 44 distinct
+pitch rules (rules 1–46, lenses 5 and 17), 206 distinct leads by phone count
+(204 by the log's chain) in 213 rows, 126 draft rows / 119 distinct drafts,
+all DRAFT — NOT SENT. The loop's closing verdict (Reviewer cycles 32–36):
 the loop itself is the cost lane to cut/pause until Mac approves a batch —
 that is the next step, not another study cycle.*
