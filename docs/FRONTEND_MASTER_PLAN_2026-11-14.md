@@ -1041,3 +1041,25 @@ Per the ideas README rule 8 (Muse/Claude make technical calls and explain them p
 - Q-042 ("Lift the halt?") is unchanged and still open.
 
 **What it means for the order of work:** F1 (wire the orphans; MissionTimeline into the Running Tasks panel first) and F3 (remove the two typed-in circle numbers, the mislabeled counts and the Missions tab's invented fallback missions) are the first batches that can start, each after its own preamble and go-ahead. F3 is the cheapest and most checkable; the live routes it needs already exist. The findings that make them first are in `docs/audit/F0_FRONTEND_AUDIT_MAP_2026-11-14.md`.
+
+
+---
+
+## Addendum A9 — The halt is lifted for all front-end work; and "no dead controls" (Mac, 2026-11-15)
+
+**Mac's words, verbatim:** archived whole in `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-11-14-directive-frontend-plan-sketch-and-answers-063.md`, section 7; recorded as `docs/FOUNDER_ANSWERED` FE-009 and FE-010.
+
+**Intake:** CHANGES the plan. It widens Addendum A8 (which named UI/UX work) so the halt is lifted for **all front-end work: design, coding, programming, UI/UX, research, improvement, innovation, best practice and front-end security**, and for that only. It also adds a new standing rule for the whole front end.
+
+**The rule: no dead controls.** Every button, switch, toggle, input, menu, link and circle on the screen must do a real thing and be connected to something live. A control that looks usable and does nothing, or that exists only for looks, is an abomination. A switch does what its label says; the founder's example is a light/dark switch that changes nothing when flipped.
+
+**What it changes in the plan:**
+- **F2 (the screen):** the light/dark switch is not a decoration. It ships with a real light theme and a real dark theme (design tokens as CSS custom properties), works on every screen including the overlays and the legacy tabs, remembers the choice, and defaults to the visitor's system setting. It is not shown until it does all of that.
+- **A new batch, F-DC (dead-control sweep):** built from the front-end auditor's list. For each dead control it records what it appears to do, what it really does, and what would make it live (an existing Worker route; a missing route, which is a halted back-end question; or front-end-only work). Each is then made live or removed. Known today (F0 audit and a count on main `f0f37b0`): 45 disabled "not wired" placeholder buttons in five command-center tabs, eight items shown as "soon" or "not connected", and no light/dark switch on screen.
+- **A guard in CI:** a static check that fails a change which adds a control with no real handler (the same style as the F3 live-data guard, `tests/unit/test_frontend_live_data.py`). Queued; not built.
+- **F3 consequence:** F3 (PR #266) greys out the Training circle so it no longer pretends to work. Under this rule that is a stopgap; the circle either becomes live (a Training panel) or goes in the sweep.
+- **New controls:** nothing new is added to the screen unless it is live in the same change.
+
+**Open reading, asked of the founder, not decided:** is a greyed-out control honestly labelled "not connected yet" acceptable while its feature is queued, or must every such control be removed until it works? Until answered, the working reading is that new controls ship live or not at all, and existing placeholders are listed and swept.
+
+**What stays halted:** everything outside the front end, including any new Worker route a front-end batch would want (raised as its own question first), the constitution workflows, `soul.md`, and the Queen's back-end work. Q-042 is unchanged.

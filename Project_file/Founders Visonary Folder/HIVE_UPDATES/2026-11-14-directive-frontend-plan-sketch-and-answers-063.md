@@ -1,9 +1,9 @@
 # HIVE_UPDATE 063 — The front-end plan: sketch, mockup, additions, and the founder's answers
 
 **Date:** 2026-11-14 (founder's words, in chat); archived 2026-11-15
-**Status:** RATIFICATION PENDING — becomes a recorded founder decision when the founder merges the PR that carries this file (see `docs/FOUNDER_ANSWERED` FE-001 to FE-008).
-**Archive kind:** verbatim founder directives (`founder-directive-capture`). Distilled meaning lives in FE-001 to FE-008 and in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md`; this file keeps the words. Typos are the founder's and are kept.
-**The halt of 2026-11-13 13:41 PST stands (Q-042) except for front-end UI/UX work (section 6).** Nothing in this file builds, merges, or deploys anything.
+**Status:** RATIFICATION PENDING — becomes a recorded founder decision when the founder merges the PR that carries this file (see `docs/FOUNDER_ANSWERED` FE-001 to FE-010).
+**Archive kind:** verbatim founder directives (`founder-directive-capture`). Distilled meaning lives in FE-001 to FE-010 and in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md`; this file keeps the words. Typos are the founder's and are kept.
+**The halt of 2026-11-13 13:41 PST stands (Q-042) except for front-end work (sections 6 and 7).** Nothing in this file builds, merges, or deploys anything.
 
 The two images the founder sent (the hand sketch and the rendered "Kai EL OS v2.0.1" mockup) are transcribed element by element in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md`, Appendix C. The image files themselves are not in this PR; where they should live is an open question to the founder.
 
@@ -71,10 +71,28 @@ Asked whether to copy the sketch and mockup image files into the repo (option a:
 
 ("hot" is the founder's typo for "halt".) The images are filed by PR #264. The newest open issue, #243 (the Hive availability audit), says the halt was enacted because the Queen and Kai El cannot see what they are supposed to know; it is a Worker and Queen knowledge problem, not a screen problem. Recorded as `docs/FOUNDER_ANSWERED` FE-008.
 
+## 7. The halt lifted for the front end, and "no dead controls" (2026-11-15)
+
+Said after the founder had asked for F3 and a seven-auditor audit, and a worker restart interrupted that work. Archived whole, then split into two rulings in `docs/FOUNDER_ANSWERED` (FE-009, FE-010):
+
+> "You can lift the halt on all frontend work design coding programming ui/ux work research, improve improvements, innovative ideas, best practices, including security wise as well that don't limit the hive for applied hybrid lens so on and so forth, but limited to what I just named because limiting it would be abomination to the hive the halt is only lifted for the rebuild and improvement on design in wiring and coding testing the front end user in office, making it more user-friendly as well and being sure there aren't just random buttons that have no real application or calls. it's just a aesthetic it doesn't work and I don't want that because that would also be an abomination everything that's there needs to be working connected to something live and see if it's a switch that does nothing. There's a plan for all that switch needs so we can be alive switch that does whatever it needs to do such as but not limited to if you are to create a light mode in a dark mode and I flip the switch and nothing happened. That's an abomination than anything and everything like such as an abomination"
+
+("user in office" is the founder's dictation of "user interface"; kept as written.)
+
+The founder's first reply in that exchange, on the order of work and the auditors, is also archived:
+
+> "A, go ahead with F3 then run multiple subagents to go throughout the entire repo and the front end and the back end seeing as there's lots of stuff in the repo, that's supposed to serve the queen Kai and anything else that is supposed to be connected meaning double checking over a larger expanded perception over the root problem found in the newest issue in which can be a larger problem than it's written to be, which needs a full fable five audit that will accompany the fable five skill meaning a new skill needs to be created as well on the level of fable five"
+
+> "All seven in smaller groups be sure F3 is done first first seeing as it's half done"
+
+> "Do the two rulings now"
+
 ## Open items this directive set created (queued, not forgotten)
 
-1. The front-end build batches (F1–F9 in the master plan) are no longer held by the halt (FE-008); each still needs its own preamble and go-ahead, and any new Worker route still waits (the halt covers back-end work).
+1. The front-end build batches (F1–F9 in the master plan) are no longer held by the halt (FE-008, FE-009); each still needs its own preamble and go-ahead, and any new Worker route still waits (the halt covers back-end work).
 2. The "$1,000 weekly" condition for the parked world code has no measurement source yet (the income ledger depends on Q-004 and Q-041). Until a source is named, that condition cannot be checked.
 3. The sketch and mockup image files are filed by PR #264 under `Project_file/Founders Visonary Folder/SOURCES/design/`.
 4. The gateway tab's "tiered fallback within limits" wording and the key-handling rule (the founder enters keys; Kai builds the setup screen) are proposals the founder has not yet answered.
 5. The test runner (Vitest) is a technical call made by Claude, per the ideas README rule 8. Setting it up is its own go-ahead.
+6. Whether a greyed-out control labelled "not connected yet" is acceptable while its feature is queued, or must be removed until it works (FE-010). Asked, not yet answered.
+7. A static check that fails a change adding a control with no real handler (FE-010 enforcement). Queued as a front-end batch; not built.

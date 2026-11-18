@@ -890,9 +890,9 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 
 ---
 
-## FE-001 to FE-008 — Front-end plan answers, DECIDED 2026-11-14 (recorded 2026-11-15)
+## FE-001 to FE-010 — Front-end plan answers and rulings, DECIDED 2026-11-14 to 2026-11-15 (recorded 2026-11-15)
 
-*Entered ahead of FQ-Q-011 (rather than at the end of the file) so this PR merges cleanly whichever of the open ratification PRs lands first; every entry carries its own date. The founder's exact words for all eight are archived in `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-11-14-directive-frontend-plan-sketch-and-answers-063.md`. Each was said in chat 2026-11-14 and counts as a founder decision under soul.md F-005 Clause 1 only once this PR is merged by the founder. None of these builds anything by itself. The halt of 2026-11-13 13:41 PST stands for everything except front-end UI/UX work (FE-008).*
+*Entered ahead of FQ-Q-011 (rather than at the end of the file) so this PR merges cleanly whichever of the open ratification PRs lands first; every entry carries its own date. The founder's exact words for all ten are archived in `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-11-14-directive-frontend-plan-sketch-and-answers-063.md`. Each was said in chat 2026-11-14 and counts as a founder decision under soul.md F-005 Clause 1 only once this PR is merged by the founder. None of these builds anything by itself. The halt of 2026-11-13 13:41 PST stands for everything except front-end work (FE-008, FE-009).*
 
 ### FE-001 — The front-end plan: Muse's F0–F9 batch plan is the spine; the sketch and mockup are the target
 
@@ -940,7 +940,27 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - **Claude's reading, not yet confirmed by the founder:** the exemption covers front-end UI/UX work only. Back-end work stays under the halt, including any **new Worker route** a front-end batch would want (for example an uptime or activity-rate route). Such a route is raised as its own question first.
 - Q-042 ("Lift the halt?") is unchanged and remains open.
 
-**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-14; recorded here 2026-11-15 via a docs-only PR the founder merges.
+### FE-009 — The halt is lifted for all front-end work (design, coding, UI/UX, research, improvement, innovation, best practice, security) and only for that
+
+**Founder's words (2026-11-15), the first half of the message:** "You can lift the halt on all frontend work design coding programming ui/ux work research, improve improvements, innovative ideas, best practices, including security wise as well that don't limit the hive for applied hybrid lens so on and so forth, but limited to what I just named because limiting it would be abomination to the hive the halt is only lifted for the rebuild and improvement on design in wiring and coding testing the front end user in office, making it more user-friendly as well"
+**What this means:**
+- The halt of 2026-11-13 13:41 PST (Q-042) is lifted **for the front end only**: designing, coding and programming it; UI/UX; research; improvements; innovative ideas; best practices, including front-end security; wiring it to what is live; testing it; and making it more user-friendly. The hybrid lens (both lenses, `dual-lens`) applies, and the work is not to limit the Hive.
+- **Everything else stays halted.** This widens FE-008 (which named UI/UX work) to name research, innovation and security best practice explicitly. Q-042 ("Lift the halt?") is unchanged and still open for everything outside the front end.
+- **Other gates still apply:** the preamble gate (a plain what / why / how / necessity / improvement / cost and risk before each batch, and the founder's go-ahead for consequential work); never self-merge; and each batch's own founder gates.
+- **Claude's reading, not yet confirmed by the founder:** "wiring" means wiring the front end to things the Worker already serves. A **new Worker route** (back-end work) stays under the halt and is raised as its own question first; so do the constitution workflows, `soul.md` and anything else outside the front end. Where this is unclear, Claude asks before touching it.
+
+### FE-010 — No dead controls: every control on the screen must work and be connected to something live
+
+**Founder's words (2026-11-15), the second half of the same message:** "and being sure there aren't just random buttons that have no real application or calls. it's just a aesthetic it doesn't work and I don't want that because that would also be an abomination everything that's there needs to be working connected to something live and see if it's a switch that does nothing. There's a plan for all that switch needs so we can be alive switch that does whatever it needs to do such as but not limited to if you are to create a light mode in a dark mode and I flip the switch and nothing happened. That's an abomination than anything and everything like such as an abomination"
+**What this means:**
+- A **dead control** is any button, switch, toggle, input, menu, link or circle that looks usable and does nothing, or that exists only for looks. It is an **abomination**, under the same rule as "No Plan Left Behind" (SR-001).
+- **Every control that is shown must work and be connected to something live.** A switch must do what its label says. The founder's own example: a light/dark switch that changes nothing when flipped.
+- Each switch or control has a plan for what it needs to be live (for example, the light/dark switch needs a real design for both themes and a stored choice); that plan is part of building the control, not a later step.
+- **Where the front end stands today (from the F0 audit, `docs/audit/F0_FRONTEND_AUDIT_MAP_2026-11-14.md`, and a count on main `f0f37b0`):** 45 disabled "not wired" placeholder buttons across five command-center tabs (Govern, No Man's Sky, Arena, Missions, WOW); eight items shown as "soon" or "not connected" (Connectors and Training in the left nav, the Training circle, five of the eight Workflows); and **no light/dark switch on the screen at all** (the store has a toggle that nothing reads). The full dead-control list is being produced by the front-end audit and becomes a sweep batch.
+- **Open reading, flagged for the founder (not decided):** whether a greyed-out control honestly labelled "not connected yet" is acceptable while its feature is queued, or whether every such control must be removed until it works. Claude's working reading, until the founder answers: **new** controls ship live or not at all; existing placeholders are listed, and each is made live or removed in the sweep.
+- **Enforcement (honest limits):** a rule cannot force an AI to comply. A static check that fails a change which adds a control with no real handler is a front-end build step, allowed under FE-009, and queued in the plan. It is not built yet.
+
+**Recorded by:** Claude, at founder direction. FE-001 to FE-008 decided in chat 2026-11-14; FE-009 and FE-010 decided in chat 2026-11-15; recorded here 2026-11-15 via a docs-only PR the founder merges.
 
 ---
 
