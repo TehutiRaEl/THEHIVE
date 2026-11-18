@@ -7,12 +7,15 @@ small businesses). Source: the working research log kept under the Tier 1 goal
 rules paraphrased in the loop's own words, leads and scorecard carried over as
 recorded. No numbers invented, no text copied from the web sources.
 
-Last synced from the working log: 2026-11-18 ~13:11 PST (through Reviewer
-cycle 28; Learner cycle 26, Scout cycle 26, and Pitcher cycle 29). The loop's
-20-cycle count is exhausted — sequential numbering now stands at Learner 26,
-Scout 26, Pitcher 29, Reviewer 28 (this feeder run carries the workflow label
-"cycle 15"). Note: Scout cycle 26 is stamped ~13:13 PST, after Reviewer cycle
-28's ~13:11 PST stamp that already covers it — see the flags.
+Last synced from the working log: 2026-11-18 ~13:33 PST (through Reviewer
+cycle 35; Learner cycle 35, Scout cycle 34, and Pitcher cycle 37). This is
+the closing sync — feeder cycle 20 of 20. The loop's nominal 20-cycle count
+was already exhausted when the sync began and is now far past it in every
+role (Reviewer 35, Pitcher 37, Learner 35, Scout 34). The working log grew
+while this sync ran (4,136 lines at the final check); Pitcher cycle 37 and
+Reviewer cycle 35 landed during the sync and are included. Note: Scout cycle
+26 is stamped ~13:13 PST, after Reviewer cycle 28's ~13:11 PST stamp that
+already covers it — see the flags.
 
 ## How the loop works
 
@@ -31,34 +34,42 @@ agreed and no outreach goes out until Mac approves the batch and the fee is
 agreed in writing first. No invented numbers, no fake urgency, no invented
 $Cashtag.
 
-## Scorecard (latest, Reviewer cycle 28, 2026-11-18 ~13:11 PST)
+## Scorecard (latest, Reviewer cycle 35, 2026-11-18 ~13:33 PST)
 
 - **Banked: $0.** Goal $1,000 by Sun 2026-11-22 — not reached. Gap $1,000,
   4 days left. At $350/deal the goal needs ~3 closed deals.
 - **Replies: 1 total, 0 new in any review window.** The one reply is Luxura
   Med Spa, via text, pre-rules (soft gatekeeper reply). No Luxura reply exists
-  in Gmail (checked repeatedly, latest ~13:11 PST).
+  in Gmail (checked repeatedly, latest ~13:33 PST).
 - **Wave 1 (sent Mon 2026-11-16):** 3 emails. Cody Dental's email bounced
   (info@codydental.com undeliverable). Tuesday follow-up texts (Birdie, Cody
   cold version, MN Pest) sent by Mac 2026-11-18 ~11:57 PST. Luxura walkthrough
   (Tue 2026-11-17, 5pm PT) outcome still unverified — Mac's message thread
   cannot be read by the loop.
-- **Drafts: 96 rows, 89 distinct, all DRAFT — NOT SENT**, awaiting Mac's
+- **Drafts: 123 rows, 116 distinct, all DRAFT — NOT SENT**, awaiting Mac's
   approval. The binding constraint is sends: the approved-ready batches have
   not gone out yet.
-- **Fees agreed in writing: none.** All 156 distinct Scout leads are
+- **Fees agreed in writing: none.** All 201 distinct Scout leads are
   candidates; no fee agreed on any. (Counted by published phone from the
-  working log — 163 rows for 156 distinct firms; the log's own running chain
-  says 154 after Scout cycle 26 — see integrity flags.)
+  working log — 208 rows for 201 distinct firms; the log's own running chain
+  says 199 distinct — a 2-firm undercount against the phone count, same gap
+  class as before — see integrity flags.)
 - **Tokens per dollar: not computable** — $0 banked, no spend tracked in the
-  log. Estimated cumulative token use is roughly ~1,545,000 through Reviewer
-  cycle 28 (no metered counts available); the loop has now spent over 1.5
-  million tokens with $0 banked and zero rule-using sends. The cycle-15 task
-  alone totals an estimated ~100,000 tokens (two Learner, two Scout, two
-  Pitcher, and two Reviewer filings — the duplicate-spawn pattern again).
-  Reviewer cycle 28 notes the marginal value of each further untested rule is
-  falling while the token cost (~50,000–60,000 per cycle) is not. Duplicate
-  parallel runs remain the largest avoidable cost (see flags).
+  log. Estimated cumulative token use is roughly ~1,937,000 through Reviewer
+  cycle 35 (no metered counts available); the loop has now spent nearly 1.94
+  million tokens with $0 banked and zero rule-using sends. The cycle-16 task
+  cost ~100,000 tokens (8 filings), cycle-17 ~100,000, cycle-18 ~100,000,
+  cycle-19 ~50,000, cycle-20 ~60,000. Reviewer cycles 32–35 carry the
+  closing verdict: **the learning loop itself is the cost lane to cut/pause**
+  — each further cycle adds ~50,000–60,000 tokens and another untested rule
+  while the binding constraint (a sent batch) stays unmet. No new rule can
+  pay for itself until a batch goes out; the next dollar of value comes from
+  Mac approving a batch, not from another study cycle. Duplicate parallel
+  runs remain the largest avoidable cost (see flags).
+- **Geography:** Scout cycles 27–34 expanded beyond Fresno/Clovis into
+  Visalia, Hanford, Tulare, Porterville, Madera/Sanger, Reedley/Selma/
+  Kingsburg/Dinuba, and Fowler/Parlier/Kerman/Orange Cove/Lemoore/Coalinga
+  — same niches, same 559 area code.
 
 ## Rules
 
@@ -103,7 +114,7 @@ None yet. **Rules kept: 0.**
   and the wholesaling lane; not a pitch rule, changes no line of the $350
   pitch.
 
-### Untested pitch rules (34)
+### Untested pitch rules (43)
 
 All of these were extracted from web sources and applied in Pitcher drafts,
 but none has been tested by a sent batch yet, because wave 1 was sent before
@@ -533,6 +544,166 @@ the rules were extracted and every Pitcher batch is still draft-only.
     due diligence). Learner cycle 26. (Pitcher cycle 29 applies it for the
     first time — "live on your own missed calls today" — still untested until
     a sent batch replies.)
+37. **Frame the $350 as the cost of doing nothing, never as the price of
+    buying something.** The facts never change — one setup, $350, missed
+    calls going to a competitor — but the buyer hears two different offers
+    depending on the frame. "It costs $350" frames the owner as a spender
+    giving money away, so keeping the cash wins. "Every missed call is
+    already costing you more than $350" frames the owner as someone already
+    losing, so stopping the loss wins — the same $350, decided by the words
+    around it. Keep one frame the whole way through: a message that opens
+    with "stop losing bookings" cannot switch at the close to "gain more
+    customers." Never frame the $350 as a bargain, a discount, or a small
+    number — it is the price of stopping a leak, and the leak is the frame.
+    Source: Psychelicht, "Framing Effect in Marketing: Psychology, Examples
+    & Guide 2026" (Kahneman & Tversky 1981 — the same outcome framed as
+    lives saved got 72% choosing the safe option, framed as lives lost only
+    22%). Learner cycle 27. (Pitcher cycle 31 applies it for the first time
+    — "$350 once, to stop the bookings that are already walking away" —
+    still untested until a sent batch replies.)
+38. **After the yes, confirm the choice — never sell again.** The yes is not
+    the end of the sale; it is the start of the doubt. Once an owner agrees
+    to the $350, their brain starts hunting for reasons they were wrong —
+    the cheaper option they did not take, the compromise inside the choice —
+    and if the seller goes silent, that doubt fills the gap and the deal can
+    unwind before the money ever moves. If the seller keeps selling, it reads
+    as pressure and feeds the doubt instead. So the first message after the
+    yes does one thing only: confirm the decision was smart, in the buyer's
+    own terms — "congratulations on your choice," never "thank you for your
+    purchase" — restate the one reason they said yes (their missed calls, now
+    getting caught), say exactly what happens next, and stop. No new pitch,
+    no upsell, no extra feature. The strongest confirmation is not words at
+    all: the first missed call caught and booked, delivered fast, proves the
+    choice before doubt can grow. Over-reassuring feels intrusive and makes
+    the buyer suspicious. Sources: Marketing Study Guide, "Cognitive
+    Dissonance in Post-Purchase Behavior" (Festinger 1957); Vision Factory,
+    "The psychology of 'Did I make a good purchase?'". Learner cycle 28.
+    (No first-message draft by design — it governs the message *after* a
+    yes, and is tested by whether agreed deals stick, not by replies to a
+    first message. No deal has been agreed yet.)
+39. **Leave the exit open — a buyer who feels free to say no says yes more
+    often.** The moment a buyer feels cornered, they stop judging the offer
+    and start defending their freedom to choose: every extra push from the
+    seller buys an equal push back, and the "no" that follows is not about
+    the $350, it is about proving nobody decides for them. So the pitch hands
+    the choice back in plain words — the demo is asked as a question, never a
+    command, and the owner is told outright that it is fine to say no. A
+    buyer who does not have to defend themselves can actually hear the
+    offer; and when the owner argues back that the missed calls really are a
+    problem, the change becomes their idea, not the seller's — the only kind
+    of yes that sticks. Never argue with a no, never reframe an objection on
+    the spot, never rescue the deal from discomfort. Source: Sandler
+    Training, "The Paradox of Control in Consultative Selling" (Brehm 1966;
+    Watershed Associates on "it's completely OK if you say no"). Learner
+    cycle 29. (Pitcher cycle 32 applies it for the first time — "No pressure
+    either way — if missed calls aren't a problem for you, just say so" —
+    still untested until a sent batch replies. The exit line is part of the
+    ask itself, not a new sales sentence, so it does not break rule 9's
+    stop-at-the-yes discipline.)
+40. **Show the buyer their future self wishing they had acted — then hand
+    them the one step that prevents it.** People do not only weigh what they
+    gain or lose today; they picture the future moment when they look back
+    and blame themselves for doing nothing, and that imagined self-blame is
+    often the push that finally moves them. So the pitch puts the owner in
+    their own future for one line — a month from now, still watching bookings
+    walk away, thinking "I knew this was happening and I left it" — and then
+    immediately offers the one small step that makes that future not happen:
+    the free demo. The regret must be their real one (their missed calls,
+    already happening), never an invented deadline or a fake "last chance" —
+    a manufactured regret is a prop, and once the buyer spots it, trust is
+    gone. Regret with no next step just paralyzes, and regret pushed too hard
+    reads as manipulation. One honest future, one easy step out of it.
+    Source: Ecommerce Psychology, "Using Anticipatory Regret To Increase
+    Immediate Actions" (+ Unlimited Conversions on regret avoidance).
+    Learner cycle 30. (Pitcher cycle 33 applies it for the first time —
+    "A month from now you'll either be catching those calls, or still
+    watching them go" — still untested until a sent batch replies.)
+41. **If the buyer cannot repeat the offer back in one plain sentence, they
+    will assume something is hidden — so keep the offer that simple.** Enron
+    looked unstoppable — about $100B of reported revenue, six years as
+    Fortune's most innovative company, a $90 share price — while its real
+    machinery was hundreds of partnerships hiding debt and a model that
+    booked twenty years of profit on day one. Nobody outside could follow it,
+    and that was the point: when the workings cannot be followed, a stranger
+    rightly assumes the complication is the hiding place, and once doubt
+    appeared the whole thing fell in about four months, $60B to zero. So the
+    pitch must be repeatable by the owner in one line — one setup, one price,
+    missed calls answered and booked — with no jargon, no moving parts, no
+    "system" to explain. A complicated offer does not sound impressive to a
+    cold buyer; it sounds like Enron. Source: MASEconomics, "Enron
+    Explained: How a Company Fooled the Market" (+ EBC on complexity as a
+    liability). Learner cycle 31. (Pitcher cycle 35, cycle-18 filing, applies
+    it for the first time — still untested until a sent batch replies.)
+42. **Sell the shift your customers already made — never ask the buyer to
+    defend the old way.** Blockbuster did not lose because its customers
+    loved driving to a store; it lost because its customers had already moved
+    to no late fees, no trip, no waiting — and Blockbuster kept defending the
+    model that profited from the friction, about 16% of its revenue from late
+    fees, while laughing at a $50 million Netflix in 2000 and filing for
+    bankruptcy in 2010. So the pitch never sells the automation as a new
+    gadget the owner must adopt; it sells it as catching up with behaviour
+    that already changed — their customers already text, already expect an
+    instant reply, already book online and move on when nobody answers. The
+    owner is not being asked to change; their customers already changed, and
+    the business is the last one still on the old way. Source: Kurums,
+    "Netflix vs Blockbuster Case Study: Strategic Innovation Lessons".
+    Learner cycle 32. (Both Pitcher cycle 35 filings apply it for the first
+    time — "your patients/customers already expect an instant reply, and
+    they move on when nobody answers" — still untested until a sent batch
+    replies.)
+43. **Never sell a certainty — sell a mechanism the buyer can watch work.**
+    LTCM's Nobel laureates told investors their risk was "negligible" while
+    running more than 25-to-1 leverage on models built from quiet years — and
+    when Russia defaulted in August 1998, every trade they had assumed was
+    independent moved against them at once, wiping out about 44% of their
+    capital in one month, roughly $4.6 billion. A pitch that promises a
+    perfect outcome — "you'll never miss another call again" — sounds like
+    that same "negligible risk": a certainty no honest system can keep, and
+    the buyer feels it even before they can name why. So the pitch promises
+    only what the buyer can watch happen: calls answered and booked while
+    they're busy, shown live in the demo. The guarantee is the demo itself,
+    not a sentence. Source: Failurepedia, "Long-Term Capital Management: why
+    it failed" (+ Decision Intel on the "negligible risk" letter). Learner
+    cycle 33. (Pitcher cycle 35, cycle-19 filing, applies it for the first
+    time — still untested until a sent batch replies.)
+44. **A promise the buyer cannot cash in is paper money — so the demo must
+    be the redemption, not the claim.** John Law's notes were worth whatever
+    anyone believed, right up until one person asked to swap them for real
+    gold and found there was none — then the whole system fell in months,
+    from about 10,000 livres a share to about 500, because a promise that
+    cannot be redeemed is only a story about value, not value. A cold pitch
+    is the same: the owner has no reason to believe "it answers and books
+    while you're busy" until they can cash that sentence in for something
+    real. So the pitch never asks the owner to take the automation on trust
+    and never self-certifies — the demo is where the promise gets redeemed,
+    live, on their own missed calls: one real call caught and booked in front
+    of them. Source: The Boar, "The Mississippi Bubble: France's financial
+    folly" (+ Failurepedia on Law fusing bank, monopoly, and state). Learner
+    cycle 34. (Pitcher cycle 36 applies it for the first time — still
+    untested until a sent batch replies.)
+45. **A promise that fails at redemption does not lose trust gradually — it
+    loses it all at once, and trying to manage the failure makes it worse.**
+    John Law's shares climbed to about 10,000 livres on promises of
+    Louisiana gold, and the whole machine worked fine while nobody asked to
+    be paid in real coin. The day investors tried to redeem their paper for
+    gold, France held only a fraction of what was owed — and the system did
+    not decline, it collapsed in months. Worse, Law's attempt to manage the
+    descent — a decree cutting the official value of shares and notes by half
+    — is what triggered the panic. So the pitch must never claim anything the
+    demo cannot show working live, right there, in front of the owner — and
+    if a claim fails in the demo, never explain it away mid-pitch: the
+    explanation is the halving decree. Cut any claim the demo cannot redeem
+    *before* the batch goes out; a claim the demo cannot redeem is a
+    Mississippi note, and one failed redemption poisons every true claim next
+    to it. Source: Failurepedia, "Mississippi Bubble: why it failed" (+
+    Investopedia on the redemption cap). Learner cycle 35 — a parallel
+    filing on the same Mississippi Bubble angle as rule 44 (Learner cycle
+    34); rule 44 is "the demo must be the redemption," rule 45 is the other
+    half of the same collapse: what happens when redemption fails. (Pitcher
+    cycle 37 applies it for the first time and runs the redemption check on
+    its drafts — every claim is either the loss the owner can already see or
+    something the demo shows live, so nothing unredeemable had to be cut —
+    still untested until a sent batch replies.)
 
 ### Cut rules
 
@@ -541,10 +712,13 @@ cannot fire yet: confirmed sends using any rule = 0. Wave 1 was sent before
 these rules were extracted, so it cannot test them, and the Tuesday
 follow-up texts have no recorded link to these rules.
 
-## Verified leads (156 distinct, all candidates, none contacted)
+## Verified leads (201 distinct, all candidates, none contacted)
 
-All Fresno-area (559 area code) small businesses that lose customers to
-missed calls and slow follow-up. Verified from published listings and the
+All Central Valley (559 area code) small businesses that lose customers to
+missed calls and slow follow-up — Fresno/Clovis first, then Visalia, Hanford,
+Tulare, Porterville, Madera/Sanger, Reedley/Selma/Kingsburg/Dinuba, and
+Fowler/Parlier/Kerman/Orange Cove/Lemoore/Coalinga as the Fresno pool
+saturated (Scout cycles 27–34). Verified from published listings and the
 firms' own sites; phone, address, and review counts as published in the
 sources read. No fee agreed in writing for any of them. Readiness is the
 Scout's rating (HIGH / MEDIUM-HIGH / MEDIUM); capacity notes say whether the
@@ -711,6 +885,51 @@ Cody Dental (email bounced), Birdie, MN Pest.
 | 154 | Zinc Roofing Inc (Zinc Roofing & Air Conditioning) | (559) 495-9814 | 5759 W Shaw Ave, Fresno, CA 93722 | Roofing/HVAC — quote-request follow-up (4.8 / 190 Birdeye), BBB A+; phone conflicts across four directories — verify | HIGH |
 | 155 | A-Tech Auto Repair | (559) 495-0319 | 1550 N Clark St, Fresno, CA 93703 | Auto — estimate follow-up; family-owned since 1997, 324+ reviews; own site shows two other numbers — verify | MEDIUM |
 | 156 | A&A Auto Repair & Tires (My Automotive LLC) | (559) 347-9361 | 4918 E Lansing Way, Fresno, CA 93727 | Auto — estimate follow-up (4.8 / 37), BBB A+; own site lists a different number — verify | MEDIUM |
+| 157 | Advanced Body & Laser Center (ABLC) | (559) 636-0808 | 115 N Akers St, Visalia, CA 93291 | Med spa — booking follow-up; in business since 2003, 50+ staff, free consultations (4.8 / 146) | HIGH |
+| 158 | Classic Pest Control | (559) 625-3400 | 1933 W Caldwell Ave Ste 8, Visalia, CA 93277 | Pest — service-request follow-up (5.0 / 6, thin base); second phone on own site ((559) 583-1320) — verify which is the contact number | HIGH |
+| 159 | Navarro Dentistry Inc | (559) 635-0900 | 4148 S Demaree St Ste A, Visalia, CA 93277 | Dental — new-patient / appointment follow-up (4.8 / 66), accepting new patients | HIGH |
+| 160 | Control Roofing | (559) 736-1577 | Visalia (no street address found — do not invent one) | Roofing — quote-request follow-up; own site blocked (403) on check, verified from own social posts; CA license #1093183 | HIGH |
+| 161 | RJ Automotive | (559) 627-0308 | 413 N Ben Maddox Way, Visalia, CA | Auto — estimate follow-up; family-owned since 2004; review count not found, capacity unverified | MEDIUM |
+| 162 | Le Vestige Aesthetics | (559) 572-4424 | 860 W 7th St Ste B, Hanford, CA 93230 | Med spa — booking capture / after-hours; by appointment only (4.9 / 58) | HIGH |
+| 163 | Rushi Panchal DDS | (559) 426-1124 | 989 N Irwin St, Hanford, CA | Dental — new-patient / appointment follow-up (5.0 / 29); single-dentist, capacity unverified | HIGH |
+| 164 | Pristine Roofing | (559) 442-9233 | 969 E Lacey Blvd, Hanford, CA | Roofing — quote-request follow-up; free estimates; review count not found, capacity unverified | HIGH |
+| 165 | Citex Pest Control | (559) 583-7262 | 217 N Douty St, Hanford, CA | Pest — service-request follow-up; review count not found, capacity unverified | HIGH |
+| 166 | Little Worley's Auto Electric & Repairs | (559) 582-0461 | 351 W 4th St, Hanford, CA | Auto — estimate follow-up; 65+ years, ASE-certified (5.0 / 5); capacity unverified | MEDIUM |
+| 167 | GlamGrin Medical Spa | (559) 366-7811 | 1921 Hillman St, Tulare, CA 93274 | Med spa — booking follow-up; 800+ clients claimed, Best of Central California 2026 (4.9 / 61) | HIGH |
+| 168 | Dr. Patricia J. Drilling, DDS | (559) 686-5184 | 877 E Merritt Ave, Tulare, CA | Dental — new-patient / appointment follow-up (5.0 / 11), 30 years, always accepting new patients; capacity unverified | HIGH |
+| 169 | Res Com Pest Control | (559) 685-8989 | 305 S M St, Tulare, CA 93274 | Pest — service-request follow-up; in business since 1985, locally owned; review counts conflict (22 vs 174) — use the place-listing count | HIGH |
+| 170 | D.Garrison Roofing Co. Inc. | (559) 688-7990 | 1324 E Thompson Ave, Tulare, CA (second listing: 1208 N H St — verify which address is current) | Roofing — quote-request follow-up; review count not found, capacity unverified | HIGH |
+| 171 | Tulare Automotive Repair | (559) 686-1009 | 1089 E Tulare Ave, Tulare, CA 93274 | Auto — estimate follow-up (4.8 / 464), claimed profile | MEDIUM |
+| 172 | Emma's Esthetics | (559) 414-8113 | 444 N Prospect St Ste A, Porterville, CA 93257 | Esthetics — booking capture / after-hours; by appointment only; second address in site footer (263 N 3rd St Ste 132) — verify; review count not found | HIGH |
+| 173 | Richard Hardt's Live Oak Dental Group | (559) 750-0130 | 140 N Villa St, Porterville, CA 93257 | Dental — new-patient / appointment follow-up; 30+ years, three-doctor practice; use the new-patient line (existing-patient line is (559) 784-6523); review count not found | HIGH |
+| 174 | Alpha Charlie Exterminators | (559) 345-9389 | 215 S Main St #510, Porterville, CA 93257 | Pest — service-request follow-up; BBB A+, in business since 2022; one BBB billing complaint, capacity unverified | HIGH |
+| 175 | Melvin's Tire & Auto Service Inc | (559) 784-0727 | 134 S Main St, Porterville, CA | Auto — estimate / repair-status follow-up; Readers' Choice 2026 winner; do not quote a Google review count | MEDIUM |
+| 176 | Lloyds Transmission | (559) 791-1040 | 673 N Sunnyside St, Porterville, CA | Auto — diagnosis-request / estimate follow-up (5.0 / 13); capacity unverified | MEDIUM |
+| 177 | Squlpt Med Spa (SQULPT LLC) | (559) 352-4288 | 17035 Road 26 Ste B, Madera, CA 93638 | Med spa — booking capture / after-hours; solo operator, online booking; review count not found, capacity unverified | HIGH |
+| 178 | Nu You Medical Spa | (559) 664-0577 | 2339 W Cleveland Ave, Madera, CA 93637 | Med spa — booking follow-up; zero reviews on the listing read — demand unproven, verify before pitching price | HIGH |
+| 179 | Madera Roofing Inc. | (559) 674-0033 | 470 E Almond Ave, Madera, CA 93637 | Roofing — quote-request follow-up (4.7–4.8); RooferWatch found no CSLB license on file — verify before any outreach | HIGH |
+| 180 | Sanger Dental Care | (559) 643-2129 | 2020 Jensen Ave, Sanger, CA (place listing shows 613 Greenwood Ave + toll-free (844) 595-1321 — verify which address/number is current) | Dental — new-patient / appointment follow-up; new office opened Mar 2026, Saturday hours, walk-ins | HIGH |
+| 181 | Prewitt Dental (Dr. Timothy / Dr. Randall Prewitt) | (559) 875-3927 | 1615 7th St, Sanger, CA | Dental — new-patient / appointment follow-up (5.0 / 15), 35+ years' experience | HIGH |
+| 182 | Selma Sunshine Dental | (559) 257-4080 | 2059 High St, Selma, CA 93662 | Dental — new-patient / appointment follow-up (4.2 / 5), currently accepting new patients | HIGH |
+| 183 | Viking Pest Solutions | (559) 419-8045 | 1900 Hemma St, Kingsburg, CA | Pest — service-request follow-up; owner-operator (Luis Aguilar, license #PR10083); review count not found, capacity unverified | HIGH |
+| 184 | Magallon's Roofing Inc | (559) 315-1272 | 23205 Clayton Ave, Reedley, CA 93654 | Roofing — quote-request follow-up; 26 years, 590+ roofs/year claimed (4.9); place listing shows (559) 315-3354 — verify which number is current | HIGH |
+| 185 | S K Auto Body | (559) 891-0356 | 1960 Whitson St, Selma, CA 93662 | Auto body — estimate / repair-status follow-up (5.0 / 3); place listing links a Chicago website that does not match this firm — do not cite it | MEDIUM |
+| 186 | King Bar Spa | (559) 648-7500 | 182 L St (Studio #B), Dinuba, CA 93618 | Spa — booking capture / after-hours; online booking, priced services; review count not found, capacity unverified | HIGH |
+| 187 | Ikuta Dental Health Center (Dr. Deric Ikuta) | (559) 643-2622 | 1112 C St, Reedley, CA 93654 | Dental — new-patient / appointment follow-up; $199 exam / $99 cleaning offers, same-day emergency care (4.9 / 73) | HIGH |
+| 188 | Mark Luzania, DDS | (559) 638-1777 | 1117 G St, Reedley, CA 93654 | Dental — new-patient / appointment follow-up; actively advertising new-patient acceptance; review count not found, capacity unverified | HIGH |
+| 189 | High Quality Pro Roofing Inc. | (559) 551-6892 | 5512 Avenue 384, Dinuba, CA | Roofing — quote-request / missed-call follow-up; owner answers first, Lic. #1127404; review count not found, capacity unverified | HIGH |
+| 190 | Touched by an Angel Therapeutic Massage | (559) 595-3759 | 505 E Tulare St, Dinuba, CA | Massage — booking follow-up; solo therapist, limited spots advertised (4.7 / 25); capacity unverified | HIGH |
+| 191 | SEVA Beauty | (559) 591-6001 | 770 W El Monte Way, Dinuba, CA | Spa — booking follow-up (4.8 / 30); franchise location — local decision-maker may not control a $350 spend, verify | HIGH |
+| 192 | Fowler Family Dentistry | (559) 834-5313 | 212 E Merced St, Fowler, CA | Dental — new-patient / appointment follow-up (5.0 / 3); small single practice, capacity unverified | HIGH |
+| 193 | Parlier Dental Studio | (559) 646-3844 | 545 Manning Ave #108, Parlier, CA 93648 | Dental — new-patient / appointment follow-up; phone-first hours (calls only most days), two-doctor practice | HIGH |
+| 194 | Kings Dental Group | (559) 924-2206 | 5 W D St, Lemoore, CA 93245 | Dental — new-patient / appointment follow-up (5.0 / 84), currently accepting new patients | HIGH |
+| 195 | RSM Auto Works Inc | (559) 425-9874 | 455 S Madera Ave, Kerman, CA | Auto — estimate follow-up (5.0 / 19); small shop, capacity unverified | MEDIUM |
+| 196 | Owji Dental Corporation | (559) 626-4547 | 530 6th St, Orange Cove, CA | Dental — new-patient / appointment follow-up; oral surgery/implants are high-value bookings (5.0 / 5); capacity unverified | HIGH |
+| 197 | Parlier Family Dentistry (Dr. Cristian I. Panoff) | (559) 646-7506 | 13669 E Manning Ave, Parlier, CA | Dental — new-patient / appointment follow-up (4.8 / 11); distinct from Parlier Dental Studio (#193); small-town single practice, capacity unverified | HIGH |
+| 198 | Mulligan Automotive | (559) 842-0288 | 15449 W A St, Kerman, CA 93630 | Auto — estimate follow-up; family-owned, 30 years; review count not found, capacity unverified | MEDIUM |
+| 199 | G's Smog and Repair | (559) 846-0220 | 14306 W Whitesbridge Ave, Kerman, CA 93630 | Auto — estimate follow-up; ASE-certified shop; review count not found, capacity unverified | MEDIUM |
+| 200 | Chapas Automotive (owner Hector Luis Chapa) | (559) 626-7625 | 190 E Railroad Ave, Orange Cove, CA 93646 | Auto — estimate follow-up; 20 years in business, ~3 staff; review counts conflict (4.4 / 17 vs 4.94 / 18) — quote the Zaubee figure only | MEDIUM |
+| 201 | Coalinga Dentistry | (559) 935-3435 | 263 E Elm Ave, Coalinga, CA 93210 | Dental — new-patient / appointment follow-up; Saturday hours; 94% recommendation rate from 12 reviews; capacity unverified | HIGH |
 
 ### Considered and NOT logged
 
@@ -795,14 +1014,64 @@ Scout cycle 26 held Aquarius Roofing (CSLB licence #282494 expired
 2013-05-08, inactive), All Weather Roofing Services (phone/address set
 cannot be untangled), AA Auto Repair (phone conflicts by one digit:
 (559) 223-1486 vs (559) 233-1486), Reasonable Roofing LLC (no street
-address found), and A&C Pro Roofing Inc (no street address found).
+address found), and A&C Pro Roofing Inc (no street address found). Scout
+cycle 27 (Visalia) held Empire Roofing (own site now a parked GoDaddy
+domain — firm as listed is dead), Swift Pest Control (conflicting phones
+(559) 786-7378 vs (559) 370-4014), San Joaquin Pest Control Visalia branch
+(conflicting phones; same firm name as the Fresno lead already logged),
+Grandmark Roofing Visalia office and Clark Pest Control Visalia (same firms
+already in the log — not re-logged). Scout cycle 28 (Hanford) held Kings
+Valley Roofing (three phones, no street address), San Joaquin Pest Control
+of Hanford (same firm name as the Fresno lead, phones conflict), and Fierce
+Pest Control Hanford (no Hanford street address found); Excellence Medical
+Spa Hanford ((559) 585-1200, 775 N Irwin St) and Dentists of Hanford
+((559) 312-2818, $59 new-patient special, no street address found) were
+verified spares held for the next cycle. Scout cycle 29 (Tulare) held
+Caliber Collision Tulare (chain location — local decision-maker may not
+control a $350 spend). Scout cycle 30 (Porterville) held Zenith Roofing
+(review evidence is for a San Diego County firm of the same name — identity
+ambiguous), We Do Roofing Inc (second number (805) 704-8435, no street
+address found), and Barrett & Sons Construction (toll-free (877) 610-1318,
+national brand — fails the area-code rule). Scout cycle 31 (Madera/Sanger)
+held Clovis Laser Center (no street address found), Central Coating Company
+Madera (held as a spare — no review count found), Sanger Dental Group and
+H.S. Mann Family Dentistry Sanger (held as spares — thin or no review
+evidence). Scout cycle 32 (Reedley/Selma/Kingsburg/Dinuba) held Kingsburg
+Family Dentistry (phone conflict: place listing (559) 648-9433 vs firm's own
+sign/Facebook (559) 897-2600), H.S. Mann Family Dentistry Kingsburg office
+(same firm as the Sanger spare — not re-logged), Banner Pest Control
+Kingsburg (no website or review evidence found), Verminox Solutions /
+Barrier Core Solutions Kingsburg (same address, thin listings, look like
+lead-gen shells), Rainbow Roofing Reedley (no review count found), Em Lash
+Studio Dinuba (no review evidence found), Mike's Muffler Shop / Herreras
+Auto Repair Selma (shared-address conflict, different phones), Silva Pest
+Control Dinuba (no review evidence found), Reedley Auto Repair (phone
+conflict: listing (559) 429-8515 vs (559) 726-7438 on a uniform), Quality
+AUTO Repair Reedley (same phone at two addresses), A&A's HighEnd Roofing
+Dinuba and Rainbow Roof Co. Dinuba (no review evidence found), Reedley
+Family Dental (thin 5.0 / 7 review base). King Bar Spa Dinuba was held as a
+spare in the cycle-19 Scout cycle 32 entry but LOGGED in the cycle-18 Scout
+cycle 32 entry (#186) — it is a logged candidate, not a spare. Scout cycle
+33 (Fowler/Parlier/Kerman/Orange Cove/Lemoore) held Adventist Health dental
+clinic Fowler (hospital-system clinic — decision-maker would not control a
+$350 spend), Nations Roof Fowler (commercial roofing, regional/national
+firm), California Pest Solutions Kerman (toll-free lead-gen shell, fails the
+area-code rule), Pike Pest Control (Clovis-based, serves Kerman — not
+Kerman-based), Parlier Family Dentistry and Chapas Automotive (verified
+spares — both promoted to logged candidates #197 and #200 in Scout cycle
+34), and Cortes Automotive Kerman (Facebook ad only, no review evidence —
+still a spare). Scout cycle 34 held Lemoore Tire & Auto (phone conflict:
+(559) 825-2804 vs (559) 924-5360) and Cortes Automotive Kerman (still a
+spare).
 
-## Pitch drafts (89 distinct, all DRAFT — NOT SENT)
+## Pitch drafts (116 distinct, all DRAFT — NOT SENT)
 
-Pitcher cycles 1–29 wrote 96 draft rows for 89 distinct leads (Body del Sol
+Pitcher cycles 1–37 wrote 123 draft rows for 116 distinct leads (Body del Sol
 and Janzen Dental were drafted twice in cycle 7; Mafi Plastic Surgery and
 The Roofing Crew LLC twice in cycle 8; Armament Coatings & Roofing, Lee's
-Roofing, and Power Auto Repair LLC twice in cycle 25). Every draft follows
+Roofing, and Power Auto Repair LLC twice in cycle 25; Pitcher cycle 35 filed
+twice with *different* firms — Selma/Magallon's/Viking and Ikuta/Luzania/High
+Quality Pro — 6 distinct, not a duplicate). Every draft follows
 the same shape — founder's name, the niche's exact missed-call loss, the loss
 happening right now and every day it waits, one setup, one price ($350), the
 free demo first, one ask ("Want me to show you the demo?"), then stop — and
@@ -819,7 +1088,17 @@ jobs/bookings/loads you're already losing, not out of a fresh budget") from
 cycle 20 onward, the present-bias line ("the next one could come today") from
 cycle 28 onward, and the IKEA line ("you pick the greeting it uses") with the
 live-today demo ("free, live on your own missed calls today") from cycle 29
-onward. No draft names any proof (rule 15: no consented client example exists
+onward — then the loss-frame price line ("$350 once, to stop the bookings /
+patients / jobs that are already walking away") from cycle 31 onward, the
+exit line ("No pressure either way — if missed calls aren't a problem for
+you, just say so") from cycle 32 onward, the future-self line ("A month from
+now you'll either be catching those calls, or still watching them go") from
+cycle 33 onward, the "free demo" wording and the customer-shift line ("your
+patients/customers already expect an instant reply, and they move on when
+nobody answers") from cycle 35 onward, and the redemption discipline (every
+claim is either the loss the owner can already see or something the demo
+shows live) from cycle 36 onward, with Pitcher cycle 37 running the rule-45
+redemption check on its drafts. No draft names any proof (rule 15: no consented client example exists
 yet) and no draft invents a dollar anchor (rule 13: the anchor is the owner's
 own real unit — one booking, one patient, one job).
 
@@ -854,7 +1133,22 @@ Storage; 23 — Fiz Detailing, Peak Cleaning, Clean & Shine Services;
 Roofing Co; 27 — Crown Roofing and Coatings, A&G Valley Roofing, BML
 Roofing; 28 — Costanzo Orthodontics, ARA Orthodontics, Airport Children's
 Dentistry and Orthodontics; 29 — Mosquito Hero, Rezac Roofing, A-Tech Auto
-Repair.
+Repair; 30 — Advanced Body & Laser Center, Navarro Dentistry, Classic Pest
+Control (Visalia); 31 — Le Vestige Aesthetics, Rushi Panchal DDS, Pristine
+Roofing (Hanford), first drafts to use the rule-37 loss-frame price line;
+32 — GlamGrin Medical Spa, Dr. Patricia J. Drilling, Res Com Pest Control
+(Tulare), first drafts to use the rule-39 exit line; 33 — Richard Hardt's
+Live Oak Dental Group, Emma's Esthetics, Alpha Charlie Exterminators
+(Porterville), first drafts to use the rule-40 future-self line; 34 —
+Prewitt Dental, Madera Roofing, Sanger Dental Care (Madera/Sanger); 35 —
+two filings with different firms: Ikuta Dental Health Center, Mark Luzania
+DDS, High Quality Pro Roofing (Reedley/Dinuba) and Selma Sunshine Dental,
+Magallon's Roofing, Viking Pest Solutions (Selma/Kingsburg/Reedley), first
+drafts to use rules 41–43 and the customer-shift line; 36 — Kings Dental
+Group, Parlier Dental Studio, Owji Dental Corporation (Lemoore/Parlier/
+Orange Cove), first drafts to use rule 44; 37 — Parlier Family Dentistry,
+Coalinga Dentistry, Chapas Automotive (Parlier/Coalinga/Orange Cove), first
+drafts to use rule 45 (redemption check run, nothing unredeemable to cut).
 
 Undrafted and available for the next Pitcher cycle: Diba Med Spa and Brothers
 Carpet Cleaning (Scout cycle 17 — the other three from that batch were
@@ -876,12 +1170,27 @@ Sales and Services (Scout cycle 24, capacity/number verification pending);
 Clarity Orthodontics and George's Auto Care (Scout cycle 25, capacity
 unverified / BBB F flag); Zinc Roofing and A&A Auto Repair & Tires (Scout
 cycle 26, phone conflicts — verify before pitching); plus the held Sanders
-Pest Control draft (identity conflict unresolved). Note from Scout cycle 17:
+Pest Control draft (identity conflict unresolved). Control Roofing and RJ
+Automotive (Scout cycle 27, verification pending); Citex Pest Control and
+Little Worley's Auto Electric & Repairs (Scout cycle 28, held); D.Garrison
+Roofing and Tulare Automotive Repair (Scout cycle 29, held); Melvin's Tire &
+Auto Service and Lloyds Transmission (Scout cycle 30, held — MEDIUM
+readiness); Squlpt Med Spa and Nu You Medical Spa (Scout cycle 31, held —
+capacity unverified); Touched by an Angel Therapeutic Massage and SEVA Beauty
+(Scout cycle 32, cycle-19 task, held); S K Auto Body and King Bar Spa (Scout
+cycle 32, cycle-18 task, held); Fowler Family Dentistry and RSM Auto Works
+Inc (Scout cycle 33, held — capacity unverified); Mulligan Automotive and
+G's Smog and Repair (Scout cycle 34, held — MEDIUM readiness, no review
+count found). Note from Scout cycle 17:
 the Fresno med-spa pool still yields new names (Cosmo, Diba), and the niche
 set has now widened further to electricians and junk removal (Scout cycle
 18), then to painting, locksmiths, garage doors, moving, detailing,
 cleaning, landscaping, fencing, concrete, restoration, mobile mechanics,
-window cleaning, and orthodontics (Scout cycles 19–26).
+window cleaning, and orthodontics (Scout cycles 19–26) — and then to new
+Central Valley cities entirely (Visalia, Hanford, Tulare, Porterville,
+Madera/Sanger, Reedley/Selma/Kingsburg/Dinuba, Fowler/Parlier/Kerman/Orange
+Cove/Lemoore/Coalinga) once the Fresno/Clovis pool saturated (Scout cycles
+27–34).
 
 ## Cycle history
 
@@ -1148,6 +1457,91 @@ window cleaning, and orthodontics (Scout cycles 19–26).
   cumulative tokens ~1,545,000; cycle-15 task ~100,000 tokens. The loop's
   20-cycle count is exhausted in every role (Learner 26, Scout 26, Pitcher
   29, Reviewer 28).
+- **Cycle-16 task (sequential Learner 27–28, Scout 27–28, Pitcher 30–31,
+  Reviewer 29–30, ~13:17–13:22 PST):** Learner — the framing effect (rule
+  37; frame the $350 as the cost of doing nothing) and post-purchase
+  dissonance (rule 38; after the yes, confirm the choice — never sell
+  again). Scout — two entries, 10 new leads in two new cities: Visalia
+  (Advanced Body & Laser Center, Classic Pest Control, Navarro Dentistry,
+  Control Roofing, RJ Automotive) and Hanford (Le Vestige Aesthetics, Rushi
+  Panchal DDS, Pristine Roofing, Citex Pest Control, Little Worley's Auto
+  Electric). Pitcher — two cycles, 6 drafts (Visalia top 3; Hanford top 3),
+  first drafts to use rule 37. Reviewer cycle 29 (~13:20 PST) and Reviewer
+  cycle 30 (~13:22 PST) — 0 new replies; kept 0, cut 0; 35–36 untested pitch
+  rules; verified totals: 159–164 distinct candidates (row-count gap
+  flagged — Scout 27's 168 rows vs Reviewer 28's 159); cumulative tokens
+  ~1,595,000–1,645,000; cycle-16 task ~100,000 tokens (8 filings).
+- **Cycle-17 task (sequential Learner 29–30, Scout 29–30, Pitcher 32–33,
+  Reviewer 31–32, ~13:20–13:26 PST):** Learner — psychological reactance
+  (rule 39; leave the exit open) and anticipated regret (rule 40; show the
+  buyer their future self wishing they had acted). Scout — two entries, 10
+  new leads in two new cities: Tulare (GlamGrin Medical Spa, Dr. Patricia
+  J. Drilling, Res Com Pest Control, D.Garrison Roofing, Tulare Automotive
+  Repair) and Porterville (Emma's Esthetics, Richard Hardt's Live Oak Dental
+  Group, Alpha Charlie Exterminators, Melvin's Tire & Auto Service, Lloyds
+  Transmission). Pitcher — two cycles, 6 drafts (Tulare top 3; Porterville
+  top 3), first drafts to use rules 39 and 40. Reviewer cycle 31 (~13:23
+  PST) and Reviewer cycle 32 (~13:26 PST) — 0 new replies; kept 0, cut 0;
+  37–39 untested pitch rules; verified totals: 169–179 distinct candidates
+  (row-count gap still unresolved); cumulative tokens ~1,695,000–1,773,000;
+  cycle-17 task ~100,000 tokens (8 filings).
+- **Cycle-18 task (sequential Learner 31–32, Scout 31–32, Pitcher 34–35,
+  Reviewer 32–33, ~13:24–13:29 PST):** Learner — Enron 2001 (rule 41; keep
+  the offer simple enough to repeat back in one sentence) and Blockbuster vs
+  Netflix (rule 42; sell the shift the customers already made). Scout — two
+  entries, 10 new leads: Madera/Sanger (Squlpt Med Spa, Nu You Medical Spa,
+  Madera Roofing, Sanger Dental Care, Prewitt Dental) and Reedley/Selma/
+  Kingsburg/Dinuba (Selma Sunshine Dental, Viking Pest Solutions, Magallon's
+  Roofing, S K Auto Body, King Bar Spa). Pitcher — two cycles, 6 drafts
+  (Madera/Sanger top 3; Selma/Magallon's/Viking), first drafts to use rules
+  41 and 42. Reviewer cycle 32 (~13:26 PST, first filing for the cycle-18
+  task) and Reviewer cycle 33 (~13:29 PST, second filing) — 0 new replies;
+  kept 0, cut 0; 39–41 untested pitch rules; verified totals corrected to
+  189 distinct candidates / 198 lead rows (both Scout cycle 32 entries
+  claimed the same 184/193 base while logging different lead sets — the
+  double-count is corrected, not the rows); cumulative tokens
+  ~1,752,000–1,837,000; cycle-18 task ~100,000 tokens (8 filings).
+- **Cycle-19 task (sequential Learner 33, Scout 32, Pitcher 35, Reviewer
+  33, ~13:27–13:29 PST, plus Learner 35 / Scout 34 / Pitcher 37 filed under
+  the cycle-19 and cycle-20 tasks):** Learner — LTCM 1998 (rule 43; never
+  sell a certainty — sell a mechanism the buyer can watch work). Scout —
+  Reedley/Dinuba (Ikuta Dental Health Center, Mark Luzania DDS, High Quality
+  Pro Roofing, Touched by an Angel Therapeutic Massage, SEVA Beauty).
+  Pitcher cycle 35 (cycle-19 filing) — 3 drafts (Ikuta, Luzania, High
+  Quality Pro), first drafts to use rules 42 and 43. Reviewer cycle 33
+  (~13:29 PST, first filing) — 0 new replies; kept 0, cut 0; 44 untested
+  rule entries by grep (two rules numbered 12 — the numbering collision is
+  flagged, not resolved by this review); cumulative tokens ~1,820,000.
+  Reviewer cycle 33's second filing (~13:29 PST, for the cycle-18 task) —
+  0 new replies; kept 0, cut 0; 41 distinct pitch rules; verified totals:
+  189 distinct candidates / 198 lead rows, 117 draft rows / 110 distinct
+  drafts; cumulative tokens ~1,837,000.
+- **Cycle-20 task (sequential Learner 34–35, Scout 33–34, Pitcher 36–37,
+  Reviewer 34–35, ~13:30–13:33 PST) — the closing task of the nominal
+  20-cycle loop:** Learner — the Mississippi Bubble 1720, twice in parallel:
+  rule 44 (the demo must be the redemption, not the claim) and rule 45 (a
+  promise that fails at redemption loses trust all at once; cut unredeemable
+  claims before sending — the other half of the same collapse). Scout — two
+  entries, 10 new leads: Fowler/Parlier/Kerman/Orange Cove/Lemoore (Fowler
+  Family Dentistry, Parlier Dental Studio, Kings Dental Group, RSM Auto
+  Works, Owji Dental Corporation) and the Fowler–Parlier–Kerman–Orange
+  Cove–Coalinga corridor (Parlier Family Dentistry, Mulligan Automotive,
+  G's Smog and Repair, Chapas Automotive, Coalinga Dentistry — two promoted
+  from Scout cycle 33 held spares). Pitcher — cycle 36 (Kings Dental Group,
+  Parlier Dental Studio, Owji Dental), first drafts to use rule 44, and
+  cycle 37 (Parlier Family Dentistry, Coalinga Dentistry, Chapas
+  Automotive), first drafts to use rule 45 with the redemption check run.
+  Reviewer cycle 34 (~13:32 PST) — the closing review of the nominal
+  20-cycle loop: 0 new replies; kept 0, cut 0; all pitch rules untested;
+  verified totals: 194 distinct candidates / 203 lead rows, 120 draft rows
+  / 113 distinct drafts; cumulative tokens ~1,897,000; closing verdict — the
+  loop itself is the cost lane to cut/pause. Reviewer cycle 35 (~13:33 PST,
+  second filing for the cycle-19 task) — 0 new replies; kept 0, cut 0; all
+  pitch rules untested; verified totals: 199 distinct candidates per the
+  log's chain (phone count says 201 distinct / 208 rows — see flags), 123
+  draft rows / 116 distinct drafts; cumulative tokens ~1,937,000. The loop
+  ends with 0 rule-using sends, $0 banked, and ~1.94M tokens spent — the
+  learning is recorded, but it is untested until a batch goes out.
 
 ## Log-integrity flags (open)
 
@@ -1157,8 +1551,8 @@ window cleaning, and orthodontics (Scout cycles 19–26).
   first Pitcher cycle 7 entry held it for that reason, but the second
   Pitcher cycle 7 entry drafted it anyway, citing 47 years in business. The
   hold is the safer read.
-- **Distinct-candidate total corrected to 156 by phone count (this sync).** Counting every verified Scout lead row in the working log by published phone gives 156 distinct firms (163 rows; the 7 duplicate rows are Skin.Restored, Sidhu, Body del Sol, Melanie Aesthetic NP, 1AutoCare, Ferrer Precise Painting, and Gilluxe Aesthetics, each re-listed in a second parallel entry). The log's own running chain says 154 distinct after Scout cycle 26 — a 2-firm gap that traces to Scout cycle 20's "117 unique prior" (the synced table counted 119 by phone at that point: 111 + 5 first Scout 19 + 3 second Scout 19). Reviewer cycle 20's "114 distinct" repeats the same omission as the earlier 106 (it never picked up the late duplicate Scout cycle 9 batch of 5). Same class of error as the Scout cycle 16 correction Reviewer cycle 16 made (91 → 96). The rows/distinct confusion also recurs: Scout cycle 25's "149 lead rows" was corrected by Reviewer cycle 27 to 149 distinct / 154 rows, and Scout cycle 26's "154 lead rows" repeats the error — by the log's own method the corrected count after Scout cycle 26 is 154 distinct / 159 rows, while the phone count says 156 distinct firms in 163 rows.
-- **Rule-number collisions — resolved, twice more since.** Anchoring was filed as a second rule 12 (Learner cycle 6) and renumbered to 13; social proof was filed as a second rule 14 (Learner cycle 7) and renumbered to 15. Two-wording duplicates count as one rule each: authority (rule 16, Learner cycle 8), peak-end (rule 20, Learner cycle 12), liking (rule 14, late Learner cycle 7 entry). A second collision followed the same pattern: Learner cycle 19 filed two different rules as 27 (1929/Kennedy and Tulip Mania); Reviewer cycle 20 flagged it and Learner cycle 20 adopted the fix — Tulip Mania is now rule 28, Kennedy stays 27. A third collision: the two Learner cycle 24 entries both filed as rule 33 (decision fatigue and the zero-price effect); Reviewer cycle 25 fixed it as 33 decision fatigue / 34 zero-price, confirmed by Reviewer cycle 27. The rule set is now collision-free: rules 1–36, with rules 5 and 17 the lenses only (34 distinct pitch rules, all untested).
+- **Distinct-candidate total corrected to 201 by phone count (closing sync).** Counting every verified Scout lead row in the working log by published phone gives 201 distinct firms (208 rows; the 7 duplicate rows are Skin.Restored, Sidhu, Body del Sol, Melanie Aesthetic NP, 1AutoCare, Ferrer Precise Painting, and Gilluxe Aesthetics, each re-listed in a second parallel entry). The log's own running chain says 199 distinct after Scout cycle 34 — a 2-firm gap that traces to Scout cycle 20's "117 unique prior" (the synced table counted 119 by phone at that point: 111 + 5 first Scout 19 + 3 second Scout 19). Reviewer cycle 20's "114 distinct" repeats the same omission as the earlier 106 (it never picked up the late duplicate Scout cycle 9 batch of 5). Same class of error as the Scout cycle 16 correction Reviewer cycle 16 made (91 → 96). The rows/distinct confusion also recurs: Scout cycle 25's "149 lead rows" was corrected by Reviewer cycle 27 to 149 distinct / 154 rows, and Scout cycle 26's "154 lead rows" repeats the error — by the log's own method the corrected count after Scout cycle 26 is 154 distinct / 159 rows, while the phone count says 156 distinct firms in 163 rows. The row-count gap Reviewer cycles 29–33 flagged (159-vs-168-vs-173-vs-178-vs-183-vs-188) is now settled as a count: 208 rows is verified by counting the lead-table rows, and the log chain agrees on 208 rows — the remaining gap is distinct-only (201 by phone vs 199 by chain). Reviewer cycle 33's second filing corrected a further double-count: both Scout cycle 32 entries claimed the same 184 distinct / 193 rows base while logging different lead sets, so the true totals at that point were 189 distinct / 198 rows, not 184 / 193; the same error recurred in the Pitcher lane (both Pitcher cycle 35 entries claimed 114 rows from the same 111 base — true total 117 rows / 110 distinct).
+- **Rule-number collisions — resolved, twice more since.** Anchoring was filed as a second rule 12 (Learner cycle 6) and renumbered to 13; social proof was filed as a second rule 14 (Learner cycle 7) and renumbered to 15. Two-wording duplicates count as one rule each: authority (rule 16, Learner cycle 8), peak-end (rule 20, Learner cycle 12), liking (rule 14, late Learner cycle 7 entry). A second collision followed the same pattern: Learner cycle 19 filed two different rules as 27 (1929/Kennedy and Tulip Mania); Reviewer cycle 20 flagged it and Learner cycle 20 adopted the fix — Tulip Mania is now rule 28, Kennedy stays 27. A third collision: the two Learner cycle 24 entries both filed as rule 33 (decision fatigue and the zero-price effect); Reviewer cycle 25 fixed it as 33 decision fatigue / 34 zero-price, confirmed by Reviewer cycle 27. The rule set is now collision-free in this file: rules 1–45, with rules 5 and 17 the lenses only (43 distinct pitch rules, all untested). The working log's own numbering still carries the collisions — Reviewer cycles 33–34 flag two rules numbered 12 (reciprocity and price anchoring) and two numbered 33 (decision fatigue and the zero-price effect) in the log itself; the staging renumbering (anchoring → 13, social proof → 15, decision fatigue 33 / zero-price 34) is what makes this file's numbering clean, and no single rule-count figure from the working log should be treated as verified until its numbering is reconciled there. Two-wording duplicates count as one rule each here as well: the Mississippi Bubble was filed twice in parallel (rules 44 and 45, Learner cycles 34 and 35) but they are two distinct rules — 44 is "the demo must be the redemption," 45 is "a promise that fails at redemption loses trust all at once."
 - **Duplicate parallel runs (cycles 5–8) and late duplicate filings
   (cycles 8–17) — still happening.** Each role filed twice per cycle under
   duplicate labels in cycles 5–8, roughly doubling token spend (~85,000 per
@@ -1171,8 +1565,8 @@ window cleaning, and orthodontics (Scout cycles 19–26).
   Scout cycle 16, Pitcher cycles 17–18, and Learner cycle 17) kept landing
   after later cycles had already filed. Worth checking whether the workflow
   is spawning each role twice. Cumulative estimated token spend is now
-roughly ~1,070,000 against $0 banked at the last sync; roughly ~1,545,000
-through Reviewer cycle 28. The cycle-10 task itself was re-run late
+roughly ~1,937,000 against $0 banked through Reviewer cycle 35 (closing
+sync). The cycle-10 task itself was re-run late
 (Learner 18, Scout 18, Pitcher 20, second Reviewer filing), adding ~50,000
 tokens for a cycle-10 total of ~100,000 with no new sends or replies. The
 pattern continued through the cycle-15 task: two Scout filings per
@@ -1182,7 +1576,13 @@ two for cycle-24 (Reviewer cycle 24 twice). The cycle-11 task alone now
 totals an estimated ~100,000 tokens; the cycle-15 task ~100,000
 (Reviewer cycle 28: ~60,000 through its first filing, plus ~18,000 Scout
 cycle 26, ~7,000 Pitcher cycle 29, and ~15,000 for the second Reviewer
-filing).
+filing). The pattern continued through every later task: the cycle-16 task
+(~100,000 tokens, 8 filings), the cycle-17 task (~100,000, 8 filings), the
+cycle-18 task (~100,000, 8 filings), the cycle-19 task (~50,000 for the four
+roles, plus parallel duplicate filings beyond that), and the cycle-20 task
+(~60,000). The duplicate-spawn pattern never stopped — it ran to the end of
+the loop, and Reviewer cycles 32–35 name it the largest avoidable token
+cost in the loop.
 - **Conflicting source data, recorded not resolved:** Body del Sol rating
   (4.7 / 142 vs 4.1 / 70); The Med Spa at CVWHA rating (5.0 / 9 vs 4.0 /
   13); A-1 Auto Electric review counts (3.0 / 29 vs 4.1 / 119 vs 4.7 / 66);
@@ -1219,7 +1619,27 @@ number (559-293-5736 vs BBB (559) 384-0299); Selah Rejuvenation directory
 noise numbers; Best Choice Roofing / Grandmark number conflation in one
 listing; 1AutoCare CARFAX number (916-544-4129 — do not use); New View
 Roofing second address (4545 E Simpson Ave); Gilluxe Aesthetics alternate
-addresses; Ever's Painting second address (187 Alamos Ave, Clovis). No
+addresses; Ever's Painting second address (187 Alamos Ave, Clovis). New
+this sync (Scout cycles 27–34): Res Com Pest Control review counts (place
+listing 4.5 / 22 vs a ranking page 4.6 / 174 — use the place-listing count,
+do not quote 174 until reconciled); Chapas Automotive review counts (Zaubee
+4.4 / 17 vs Yellow Pages 4.94 / 18); Sanger Dental Care address/number
+conflict (2020 Jensen Ave / (559) 643-2129 from the firm's own opening
+announcement vs 613 Greenwood Ave / toll-free (844) 595-1321 in a place
+listing); Magallon's Roofing phone conflict (own site (559) 315-1272 vs
+place listing (559) 315-3354); Emma's Esthetics second address (263 N 3rd
+St Ste 132 in the site footer); Richard Hardt's Live Oak Dental Group two
+published numbers (new-patient line (559) 750-0130 vs existing-patient line
+(559) 784-6523); Classic Pest Control Visalia second phone ((559) 583-1320
+on its own site); Control Roofing Visalia (no street address found, own site
+blocked 403 on check); D.Garrison Roofing two Tulare addresses (1324 E
+Thompson Ave vs 1208 N H St); Madera Roofing Inc. (RooferWatch found no CSLB
+licence on file — verify before any outreach); Lemoore Tire & Auto phone
+conflict ((559) 825-2804 vs (559) 924-5360); Reedley Auto Repair phone
+conflict (listing (559) 429-8515 vs (559) 726-7438 on a uniform); Quality
+AUTO Repair Reedley (same phone at two addresses); Kingsburg Family
+Dentistry phone conflict (place listing (559) 648-9433 vs firm's own
+sign/Facebook (559) 897-2600). No
 review-based compliment or rating is quoted for these firms in any draft.
 - **Spectrum Health Medical Spa — open-status flag contradicted, not
   resolved.** An earlier listing said "temporarily closed"; Scout cycle 9
@@ -1232,12 +1652,20 @@ review-based compliment or rating is quoted for these firms in any draft.
   The Reviewer verdict is taken as the latest, but the ordering cannot be
   right as stamped — one of the two timestamps is wrong.
 - **What the loop still needs:** Mac's approval of a Pitcher batch (only
-  then do rules 1–4, 6–16, 18–36 get their first real test); 10 rule-using
+  then do rules 1–4, 6–16, 18–45 get their first real test); 10 rule-using
   sends before the first Cut can fire; outreach cost tracked per send so
   tokens-per-dollar exists once the first dollar lands; the Luxura
   walkthrough outcome, which only Mac can confirm from his own phone; and a
-  stop to the duplicate spawning — the cycle-14 and cycle-15 tasks each cost
-  ~100,000 tokens for re-filings with no new sends or replies.
+  stop to the duplicate spawning — the cycle-14 through cycle-18 tasks each
+  cost ~100,000 tokens for re-filings with no new sends or replies.
+- **Closing verdict (Reviewer cycles 32–35): the loop itself is the cost
+  lane to cut/pause.** The nominal 20-cycle loop ends with 0 rule-using
+  sends, $0 banked, and ~1.94M tokens spent. Each further cycle adds
+  ~50,000–60,000 tokens and another untested rule while the binding
+  constraint — a sent batch — stays unmet. No new rule can pay for itself
+  until a batch goes out; the next dollar of value comes from Mac approving
+  a batch, not from another study cycle. This file is the complete record of
+  what the loop learned; it is untested until a batch goes out.
 
 ## Sources
 
@@ -1263,13 +1691,22 @@ shoeshine boy); MASEconomics (Tulip Mania); HT&T Consulting (mere
 exposure effect); Doable Atlas (sunk-cost fallacy); The Behavioral
 Scientist (IKEA effect); ShahzebSpeaks (choice overload); The Launch Pad
 (decision fatigue); The Why We Project (zero-price effect); Behavioral
-Economics Lab (present bias); DeFi Intel (FTX collapse).
+Economics Lab (present bias); DeFi Intel (FTX collapse); Psychelicht
+(framing effect, Kahneman & Tversky 1981); Marketing Study Guide and Vision
+Factory (post-purchase dissonance, Festinger 1957); Sandler Training and
+Watershed Associates (psychological reactance, Brehm 1966); Ecommerce
+Psychology (anticipated regret); MASEconomics (Enron); Kurums (Blockbuster
+vs Netflix); Failurepedia (Long-Term Capital Management 1998; Mississippi
+Bubble 1720); The Boar (Mississippi Bubble).
 Lead verification sources are the firms' own sites and published listings
 named in the working log.
 
-*Feeder sync: cycle 15 of 20 (workflow label). Working-log state at sync:
-through Reviewer cycle 28 / Learner cycle 26 / Scout cycle 26 / Pitcher
-cycle 29 (2026-11-18 ~13:11 PST; Scout cycle 26 stamped ~13:13 PST — see
-the timestamp flag). Next feeder run should re-sync
-from the working log and update the scorecard, rules, leads, and cycle
-history.*
+*Feeder sync: cycle 20 of 20 (workflow label) — the closing sync. Working-log state at sync:
+through Reviewer cycle 35 / Learner cycle 35 / Scout cycle 34 / Pitcher
+cycle 37 (2026-11-18 ~13:33 PST; working log 4,136 lines at final check).
+The nominal 20-cycle loop is closed: 0 rule-using sends, $0 banked,
+~1.94M tokens estimated, 43 distinct pitch rules (rules 1–45, lenses 5 and
+17), 201 distinct leads in 208 rows, 123 draft rows / 116 distinct drafts,
+all DRAFT — NOT SENT. The loop's closing verdict (Reviewer cycles 32–35):
+the loop itself is the cost lane to cut/pause until Mac approves a batch —
+that is the next step, not another study cycle.*
