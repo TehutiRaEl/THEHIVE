@@ -856,7 +856,7 @@ Each item has four parts, always in this order:
 ### AB-8.05 — Jobs, task digest, subsystem health, knowledge, memory search and colony reports have no React screen
 - **What it is:** `GET /v11/jobs`, `/hive/task-digest`, `/health/subsystems`, `/knowledge/status`, `/memory/search` and `/colony/reports` are live; the React app calls none of them (jobs and task-digest appear only in legacy pages). The sketch's Running Tasks panel, the Debugger tile and the Memories circle have nothing behind them today.
 - **Where it was found:** `worker/src/index.js`; zero references in `frontend/src`. Cross-reference the purpose map items 7 and 8 (`docs/COMMAND_CENTER_PURPOSE_MAP.md` §3).
-- **What fixes it:** wire each to its home — Running Tasks (via the orphan `MissionTimeline`, Batch F1), the Debugger tile, the Memories circle, the Hive tab.
+- **What fixes it:** wire each to its home — Running Tasks (via the orphan `MissionTimeline`, Batch F1), the Debugger tile, the Memories circle, the Hive tab. **Correction (2026-11-18, verified on main `f0f37b0`):** `GET /v11/jobs` is a single-job lookup that needs `?id=`; no route lists jobs, so it cannot feed Running Tasks until a list route exists (a back-end change, still halted). `GET /v11/hive/task-digest` does exist and has no screen. Running Tasks can use `/v11/tasks` and `/v11/arena/challenges` today, but nothing in the Worker writes the `tasks` table, so that list is probably empty until something does.
 - **What proves it is fixed:** each panel shows live data from its route or says "no data", verified live.
 - **Status:** OPEN (UNVERIFIED pending F0).
 
