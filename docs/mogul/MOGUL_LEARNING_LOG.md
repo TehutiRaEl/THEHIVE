@@ -7,8 +7,8 @@ small businesses). Source: the working research log kept under the Tier 1 goal
 rules paraphrased in the loop's own words, leads and scorecard carried over as
 recorded. No numbers invented, no text copied from the web sources.
 
-Last synced from the working log: 2026-11-18 ~12:20 PST (through Reviewer
-cycle 7; Learner / Scout / Pitcher cycle 8). Loop is 8 of 20 cycles in.
+Last synced from the working log: 2026-11-18 ~12:25 PST (through Reviewer
+cycle 9; Learner / Scout / Pitcher cycle 10). Loop is 10 of 20 cycles in.
 
 ## How the loop works
 
@@ -27,28 +27,29 @@ agreed and no outreach goes out until Mac approves the batch and the fee is
 agreed in writing first. No invented numbers, no fake urgency, no invented
 $Cashtag.
 
-## Scorecard (latest, Reviewer cycle 7, 2026-11-18 ~12:19 PST)
+## Scorecard (latest, Reviewer cycle 9, 2026-11-18 ~12:25 PST)
 
 - **Banked: $0.** Goal $1,000 by Sun 2026-11-22 — not reached. Gap $1,000,
   4 days left. At $350/deal the goal needs ~3 closed deals.
 - **Replies: 1 total, 0 new in any review window.** The one reply is Luxura
   Med Spa, via text, pre-rules (soft gatekeeper reply). No Luxura reply exists
-  in Gmail (checked repeatedly, latest ~12:19 PST).
+  in Gmail (checked repeatedly, latest ~12:25 PST).
 - **Wave 1 (sent Mon 2026-11-16):** 3 emails. Cody Dental's email bounced
   (info@codydental.com undeliverable). Tuesday follow-up texts (Birdie, Cody
   cold version, MN Pest) sent by Mac 2026-11-18 ~11:57 PST. Luxura walkthrough
   (Tue 2026-11-17, 5pm PT) outcome still unverified — Mac's message thread
   cannot be read by the loop.
-- **Drafts: 30 rows, 26 distinct, all DRAFT — NOT SENT**, awaiting Mac's
+- **Drafts: 36 rows, 32 distinct, all DRAFT — NOT SENT**, awaiting Mac's
   approval. The binding constraint is sends: the approved-ready batches have
   not gone out yet.
-- **Fees agreed in writing: none.** All 51 distinct Scout leads are
+- **Fees agreed in writing: none.** All 61 distinct Scout leads are
   candidates; no fee agreed on any.
 - **Tokens per dollar: not computable** — $0 banked, no spend tracked in the
   log. Estimated token use is ~50,000 per cycle for cycles 3–4 and ~85,000 per
   cycle for cycles 5–8 (duplicate parallel runs — see integrity flags);
-  cumulative loop spend roughly ~500,000 tokens against $0 banked (Reviewer
-  cycle 7 estimate, no metered counts available).
+  cycle 10 ran once per role (~50,000); cumulative loop spend roughly
+  ~600,000 tokens against $0 banked (Reviewer cycle 9 estimate, no metered
+  counts available).
 
 ## Rules
 
@@ -69,7 +70,31 @@ None yet. **Rules kept: 0.**
   "Historical Patterns in Bull and Bear Markets". Seed run, 2026-11-18.
   Market-timing lens for the Mogul persona; not tested by replies.
 
-### Untested pitch rules (15)
+- **Rule 17 — Land runs on an 18-year clock — about 14 years up, about 4
+  years down — and the two moments that ruin people are the mid-cycle dip
+  and the winner's curse surge.** Land prices have peaked roughly every 18
+  years for 200 years (1836, 1856, 1872, 1890, 1925, 1972, 1989, 2006)
+  because land cannot be made and banks keep lending more against it until
+  no productive business can afford it — then credit evaporates and
+  everything else pops with it. The dip halfway through (~year 7) looks
+  like the end of the cycle and makes people sell too early; the final surge
+  (years 12–14) feels like safety because everyone is winning, and that is
+  exactly when exposure should shrink, not grow. So: buy the trough when
+  everyone is still scared, hold through the dip, and never chase the last
+  surge. Treat the clock as a compass, never a calendar — the rhythm is
+  real, the year is not. The model places the next cyclical low in the
+  2026–2028 window, which — if the rhythm holds — makes the coming years
+  the buying window for the Fresno land lane (the four CMX lots: 333 / 433 /
+  403 W Church, 2233 S Fruit), not the selling window; do not present the
+  window as a prediction, only as the lens saying "near the trough, not
+  near the peak." Sources: Progress.org, "The 18-Year Pattern Predicting
+  2027's Market Crash" (Hoyt 1933; Harrison 1983/2005; Foldvary 1997;
+  Anderson 2008); Willowdale Equity; Property Investments UK; Lifestyle
+  Property Group. Learner cycle 9. Land-timing lens for the Mogul persona
+  and the wholesaling lane; not a pitch rule, changes no line of the $350
+  pitch.
+
+### Untested pitch rules (16)
 
 All of these were extracted from web sources and applied in Pitcher drafts,
 but none has been tested by a sent batch yet, because wave 1 was sent before
@@ -206,6 +231,24 @@ the rules were extracted and every Pitcher batch is still draft-only.
     cycle 8. (Two Learner cycle 8 entries word this rule differently — one
     stresses the borrowed title, the other the honest limit and ordering
     expertise before the ask. Same rule, same principle; counted once.)
+17. **Name the one real "we" you actually share with the buyer — and only
+    that one — then frame the missed call as our shared problem, not their
+    problem.** People say yes far more easily to someone they count as one
+    of their own, because they stop judging the seller as an outsider and
+    start acting as if for themselves. The "we" has to be true: the one Mac
+    genuinely shares with a Fresno owner is same city, same small-business
+    life — both local businesses serving Fresno customers, both losing money
+    to the same missed call. Never claim a shared trade, school, or group
+    Mac does not belong to — a false "we" is the most damaging invention of
+    all, because once spotted it poisons the trust every other rule depends
+    on. The pitch names the shared ground once, in "we" language ("we both
+    run local businesses here in Fresno"), and the demo becomes something
+    built together, not something sold to them. Source: NEGOCOACH, "The
+    Unity Principle Technique" (Cialdini, *Pre-Suasion* 2016; *Influence*
+    2021 expanded); PulseRevOps; Len P. van der Hof; Prospeo. Learner
+    cycle 10. (Cialdini's seventh principle, unity — distinct from liking,
+    rule 14, which is "you're similar to me"; unity is "you are one of
+    us.")
 
 ### Cut rules
 
@@ -214,7 +257,7 @@ cannot fire yet: confirmed sends using any rule = 0. Wave 1 was sent before
 these rules were extracted, so it cannot test them, and the Tuesday
 follow-up texts have no recorded link to these rules.
 
-## Verified leads (51 distinct, all candidates, none contacted)
+## Verified leads (61 distinct, all candidates, none contacted)
 
 All Fresno-area (559 area code) small businesses that lose customers to
 missed calls and slow follow-up. Verified from published listings and the
@@ -279,33 +322,60 @@ Cody Dental (email bounced), Birdie, MN Pest.
 | 49 | Clark Pest Control — Fresno branch | (559) 821-7781 | 5245 N Gates Ave, Fresno, CA 93722 | Pest — service-request follow-up; 70+ years, BBB A+; large multi-city company, local decision-maker may not control a $350 spend | HIGH |
 | 50 | The Roofing Crew LLC | (559) 283-3020 | 2777 W Browning Ave, Fresno | Roofing — quote-request / missed-call follow-up; emergency services, 7 AM–8 PM daily; review count not found, capacity unverified | HIGH |
 | 51 | A-1 Auto Electric | (559) 485-4427 | 2320 Stanislaus St, Fresno, CA 93721 | Auto — estimate follow-up; ASE-certified technicians; review counts conflict across directories — do not quote one | MEDIUM-HIGH |
+| 52 | Spectrum Health Medical Spa: Anila Thampy, MD | (559) 234-2360 | 7105 N Chestnut Ave #101, Fresno, CA 93720 | Med spa — consultation-booking follow-up (5.0 / 22); 20+ years, board-certified physician owner. **Verify open status and number before pitching** — one listing says temporarily closed, alternate phone (559) 543-8340 appears | HIGH |
+| 53 | Fresno Pest Control Inc | (559) 292-1558 | 729 E Olive Ave, Fresno (BBB lists 5757 E Clinton Ave Ste 109, Fresno, CA 93727) | Pest — service-request follow-up (4.8 / 41); family-owned; a review reports unanswered calls — direct evidence of the follow-up need. Alternate numbers appear in other listings — verify before pitching | HIGH |
+| 54 | Rudy Solorio Roofing Inc | (559) 352-4023 | 2408 E Santa Ana Ave, Fresno, CA 93726 | Roofing — quote-request / missed-call follow-up (3.7 / 3), BBB A+; capacity unverified | HIGH |
+| 55 | Romita Auto Service | (559) 485-5675 | 4909 E Dakota Ave, Fresno, CA 93727 | Auto — estimate follow-up (4.6 / 613); family-owned since 1999, BBB accredited, ASE-certified | HIGH |
+| 56 | Redline Auto | (559) 374-6770 | 2006 H St, Fresno, CA 93721 | Auto — estimate / repair-status follow-up (4.5 / 15); family-owned, 10 years; capacity unverified | MEDIUM |
+| 57 | Mid-State Construction | (559) 400-9558 | 821 E Beverly Way, Fresno | Roofing — quote-request / missed-call follow-up; roofing Fresno since 1995; review count not found, capacity unverified | HIGH |
+| 58 | G&C Auto Body - Fresno (Central) | (559) 550-4338 | 4002 N Ann Ave Ste 101, Fresno, CA 93727 | Auto body — estimate / repair-status follow-up (4.7 / 54); family-owned, 54 years; insurance-driven | MEDIUM |
+| 59 | Xtreme Collision Center Inc. | (559) 275-4242 | 4203 West Shaw, Fresno, CA 93722 | Auto body — estimate / repair-status follow-up (4.1 / 2,119); insurance-driven | MEDIUM |
+| 60 | GreenZone Exterminators | (559) 332-0349 | 1200 Merced St, Fresno | Pest — service-request follow-up; review count not found, capacity unverified | HIGH |
+| 61 | Fresno Heating and Cooling | (559) 720-0479 | 4051 N Valentine Ave Ste 108, Fresno, CA 93722 | HVAC — service-request follow-up (4.9 / 454); family-owned since 2009, licensed, CA C-20 #1078849; AC breakdown calls are urgent | HIGH |
 
 ### Considered and NOT logged
 
 These were surfaced and deliberately left out — do not pitch them on the
 numbers in the log: RIDX Pest Control (conflicting phones and base,
-Fresno vs Madera); Spectrum Health Medical Spa (temporarily closed);
-Fresno Family Dentist, 4747 N First St (near-identical name to logged
-Fresno Family Dentistry — confusion risk); Fresno Heating and Cooling
-(conflicting phones); Fresno Roofing Company LLC (listed address is Advanced
-Roofing & Raingutters' office — identity ambiguous); Neo Valley Roofing
-(conflicting phone, CSLB license reported inactive/expired 2026-09-30);
-Armament Coatings & Roofing and BML Roofing (no firm Fresno street address
-found); A&C Pro Roofing (no firm address); Sanders Pest Control Inc. variant
-(own site now presents as a referral service — see flag below).
+Fresno vs Madera); Fresno Family Dentist, 4747 N First St (near-identical
+name to logged Fresno Family Dentistry — confusion risk); Fresno Heating
+and Cooling (conflicting phones — now resolved and logged as #61 on the
+BBB/ProsGrade number (559) 720-0479); Fresno Roofing Company LLC (listed
+address is Advanced Roofing & Raingutters' office — identity ambiguous);
+Neo Valley Roofing (conflicting phone, CSLB license reported inactive/expired
+2026-09-30); Armament Coatings & Roofing and BML Roofing (no firm Fresno
+street address found); A&C Pro Roofing (no firm address); Sanders Pest
+Control Inc. variant (own site now presents as a referral service — see
+flag below); Aquarius Roofing (CSLB license inactive, expired 2013 — do
+not pitch an unlicensed roofer); General Pest Control, 214 E Olive Ave
+(unverified, no reviews found); J&J Pest Control (published phone is a
+Florida (321) area code, fails the 559 match); KTA IPM (Madera-based, no
+Fresno street address, one testimonial labeled a sample review); Clovis
+Laser Center (thin review base — 4.3 / 6 — held); Mosquito Hero Fresno
+(franchise, no review count found — held); Rezac Roofing, All Weather
+Roofing Company, Fresno Roofing Company LLC (no review count found —
+held); Crestline Bug Removal (Idaho (208) area code, fails the 559 match);
+TotalZone Pest Solutions and PrimeGuard Pest Solutions (844 numbers, fail
+the 559 match); Pest Control Fresno CA (generic lead-gen-style site, not a
+verifiable firm); Surabian Dental Center (844 number, fails the 559
+match). Spectrum Health Medical Spa was held earlier as temporarily
+closed, then logged as #52 on its own site's number once re-verified —
+verify its open status before any outreach.
 
-## Pitch drafts (26 distinct, all DRAFT — NOT SENT)
+## Pitch drafts (32 distinct, all DRAFT — NOT SENT)
 
-Pitcher cycles 1–8 wrote 30 draft rows for 26 distinct leads (Body del Sol
+Pitcher cycles 1–10 wrote 36 draft rows for 32 distinct leads (Body del Sol
 and Janzen Dental were drafted twice in cycle 7; Mafi Plastic Surgery and
 The Roofing Crew LLC twice in cycle 8). Every draft follows the same shape
 — founder's name, the niche's exact missed-call loss, the loss happening
 right now and every day it waits, one setup, one price ($350), the free demo
 first, one ask ("Want me to show you the demo?"), then stop — and applies
 the current best rules, including the honest-limit line ("I only do this one
-thing") from cycle 8 onward. No draft names any proof (rule 15: no consented
-client example exists yet) and no draft invents a dollar anchor (rule 13:
-the anchor is the owner's own real unit — one booking, one patient, one job).
+thing") from cycle 8 onward and the shared-identity line ("we both run local
+businesses here in Fresno") from cycle 10 onward. No draft names any proof
+(rule 15: no consented client example exists yet) and no draft invents a
+dollar anchor (rule 13: the anchor is the owner's own real unit — one
+booking, one patient, one job).
 
 Drafted leads, by cycle: 1 — Mystique, Paladin, Valley Integrated; 2 — Kiss
 Me, Total Pest Control, K2D; 3 — Cyrus Cosmetics, Fresno Dental Care, San
@@ -314,12 +384,19 @@ Pest Control; 5 — Skin.Restored, AAA Roofing, Sidhu Family Dentistry;
 6 — Wisdom Teeth Away, The MedSpa at EYE-Q, Gerber Collision; 7 — Janzen
 Dental, The Medical Spa Fresno, Body del Sol Aesthetics, Sanders Pest
 Control (held — see flags); 8 — Mafi Plastic Surgery, The Roofing Crew LLC,
-A-1 Auto Electric, Clark Pest Control (Fresno branch).
+A-1 Auto Electric, Clark Pest Control (Fresno branch); 9 — Romita Auto
+Service, Fresno Pest Control Inc, Rudy Solorio Roofing Inc; 10 — Fresno
+Heating and Cooling, Mid-State Construction, GreenZone Exterminators.
 
 Undrafted and available for the next Pitcher cycle: the first Scout cycle 8
 batch (The Med Spa at CVWHA, Maria Gabriela Echaverry-Centeno DDS, Valley
 Air Conditioning & Repair, Comfort Pro Home Services, CJM Roofing),
-including the new HVAC niche.
+including the new HVAC niche; plus the held leads from cycles 9–10
+(Spectrum Health Medical Spa — verify open status first; Redline Auto;
+G&C Auto Body; Xtreme Collision Center). Note from Scout cycle 10: the
+Fresno med-spa and dental pools are now nearly exhausted — the
+TrustAnalytica top-13 med-spa table is fully covered except Clovis Laser
+Center — so later cycles lean on roofing, auto body, pest, and HVAC.
 
 ## Cycle history
 
@@ -377,6 +454,29 @@ including the new HVAC niche.
   (~12:19–12:20 PST) — 0 new replies; kept 0, cut 0; rule-14 collision
   resolved (social proof is now rule 15, liking stays 14); distinct
   candidates corrected to 51; distinct drafts corrected to 26.
+- **Cycle 9:** Learner — recurring cycles through history: the 18.6-year
+  land cycle (rule 17, keep as lens; bears on the Fresno CMX lots — next
+  cyclical low placed 2026–2028 by the source author, a compass not a
+  calendar). Scout — 5 leads (Spectrum Health Medical Spa, Fresno Pest
+  Control Inc, Rudy Solorio Roofing, Romita Auto, Redline Auto). Pitcher —
+  3 drafts (Romita Auto, Fresno Pest Control Inc, Rudy Solorio Roofing).
+  Reviewer cycle 8 (~12:22 PST) — a second, late Reviewer filing for the
+  cycle-4 task, re-checking live rather than repeating the earlier verdict;
+  0 new replies; kept 0, cut 0; verified totals adopted: 56 distinct
+  candidates, 29 distinct drafts; cumulative tokens ~550,000.
+- **Cycle 10:** Learner — persuasion: unity, Cialdini's seventh principle
+  (rule 18; near-miss recorded — authority was tried first, already covered
+  by rule 16). Scout — 5 leads (Mid-State Construction, G&C Auto Body,
+  Xtreme Collision Center, GreenZone Exterminators, Fresno Heating and
+  Cooling); med-spa and dental pools now nearly exhausted, later cycles
+  lean on roofing, auto body, pest, and HVAC. Pitcher — 3 drafts (Fresno
+  Heating and Cooling, Mid-State Construction, GreenZone Exterminators),
+  first drafts to use the rule-18 shared-identity line. Reviewer cycle 9
+  (~12:25 PST) — a second, late Reviewer filing for the cycle-5 task;
+  0 new replies; kept 0, cut 0; verified totals: 61 distinct candidates,
+  36 draft rows / 32 distinct drafts; cumulative tokens ~600,000. Cycle 10
+  ran once per role (~50,000 tokens estimated), unlike the duplicated
+  cycles 5–8.
 
 ## Log-integrity flags (open)
 
@@ -390,13 +490,17 @@ including the new HVAC niche.
   rule 12 (Learner cycle 6) and renumbered to 13; social proof was filed as
   a second rule 14 (Learner cycle 7) and renumbered to 15. The rule set is
   now collision-free: rules 1–16, with rule 5 the lens only.
-- **Duplicate parallel runs (cycles 5–8).** Each role filed twice per cycle
-  under duplicate labels, roughly doubling token spend (~85,000 per cycle
-  vs ~50,000) with no extra sends or replies, and corrupting the running
-  totals (each duplicate entry computed its totals as if the other did not
-  exist). Corrected totals used in this file: 51 distinct candidates, 26
-  distinct drafts. Worth checking whether the workflow is spawning each
-  role twice.
+- **Duplicate parallel runs (cycles 5–8) and late duplicate Reviewer
+  filings (cycles 8–9).** Each role filed twice per cycle under duplicate
+  labels, roughly doubling token spend (~85,000 per cycle vs ~50,000) with
+  no extra sends or replies, and corrupting the running totals (each
+  duplicate entry computed its totals as if the other did not exist).
+  Corrected totals used in this file: 61 distinct candidates, 32 distinct
+  drafts. The pattern continued as late arrivals: Reviewer cycle 8
+  (~12:22 PST) is a second filing for the cycle-4 task, and Reviewer cycle
+  9 (~12:25 PST) a second filing for the cycle-5 task, both landing after
+  later cycles had already filed. Cycle 10 itself ran once per role.
+  Worth checking whether the workflow is spawning each role twice.
 - **Conflicting source data, recorded not resolved:** Body del Sol rating
   (4.7 / 142 vs 4.1 / 70); The Med Spa at CVWHA rating (5.0 / 9 vs 4.0 /
   13); A-1 Auto Electric review counts (3.0 / 29 vs 4.1 / 119 vs 4.7 / 66);
@@ -404,7 +508,7 @@ including the new HVAC niche.
   alternate numbers. No review-based compliment or rating is quoted for
   these firms in any draft.
 - **What the loop still needs:** Mac's approval of a Pitcher batch (only
-  then do rules 1–4, 6–16 get their first real test); 10 rule-using sends
+  then do rules 1–4, 6–16, 18 get their first real test); 10 rule-using sends
   before the first Cut can fire; outreach cost tracked per send so
   tokens-per-dollar exists once the first dollar lands; the Luxura
   walkthrough outcome, which only Mac can confirm from his own phone.
@@ -423,10 +527,11 @@ History Decoded (South Sea Bubble); StockEyes (market cycles); Journalism
 University (mood and antecedent states); SUE Behavioural Design and The
 Social Cat (reciprocity); ConversionStudio (price anchoring); Lead
 Alchemists (liking); The Why We Project (social proof); Cognitigence
-(authority). Lead verification sources are the firms' own sites and
-published listings named in the working log.
+(authority); Progress.org (18.6-year land cycle); NEGOCOACH (unity). Lead
+verification sources are the firms' own sites and published listings named
+in the working log.
 
 *Feeder sync: cycle 5 of 20 (workflow label). Working-log state at sync:
-through Reviewer cycle 7 / Learner, Scout, Pitcher cycle 8, 2026-11-18
-~12:20 PST. Next feeder run should re-sync from the working log and update
+through Reviewer cycle 9 / Learner, Scout, Pitcher cycle 10, 2026-11-18
+~12:25 PST. Next feeder run should re-sync from the working log and update
 the scorecard, rules, leads, and cycle history.*
