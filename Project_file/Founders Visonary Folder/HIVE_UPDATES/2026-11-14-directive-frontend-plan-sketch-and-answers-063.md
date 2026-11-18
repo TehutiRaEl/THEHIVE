@@ -1,8 +1,8 @@
 # HIVE_UPDATE 063 — The front-end plan: sketch, mockup, additions, and the founder's answers
 
 **Date:** 2026-11-14 (founder's words, in chat); archived 2026-11-15
-**Status:** RATIFICATION PENDING — becomes a recorded founder decision when the founder merges the PR that carries this file (see `docs/FOUNDER_ANSWERED` FE-001 to FE-010).
-**Archive kind:** verbatim founder directives (`founder-directive-capture`). Distilled meaning lives in FE-001 to FE-010 and in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md`; this file keeps the words. Typos are the founder's and are kept.
+**Status:** RATIFICATION PENDING — becomes a recorded founder decision when the founder merges the PR that carries this file (see `docs/FOUNDER_ANSWERED` FE-001 to FE-011).
+**Archive kind:** verbatim founder directives (`founder-directive-capture`). Distilled meaning lives in FE-001 to FE-011 and in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md`; this file keeps the words. Typos are the founder's and are kept.
 **The halt of 2026-11-13 13:41 PST stands (Q-042) except for front-end work (sections 6 and 7).** Nothing in this file builds, merges, or deploys anything.
 
 The two images the founder sent (the hand sketch and the rendered "Kai EL OS v2.0.1" mockup) are transcribed element by element in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md`, Appendix C. The image files themselves are not in this PR; where they should live is an open question to the founder.
@@ -87,6 +87,14 @@ The founder's first reply in that exchange, on the order of work and the auditor
 
 > "Do the two rulings now"
 
+## 8. The old command center page (2026-11-18)
+
+Said while the founder was about to reach a usage limit, after the front-end auditor reported a weakness in the legacy `command-center.html` page and asked whether to fix it or retire it:
+
+> "You spoke of the old command center, which I believe was on GitHub pages which should've been retired. I already answered that question a while ago, which you can double check my answer before you do anything as well as you are about to hit the usage limits so you need to tidy up everything the agents did nowand provide me back everything that way it's clean set up for the next session run"
+
+Recorded as `docs/FOUNDER_ANSWERED` FE-011 (answers FQ-Q-023: retire). No earlier recorded answer was found; see FE-011 for the record check.
+
 ## Open items this directive set created (queued, not forgotten)
 
 1. The front-end build batches (F1–F9 in the master plan) are no longer held by the halt (FE-008, FE-009); each still needs its own preamble and go-ahead, and any new Worker route still waits (the halt covers back-end work).
@@ -96,3 +104,4 @@ The founder's first reply in that exchange, on the order of work and the auditor
 5. The test runner (Vitest) is a technical call made by Claude, per the ideas README rule 8. Setting it up is its own go-ahead.
 6. Whether a greyed-out control labelled "not connected yet" is acceptable while its feature is queued, or must be removed until it works (FE-010). Asked, not yet answered.
 7. A static check that fails a change adding a control with no real handler (FE-010 enforcement). Queued as a front-end batch; not built.
+8. Retire `docs/command-center.html` (FE-011): move it outside `docs/`, remove its link from `docs/index.html`. Queued; needs its own preamble and go-ahead.

@@ -890,9 +890,9 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 
 ---
 
-## FE-001 to FE-010 — Front-end plan answers and rulings, DECIDED 2026-11-14 to 2026-11-15 (recorded 2026-11-15)
+## FE-001 to FE-011 — Front-end plan answers and rulings, DECIDED 2026-11-14 to 2026-11-18 (recorded 2026-11-15)
 
-*Entered ahead of FQ-Q-011 (rather than at the end of the file) so this PR merges cleanly whichever of the open ratification PRs lands first; every entry carries its own date. The founder's exact words for all ten are archived in `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-11-14-directive-frontend-plan-sketch-and-answers-063.md`. Each was said in chat 2026-11-14 and counts as a founder decision under soul.md F-005 Clause 1 only once this PR is merged by the founder. None of these builds anything by itself. The halt of 2026-11-13 13:41 PST stands for everything except front-end work (FE-008, FE-009).*
+*Entered ahead of FQ-Q-011 (rather than at the end of the file) so this PR merges cleanly whichever of the open ratification PRs lands first; every entry carries its own date. The founder's exact words for all eleven are archived in `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-11-14-directive-frontend-plan-sketch-and-answers-063.md`. Each was said in chat 2026-11-14 and counts as a founder decision under soul.md F-005 Clause 1 only once this PR is merged by the founder. None of these builds anything by itself. The halt of 2026-11-13 13:41 PST stands for everything except front-end work (FE-008, FE-009).*
 
 ### FE-001 — The front-end plan: Muse's F0–F9 batch plan is the spine; the sketch and mockup are the target
 
@@ -960,7 +960,17 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - **Open reading, flagged for the founder (not decided):** whether a greyed-out control honestly labelled "not connected yet" is acceptable while its feature is queued, or whether every such control must be removed until it works. Claude's working reading, until the founder answers: **new** controls ship live or not at all; existing placeholders are listed, and each is made live or removed in the sweep.
 - **Enforcement (honest limits):** a rule cannot force an AI to comply. A static check that fails a change which adds a control with no real handler is a front-end build step, allowed under FE-009, and queued in the plan. It is not built yet.
 
-**Recorded by:** Claude, at founder direction. FE-001 to FE-008 decided in chat 2026-11-14; FE-009 and FE-010 decided in chat 2026-11-15; recorded here 2026-11-15 via a docs-only PR the founder merges.
+### FE-011 — The old command center page (`docs/command-center.html`) is to be RETIRED (answers FQ-Q-023)
+
+**Founder's words (2026-11-18):** "You spoke of the old command center, which I believe was on GitHub pages which should've been retired. I already answered that question a while ago, which you can double check my answer before you do anything"
+**Record check, 2026-11-18, on main `2989af4` and every open PR:** no entry retires `docs/command-center.html`. `docs/FOUNDER_QUEUE` still lists FQ-Q-023 as **open**. The retire answers that ARE recorded are about other pages: Q-B1 (retire the legacy **biosystem** page `docs/biosystem.html`; done in PR #229) and FQ-Q-028 (Jasper is LEGACY, left as archive; open PR #255). If the founder's earlier answer was given in a chat that was never recorded, it is not in the repo; this entry records the answer now.
+**What this means:**
+- FQ-Q-023 is answered: **retire the page.** Treated as the same shape as Q-B1 (retire the page, keep its purposes; the purpose map `docs/COMMAND_CENTER_PURPOSE_MAP.md` lists them). If the founder's earlier answer said anything different, it overrides this wording.
+- **It is still being published.** `.github/workflows/pages.yml` uploads all of `docs/` to GitHub Pages, and `docs/index.html` links it as "Legacy · SOUL REALM", so the page is live on GitHub Pages and on the Worker today.
+- **Retirement is front-end work, allowed under FE-009.** It follows the Q-B1 / PR #229 pattern: move the page to the archive outside `docs/` (so nothing serves it), remove the link from `docs/index.html`, and say so honestly. It also removes the `?backend=` weakness the front-end audit found in that page. It is **queued, not done**, and needs its own preamble and the founder's go-ahead.
+- The legacy page's purposes (the 11 the purpose map lists as having no live home) stay on the plan as front-end batches; retiring the page does not retire the purposes.
+
+**Recorded by:** Claude, at founder direction. FE-001 to FE-008 decided in chat 2026-11-14; FE-009 and FE-010 decided in chat 2026-11-15; FE-011 decided in chat 2026-11-18; recorded here via a docs-only PR the founder merges.
 
 ---
 
