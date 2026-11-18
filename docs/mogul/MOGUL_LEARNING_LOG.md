@@ -7,11 +7,11 @@ small businesses). Source: the working research log kept under the Tier 1 goal
 rules paraphrased in the loop's own words, leads and scorecard carried over as
 recorded. No numbers invented, no text copied from the web sources.
 
-Last synced from the working log: 2026-11-18 ~12:49 PST (through Reviewer
-cycle 19; Learner cycle 18, Scout cycle 18, and Pitcher cycle 20). Loop is 19
-of 20 cycles in by the log's sequential numbering (this feeder run carries the
-workflow label "cycle 10" — a late re-run of that task, landing after cycles
-11–18 had already filed).
+Last synced from the working log: 2026-11-18 ~13:13 PST (through Scout cycle 26
+and Pitcher cycle 29; Reviewer cycle 27 at ~13:10 PST). The loop's 20-cycle
+count is exhausted — sequential numbering now stands at Learner 26, Scout 26,
+Pitcher 29, Reviewer 27 (this feeder run carries the workflow label
+"cycle 15").
 
 ## How the loop works
 
@@ -30,32 +30,34 @@ agreed and no outreach goes out until Mac approves the batch and the fee is
 agreed in writing first. No invented numbers, no fake urgency, no invented
 $Cashtag.
 
-## Scorecard (latest, Reviewer cycle 19, 2026-11-18 ~12:49 PST)
+## Scorecard (latest, Reviewer cycle 27, 2026-11-18 ~13:10 PST; plus Scout cycle 26 and Pitcher cycle 29, ~13:13 PST)
 
 - **Banked: $0.** Goal $1,000 by Sun 2026-11-22 — not reached. Gap $1,000,
   4 days left. At $350/deal the goal needs ~3 closed deals.
 - **Replies: 1 total, 0 new in any review window.** The one reply is Luxura
   Med Spa, via text, pre-rules (soft gatekeeper reply). No Luxura reply exists
-  in Gmail (checked repeatedly, latest ~12:49 PST).
+  in Gmail (checked repeatedly, latest ~13:10 PST).
 - **Wave 1 (sent Mon 2026-11-16):** 3 emails. Cody Dental's email bounced
   (info@codydental.com undeliverable). Tuesday follow-up texts (Birdie, Cody
   cold version, MN Pest) sent by Mac 2026-11-18 ~11:57 PST. Luxura walkthrough
   (Tue 2026-11-17, 5pm PT) outcome still unverified — Mac's message thread
   cannot be read by the loop.
-- **Drafts: 66 rows, 62 distinct, all DRAFT — NOT SENT**, awaiting Mac's
+- **Drafts: 96 rows, 89 distinct, all DRAFT — NOT SENT**, awaiting Mac's
   approval. The binding constraint is sends: the approved-ready batches have
   not gone out yet.
-- **Fees agreed in writing: none.** All 111 distinct Scout leads are
-  candidates; no fee agreed on any. (The log's own running total says 106
-  after Scout cycle 18 — it omits the late Scout cycle 9 batch of 5; see
-  integrity flags.)
+- **Fees agreed in writing: none.** All 156 distinct Scout leads are
+  candidates; no fee agreed on any. (Counted by published phone from the
+  working log — 163 rows for 156 distinct firms; the log's own running chain
+  says 154 after Scout cycle 26 — see integrity flags.)
 - **Tokens per dollar: not computable** — $0 banked, no spend tracked in the
-  log. Estimated cumulative token use is roughly ~1,070,000 through Reviewer
-  cycle 19 (no metered counts available); the loop crossed one million tokens
-  with $0 banked and zero rule-using sends. The cycle-10 task alone now totals
-  an estimated ~100,000 tokens (the original ~50,000 run plus this late
-  re-run's Learner 18, Scout 18, Pitcher 20, and second Reviewer filing).
-  Duplicate parallel runs remain the largest avoidable cost (see flags).
+  log. Estimated cumulative token use is roughly ~1,505,000 through Reviewer
+  cycle 27 (no metered counts available); Scout cycle 26 and Pitcher cycle 29
+  have filed since, with no token estimate recorded in the log, so the
+  cumulative figure is not advanced past Reviewer cycle 27 here. The loop
+  crossed one million tokens with $0 banked and zero rule-using sends.
+  Reviewer cycle 27 notes the marginal value of each further untested rule is
+  falling while the token cost (~50,000–60,000 per cycle) is not. Duplicate
+  parallel runs remain the largest avoidable cost (see flags).
 
 ## Rules
 
@@ -100,7 +102,7 @@ None yet. **Rules kept: 0.**
   and the wholesaling lane; not a pitch rule, changes no line of the $350
   pitch.
 
-### Untested pitch rules (24)
+### Untested pitch rules (34)
 
 All of these were extracted from web sources and applied in Pitcher drafts,
 but none has been tested by a sent batch yet, because wave 1 was sent before
@@ -376,6 +378,161 @@ the rules were extracted and every Pitcher batch is still draft-only.
     Explained". Learner cycle 17. (Pitcher cycle 19 now applies it — "watch it catch one yourself" — still untested until a sent batch replies; application is not a Keep.)
 26. **File the $350 in the bucket that is already leaking, not in the new-spending bucket.** The owner does not judge $350 against all their money — they judge it against whichever mental envelope they put it in. Put it in "new software to buy" and it competes with every guarded dollar; put it in "the bookings I am already losing" and it comes out of money that is already walking out the door, so paying it feels like stopping a leak, not starting a spend. The pitch never presents $350 as a new purchase; it presents it as the price of keeping money that is already theirs — one setup, paid out of the calls that would otherwise be lost, never as a fresh budget. No invented dollar value for a booking (rule 4 still holds) and still one offer, one price, one ask (rule 7 still holds). Source: Unseel, "Mental Accounting — Why $100 of Bonus Isn't $100 of Salary" (Thaler 1985/1999). Learner cycle 18. (Pitcher cycle 20 applies it — "paid from the jobs/bookings/loads you're already losing, not out of a fresh budget" — still untested until a sent batch replies.)
 
+27. **When the crowd starts selling you the thing, stop buying it — and when
+    everyone is pitching the same thing, stop pitching it the same way.** The
+    top is not marked by bad news but by everybody talking about the same
+    thing; when people with no edge confidently give tips, everyone who could
+    buy already has. Kennedy sold in the summer of 1929 after a shoeshine boy
+    gave him stock tips; the Dow peaked at 381 in September 1929 and fell to
+    41 by July 1932, down about 89%. For the seller the signal works in
+    reverse: when every automation seller floods the same spas with the same
+    words, the niche is crowded and the pitch is noise — move to a fresh niche
+    or a fresh angle, never answer a crowded pitch by shouting louder. Source:
+    Quote Investigator, "When a Shoeshine Boy Knows as Much as I Do About the
+    Stock Market" (Dinneen 1959; Baruch 1960). Learner cycle 19. (Honesty note
+    from the source page: the tale may be apocryphal — the thirty-year delay
+    before Dinneen's book reduces its credibility, and another account credits
+    lawyer Guy Currier with warning Kennedy — but Baruch independently
+    documented the same crowd behaviour.)
+28. **A yes nobody has to keep is not a sale — count only money agreed in
+    writing, never a nod.** In February 1637 the Dutch tulip sellers were rich
+    on paper and ruined in fact, because every sale was a private promise with
+    no money behind it: no deposit, no margin, no court that would enforce it.
+    When prices broke, a buyer could walk away from a 1,000-guilder promise
+    for 35 guilders, and the seller was left holding the bulb and the loss —
+    one seller was still chasing his money years later, after the buyer had
+    died. A spoken yes costs the buyer nothing to break, so it is worth
+    nothing to the seller. The pitch therefore never counts a reply, a
+    compliment, or a "sounds good" as a win — the win is the fee agreed in
+    writing first, and no work starts before that writing exists. A verbal yes
+    is a door left open; a written agreement is the sale. Source: MASEconomics,
+    "Tulip Mania: What Really Happened in 1637" (Garber 1989; Goldgar 2007;
+    Thompson 2007). Learner cycle 19. (Filed as a second rule 27; renumbered
+    to 28 per Reviewer cycle 20 / Learner cycle 20.)
+29. **Familiarity itself sells — so the first message only has to make the
+    name known, and the polite second touch is where the decision happens.** A
+    stranger's pitch is distrusted for being strange, not for being wrong: the
+    owner's brain has never met the name "Mac Lee made it" before, so it reads
+    the message as a threat and files it away. Repeated, neutral exposure fixes
+    that on its own — each calm sighting makes the name easier to process, and
+    the brain reads that ease as trust. So the first message does not have to
+    win the sale; it only has to introduce the name and the one-line offer,
+    cleanly. The polite second touch, a few days later at a different time of
+    day, is not pestering — it is the exposure that turns a stranger into a
+    familiar name, and familiarity is what lets the owner say yes. The
+    guardrail is the inverted-U curve: repeat only a calm, short message, never
+    a hyped or pushy one — repeating something the owner already dislikes
+    deepens the dislike. Source: HT&T Consulting, "Mere Exposure Effect:
+    Marketing & Brand Strategy Guide" (Zajonc 1968). Learner cycle 20.
+30. **Never make the buyer defend what they already spent — judge only what
+    the next dollar buys.** An owner who has run their phones the same way for
+    years, trained a front desk, or paid for a system will not switch because
+    you prove the old way was wasteful — proving it was wasteful asks them to
+    admit the past spending was a mistake, and the brain would rather keep
+    paying than admit that, so it doubles down instead (escalation of
+    commitment). So the pitch never attacks the old setup and never asks "why
+    are you still doing it this way?"; it treats everything they already built
+    — their number, their team, their reputation, their customer list — as
+    assets that carry forward, and it puts only the forward comparison in front
+    of them: from today on, what does one more month of missed calls cost,
+    against $350 once for the automation that sits on top of what they already
+    have. Source: Doable Atlas, "15 Surprising Sunk Cost Fallacy Examples"
+    (Arkes & Blumer 1985; Kahneman & Tversky; Staw 1976). Learner cycle 21.
+31. **Let the buyer help build it, and they will value it more than the
+    identical thing handed to them.** People who put their own effort into
+    making something value it far more than the same thing made by someone
+    else — builders paid about 63% more for a box they assembled, and about
+    five times more for an origami figure they folded — because the effort ties
+    the thing to who they are, not just to what they own. So the demo must
+    never be a finished thing shown to the owner; the owner picks one small
+    piece of it — the greeting it says, the hours it answers, the words it
+    uses — and the automation becomes partly theirs before any money is
+    discussed. Keep the build tiny and finishable: an unfinished or frustrating
+    task kills the effect, so never ask the buyer to do real work, only to
+    choose. Source: The Behavioral Scientist, "IKEA effect Definition and
+    Examples" (Norton, Mochon & Ariely 2012; Walasek et al. 2017; Marsh et al.
+    2018). Learner cycle 22. (Pitcher cycle 29 applies it — "you pick the
+    greeting it uses" — still untested until a sent batch replies.)
+32. **Never make the buyer choose between options — give one recommended
+    thing, and let the yes be the only decision.** With 24 jams on the table
+    only about 3% of shoppers bought; with 6 jams, about 30% did — the bigger
+    display drew more lookers and ten times fewer buyers, because every extra
+    option adds a comparison and another chance to regret picking wrong, until
+    no decision is the easiest decision. But the effect is conditional, not a
+    law — it fires hardest when the options are hard to compare, the buyer
+    does not know what they want, and they want the decision over quickly,
+    which is exactly a busy owner reading a cold pitch about a category they
+    have never bought. So the pitch never offers tiers, packages, or "pick a
+    plan" — one setup, one price, one recommended next step (the demo) — and
+    if a choice must exist, pre-pick it for them. Source: ShahzebSpeaks,
+    "Choice Overload: When More Options Really Cost You Sales" (Iyengar &
+    Lepper 2000; Scheibehenne et al. 2010; Chernev et al. 2015). Learner
+    cycle 23.
+33. **A buyer who has already decided all day cannot decide one more time —
+    so make the yes the default, not a decision.** After dozens of decisions
+    the brain stops weighing and takes whatever costs the least effort —
+    usually doing nothing: judges granted parole ~65% of the time at the start
+    of a session and nearly 0% just before a break, same cases, only the
+    position in the sequence differing, and car buyers clicked "default" on
+    every late choice. A tired owner reading the pitch late in the day will not
+    evaluate it; they will keep the status quo, which is no automation and more
+    missed calls. So the pitch must never ask a tired owner to evaluate
+    anything — the yes is the pre-picked default ("just reply yes"), the demo
+    is framed as what happens next rather than a choice to weigh, and the ask
+    is sent in the morning, not at the end of a long day. Source: The Launch
+    Pad, "Decision Fatigue: Why Your Brain Makes Worse Choices as the Day Goes
+    On" (Danziger et al. 2011; Baumeister 1998; Levav & Heitmann 2010).
+    Learner cycle 24. (Filed as rule 33; the second Learner cycle 24 entry
+    also filed as 33 — see flags; Reviewer cycle 25 fixed the zero-price rule
+    as 34.)
+34. **Say "free" first and plainly — zero is not a low price, it is a
+    different decision.** When the demo costs nothing, the buyer's brain stops
+    doing cost-benefit maths: in Ariely's chocolate test, cutting both prices
+    by one cent changed nothing until the cheaper one hit zero — then about 69%
+    took the free Kiss over the better truffle, because free carries no chance
+    of a bad choice and no regret to price. So the pitch must put the word
+    "free" on the demo, early and plainly ("I'll show you how it works first,
+    free"), not bury it after the $350 — free removes the downside, which is
+    what a tired owner is actually weighing. But free must never stand alone as
+    the offer: the free demo must sit next to the real $350 value, or the
+    product is judged by the free anchor instead of its worth. Source: The Why
+    We Project, "Why is free so hard to resist?" (Shampanier, Mazar & Ariely
+    2007; Ariely, *Predictably Irrational* 2008). Learner cycle 24. (Filed as
+    a second rule 33; renumbered to 34 per Reviewer cycle 25.)
+35. **Pull the benefit into today — never sell a future payoff against a
+    present cost.** The buyer's brain gives full weight to what is now and
+    discounts what is later, so the $350 paid today looms large while
+    "bookings saved over the year" shrinks to almost nothing — and the owner
+    will always say "let me think about it," because thinking about it costs
+    nothing today and the future self can decide tomorrow, except tomorrow's
+    self says the same thing. So the pitch never sells the future: it names the
+    next missed call, which happens today, and the demo, which catches one
+    today — the benefit is immediate, visible, and in the same day as the
+    decision. And the honest limit from the research: the bias bites hardest on
+    effort, not money — so the pitch must also make *adopting* effortless now
+    (the demo does the work, the owner just watches). Source: Behavioral
+    Economics Lab, "Present Bias & Hyperbolic Discounting" (Laibson 1997;
+    O'Donoghue & Rabin 1999; Read & van Leeuwen 1998). Learner cycle 25.
+    (Pitcher cycle 28 applies it — "the next one could come today" — still
+    untested until a sent batch replies.)
+36. **Let the buyer check the workings before they pay — a promise nobody can
+    verify is a story, and stories collapse the moment someone looks at the
+    books.** FTX was worth $32B on paper and bankrupt five days after one
+    journalist published its sister firm's balance sheet, because the whole
+    edifice was a claim nobody had ever been allowed to check — customer money
+    quietly funding the sister firm's bets, secured by a token the sister firm
+    itself priced. The glossy story survived for years; the workings survived
+    one look. A buyer who has been burned — or who has watched a burn — does
+    not need a better promise, they need a way to check. So the pitch never
+    asks the owner to take the automation on trust: the demo is the check, done
+    live on their own missed calls, before any money moves — a real call caught
+    and booked, in front of them, so the mechanism is verified by their own
+    eyes rather than asserted. Source: DeFi Intel, "FTX Collapse 2022"
+    (CoinDesk Nov 2, 2022 Alameda balance-sheet leak; Binance walk-away after
+    due diligence). Learner cycle 26. (Pitcher cycle 29 applies it for the
+    first time — "live on your own missed calls today" — still untested until
+    a sent batch replies.)
+
 ### Cut rules
 
 **None. Rules cut: 0.** The cut rule (10 rule-using sends with no reply lift)
@@ -383,7 +540,7 @@ cannot fire yet: confirmed sends using any rule = 0. Wave 1 was sent before
 these rules were extracted, so it cannot test them, and the Tuesday
 follow-up texts have no recorded link to these rules.
 
-## Verified leads (111 distinct, all candidates, none contacted)
+## Verified leads (156 distinct, all candidates, none contacted)
 
 All Fresno-area (559 area code) small businesses that lose customers to
 missed calls and slow follow-up. Verified from published listings and the
@@ -508,6 +665,51 @@ Cody Dental (email bounced), Birdie, MN Pest.
 | 109 | Renew Wellness Spa | (559) 614-7597 | 1485 W Shaw Ave, Fresno, CA 93711 | Wellness spa — booking follow-up; appointment-only, bookings by text/call to one named person (5.0 / 136 Birdeye; Yelp shows a different phone, (559) 272-7546 — verify before pitching) | HIGH |
 | 110 | Papi's Junk Removal | (559) 575-0516 | Clovis, CA (serves Fresno; no Fresno street address found — do not invent one) | Junk removal — same-day pickup follow-up; family-owned, same-day/next-day pickups (4.9 / 83) | HIGH |
 | 111 | The Junk Men | (559) 426-9795 | 3145 W Floradora Ave, Fresno, CA | Junk removal — estimate-request follow-up; residential/commercial, fast pickup; review count not found, capacity unverified | HIGH |
+| 112 | Ferrer Precise Painting LLC | (559) 668-1692 | 828 W Peralta Way, Fresno, CA 93705 | Painting — free-estimate / quote-request follow-up; CA C-33 #1153891 (4.9 / 10) | HIGH |
+| 113 | Ever's Painting | (559) 801-3501 | 5878 E Ramona Ave, Fresno, CA 93727 | Painting — free-estimate / quote-request follow-up; CA Lic #1078077; review counts conflict (5 vs 124) — do not quote one | HIGH |
+| 114 | 1 Stop Lock & Key | (559) 775-7333 | 619 N Fulton St, Fresno, CA 93728 | Locksmith — emergency-lockout / key-service follow-up (4.9 / 175–183); BBB B- (1 unresponded complaint) | HIGH |
+| 115 | Gilluxe Aesthetics | (559) 916-7961 | 2745 W Shaw Ave #116, Fresno, CA 93711 | Med spa — booking follow-up (5.0 / 165–173); alternate addresses in other listings — verify address before pitching | HIGH |
+| 116 | Arroyo Painting Co. | (559) 569-5044 | 3850 E Platt Ave, Fresno, CA 93702 | Painting — free-estimate follow-up; owner answers the phone himself, so overflow/after-hours (4.9 / 72–73) | HIGH |
+| 117 | Bob Garage Door | (559) 916-6900 | 7504 N Trellis Cir, Fresno, CA 93720 | Garage door — missed-call / free-estimate follow-up; same-day urgent calls (4.9; counts 165 vs 159 — do not quote one) | HIGH |
+| 118 | Rapid Moving and Trucking | (559) 777-7794 | 3928 E Ashcroft Ave, Fresno, CA 93726 | Moving — quote-request follow-up; BBB A+, since 2021 (4.6 Google / 4.5 Yelp) | HIGH |
+| 119 | Courtesy Moving and Storage | (559) 402-3800 | 3515 N Sabre Dr, Fresno, CA 93727 | Moving — quote-request follow-up; BBB A+, since 1975, top-rated Fresno mover | HIGH |
+| 120 | Fiz Detailing | (559) 338-1616 | Fresno, CA 93706 (no street address published — do not invent one) | Mobile detailing — booking + quote follow-up; since 2013, 100+ reviews | HIGH |
+| 121 | Peak Cleaning | (559) 421-5957 | 7942 N Maple Ave UNIT 106, Fresno, CA 93720 | Cleaning — booking follow-up (5.0 / 49) | HIGH |
+| 122 | Clean & Shine Services | (559) 776-7450 | 93 S Filbert Ave, Fresno, CA 93727 | Exterior cleaning — quote-request follow-up (5.0 / 33), 10+ years | HIGH |
+| 123 | Mundo's Landscaping & Gardening service | (559) 396-2493 | 4407 E Olive Ave Apt #101, Fresno, CA | Landscaping — free-estimate follow-up (5.0 / 11), Lic #1131609; second number on own site — verify before pitching | MEDIUM-HIGH |
+| 124 | Central Valley Rain Gutters | (559) 291-1847 | 3970 N Ann Ave, Fresno, CA | Rain gutters — estimate-request follow-up (3.9 / 9), since 1995; capacity unverified | MEDIUM |
+| 125 | Kerb Appeal Fenceworks | (559) 281-6010 | 3188 N Marks Ave #121, Fresno, CA 93722 | Fencing — free-estimate follow-up; licensed & $5M insured, founded 2018; second address on commercial site — verify | HIGH |
+| 126 | Blue Rock Concrete | (559) 237-6257 | 1207 N Doon Way, Fresno, CA | Concrete — free-estimate follow-up (4.6 / 9); capacity unverified | HIGH |
+| 127 | Restore Restoration Company | (559) 207-7126 | No street address found — do not invent one (serves Fresno/Clovis/Madera/Visalia/Hanford) | Restoration — emergency-response follow-up, 24/7 water/fire/mold (5.0 / 27) | HIGH |
+| 128 | AB Concrete Co. | (559) 977-4137 | No street address found — do not invent one | Concrete — free-estimate follow-up; CSLB #1101985 | HIGH |
+| 129 | Lock Masters | (559) 351-8994 | 2240 E McKinley Ave, Fresno, CA | Locksmith — emergency lockout follow-up (4.2 / 5); capacity unverified | HIGH |
+| 130 | Fresno Metro Mobile Mechanic | (559) 272-8683 | 945 E Divisadero St, Fresno, CA 93721 | Mobile mechanic — booking follow-up, 24/7; site footer shows a second number (720-807-2555) — verify the 559 number | HIGH |
+| 131 | Rhino Mobile Mechanics of Fresno | (559) 272-5976 | 2728 E Belmont Ave, Fresno, CA 93701 | Mobile mechanic — booking follow-up; a directory lists a different name/address/phone for the same domain — verify | HIGH |
+| 132 | NEO Window Cleaning | (559) 520-4711 | 6129 E Hampton Way, Fresno, CA | Window cleaning — estimate-request follow-up; husband-and-wife team, capacity unverified | HIGH |
+| 133 | Auto Machine Specialties | (559) 268-9235 | 420 Broadway St, Fresno, CA 93721 | Machine shop — quote-request follow-up (5.0 / 15) | MEDIUM-HIGH |
+| 134 | Golden State Exterior Cleaning | (559) 882-0959 | Fresno & Clovis, CA (no firm street address found — do not invent one) | Exterior cleaning — quote-request follow-up; an older video shows a different number — verify | HIGH |
+| 135 | Armament Coatings & Roofing, Inc | (559) 235-7770 | 3050 W San Gabriel Ave, Fresno, CA 93722 (second location: 4051 N Valentine Ave Ste 111) | Roofing — free-estimate follow-up; a Sep 2026 ad shows a different number — verify | HIGH |
+| 136 | Lee's Roofing | (559) 384-0299 | 2440 S Gearhart Ave Ste 101, Fresno, CA 93725-1341 | Roofing — free-assessment follow-up; BBB A; a rep video shows a different number — verify | HIGH |
+| 137 | Power Auto Repair LLC | (559) 955-6290 | 1428 N Blackstone Ave, Fresno, CA 93703 | Auto — estimate follow-up; recently shop-based, capacity unverified | HIGH |
+| 138 | Danian's Auto Repair | (559) 441-1883 | 1015 N Blackstone Ave, Fresno, CA | Auto — estimate follow-up (5.0 / 3); capacity unverified | MEDIUM |
+| 139 | Best Choice Roofing | (559) 575-2734 | 2777 W Browning Ave, Fresno, CA 93711 | Roofing — quote-request follow-up (4.8 / 209), BBB A+; one listing conflates Grandmark Roofing's number with this firm | HIGH |
+| 140 | Crown Roofing and Coatings | (559) 505-3424 | Madera, CA 93636 (serves Fresno; no street address found — do not invent one) | Roofing — quote-request follow-up (4.8 / 12), BBB A, since 2024; capacity unverified | HIGH |
+| 141 | Lopez Bros Professional Roofing Co | (559) 722-0059 | 1321 W Yale Ave, Fresno, CA 93705 | Roofing — quote-request follow-up; CSLB #1067719; review count not found, capacity unverified | HIGH |
+| 142 | BML Roofing | (559) 216-2039 | No street address found — do not invent one, Fresno, CA | Roofing — quote-request follow-up; CSLB #1157875; review count not found | HIGH |
+| 143 | New View Roofing LLC | (559) 326-8683 | 325 S Lind Ave, Fresno, CA 93727 | Roofing — quote-request follow-up, 24/7 emergency (4.9 / 80+); second address in another directory — verify | HIGH |
+| 144 | A&G Valley Roofing, LLC | (559) 581-7994 | 4844 E Washington Ave, Fresno, CA 93727 | Roofing — quote-request follow-up; BBB A+, CSLB #1107727; review count not found | HIGH |
+| 145 | Selah Rejuvenation | (559) 392-4720 | 334 Shaw Ave Ste 139, Clovis, CA 93612 | Med spa (Clovis, serves Fresno) — booking follow-up, open Wed–Sat only (5.0 / 8); directory noise shows other numbers — verify | HIGH |
+| 146 | Molina's Sales and Services | (559) 458-9122 | 1828 S Mary St, Fresno, CA | Auto repair — estimate follow-up; also a car dealer, so verify the repair side is the decision-maker's business; review count not found | MEDIUM |
+| 147 | George's Auto Care (& Smog) | (559) 237-0644 | 603 Broadway St, Fresno, CA 93721 | Auto — estimate follow-up (4.9 / 19 Birdeye); BBB F plus a $3,000 BBB complaint review — flags before pitching | MEDIUM |
+| 148 | Airport Children's Dentistry and Orthodontics | (559) 840-1082 | 1705 N Fine Ave Ste 102, Fresno, CA 93727 | Dental/ortho — new-patient / appointment follow-up (4.5 / 80) | HIGH |
+| 149 | Clarity Orthodontics | (559) 476-4537 | 7035 N West Ave #103, Fresno, CA | Orthodontics — new-patient / consultation follow-up (5.0 / 12); single-doctor practice, capacity unverified | HIGH |
+| 150 | ARA Orthodontics | (559) 434-9999 | 5646 N Palm Ave #101, Fresno, CA | Orthodontics — new-patient / consultation follow-up (4.9 / 40) | HIGH |
+| 151 | Costanzo Orthodontics | (559) 435-5033 | 7055 N Maple Ave, Fresno, CA | Orthodontics — new-patient / consultation follow-up (5.0 / 130) | HIGH |
+| 152 | Mosquito Hero | (559) 266-1624 | 4973 E Lansing Way, Fresno, CA 93727 | Mosquito control — booking-request follow-up (4.8 / 237–238); franchise location, second address/number appear — verify the local decision-maker controls a $350 spend | HIGH |
+| 153 | Rezac Roofing | (559) 681-6662 | 4835 E Pico Ave, Fresno, CA 93726 | Roofing — quote-request follow-up (5.0 / 1); capacity unverified | HIGH |
+| 154 | Zinc Roofing Inc (Zinc Roofing & Air Conditioning) | (559) 495-9814 | 5759 W Shaw Ave, Fresno, CA 93722 | Roofing/HVAC — quote-request follow-up (4.8 / 190 Birdeye), BBB A+; phone conflicts across four directories — verify | HIGH |
+| 155 | A-Tech Auto Repair | (559) 495-0319 | 1550 N Clark St, Fresno, CA 93703 | Auto — estimate follow-up; family-owned since 1997, 324+ reviews; own site shows two other numbers — verify | MEDIUM |
+| 156 | A&A Auto Repair & Tires (My Automotive LLC) | (559) 347-9361 | 4918 E Lansing Way, Fresno, CA 93727 | Auto — estimate follow-up (4.8 / 37), BBB A+; own site lists a different number — verify | MEDIUM |
 
 ### Considered and NOT logged
 
@@ -577,27 +779,48 @@ held / not-logged status is contradictory; see flags), Reynosa Appliance
 Ave Ste 103 address), and J & R Appliance Service / Genesis Appliance (same
 address 3817 E Tulare Ave and phone (559) 349-3568 under two names — identity
 ambiguous). RIDX Pest Control and Spectrum Health Medical Spa remain not
-logged (conflicting phones/base; temporarily closed).
+logged (conflicting phones/base; temporarily closed). Scout cycle 19 held
+three more: All Fresno Locksmith (only 3 reviews), Klaus Baker Painting
+(only 1 review), Sunnyside Painting (phone confirmed in its own flyer but
+no firm street address found). Scout cycle 20 held Central Valley Window
+Cleaning (serious reputation complaints in reviews — skip) and Sears
+Appliance Repair (national chain location). Scout cycle 21 held Central Cal
+Restoration (conflicting phones/addresses), Star Water Damage Fresno (no
+street address, no review count), and All Fresno Locksmith (already held).
+Scout cycle 25 held Neo Valley Roofing (phone conflicts across four sources
++ expired CSLB licence), Fresno Roofing Company LLC (LLC/Inc/address/phone
+set untangled), ARA Pest Stop and HGC Roofing (no street address found).
+Scout cycle 26 held Aquarius Roofing (CSLB licence #282494 expired
+2013-05-08, inactive), All Weather Roofing Services (phone/address set
+cannot be untangled), AA Auto Repair (phone conflicts by one digit:
+(559) 223-1486 vs (559) 233-1486), Reasonable Roofing LLC (no street
+address found), and A&C Pro Roofing Inc (no street address found).
 
-## Pitch drafts (62 distinct, all DRAFT — NOT SENT)
+## Pitch drafts (89 distinct, all DRAFT — NOT SENT)
 
-Pitcher cycles 1–20 wrote 66 draft rows for 62 distinct leads (Body del Sol
+Pitcher cycles 1–29 wrote 96 draft rows for 89 distinct leads (Body del Sol
 and Janzen Dental were drafted twice in cycle 7; Mafi Plastic Surgery and
-The Roofing Crew LLC twice in cycle 8). Every draft follows the same shape
-— founder's name, the niche's exact missed-call loss, the loss happening
-right now and every day it waits, one setup, one price ($350), the free demo
-first, one ask ("Want me to show you the demo?"), then stop — and applies
-the current best rules, including the honest-limit line ("I only do this one
-thing") from cycle 8 onward, the shared-identity line ("we both run local
-businesses here in Fresno") from cycle 10 onward, the possessive demo
+The Roofing Crew LLC twice in cycle 8; Armament Coatings & Roofing, Lee's
+Roofing, and Power Auto Repair LLC twice in cycle 25). Every draft follows
+the same shape — founder's name, the niche's exact missed-call loss, the loss
+happening right now and every day it waits, one setup, one price ($350), the
+free demo first, one ask ("Want me to show you the demo?"), then stop — and
+applies the current best rules, including the honest-limit line ("I only do
+this one thing") from cycle 8 onward, the shared-identity line ("we both run
+local businesses here in Fresno") from cycle 10 onward, the possessive demo
 framing ("on your own missed calls") from cycle 11 onward, the decoy
 comparison ("the alternative is another week of missed calls, or paying
 someone to sit by the phone") from cycle 14 onward, the cash-result framing
 ("the booking / job stays with you instead of going elsewhere") from cycle
-16 onward, and the real-scarcity line ("I take one deal at a time" + "gone for good") from cycle 18 onward, and the mental-accounting line ("paid from the jobs/bookings/loads you're already losing, not out of a fresh budget") from cycle 20 onward. No draft names any proof (rule 15: no
-consented client example exists yet) and no draft invents a dollar anchor
-(rule 13: the anchor is the owner's own real unit — one booking, one
-patient, one job).
+16 onward, the real-scarcity line ("I take one deal at a time" + "gone for
+good") from cycle 18 onward, the mental-accounting line ("paid from the
+jobs/bookings/loads you're already losing, not out of a fresh budget") from
+cycle 20 onward, the present-bias line ("the next one could come today") from
+cycle 28 onward, and the IKEA line ("you pick the greeting it uses") with the
+live-today demo ("free, live on your own missed calls today") from cycle 29
+onward. No draft names any proof (rule 15: no consented client example exists
+yet) and no draft invents a dollar anchor (rule 13: the anchor is the owner's
+own real unit — one booking, one patient, one job).
 
 Drafted leads, by cycle: 1 — Mystique, Paladin, Valley Integrated; 2 — Kiss
 Me, Total Pest Control, K2D; 3 — Cyrus Cosmetics, Fresno Dental Care, San
@@ -620,7 +843,17 @@ Alf Plumbing; 17 — Sylvan Med Spa and Weight Loss, Forza Auto Body, Happy
 Teeth Dental; 18 — Northwest Optometry Associates, Wooforia Grooming Salon,
 Inspection Pro; 19 — Cosmo Health Resolution, Better Pest Control, Duenas
 Towing; 20 — Martin Electrical & Lighting, Renew Wellness Spa, Papi's Junk
-Removal.
+Removal; 21 — Gilluxe Aesthetics, 1 Stop Lock & Key, Arroyo Painting Co.;
+22 — Bob Garage Door, Rapid Moving and Trucking, Courtesy Moving and
+Storage; 23 — Fiz Detailing, Peak Cleaning, Clean & Shine Services;
+24 — Kerb Appeal Fenceworks, Restore Restoration Company, AB Concrete Co.;
+25 — Armament Coatings & Roofing, Lee's Roofing, Power Auto Repair LLC
+(filed twice, same 3 drafts — 0 new distinct the second time);
+26 — Best Choice Roofing, New View Roofing LLC, Lopez Bros Professional
+Roofing Co; 27 — Crown Roofing and Coatings, A&G Valley Roofing, BML
+Roofing; 28 — Costanzo Orthodontics, ARA Orthodontics, Airport Children's
+Dentistry and Orthodontics; 29 — Mosquito Hero, Rezac Roofing, A-Tech Auto
+Repair.
 
 Undrafted and available for the next Pitcher cycle: Diba Med Spa and Brothers
 Carpet Cleaning (Scout cycle 17 — the other three from that batch were
@@ -632,11 +865,22 @@ Service (Scout cycle 13), Gomez Tree Service and Rodriguez Pool Service
 Gabriela Echaverry-Centeno DDS (Scout cycle 8, held for capacity), Dee's
 Plumbing and Patton Air Conditioning (Scout cycle 15), Citadel Roofing &
 Solar and General Pest Control (Scout cycle 16, first entry), GJEL Accident
-Attorneys and Gennock Insurance Agency (Scout cycle 16, second entry), and
-the held Sanders Pest Control draft (identity conflict unresolved). Note
-from Scout cycle 17: the Fresno med-spa pool still yields new names (Cosmo,
-Diba), and the niche set has now widened further to electricians and junk removal
-(Scout cycle 18).
+Attorneys and Gennock Insurance Agency (Scout cycle 16, second entry),
+Scout cycle 22's five leads (Fresno Metro Mobile Mechanic, Rhino Mobile
+Mechanics, NEO Window Cleaning, Auto Machine Specialties, Golden State
+Exterior Cleaning) remain undrafted; Danian's Auto Repair (Scout cycle 23,
+MEDIUM readiness, 3 reviews); Blue Rock Concrete and Lock Masters (Scout
+cycle 21, capacity unverified); Selah Rejuvenation, 1AutoCare, Molina's
+Sales and Services (Scout cycle 24, capacity/number verification pending);
+Clarity Orthodontics and George's Auto Care (Scout cycle 25, capacity
+unverified / BBB F flag); Zinc Roofing and A&A Auto Repair & Tires (Scout
+cycle 26, phone conflicts — verify before pitching); plus the held Sanders
+Pest Control draft (identity conflict unresolved). Note from Scout cycle 17:
+the Fresno med-spa pool still yields new names (Cosmo, Diba), and the niche
+set has now widened further to electricians and junk removal (Scout cycle
+18), then to painting, locksmiths, garage doors, moving, detailing,
+cleaning, landscaping, fencing, concrete, restoration, mobile mechanics,
+window cleaning, and orthodontics (Scout cycles 19–26).
 
 ## Cycle history
 
@@ -826,6 +1070,79 @@ Diba), and the niche set has now widened further to electricians and junk remova
   with no new sends or replies. Rules now 1–26 (5 and 17 lens-only; 24 pitch
   rules, all untested).
 
+- **Cycle-11 task (filed as sequential Learner 19, Scout 19, Pitcher 21–22,
+  Reviewer 20–21, ~12:54–12:57 PST):** Learner — two entries: the 1929 crash
+  and Kennedy's shoeshine-boy exit (rule 27) and Tulip Mania 1637 (filed as a
+  second rule 27; the collision was flagged by Reviewer cycle 20 and the
+  Tulip rule renumbered to 28 by Learner cycle 20). Scout — two entries, 8
+  distinct new leads: painting, locksmith, and moving sub-niches open for the
+  first time (Ferrer Precise Painting, Ever's Painting, 1 Stop Lock & Key,
+  Gilluxe Aesthetics, Arroyo Painting; Bob Garage Door, Rapid Moving and
+  Trucking, Courtesy Moving and Storage). Pitcher — two cycles, 6 drafts
+  (Gilluxe, 1 Stop, Arroyo; Bob Garage Door, Rapid, Courtesy), first drafts
+  to move to fresh niches per rule 27. Reviewer cycle 20 (~12:56 PST) — a
+  second filing for the cycle-11 task; Reviewer cycle 21 (~12:57 PST) — a
+  third filing for the same task; 0 new replies; kept 0, cut 0; distinct
+  candidates corrected to 114 per the log's own chain (see flags — the phone
+  count says 119); cumulative tokens ~1,170,000. The cycle-11 task alone now
+  totals an estimated ~100,000 tokens.
+- **Cycle-12 task (sequential Learner 20–21, Scout 20–21, Pitcher 23–24,
+  Reviewer 22–23, ~12:57–13:00 PST):** Learner — the mere exposure effect
+  (rule 29; adopts the Tulip → 28 fix) and the sunk-cost fallacy (rule 30).
+  Scout — two entries, 10 new leads in five new sub-niches (mobile detailing,
+  cleaning, exterior cleaning, landscaping, rain gutters; fencing, concrete,
+  restoration, plus a second locksmith). Pitcher — two cycles, 6 drafts (Fiz
+  Detailing, Peak Cleaning, Clean & Shine Services; Kerb Appeal Fenceworks,
+  Restore Restoration Company, AB Concrete Co.). Reviewer cycle 22 (~12:59
+  PST) and Reviewer cycle 23 (~13:00 PST) — 0 new replies; kept 0, cut 0;
+  verified totals: 127 distinct candidates, 75 draft rows / 71 distinct
+  drafts after cycle 23; cumulative tokens ~1,260,000.
+- **Cycle-13 task (sequential Learner 22–23, Scout 22–23, Pitcher 25,
+  Reviewer 24, ~13:00–13:04 PST):** Learner — the IKEA effect (rule 31; let
+  the buyer help build the demo) and choice overload (rule 32; one recommended
+  thing, no menu). Scout — two entries: 5 new leads (Fresno Metro Mobile
+  Mechanic, Rhino Mobile Mechanics, NEO Window Cleaning, Auto Machine
+  Specialties, Golden State Exterior Cleaning) and 4 new rows (Armament
+  Coatings & Roofing, Lee's Roofing, Power Auto Repair, Danian's Auto Repair)
+  — the second entry says "5 found" but its table holds 4 rows. Pitcher cycle
+  25 filed twice with the same 3 drafts (Armament, Lee's, Power Auto) — 0 new
+  distinct the second time. Reviewer cycle 24 filed twice (~13:04 PST) — 0
+  new replies; kept 0, cut 0; 30 untested pitch rules; cumulative tokens
+  ~1,345,000.
+- **Cycle-14 task (sequential Learner 24, Scout 24, Pitcher 26–27, Reviewer
+  25–26, ~13:04–13:09 PST):** Learner — two entries under cycle 24: decision
+  fatigue (rule 33) and the zero-price effect (filed as a second rule 33 —
+  the log's second rule-number collision; Reviewer cycle 25 fixed it as 33
+  decision fatigue / 34 zero-price). Scout — two entries, 8 distinct new
+  leads, all roofing and auto (Best Choice Roofing, Crown Roofing and
+  Coatings, Lopez Bros, BML Roofing; New View Roofing, A&G Valley Roofing,
+  Selah Rejuvenation, Molina's Sales and Services) plus a re-listing of
+  1AutoCare (already #38). Pitcher — two cycles, 6 drafts (Best Choice, New
+  View, Lopez Bros; Crown, A&G, BML). Reviewer cycle 25 (~13:07 PST) and
+  Reviewer cycle 26 (~13:09 PST) — 0 new replies; kept 0, cut 0; 32 untested
+  pitch rules; cumulative tokens ~1,445,000.
+- **Cycle-15 task (sequential Learner 25–26, Scout 25–26, Pitcher 28–29,
+  Reviewer 27, ~13:08–13:13 PST):** Learner — present bias / hyperbolic
+  discounting (rule 35; pull the benefit into today) and the FTX collapse
+  (rule 36; let the buyer check the workings — the demo is the live check).
+  Scout — two entries, 10 new leads: orthodontics widen further plus auto
+  (George's Auto Care, Airport Children's Dentistry and Orthodontics, Clarity
+  Orthodontics, ARA Orthodontics, Costanzo Orthodontics; Mosquito Hero —
+  previously held, now logged — Rezac Roofing, Zinc Roofing, A-Tech Auto
+  Repair, A&A Auto Repair & Tires). Pitcher — cycle 28 (Costanzo, ARA,
+  Airport Children's), first drafts to apply rule 35, and cycle 29 (Mosquito
+  Hero, Rezac Roofing, A-Tech Auto Repair), first drafts to apply rule 36 and
+  the rule-31 IKEA line ("you pick the greeting it uses"). Reviewer cycle 27
+  (~13:10 PST) — first Reviewer filing for the cycle-15 task; 0 new replies;
+  kept 0, cut 0; 34 untested pitch rules; verified totals: 149 distinct
+  candidates / 154 lead rows (Reviewer 27's correction of Scout cycle 25's
+  row count), 93 draft rows / 86 distinct drafts; cumulative tokens
+  ~1,505,000. Reviewer 27 notes the loop has spent over 1.5 million tokens
+  with $0 banked and zero rule-using sends, and the marginal value of each
+  further untested rule is falling while the token cost is not. The loop's
+  20-cycle count is exhausted in every role (Learner 26, Scout 26, Pitcher
+  29, Reviewer 27).
+
 ## Log-integrity flags (open)
 
 - **Sanders Pest Control — do not send its draft until re-verified.** The
@@ -834,27 +1151,8 @@ Diba), and the niche set has now widened further to electricians and junk remova
   first Pitcher cycle 7 entry held it for that reason, but the second
   Pitcher cycle 7 entry drafted it anyway, citing 47 years in business. The
   hold is the safer read.
-- **Distinct-candidate total corrected to 111 (this sync).** The log's own
-  running total says 106 after Scout cycle 18, but it omits the late
-  duplicate Scout cycle 9 entry (Synergy Wellness Center, Fresno Dental
-  Surgery Center, LaserAway Fresno, Sandoval Auto Repair, M & F Auto
-  Repair — 5 distinct firms, verified in their own entry, and treated as
-  logged by Scout cycle 15's prior-leads list). Counting every verified lead
-  row in the working log by phone gives 115 rows for 111 distinct firms
-  (the 4 duplicates are Skin.Restored, Sidhu, Body del Sol, and Melanie
-  Aesthetic NP, each re-listed in a second parallel entry). Reviewer cycle
-  19's "106 distinct" repeats the same omission (101 before Scout cycle 18
-  + 5 new). Same class of error as the Scout cycle 16 correction Reviewer
-  cycle 16 made (91 → 96).
-- **Rule-number collisions — resolved.** Anchoring was filed as a second
-  rule 12 (Learner cycle 6) and renumbered to 13; social proof was filed as
-  a second rule 14 (Learner cycle 7) and renumbered to 15. Two-wording
-  duplicates count as one rule each: authority (rule 16, Learner cycle 8),
-  peak-end (rule 20, Learner cycle 12), liking (rule 14, late Learner
-  cycle 7 entry). The rule set is now collision-free: rules 1–26, with
-rules 5 and 17 the lenses only. (Correction to the previous sync of this
-  file: the unity rule was listed as "17." in the untested list; it is rule
-  18 — the land-cycle lens is rule 17.)
+- **Distinct-candidate total corrected to 156 by phone count (this sync).** Counting every verified Scout lead row in the working log by published phone gives 156 distinct firms (163 rows; the 7 duplicate rows are Skin.Restored, Sidhu, Body del Sol, Melanie Aesthetic NP, 1AutoCare, Ferrer Precise Painting, and Gilluxe Aesthetics, each re-listed in a second parallel entry). The log's own running chain says 154 distinct after Scout cycle 26 — a 2-firm gap that traces to Scout cycle 20's "117 unique prior" (the synced table counted 119 by phone at that point: 111 + 5 first Scout 19 + 3 second Scout 19). Reviewer cycle 20's "114 distinct" repeats the same omission as the earlier 106 (it never picked up the late duplicate Scout cycle 9 batch of 5). Same class of error as the Scout cycle 16 correction Reviewer cycle 16 made (91 → 96). The rows/distinct confusion also recurs: Scout cycle 25's "149 lead rows" was corrected by Reviewer cycle 27 to 149 distinct / 154 rows, and Scout cycle 26's "154 lead rows" repeats the error — by the log's own method the corrected count after Scout cycle 26 is 154 distinct / 159 rows, while the phone count says 156 distinct firms in 163 rows.
+- **Rule-number collisions — resolved, twice more since.** Anchoring was filed as a second rule 12 (Learner cycle 6) and renumbered to 13; social proof was filed as a second rule 14 (Learner cycle 7) and renumbered to 15. Two-wording duplicates count as one rule each: authority (rule 16, Learner cycle 8), peak-end (rule 20, Learner cycle 12), liking (rule 14, late Learner cycle 7 entry). A second collision followed the same pattern: Learner cycle 19 filed two different rules as 27 (1929/Kennedy and Tulip Mania); Reviewer cycle 20 flagged it and Learner cycle 20 adopted the fix — Tulip Mania is now rule 28, Kennedy stays 27. A third collision: the two Learner cycle 24 entries both filed as rule 33 (decision fatigue and the zero-price effect); Reviewer cycle 25 fixed it as 33 decision fatigue / 34 zero-price, confirmed by Reviewer cycle 27. The rule set is now collision-free: rules 1–36, with rules 5 and 17 the lenses only (34 distinct pitch rules, all untested).
 - **Duplicate parallel runs (cycles 5–8) and late duplicate filings
   (cycles 8–17) — still happening.** Each role filed twice per cycle under
   duplicate labels in cycles 5–8, roughly doubling token spend (~85,000 per
@@ -867,10 +1165,15 @@ rules 5 and 17 the lenses only. (Correction to the previous sync of this
   Scout cycle 16, Pitcher cycles 17–18, and Learner cycle 17) kept landing
   after later cycles had already filed. Worth checking whether the workflow
   is spawning each role twice. Cumulative estimated token spend is now
-roughly ~1,070,000 against $0 banked. The cycle-10 task itself was re-run
-late (Learner 18, Scout 18, Pitcher 20, second Reviewer filing), adding
-~50,000 tokens for a cycle-10 total of ~100,000 with no new sends or
-replies.
+roughly ~1,070,000 against $0 banked at the last sync; roughly ~1,505,000
+through Reviewer cycle 27. The cycle-10 task itself was re-run late
+(Learner 18, Scout 18, Pitcher 20, second Reviewer filing), adding ~50,000
+tokens for a cycle-10 total of ~100,000 with no new sends or replies. The
+pattern continued through the cycle-15 task: two Scout filings per
+cycle-12/13/14/15 task, two Pitcher cycle 25 filings with identical drafts,
+three Reviewer filings for the cycle-11 task alone (cycles 20 and 21) and
+two for cycle-24 (Reviewer cycle 24 twice). The cycle-11 task alone now
+totals an estimated ~100,000 tokens; the cycle-15 task ~60,000.
 - **Conflicting source data, recorded not resolved:** Body del Sol rating
   (4.7 / 142 vs 4.1 / 70); The Med Spa at CVWHA rating (5.0 / 9 vs 4.0 /
   13); A-1 Auto Electric review counts (3.0 / 29 vs 4.1 / 119 vs 4.7 / 66);
@@ -891,21 +1194,31 @@ conflict ((559) 614-7597 vs (559) 272-7546); Duenas Towing second phones
 ((559) 313-1736, (559) 374-9859) and conflicting founding years; Synergy
 Wellness Center phone conflict ((559) 785-9490 vs (559) 628-2792) — and it
 is listed both as logged (#82) and as held / not logged (Scout cycle 18),
-unresolved. No review-based compliment or rating is
-quoted for these firms in any draft.
+unresolved. New this sync: Ever's Painting review counts (5 vs 124); Bob
+Garage Door review counts (165 vs 159); 1 Stop Lock & Key BBB B- (1
+unresponded complaint); George's Auto Care BBB F plus a $3,000 BBB complaint
+review; Zinc Roofing phone conflicts across four directories ((559) 495-9814
+own site vs (559) 352-3140, (559) 838-4420, (559) 423-7457); A-Tech Auto
+Repair numbers ((559) 495-0319 structured field vs (559) 206-2585,
++1 559-527-4006); A&A Auto Repair & Tires phone conflict ((559) 347-9361
+vs (559) 396-1978); Fresno Metro Mobile Mechanic footer number
+(720-807-2555); Rhino Mobile Mechanics name/address/phone conflict across
+listings; Mundo's Landscaping second number ((559) 500-8293); Golden State
+Exterior Cleaning older number ((559) 581-9976); Armament Coatings Sep 2026
+ad number ((559) 235-7849 vs logged (559) 235-7770); Lee's Roofing rep video
+number (559-293-5736 vs BBB (559) 384-0299); Selah Rejuvenation directory
+noise numbers; Best Choice Roofing / Grandmark number conflation in one
+listing; 1AutoCare CARFAX number (916-544-4129 — do not use); New View
+Roofing second address (4545 E Simpson Ave); Gilluxe Aesthetics alternate
+addresses; Ever's Painting second address (187 Alamos Ave, Clovis). No
+review-based compliment or rating is quoted for these firms in any draft.
 - **Spectrum Health Medical Spa — open-status flag contradicted, not
   resolved.** An earlier listing said "temporarily closed"; Scout cycle 9
   later logged it as an active listing (#52). Verify its open status before
   any outreach.
-- **Mosquito Hero Fresno — new evidence recorded, still held.** Scout cycle
-  17's fresh check found Birdeye 4.8 / 237–242 reviews and its own site
-  confirming (559) 266-1624 and 4973 E Lansing Way, which resolves the
-  earlier "no review count found" objection — but the franchise / local
-  decision-maker question is unresolved and a second address (1900 S Van
-  Ness Ave) and a second number ((559) 201-0672) still appear, so it stays
-  held until the local decision-maker is proven.
+- **Mosquito Hero Fresno — previously held, now logged and drafted (Scout cycle 26 / Pitcher cycle 29).** Scout cycle 26 logged it as #152 on its own site's number (559) 266-1624 and 4973 E Lansing Way (Birdeye 4.8 / 237–238, profile claimed by the business), and Pitcher cycle 29 drafted it. The franchise / local-decision-maker question is still unresolved and a second address (1900 S Van Ness Ave) and a second number ((559) 201-0672) still appear — verify the local decision-maker controls a $350 spend before sending the draft.
 - **What the loop still needs:** Mac's approval of a Pitcher batch (only
-  then do rules 1–4, 6–16, 18–26 get their first real test); 10 rule-using
+  then do rules 1–4, 6–16, 18–36 get their first real test); 10 rule-using
   sends before the first Cut can fire; outreach cost tracked per send so
   tokens-per-dollar exists once the first dollar lands; the Luxura
   walkthrough outcome, which only Mac can confirm from his own phone.
@@ -929,11 +1242,17 @@ NEGOCOACH (unity); B2B Sell and MagicWorks IT Solutions (peak-end rule);
 When
 Notes Fly (decoy effect); Investopedia and RiskHub (Pets.com and the
 dot-com crash); SelfGrowth (scarcity); MASEconomics (2008 financial crisis);
-Unseel (mental accounting, Thaler).
+Unseel (mental accounting, Thaler); Quote Investigator (1929/Kennedy
+shoeshine boy); MASEconomics (Tulip Mania); HT&T Consulting (mere
+exposure effect); Doable Atlas (sunk-cost fallacy); The Behavioral
+Scientist (IKEA effect); ShahzebSpeaks (choice overload); The Launch Pad
+(decision fatigue); The Why We Project (zero-price effect); Behavioral
+Economics Lab (present bias); DeFi Intel (FTX collapse).
 Lead verification sources are the firms' own sites and published listings
 named in the working log.
 
-*Feeder sync: cycle 10 of 20 (workflow label). Working-log state at sync:
-through Reviewer cycle 19 / Learner cycle 18 / Scout cycle 18 / Pitcher
-cycle 20, 2026-11-18 ~12:49 PST. Next feeder run should re-sync from the
-working log and update the scorecard, rules, leads, and cycle history.*
+*Feeder sync: cycle 15 of 20 (workflow label). Working-log state at sync:
+through Scout cycle 26 / Pitcher cycle 29 (2026-11-18 ~13:13 PST) and
+Reviewer cycle 27 (2026-11-18 ~13:10 PST). Next feeder run should re-sync
+from the working log and update the scorecard, rules, leads, and cycle
+history.*
