@@ -7,11 +7,12 @@ small businesses). Source: the working research log kept under the Tier 1 goal
 rules paraphrased in the loop's own words, leads and scorecard carried over as
 recorded. No numbers invented, no text copied from the web sources.
 
-Last synced from the working log: 2026-11-18 ~13:13 PST (through Scout cycle 26
-and Pitcher cycle 29; Reviewer cycle 27 at ~13:10 PST). The loop's 20-cycle
-count is exhausted — sequential numbering now stands at Learner 26, Scout 26,
-Pitcher 29, Reviewer 27 (this feeder run carries the workflow label
-"cycle 15").
+Last synced from the working log: 2026-11-18 ~13:11 PST (through Reviewer
+cycle 28; Learner cycle 26, Scout cycle 26, and Pitcher cycle 29). The loop's
+20-cycle count is exhausted — sequential numbering now stands at Learner 26,
+Scout 26, Pitcher 29, Reviewer 28 (this feeder run carries the workflow label
+"cycle 15"). Note: Scout cycle 26 is stamped ~13:13 PST, after Reviewer cycle
+28's ~13:11 PST stamp that already covers it — see the flags.
 
 ## How the loop works
 
@@ -30,13 +31,13 @@ agreed and no outreach goes out until Mac approves the batch and the fee is
 agreed in writing first. No invented numbers, no fake urgency, no invented
 $Cashtag.
 
-## Scorecard (latest, Reviewer cycle 27, 2026-11-18 ~13:10 PST; plus Scout cycle 26 and Pitcher cycle 29, ~13:13 PST)
+## Scorecard (latest, Reviewer cycle 28, 2026-11-18 ~13:11 PST)
 
 - **Banked: $0.** Goal $1,000 by Sun 2026-11-22 — not reached. Gap $1,000,
   4 days left. At $350/deal the goal needs ~3 closed deals.
 - **Replies: 1 total, 0 new in any review window.** The one reply is Luxura
   Med Spa, via text, pre-rules (soft gatekeeper reply). No Luxura reply exists
-  in Gmail (checked repeatedly, latest ~13:10 PST).
+  in Gmail (checked repeatedly, latest ~13:11 PST).
 - **Wave 1 (sent Mon 2026-11-16):** 3 emails. Cody Dental's email bounced
   (info@codydental.com undeliverable). Tuesday follow-up texts (Birdie, Cody
   cold version, MN Pest) sent by Mac 2026-11-18 ~11:57 PST. Luxura walkthrough
@@ -50,12 +51,12 @@ $Cashtag.
   working log — 163 rows for 156 distinct firms; the log's own running chain
   says 154 after Scout cycle 26 — see integrity flags.)
 - **Tokens per dollar: not computable** — $0 banked, no spend tracked in the
-  log. Estimated cumulative token use is roughly ~1,505,000 through Reviewer
-  cycle 27 (no metered counts available); Scout cycle 26 and Pitcher cycle 29
-  have filed since, with no token estimate recorded in the log, so the
-  cumulative figure is not advanced past Reviewer cycle 27 here. The loop
-  crossed one million tokens with $0 banked and zero rule-using sends.
-  Reviewer cycle 27 notes the marginal value of each further untested rule is
+  log. Estimated cumulative token use is roughly ~1,545,000 through Reviewer
+  cycle 28 (no metered counts available); the loop has now spent over 1.5
+  million tokens with $0 banked and zero rule-using sends. The cycle-15 task
+  alone totals an estimated ~100,000 tokens (two Learner, two Scout, two
+  Pitcher, and two Reviewer filings — the duplicate-spawn pattern again).
+  Reviewer cycle 28 notes the marginal value of each further untested rule is
   falling while the token cost (~50,000–60,000 per cycle) is not. Duplicate
   parallel runs remain the largest avoidable cost (see flags).
 
@@ -1122,7 +1123,7 @@ window cleaning, and orthodontics (Scout cycles 19–26).
   Reviewer cycle 26 (~13:09 PST) — 0 new replies; kept 0, cut 0; 32 untested
   pitch rules; cumulative tokens ~1,445,000.
 - **Cycle-15 task (sequential Learner 25–26, Scout 25–26, Pitcher 28–29,
-  Reviewer 27, ~13:08–13:13 PST):** Learner — present bias / hyperbolic
+  Reviewer 27–28, ~13:08–13:13 PST):** Learner — present bias / hyperbolic
   discounting (rule 35; pull the benefit into today) and the FTX collapse
   (rule 36; let the buyer check the workings — the demo is the live check).
   Scout — two entries, 10 new leads: orthodontics widen further plus auto
@@ -1139,9 +1140,14 @@ window cleaning, and orthodontics (Scout cycles 19–26).
   row count), 93 draft rows / 86 distinct drafts; cumulative tokens
   ~1,505,000. Reviewer 27 notes the loop has spent over 1.5 million tokens
   with $0 banked and zero rule-using sends, and the marginal value of each
-  further untested rule is falling while the token cost is not. The loop's
+  further untested rule is falling while the token cost is not. Reviewer
+  cycle 28 (~13:11 PST) — a second Reviewer filing for the cycle-15 task; 0
+  new replies; kept 0, cut 0; 34 untested pitch rules; verified totals: 154
+  distinct candidates / 159 lead rows per the log (phone count says 156
+  distinct / 163 rows — see the flags), 96 draft rows / 89 distinct drafts;
+  cumulative tokens ~1,545,000; cycle-15 task ~100,000 tokens. The loop's
   20-cycle count is exhausted in every role (Learner 26, Scout 26, Pitcher
-  29, Reviewer 27).
+  29, Reviewer 28).
 
 ## Log-integrity flags (open)
 
@@ -1165,15 +1171,18 @@ window cleaning, and orthodontics (Scout cycles 19–26).
   Scout cycle 16, Pitcher cycles 17–18, and Learner cycle 17) kept landing
   after later cycles had already filed. Worth checking whether the workflow
   is spawning each role twice. Cumulative estimated token spend is now
-roughly ~1,070,000 against $0 banked at the last sync; roughly ~1,505,000
-through Reviewer cycle 27. The cycle-10 task itself was re-run late
+roughly ~1,070,000 against $0 banked at the last sync; roughly ~1,545,000
+through Reviewer cycle 28. The cycle-10 task itself was re-run late
 (Learner 18, Scout 18, Pitcher 20, second Reviewer filing), adding ~50,000
 tokens for a cycle-10 total of ~100,000 with no new sends or replies. The
 pattern continued through the cycle-15 task: two Scout filings per
 cycle-12/13/14/15 task, two Pitcher cycle 25 filings with identical drafts,
 three Reviewer filings for the cycle-11 task alone (cycles 20 and 21) and
 two for cycle-24 (Reviewer cycle 24 twice). The cycle-11 task alone now
-totals an estimated ~100,000 tokens; the cycle-15 task ~60,000.
+totals an estimated ~100,000 tokens; the cycle-15 task ~100,000
+(Reviewer cycle 28: ~60,000 through its first filing, plus ~18,000 Scout
+cycle 26, ~7,000 Pitcher cycle 29, and ~15,000 for the second Reviewer
+filing).
 - **Conflicting source data, recorded not resolved:** Body del Sol rating
   (4.7 / 142 vs 4.1 / 70); The Med Spa at CVWHA rating (5.0 / 9 vs 4.0 /
   13); A-1 Auto Electric review counts (3.0 / 29 vs 4.1 / 119 vs 4.7 / 66);
@@ -1217,11 +1226,18 @@ review-based compliment or rating is quoted for these firms in any draft.
   later logged it as an active listing (#52). Verify its open status before
   any outreach.
 - **Mosquito Hero Fresno — previously held, now logged and drafted (Scout cycle 26 / Pitcher cycle 29).** Scout cycle 26 logged it as #152 on its own site's number (559) 266-1624 and 4973 E Lansing Way (Birdeye 4.8 / 237–238, profile claimed by the business), and Pitcher cycle 29 drafted it. The franchise / local-decision-maker question is still unresolved and a second address (1900 S Van Ness Ave) and a second number ((559) 201-0672) still appear — verify the local decision-maker controls a $350 spend before sending the draft.
+- **Timestamp oddity — Reviewer cycle 28 precedes the filing it reviews.**
+  Scout cycle 26 is stamped ~13:13 PST, but Reviewer cycle 28 (~13:11 PST)
+  already covers Scout cycle 26 and Pitcher cycle 29 in its verified totals.
+  The Reviewer verdict is taken as the latest, but the ordering cannot be
+  right as stamped — one of the two timestamps is wrong.
 - **What the loop still needs:** Mac's approval of a Pitcher batch (only
   then do rules 1–4, 6–16, 18–36 get their first real test); 10 rule-using
   sends before the first Cut can fire; outreach cost tracked per send so
   tokens-per-dollar exists once the first dollar lands; the Luxura
-  walkthrough outcome, which only Mac can confirm from his own phone.
+  walkthrough outcome, which only Mac can confirm from his own phone; and a
+  stop to the duplicate spawning — the cycle-14 and cycle-15 tasks each cost
+  ~100,000 tokens for re-filings with no new sends or replies.
 
 ## Sources
 
@@ -1252,7 +1268,8 @@ Lead verification sources are the firms' own sites and published listings
 named in the working log.
 
 *Feeder sync: cycle 15 of 20 (workflow label). Working-log state at sync:
-through Scout cycle 26 / Pitcher cycle 29 (2026-11-18 ~13:13 PST) and
-Reviewer cycle 27 (2026-11-18 ~13:10 PST). Next feeder run should re-sync
+through Reviewer cycle 28 / Learner cycle 26 / Scout cycle 26 / Pitcher
+cycle 29 (2026-11-18 ~13:11 PST; Scout cycle 26 stamped ~13:13 PST — see
+the timestamp flag). Next feeder run should re-sync
 from the working log and update the scorecard, rules, leads, and cycle
 history.*
