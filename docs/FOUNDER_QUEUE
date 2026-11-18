@@ -11,22 +11,6 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-012 — Switch-9 truthiness fix timing (open)
-
-**Question:** `worker/src/index.js:2756` reads `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness (any non-empty string counts as on). Fix it now (draft the fix), or park it until after BATCH-QZ?
-**Context:** Asked 2026-11-10, unanswered. Must be fixed before switch 9 is ever touched. Q-006 keeps switch 9 OFF until the Queen passes the done ladder, and even then never skips the action-request gate.
-**Status:** open.
-
----
-
-## Q-013 — Proposal #120 (open)
-
-**Question:** Proposal #120 (filed 2026-11-09 by the handoff audit's own probe through the unauthenticated Kai El chat path) — reject it as an audit artifact, leave it pending, or decide it on its merits?
-**Context:** Asked 2026-11-10, unanswered. Compound proposal #117 (88 clones) is also live and pending for Mac. Cleanup of the remaining pending clones is STOPPED by Mac (2026-11-05) — do not resume without a new explicit instruction.
-**Status:** open.
-
----
-
 ## Q-014 — Tier 1 lore beats (open)
 
 **Question:** Tier 1 lore beats — Rank 1 + per-Short pairings/beats + Codex sections (candidate pack in the Tier 1 goal's files)?
@@ -119,14 +103,6 @@ Ranked roughly smallest decision-cost first where known.
 
 **Question:** Which faceless-social niche for Tier 1? (Rank 1 candidate: esoteric/mystery lore as cinematic AI story shorts + monthly long-form movie, $7–$15 "Crossroads Codex" PDF + pre-order as week-1 product.)
 **Context:** From the completeness audit (2026-11-10): the niche decision is Mac's. Gates all scripting toward the first $1,000 (due Sun Nov 22, 2026). Related: Q-014 (Tier 1 lore beats).
-**Status:** open.
-
----
-
-## Q-028 — Jasper disposition (open)
-
-**Question:** Jasper — legacy (leave it as archive), NAR2 rename, or restore?
-**Context:** Open since the Jasper dissection. Jasper v7 was a standalone FastAPI swarm backend (port 8080); its v10 code sits in repo `backend/` (System A, runs nowhere); `.archive/jasper_v10_complete.py` is in the repo; NAR2 is the Security colony name. "Jasper = Solomon = NAR2" is contradicted — Solomon is a distinct live Worker agent. The MUSE folder audit found 42 Jasper items that need review (goal: Jasper missing-items review).
 **Status:** open.
 
 ---
