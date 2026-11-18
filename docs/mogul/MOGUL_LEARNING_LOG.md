@@ -7,10 +7,11 @@ small businesses). Source: the working research log kept under the Tier 1 goal
 rules paraphrased in the loop's own words, leads and scorecard carried over as
 recorded. No numbers invented, no text copied from the web sources.
 
-Last synced from the working log: 2026-11-18 ~12:41 PST (through Reviewer
-cycle 17; Learner cycle 17 and Scout cycle 17). Loop is 17 of 20 cycles in by
-the log's sequential numbering (this feeder run carries the workflow label
-"cycle 10").
+Last synced from the working log: 2026-11-18 ~12:49 PST (through Reviewer
+cycle 19; Learner cycle 18, Scout cycle 18, and Pitcher cycle 20). Loop is 19
+of 20 cycles in by the log's sequential numbering (this feeder run carries the
+workflow label "cycle 10" — a late re-run of that task, landing after cycles
+11–18 had already filed).
 
 ## How the loop works
 
@@ -29,29 +30,32 @@ agreed and no outreach goes out until Mac approves the batch and the fee is
 agreed in writing first. No invented numbers, no fake urgency, no invented
 $Cashtag.
 
-## Scorecard (latest, Reviewer cycle 17, 2026-11-18 ~12:41 PST)
+## Scorecard (latest, Reviewer cycle 19, 2026-11-18 ~12:49 PST)
 
 - **Banked: $0.** Goal $1,000 by Sun 2026-11-22 — not reached. Gap $1,000,
   4 days left. At $350/deal the goal needs ~3 closed deals.
 - **Replies: 1 total, 0 new in any review window.** The one reply is Luxura
   Med Spa, via text, pre-rules (soft gatekeeper reply). No Luxura reply exists
-  in Gmail (checked repeatedly, latest ~12:41 PST).
+  in Gmail (checked repeatedly, latest ~12:49 PST).
 - **Wave 1 (sent Mon 2026-11-16):** 3 emails. Cody Dental's email bounced
   (info@codydental.com undeliverable). Tuesday follow-up texts (Birdie, Cody
   cold version, MN Pest) sent by Mac 2026-11-18 ~11:57 PST. Luxura walkthrough
   (Tue 2026-11-17, 5pm PT) outcome still unverified — Mac's message thread
   cannot be read by the loop.
-- **Drafts: 60 rows, 56 distinct, all DRAFT — NOT SENT**, awaiting Mac's
+- **Drafts: 66 rows, 62 distinct, all DRAFT — NOT SENT**, awaiting Mac's
   approval. The binding constraint is sends: the approved-ready batches have
   not gone out yet.
-- **Fees agreed in writing: none.** All 106 distinct Scout leads are
-  candidates; no fee agreed on any. (The log's own running total says 101 —
-  it omits the late Scout cycle 9 batch of 5; see integrity flags.)
+- **Fees agreed in writing: none.** All 111 distinct Scout leads are
+  candidates; no fee agreed on any. (The log's own running total says 106
+  after Scout cycle 18 — it omits the late Scout cycle 9 batch of 5; see
+  integrity flags.)
 - **Tokens per dollar: not computable** — $0 banked, no spend tracked in the
-  log. Estimated cumulative token use is roughly ~970,000 through Reviewer
-  cycle 17 (no metered counts available); Learner cycle 17 and Scout cycle 17
-  have not yet been tallied by a Reviewer. Duplicate parallel runs remain the
-  largest avoidable cost (see flags).
+  log. Estimated cumulative token use is roughly ~1,070,000 through Reviewer
+  cycle 19 (no metered counts available); the loop crossed one million tokens
+  with $0 banked and zero rule-using sends. The cycle-10 task alone now totals
+  an estimated ~100,000 tokens (the original ~50,000 run plus this late
+  re-run's Learner 18, Scout 18, Pitcher 20, and second Reviewer filing).
+  Duplicate parallel runs remain the largest avoidable cost (see flags).
 
 ## Rules
 
@@ -96,7 +100,7 @@ None yet. **Rules kept: 0.**
   and the wholesaling lane; not a pitch rule, changes no line of the $350
   pitch.
 
-### Untested pitch rules (23)
+### Untested pitch rules (24)
 
 All of these were extracted from web sources and applied in Pitcher drafts,
 but none has been tested by a sent batch yet, because wave 1 was sent before
@@ -369,8 +373,8 @@ the rules were extracted and every Pitcher batch is still draft-only.
     eyes. The buyer verifies the thing itself, in one sitting, instead of
     taking anyone's word for it — and the simpler the thing is to check, the
     faster the yes comes. Source: MASEconomics, "The 2008 Financial Crisis
-    Explained". Learner cycle 17. (Filed after Reviewer cycle 17, so no draft
-    in the log has applied rule 25 yet.)
+    Explained". Learner cycle 17. (Pitcher cycle 19 now applies it — "watch it catch one yourself" — still untested until a sent batch replies; application is not a Keep.)
+26. **File the $350 in the bucket that is already leaking, not in the new-spending bucket.** The owner does not judge $350 against all their money — they judge it against whichever mental envelope they put it in. Put it in "new software to buy" and it competes with every guarded dollar; put it in "the bookings I am already losing" and it comes out of money that is already walking out the door, so paying it feels like stopping a leak, not starting a spend. The pitch never presents $350 as a new purchase; it presents it as the price of keeping money that is already theirs — one setup, paid out of the calls that would otherwise be lost, never as a fresh budget. No invented dollar value for a booking (rule 4 still holds) and still one offer, one price, one ask (rule 7 still holds). Source: Unseel, "Mental Accounting — Why $100 of Bonus Isn't $100 of Salary" (Thaler 1985/1999). Learner cycle 18. (Pitcher cycle 20 applies it — "paid from the jobs/bookings/loads you're already losing, not out of a fresh budget" — still untested until a sent batch replies.)
 
 ### Cut rules
 
@@ -379,7 +383,7 @@ cannot fire yet: confirmed sends using any rule = 0. Wave 1 was sent before
 these rules were extracted, so it cannot test them, and the Tuesday
 follow-up texts have no recorded link to these rules.
 
-## Verified leads (106 distinct, all candidates, none contacted)
+## Verified leads (111 distinct, all candidates, none contacted)
 
 All Fresno-area (559 area code) small businesses that lose customers to
 missed calls and slow follow-up. Verified from published listings and the
@@ -499,6 +503,11 @@ Cody Dental (email bounced), Birdie, MN Pest.
 | 104 | Better Pest Control | (559) 294-8286 | 4920 E Ashlan Ave, Fresno, CA 93726 | Pest — service-request follow-up; review base thin and conflicting (0 Birdeye; 2.33 / 3 YellowPages) — do not quote a rating; 67 years in business, BBB A+ | HIGH |
 | 105 | Duenas Towing | (559) 681-3098 | 3135 E Mono Ave, Fresno, CA 93702 | Towing — emergency-roadside follow-up; 24/7, a missed call is a job lost the same minute; review counts conflict wildly across sources — do not quote one; second phones appear in other listings — verify before pitching | HIGH |
 | 106 | Brothers Carpet Cleaning | (559) 474-5536 | 2316 E Andrews Ave, Fresno, CA 93726 | Carpet cleaning — quote-request follow-up; thin review base (1–2 reviews); a similar-named firm with 154 reviews and a 925 number is a DIFFERENT business (East Bay), not this one; one directory lists a different phone ((559) 277-2415) — verify before pitching | HIGH |
+| 107 | First Impression Dental Fresno | (559) 513-0707 | 1476 W Herndon Ave Ste 101, Fresno, CA 93711 | Dental — new-patient / appointment follow-up; general + implant + emergency, new patients welcome; review count not found, capacity unverified | HIGH |
+| 108 | Martin Electrical & Lighting Inc | (559) 681-0011 | 6164 E Church Ave, Fresno, CA 93727 | Electrician — missed-call / estimate-request follow-up; residential/commercial/industrial, EV charger and panel work; CSLB #1095979, BBB A+ (5.0 / 107 per InstallerEV; counts vary 107/114/122/61 — do not quote a single count) | HIGH |
+| 109 | Renew Wellness Spa | (559) 614-7597 | 1485 W Shaw Ave, Fresno, CA 93711 | Wellness spa — booking follow-up; appointment-only, bookings by text/call to one named person (5.0 / 136 Birdeye; Yelp shows a different phone, (559) 272-7546 — verify before pitching) | HIGH |
+| 110 | Papi's Junk Removal | (559) 575-0516 | Clovis, CA (serves Fresno; no Fresno street address found — do not invent one) | Junk removal — same-day pickup follow-up; family-owned, same-day/next-day pickups (4.9 / 83) | HIGH |
+| 111 | The Junk Men | (559) 426-9795 | 3145 W Floradora Ave, Fresno, CA | Junk removal — estimate-request follow-up; residential/commercial, fast pickup; review count not found, capacity unverified | HIGH |
 
 ### Considered and NOT logged
 
@@ -558,14 +567,21 @@ is estimated — do not log an estimated address); Fowler | Helsel | Vogt
 Goldberg & Loren (no own-site verification read — hold); Scheidt Home
 Inspection (5.0 stars but only 4 reviews; hold); R&C Home Inspections (no
 street address found; hold); Meathead Movers (Clovis) and Colonial Van &
-Storage (Fresno) (franchise/chain locations — hold). Spectrum Health
-Medical Spa was held earlier as temporarily closed, then logged as #52 on
+Storage (Fresno) (franchise/chain locations — hold). Spectrum Health Medical Spa was held earlier as temporarily closed, then logged as #52 on
 its own site's number once re-verified — verify its open status before any
-outreach.
+outreach. Scout cycle 18 held three more: Synergy Wellness Center (phone
+conflicts (559) 785-9490 vs (559) 628-2792 — note: the log already carries a
+Synergy Wellness Center row as #82 from the late Scout cycle 9 entry, so the
+held / not-logged status is contradictory; see flags), Reynosa Appliance
+(phones conflict (559) 385-4602 vs (559) 515-6805 for the same 4535 N Bendel
+Ave Ste 103 address), and J & R Appliance Service / Genesis Appliance (same
+address 3817 E Tulare Ave and phone (559) 349-3568 under two names — identity
+ambiguous). RIDX Pest Control and Spectrum Health Medical Spa remain not
+logged (conflicting phones/base; temporarily closed).
 
-## Pitch drafts (56 distinct, all DRAFT — NOT SENT)
+## Pitch drafts (62 distinct, all DRAFT — NOT SENT)
 
-Pitcher cycles 1–18 wrote 60 draft rows for 56 distinct leads (Body del Sol
+Pitcher cycles 1–20 wrote 66 draft rows for 62 distinct leads (Body del Sol
 and Janzen Dental were drafted twice in cycle 7; Mafi Plastic Surgery and
 The Roofing Crew LLC twice in cycle 8). Every draft follows the same shape
 — founder's name, the niche's exact missed-call loss, the loss happening
@@ -578,8 +594,7 @@ framing ("on your own missed calls") from cycle 11 onward, the decoy
 comparison ("the alternative is another week of missed calls, or paying
 someone to sit by the phone") from cycle 14 onward, the cash-result framing
 ("the booking / job stays with you instead of going elsewhere") from cycle
-16 onward, and the real-scarcity line ("I take one deal at a time" + "gone
-for good") from cycle 18 onward. No draft names any proof (rule 15: no
+16 onward, and the real-scarcity line ("I take one deal at a time" + "gone for good") from cycle 18 onward, and the mental-accounting line ("paid from the jobs/bookings/loads you're already losing, not out of a fresh budget") from cycle 20 onward. No draft names any proof (rule 15: no
 consented client example exists yet) and no draft invents a dollar anchor
 (rule 13: the anchor is the owner's own real unit — one booking, one
 patient, one job).
@@ -603,11 +618,14 @@ Repair, CJM Roofing (from the Scout cycle 8 backlog — the first backlog
 batch ever drafted); 16 — La Peau Spa & Laser, JC Melton Air Conditioning,
 Alf Plumbing; 17 — Sylvan Med Spa and Weight Loss, Forza Auto Body, Happy
 Teeth Dental; 18 — Northwest Optometry Associates, Wooforia Grooming Salon,
-Inspection Pro.
+Inspection Pro; 19 — Cosmo Health Resolution, Better Pest Control, Duenas
+Towing; 20 — Martin Electrical & Lighting, Renew Wellness Spa, Papi's Junk
+Removal.
 
-Undrafted and available for the next Pitcher cycle: the Scout cycle 17 batch
-(Cosmo Health Resolution, Diba Med Spa, Better Pest Control, Duenas Towing,
-Brothers Carpet Cleaning); plus the held backlog — Fresno Mobile Key and
+Undrafted and available for the next Pitcher cycle: Diba Med Spa and Brothers
+Carpet Cleaning (Scout cycle 17 — the other three from that batch were
+drafted in cycle 19); First Impression Dental Fresno and The Junk Men (Scout
+cycle 18, held for capacity); plus the held backlog — Fresno Mobile Key and
 C.H. Veterinary Clinic (Scout cycle 12), Kubo Orthodontic Group and Get Auto
 Service (Scout cycle 13), Gomez Tree Service and Rodriguez Pool Service
 (Scout cycle 14, held for verification), The Med Spa at CVWHA and Maria
@@ -617,8 +635,8 @@ Solar and General Pest Control (Scout cycle 16, first entry), GJEL Accident
 Attorneys and Gennock Insurance Agency (Scout cycle 16, second entry), and
 the held Sanders Pest Control draft (identity conflict unresolved). Note
 from Scout cycle 17: the Fresno med-spa pool still yields new names (Cosmo,
-Diba), and the niche set has now widened to towing, carpet cleaning, injury
-law, optometry, home inspection, insurance, and pet grooming.
+Diba), and the niche set has now widened further to electricians and junk removal
+(Scout cycle 18).
 
 ## Cycle history
 
@@ -780,13 +798,33 @@ law, optometry, home inspection, insurance, and pet grooming.
   sub-niches — carpet cleaning, 24/7 towing, plus the remaining med-spa and
   pest pools. Pitcher — 3 drafts each in cycles 17 and 18 (Sylvan Med Spa,
   Forza Auto Body, Happy Teeth Dental; Northwest Optometry Associates,
-  Wooforia Grooming Salon, Inspection Pro) — cycle 18 is the first draft
-  batch to use the rule-24 scarcity line. Reviewer cycle 17 (~12:41 PST) —
+  Wooforia Grooming Salon, Inspection Pro) — cycle 18 is the first draft  batch to use the rule-24 scarcity line. Reviewer cycle 17 (~12:41 PST) —
   a second filing for the cycle-10 task; 0 new replies; kept 0, cut 0;
   verified totals: 96 distinct candidates (log's own total — see the 106
   correction in the flags), 60 draft rows / 56 distinct drafts; cumulative
   tokens ~970,000. Rules now 1–25 (5 and 17 lens-only; 23 pitch rules, all
   untested).
+- **Cycle 18:** Learner — buying psychology: mental accounting (rule 26;
+  file the $350 in the bucket that is already leaking, not in the
+  new-spending bucket — Thaler 1985/1999). Scout — 5 leads (First Impression
+  Dental Fresno, Martin Electrical & Lighting, Renew Wellness Spa, Papi's
+  Junk Removal, The Junk Men); two new sub-niches — electricians and junk
+  removal. Pitcher — 3 drafts in cycle 19 (Cosmo Health Resolution, Better
+  Pest Control, Duenas Towing), first drafts to apply rule 25, and 3 drafts
+  in cycle 20 (Martin Electrical & Lighting, Renew Wellness Spa, Papi's Junk
+  Removal), first drafts to apply rule 26. Reviewer cycle 18 (~12:46 PST) —
+  a third filing for the cycle-9 task; 0 new replies; kept 0, cut 0;
+  verified totals: 101 distinct candidates per the log's own total (see the
+  111 correction in the flags), 63 draft rows / 59 distinct drafts;
+  cumulative tokens ~1,020,000 — the loop crossed one million tokens with $0
+  banked. This cycle's four roles arrived as a late re-run of the cycle-10
+  task, after cycles 11–17 had already filed.
+- **Cycle 19:** Reviewer cycle 19 (~12:49 PST) — a second filing for the
+  cycle-10 task; 0 new replies; kept 0, cut 0; verified totals: 66 draft
+  rows / 62 distinct drafts; cumulative tokens ~1,070,000. The cycle-10 task
+  now totals an estimated ~100,000 tokens (original run plus late re-run)
+  with no new sends or replies. Rules now 1–26 (5 and 17 lens-only; 24 pitch
+  rules, all untested).
 
 ## Log-integrity flags (open)
 
@@ -796,23 +834,25 @@ law, optometry, home inspection, insurance, and pet grooming.
   first Pitcher cycle 7 entry held it for that reason, but the second
   Pitcher cycle 7 entry drafted it anyway, citing 47 years in business. The
   hold is the safer read.
-- **Distinct-candidate total corrected to 106 (this sync).** The log's own
-  running total says 101 after Scout cycle 17, but it omits the late
+- **Distinct-candidate total corrected to 111 (this sync).** The log's own
+  running total says 106 after Scout cycle 18, but it omits the late
   duplicate Scout cycle 9 entry (Synergy Wellness Center, Fresno Dental
   Surgery Center, LaserAway Fresno, Sandoval Auto Repair, M & F Auto
   Repair — 5 distinct firms, verified in their own entry, and treated as
   logged by Scout cycle 15's prior-leads list). Counting every verified lead
-  row in the working log by phone gives 110 rows for 106 distinct firms
+  row in the working log by phone gives 115 rows for 111 distinct firms
   (the 4 duplicates are Skin.Restored, Sidhu, Body del Sol, and Melanie
-  Aesthetic NP, each re-listed in a second parallel entry). Same class of
-  error as the Scout cycle 16 correction Reviewer cycle 16 made (91 → 96).
+  Aesthetic NP, each re-listed in a second parallel entry). Reviewer cycle
+  19's "106 distinct" repeats the same omission (101 before Scout cycle 18
+  + 5 new). Same class of error as the Scout cycle 16 correction Reviewer
+  cycle 16 made (91 → 96).
 - **Rule-number collisions — resolved.** Anchoring was filed as a second
   rule 12 (Learner cycle 6) and renumbered to 13; social proof was filed as
   a second rule 14 (Learner cycle 7) and renumbered to 15. Two-wording
   duplicates count as one rule each: authority (rule 16, Learner cycle 8),
   peak-end (rule 20, Learner cycle 12), liking (rule 14, late Learner
-  cycle 7 entry). The rule set is now collision-free: rules 1–25, with
-  rules 5 and 17 the lenses only. (Correction to the previous sync of this
+  cycle 7 entry). The rule set is now collision-free: rules 1–26, with
+rules 5 and 17 the lenses only. (Correction to the previous sync of this
   file: the unity rule was listed as "17." in the untested list; it is rule
   18 — the land-cycle lens is rule 17.)
 - **Duplicate parallel runs (cycles 5–8) and late duplicate filings
@@ -827,7 +867,10 @@ law, optometry, home inspection, insurance, and pet grooming.
   Scout cycle 16, Pitcher cycles 17–18, and Learner cycle 17) kept landing
   after later cycles had already filed. Worth checking whether the workflow
   is spawning each role twice. Cumulative estimated token spend is now
-  roughly ~970,000 against $0 banked.
+roughly ~1,070,000 against $0 banked. The cycle-10 task itself was re-run
+late (Learner 18, Scout 18, Pitcher 20, second Reviewer filing), adding
+~50,000 tokens for a cycle-10 total of ~100,000 with no new sends or
+replies.
 - **Conflicting source data, recorded not resolved:** Body del Sol rating
   (4.7 / 142 vs 4.1 / 70); The Med Spa at CVWHA rating (5.0 / 9 vs 4.0 /
   13); A-1 Auto Electric review counts (3.0 / 29 vs 4.1 / 119 vs 4.7 / 66);
@@ -841,8 +884,15 @@ law, optometry, home inspection, insurance, and pet grooming.
   Control (0 Birdeye vs 2.33 / 3 YellowPages); Synergy Wellness Center
   phone conflict ((559) 785-9490 vs (559) 628-2792); Gomez Tree Service
   second phone ((559) 289-8935 on its own site); General Pest Control —
-  thin verification, generic name. No review-based compliment or rating is
-  quoted for these firms in any draft.
+thin verification, generic name. New this sync: Martin Electrical &
+Lighting review counts (107 / 114 / 122 / 61); Renew Wellness Spa review
+counts (Birdeye 5.0 / 136 vs Yelp 4.9 / 56 vs own site 4.95 / 183+) and phone
+conflict ((559) 614-7597 vs (559) 272-7546); Duenas Towing second phones
+((559) 313-1736, (559) 374-9859) and conflicting founding years; Synergy
+Wellness Center phone conflict ((559) 785-9490 vs (559) 628-2792) — and it
+is listed both as logged (#82) and as held / not logged (Scout cycle 18),
+unresolved. No review-based compliment or rating is
+quoted for these firms in any draft.
 - **Spectrum Health Medical Spa — open-status flag contradicted, not
   resolved.** An earlier listing said "temporarily closed"; Scout cycle 9
   later logged it as an active listing (#52). Verify its open status before
@@ -855,7 +905,7 @@ law, optometry, home inspection, insurance, and pet grooming.
   Ness Ave) and a second number ((559) 201-0672) still appear, so it stays
   held until the local decision-maker is proven.
 - **What the loop still needs:** Mac's approval of a Pitcher batch (only
-  then do rules 1–4, 6–16, 18–25 get their first real test); 10 rule-using
+  then do rules 1–4, 6–16, 18–26 get their first real test); 10 rule-using
   sends before the first Cut can fire; outreach cost tracked per send so
   tokens-per-dollar exists once the first dollar lands; the Luxura
   walkthrough outcome, which only Mac can confirm from his own phone.
@@ -876,12 +926,14 @@ Design and The Social Cat (reciprocity); ConversionStudio (price anchoring);
 Lead Alchemists (liking; endowment effect); The Why We Project (social
 proof); Cognitigence (authority); Progress.org (18.6-year land cycle);
 NEGOCOACH (unity); B2B Sell and MagicWorks IT Solutions (peak-end rule);
-When Notes Fly (decoy effect); Investopedia and RiskHub (Pets.com and the
-dot-com crash); SelfGrowth (scarcity); MASEconomics (2008 financial crisis).
+When
+Notes Fly (decoy effect); Investopedia and RiskHub (Pets.com and the
+dot-com crash); SelfGrowth (scarcity); MASEconomics (2008 financial crisis);
+Unseel (mental accounting, Thaler).
 Lead verification sources are the firms' own sites and published listings
 named in the working log.
 
 *Feeder sync: cycle 10 of 20 (workflow label). Working-log state at sync:
-through Reviewer cycle 17 / Learner cycle 17 / Scout cycle 17, 2026-11-18
-~12:41 PST. Next feeder run should re-sync from the working log and update
-the scorecard, rules, leads, and cycle history.*
+through Reviewer cycle 19 / Learner cycle 18 / Scout cycle 18 / Pitcher
+cycle 20, 2026-11-18 ~12:49 PST. Next feeder run should re-sync from the
+working log and update the scorecard, rules, leads, and cycle history.*
