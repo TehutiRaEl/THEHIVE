@@ -1093,7 +1093,7 @@ const FALLBACK_PROPS = [
 async function aiProposition(env, a, b) {
   try {
     if (!env.AI) return null;
-    const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
+    const r = await env.AI.run('@cf/google/gemma-4-26b-a4b-it', {
       prompt: `Write one bold, arguable proposition (under 20 words) that agent ${a} challenges agent ${b} over, inside a constitutional AI hive concerned with governance, memory, and emergence. Reply with only the proposition — no quotes, no preamble.`,
       max_tokens: 48,
     });
@@ -1644,11 +1644,18 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
     // to hardcode one specific free-tier id (meta-llama/llama-3.3-70b-instruct:free) —
     // confirmed 2026-08-18 that OpenRouter delisted that exact model's free tier earlier
     // this same month, which is precisely the "maintenance point, not a one-time choice"
-    // risk the original comment named. Default is now `openrouter/free`, OpenRouter's own
-    // Free Models Router (https://openrouter.ai/openrouter/free) — it auto-selects from
-    // whatever is currently live on the free roster, so a future delisting degrades to a
-    // different free model instead of a dead id. OPENROUTER_MODEL still overrides, for
-    // when the founder wants one specific model pinned.
+    // risk the original comment named. Default was then `openrouter/free`, OpenRouter's
+    // own Free Models Router — but the router kept landing on reasoning models, which
+    // spend the whole max_tokens budget thinking and return HTTP 200 with empty content
+    // and finish_reason "length" (the "no usable text" failure in provider health).
+    // Default is now pinned (2026-11-18, verified live against the OpenRouter models
+    // API + a daily free-tier checker): `nvidia/nemotron-3.5-lightning:free` — a
+    // non-reasoning model, fastest free head, 1M context, answered 7/7 days. The first
+    // candidate, `google/gemma-4-26b-a4b-it:free`, was rejected: it 429'd from Google
+    // AI Studio 0/7 days. OPENROUTER_MODEL still overrides, for when the founder wants
+    // one specific model pinned — and if this pin dies, change the default again; that
+    // is the maintenance point, not a one-time choice. OpenRouter is the SECOND voice
+    // only (50 requests/day per free model): Workers AI stays primary.
     deepseek: async () => {
       if (!env.DEEPSEEK_API_KEY) return null;
       const r = await fetch('https://api.deepseek.com/chat/completions', {
@@ -1716,11 +1723,18 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
     },
     openrouter: async () => {
       if (!env.OPENROUTER_API_KEY) return null;
+      const model = env.OPENROUTER_MODEL || 'nvidia/nemotron-3.5-lightning:free';
+      // The completion budget is floored at 1024 tokens: a reasoning model can spend
+      // the whole max_tokens budget thinking and return an empty `content` with
+      // finish_reason "length" (OpenRouter's own docs name this exact failure) — the
+      // floor leaves room for an answer after the thinking. The pin above is a
+      // non-reasoning model, so this is belt-and-braces for an env override.
+      const openRouterMaxTokens = Math.max(maxTokens, 1024);
       const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.OPENROUTER_API_KEY}`, 'content-type': 'application/json' },
         body: JSON.stringify({
-          model: env.OPENROUTER_MODEL || 'openrouter/free', max_tokens: maxTokens,
+          model, max_tokens: openRouterMaxTokens,
           messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
         }),
         signal: timeout(15000),
@@ -1731,13 +1745,21 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
       }
       const d = await r.json();
       const text = (d?.choices?.[0]?.message?.content || '').trim();
-      if (!text) throw new Error('HTTP 200 but no usable text in response');
+      if (!text) {
+        // Diagnosable, not generic: the failure signature that kept recurring was a
+        // reasoning model spending the whole budget thinking — finish_reason "length"
+        // with reasoning_tokens near the completion total. Record both so the next
+        // failure names its cause in provider health instead of a bare "no usable text".
+        const finishReason = d?.choices?.[0]?.finish_reason ?? 'unknown';
+        const reasoningTokens = d?.usage?.completion_tokens_details?.reasoning_tokens ?? null;
+        throw new Error(`HTTP 200 but no usable text in response (model: ${model}, finish_reason: ${finishReason}${reasoningTokens === null ? '' : `, reasoning_tokens: ${reasoningTokens}`})`);
+      }
       return { text, usage: d?.usage ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null } : null };
     },
     'workers-ai': async () => {
       if (!env.AI) return null;
       // The proven-live path: same model + prompt-string shape as the heartbeat.
-      const r = await env.AI.run('@cf/meta/llama-3.2-1b-instruct', {
+      const r = await env.AI.run('@cf/google/gemma-4-26b-a4b-it', {
         prompt: system + '\n\n' + prompt,
         max_tokens: maxTokens,
       });
@@ -4978,7 +5000,7 @@ export default {
         try { const r = await DB.prepare('SELECT ts FROM hive_pulse ORDER BY id DESC LIMIT 1').first(); pulseTs = r?.ts ?? null; } catch {}
         const subsystems = {
           d1_database: { bound: !!DB, healthy: dbOk },
-          workers_ai: { bound: !!env.AI, model: '@cf/meta/llama-3.2-1b-instruct' },
+          workers_ai: { bound: !!env.AI, model: '@cf/google/gemma-4-26b-a4b-it' },
           vectorize_memory: { bound: !!env.VECTORIZE, model: EMBED_MODEL },
           assets: { bound: !!env.ASSETS },
           heartbeat: { last_pulse: pulseTs, alive: !!pulseTs },
@@ -5164,7 +5186,7 @@ export default {
         return json({
           pipeline: env.AI ? 'cloudflare-workers-ai' : 'simulation',
           ai_bound: !!env.AI,
-          models: env.AI ? ['@cf/meta/llama-3.2-1b-instruct', EMBED_MODEL] : [],
+          models: env.AI ? ['@cf/google/gemma-4-26b-a4b-it', EMBED_MODEL] : [],
           note: 'inference runs on Workers AI at the edge; no separate ML server is provisioned',
         });
       }

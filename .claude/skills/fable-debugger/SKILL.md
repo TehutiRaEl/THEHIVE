@@ -76,7 +76,7 @@ A green you asserted without a run is an F-004 violation. Probe, then claim.
 This skill is the *method* and runs on discipline alone. When it needs a generative voice
 to reason about a fix, it uses whatever the hive has bound — and it does not care which:
 - **Workers AI** (already bound at the edge; the heartbeat and Kai El chat prove it):
-  `env.AI.run('@cf/meta/llama-3.2-1b-instruct', { prompt })`.
+  `env.AI.run('@cf/google/gemma-4-26b-a4b-it', { prompt })`.
 - **A Claude API key** (bring-your-own; see the `claude-api` skill): higher-order reasoning
   when the founder provides `ANTHROPIC_API_KEY`.
 - **A local model** later: same contract.
