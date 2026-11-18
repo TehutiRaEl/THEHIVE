@@ -107,14 +107,6 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-028 — Jasper disposition (open)
-
-**Question:** Jasper — legacy (leave it as archive), NAR2 rename, or restore?
-**Context:** Open since the Jasper dissection. Jasper v7 was a standalone FastAPI swarm backend (port 8080); its v10 code sits in repo `backend/` (System A, runs nowhere); `.archive/jasper_v10_complete.py` is in the repo; NAR2 is the Security colony name. "Jasper = Solomon = NAR2" is contradicted — Solomon is a distinct live Worker agent. The MUSE folder audit found 42 Jasper items that need review (goal: Jasper missing-items review).
-**Status:** open.
-
----
-
 ## Q-029 — Muur restitution goal (open)
 
 **Question:** The Muur restitution goal (Heirs of Turner) — is it a Hive mission or not?
