@@ -2,7 +2,7 @@
 
 **Rule:** the registry holds canonical role definitions. The runtime
 (Muse subagents, in this environment) instantiates workers from them.
-30 roles are defined; 30 always-running processes are NOT created.
+32 roles are defined; 32 always-running processes are NOT created.
 Each role below follows the 12-component specification shape:
 identity, mission, persona, expertise, system instructions, tools,
 functions, memory, context, output schema, evaluation, boundaries.
