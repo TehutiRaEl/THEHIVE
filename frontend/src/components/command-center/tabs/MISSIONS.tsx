@@ -9,19 +9,25 @@ interface Mission {
   name: string;
   description: string;
   status: 'pending' | 'active' | 'completed' | 'failed' | 'proposed' | 'formalized';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  createdAt: string;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  createdAt?: string;
   dueDate?: string;
   colonyId?: string;
   assignedTo?: string;
   progress?: number;
 }
 
+// GET /v11/tasks returns one page (the Worker's default page size). A full page
+// means there may be more tasks than are shown.
+const TASK_PAGE_SIZE = 20;
+
 const MISSIONS: React.FC = () => {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'pending'>('all');
+  // When /v11/tasks last answered. Shown as "Last updated" -- never the render time.
+  const [lastLoadedAt, setLastLoadedAt] = useState<Date | null>(null);
 
   // Fetch real missions data from API
   const fetchMissions = async () => {
@@ -35,31 +41,30 @@ const MISSIONS: React.FC = () => {
         const resp = await getTasks();
         const data = resp?.tasks ?? [];
 
-        // Transform API data to our Mission interface
-        const transformedMissions: Mission[] = (Array.isArray(data) ? data : []).map((mission: any) => ({
-          id: mission.id || `m-${Math.random().toString(36).substr(2, 4)}`,
-          name: mission.name || mission.title || 'Untitled Mission',
-          description: mission.description || mission.details || 'No description provided',
+        // Map each Hive task onto a card. Only fields the task really carries are
+        // set: a missing priority, progress or created date stays missing and the
+        // card shows nothing for it. Nothing is defaulted to a made-up value.
+        const transformedMissions: Mission[] = (Array.isArray(data) ? data : []).map((mission: any, index: number) => ({
+          id: mission.id != null ? String(mission.id) : `task-${index}`,
+          name: mission.name || mission.title || 'Untitled task',
+          description: mission.description || mission.details || '',
           status: mission.status || 'pending',
-          priority: mission.priority || 'medium',
-          createdAt: mission.created_at || mission.createdAt || new Date().toISOString(),
+          priority: mission.priority || undefined,
+          createdAt: mission.created_at || mission.createdAt || undefined,
           dueDate: mission.due_date || mission.dueDate,
           colonyId: mission.colony_id || mission.colonyId,
           assignedTo: mission.assigned_to || mission.assignedTo,
-          progress: mission.progress || 0
+          progress: typeof mission.progress === 'number' ? mission.progress : undefined,
         }));
-        
-        // Fallback to mock data if API returns empty
-        if (transformedMissions.length === 0) {
-          console.warn('API returned no missions, using fallback data');
-          setMissions(getFallbackMissions());
-        } else {
-          setMissions(transformedMissions);
-        }
+
+        // An empty queue is shown as empty. This tab used to fill itself with
+        // eight invented sample missions here; that is gone (live data or "no data").
+        setMissions(transformedMissions);
+        setLastLoadedAt(new Date());
       } catch (err) {
-        console.error('Failed to fetch missions:', err);
-        setError('Failed to load missions. Using fallback data.');
-        setMissions(getFallbackMissions());
+        console.error('Failed to fetch tasks:', err);
+        setError('Could not reach the Hive task list (/v11/tasks). Nothing is shown, rather than sample data.');
+        setMissions([]);
       } finally {
         setLoading(false);
       }
@@ -71,90 +76,6 @@ const MISSIONS: React.FC = () => {
     const interval = setInterval(fetchMissions, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  // Fallback mission data when API is unavailable
-  const getFallbackMissions = (): Mission[] => [
-    {
-      id: 'm-001',
-      name: 'Complete Command Center Tabs',
-      description: 'Create all 13 SEE command center tab components',
-      status: 'active',
-      priority: 'critical',
-      createdAt: '2026-07-09',
-      dueDate: '2026-07-10',
-      progress: 100
-    },
-    {
-      id: 'm-002',
-      name: 'Implement Real 4D Math',
-      description: 'Replace stubs in TesseractRenderer with real 4D geometry',
-      status: 'completed',
-      priority: 'high',
-      createdAt: '2026-07-09',
-      dueDate: '2026-07-11',
-      progress: 100
-    },
-    {
-      id: 'm-003',
-      name: 'Colony Console Components',
-      description: 'Create ColonyHeader, ColonyConsole, HealthDashboard',
-      status: 'completed',
-      priority: 'high',
-      createdAt: '2026-07-09',
-      dueDate: '2026-07-11',
-      progress: 100
-    },
-    {
-      id: 'm-004',
-      name: 'Federation Intelligence',
-      description: 'Create ConstitutionVisualizer, MemoryGraphEnhanced, MissionTimeline',
-      status: 'completed',
-      priority: 'medium',
-      createdAt: '2026-07-09',
-      dueDate: '2026-07-12',
-      progress: 100
-    },
-    {
-      id: 'm-005',
-      name: 'Documentation Cleanup',
-      description: 'Remove all false claims from documentation',
-      status: 'completed',
-      priority: 'high',
-      createdAt: '2026-07-09',
-      dueDate: '2026-07-09',
-      progress: 100
-    },
-    {
-      id: 'm-006',
-      name: 'Batch 10 Colony Consoles',
-      description: 'Create all 10 colony-specific console components',
-      status: 'completed',
-      priority: 'high',
-      createdAt: '2026-07-10',
-      dueDate: '2026-07-10',
-      progress: 100
-    },
-    {
-      id: 'm-007',
-      name: 'Common UI Components',
-      description: 'Create Button, Card, Modal common components',
-      status: 'completed',
-      priority: 'medium',
-      createdAt: '2026-07-10',
-      dueDate: '2026-07-10',
-      progress: 100
-    },
-    {
-      id: 'm-008',
-      name: 'API Integration',
-      description: 'Connect components to real API data',
-      status: 'active',
-      priority: 'high',
-      createdAt: '2026-07-10',
-      dueDate: '2026-07-11',
-      progress: 50
-    },
-  ];
 
   const filteredMissions = filter === 'all'
     ? missions
@@ -259,7 +180,7 @@ const MISSIONS: React.FC = () => {
           {loading ? (
             <div className="loading-missions">
               <div className="spinner"></div>
-              <p>Loading missions from API...</p>
+              <p>Loading tasks from the Hive...</p>
             </div>
           ) : filteredMissions.length > 0 ? (
             <div className="mission-cards">
@@ -271,12 +192,14 @@ const MISSIONS: React.FC = () => {
                       <span className={`mission-status ${getStatusColor(mission.status)}`}>
                         {getStatusText(mission.status)}
                       </span>
-                      <span className={`mission-priority ${getPriorityColor(mission.priority)}`}>
-                        {getPriorityText(mission.priority)}
-                      </span>
+                      {mission.priority && (
+                        <span className={`mission-priority ${getPriorityColor(mission.priority)}`}>
+                          {getPriorityText(mission.priority)}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <p className="mission-description">{mission.description}</p>
+                  {mission.description && <p className="mission-description">{mission.description}</p>}
                   <div className="mission-progress">
                     {mission.progress !== undefined && (
                       <div className="progress-bar">
@@ -288,9 +211,11 @@ const MISSIONS: React.FC = () => {
                     )}
                   </div>
                   <div className="mission-footer">
-                    <span className="mission-date">
-                      Created: {formatDate(mission.createdAt)}
-                    </span>
+                    {mission.createdAt && (
+                      <span className="mission-date">
+                        Created: {formatDate(mission.createdAt)}
+                      </span>
+                    )}
                     {mission.dueDate && (
                       <span className="mission-due">
                         Due: {formatDate(mission.dueDate)}
@@ -310,7 +235,13 @@ const MISSIONS: React.FC = () => {
               ))}
             </div>
           ) : (
-            <p className="no-missions">No missions found</p>
+            <p className="no-missions">
+              {error
+                ? 'No data: the Hive task list could not be reached.'
+                : missions.length === 0
+                  ? 'No data: the Hive task queue is empty.'
+                  : 'No tasks match this filter.'}
+            </p>
           )}
         </section>
 
@@ -347,11 +278,16 @@ const MISSIONS: React.FC = () => {
         <section className="api-info">
           <h3>API Status</h3>
           <p>
-            Data source: <code>{loading ? 'Loading...' : error ? 'Fallback' : '/v11/genesis/missions'}</code>
+            Data source: <code>{loading ? 'Loading...' : error ? 'unavailable' : '/v11/tasks'}</code>
           </p>
           <p>
-            Last updated: {new Date().toLocaleTimeString()}
+            Last updated: {lastLoadedAt ? lastLoadedAt.toLocaleTimeString() : 'no data yet'}
           </p>
+          {missions.length >= TASK_PAGE_SIZE && (
+            <p>
+              Showing the latest {missions.length} tasks. Older tasks are not loaded, so these counts are not totals.
+            </p>
+          )}
           <p>
             Auto-refresh: Every 30 seconds
           </p>
