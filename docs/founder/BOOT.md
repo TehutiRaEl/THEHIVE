@@ -304,7 +304,11 @@ verified-live, the Queen Digest record that the boot was read.
   (`docs/FOUNDER_ANSWERED` FE-009):** the halt is lifted for all **front-end
   work** (design, coding, UI/UX, research, improvement, innovation, best
   practice, front-end security, wiring and testing the front end), and only for
-  that. Everything else, including any new Worker route, stays halted. This boot file exists because the founder explicitly ordered
+  that. **Widened 2026-11-19 (`FE-012`):** the halt is also lifted for all
+  already-scoped **command-center work including the back-end (Worker) work it
+  needs**, and only for that. Everything else stays halted: `soul.md`,
+  `.queen/soul.md`, the constitution workflows, the Queen's own stages, and
+  Worker routes the command center does not use. This boot file exists because the founder explicitly ordered
   "strengthen the universal now" (2026-11-13 14:39 PST) — that order is the
   exception that authorizes this file, and it authorizes nothing else.
 
