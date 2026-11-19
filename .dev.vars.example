@@ -18,7 +18,7 @@
 #              {"id":"mistral","bound":false}]}
 # GET /v11/debug/env also confirms "secrets_present":[] — zero Worker
 # secrets are currently bound, of any kind. The Worker is running entirely on
-# the free Workers AI fallback (@cf/meta/llama-3.2-1b-instruct). If you
+# the free Workers AI fallback (@cf/google/gemma-4-26b-a4b-it). If you
 # recently added a key somewhere, it has not reached the live Worker — most
 # likely it went into a local .env file (which Workers never read) instead of
 # `wrangler secret put`. Re-run the three commands below to actually bind them.
