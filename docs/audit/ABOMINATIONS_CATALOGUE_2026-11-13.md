@@ -47,11 +47,11 @@ Each item has four parts, always in this order:
 2. **Work left in a workspace instead of returned to the Hive** (10 items).
 3. **Things assumed / hypothecated / censored / abridged / abated / truncated** (11 items).
 4. **Decisions not recorded** — chat yeses never ratified into FOUNDER_ANSWERED (10 items).
-5. **Builds not verified-live** — claimed done without live proof (18 items).
+5. **Builds not verified-live** — claimed done without live proof (19 items).
 6. **Laws not absorbed** — draft laws, unratified principles (7 items).
 7. **Anything else the record shows the founder named as inadequate** (12 items).
 
-**Total: 83 items** (15 + 10 + 11 + 10 + 18 + 7 + 12). Of these, 5 are marked RESOLVED with evidence in hand, 17 are IN PROGRESS in open PRs or the ordered 2026-11-13 14:39 package, and 61 are OPEN. The resolved ones stay in the catalogue so the record shows what was eradicated and how — an abomination removed from the list without a trace would be the same failure again.
+**Total: 84 items** (15 + 10 + 11 + 10 + 19 + 7 + 12). Of these, 5 are marked RESOLVED with evidence in hand, 17 are IN PROGRESS in open PRs or the ordered 2026-11-13 14:39 package, and 62 are OPEN. The resolved ones stay in the catalogue so the record shows what was eradicated and how — an abomination removed from the list without a trace would be the same failure again.
 
 ---
 
@@ -594,6 +594,14 @@ Each item has four parts, always in this order:
 - **What fixes it:** The frontend auto-update build — Task 5 of this package.
 - **What proves it is fixed:** A completed item appearing in the command center live, immediately after passing its gates, with the update path cited (code + live probe).
 - **Status:** IN PROGRESS — sibling Task 5. Not built.
+
+## AB-5.19 — The operator cannot drive the Hive's multi-credential routes, so the Hive has no proof of its own absorption
+
+- **What it is:** The Hive's sync route (POST /v11/founder/decisions/sync) exists and the absorption data is in Nanuet's brain, but the route itself has never run. The operator (Muse) cannot invoke it: the route needs three credentials in one request (Access Client ID, Access Client Secret, Founder Key Bearer), and Muse's egress allows only one credential surrogate per request — any request carrying two or more is rejected with HTTP 403 `credential_ambiguity`. So the work had to move through the operator by hand (direct D1 writes), and the Hive has no proof of its own absorption. The bridge (operator action → Hive's own mechanism → Hive proof) is unwired. A Digest receipt written by hand even claimed the route as its source; Mac flagged it as an abomination and it was corrected to tell the truth.
+- **Where it was found:** 2026-11-15, during the P1 founder-decisions sync. The Access service token (`thehive-sync`) was created and stored as two credentials (`custom.thehive-access-id`, `custom.thehive-access-secret`); the Founder Key is stored as `custom.thehive`. The helper (`thehive.py`) attaches all three headers, but Sentinel rejects the request before it reaches Cloudflare. Verified: even two surrogates (Access only) are rejected the same way.
+- **What fixes it:** One of: (a) the egress allows multiple credential surrogates per request (a platform change, not in the Hive's control); (b) the Hive's founder routes accept a single credential that covers both doors (an auth redesign — founder-gated, it touches the Q-011 BOTH decision); or (c) the route is exercised from the founder's own browser, where his Access session covers the outer door and he supplies the Founder Key (the only path available today). Until one of these lands, the operator cannot produce Hive proof for any multi-credential route.
+- **What proves it is fixed:** The sync route runs (dry-run, then real) through the helper or another operator path, and returns its own `{"synced": true, "written": 63, ...}` response with a Worker-written Digest receipt whose source is genuinely `POST /v11/founder/decisions/sync`. A hand-written receipt does not count.
+- **Status:** OPEN — the data is in the brain (63 decisions, 1 corrected receipt, verified live 2026-11-15), but the route itself has never run and the bridge is unwired.
 
 ---
 
