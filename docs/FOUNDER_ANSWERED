@@ -893,6 +893,90 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 
 ---
 
+## FE-001 to FE-011 — Front-end plan answers and rulings, DECIDED 2026-11-14 to 2026-11-18 (recorded 2026-11-15)
+
+*Entered ahead of FQ-Q-011 (rather than at the end of the file) so this PR merges cleanly whichever of the open ratification PRs lands first; every entry carries its own date. The founder's exact words for all eleven are archived in `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-11-14-directive-frontend-plan-sketch-and-answers-063.md`. Each was said in chat 2026-11-14 and counts as a founder decision under soul.md F-005 Clause 1 only once this PR is merged by the founder. None of these builds anything by itself. The halt of 2026-11-13 13:41 PST stands for everything except front-end work (FE-008, FE-009).*
+
+### FE-001 — The front-end plan: Muse's F0–F9 batch plan is the spine; the sketch and mockup are the target
+
+**Founder's instruction:** use the plan he provided to "extend enhance and improve further upon the plan you already provided me that way this plan I provided you fully is absorbed into the plan you created fully uncensored unabridged untrunucated unabated", with his hand sketch and rendered mockup.
+**What this means:** `docs/FRONTEND_MASTER_PLAN_2026-11-14.md` is the filed plan (Muse's plan verbatim in Appendix A; Claude's earlier prompt verbatim in Appendix B; the sketch and mockup transcribed in Appendix C). The React Command Center (`frontend/`) is the canonical front end (Q-009). Where sources differ, the founder's later words win, then Muse's plan, then Claude's earlier plan; for layout the sketch outranks the mockup; for numbers the live route outranks every picture.
+**Downstream chain:** Batch F0 (`docs/audit/F0_FRONTEND_AUDIT_MAP_2026-11-14.md`); F1–F9.
+
+### FE-002 — The centre graph has 15 circles: Ventures, Treasury (gated), and the Queen with a halo and crown
+
+**Founder's words:** "should be 13 circles. The extra circle is the ventures then there should be another circle as a 14 circle being the treasury and a 15th circle, which should be the top circle Being the queen and which should have a halo around her circle emanating above it like an angel's halo would yet this halo emanates a crown a queen's crown very symbolic of a map to Queen Elizabeth's"
+**What this means:** circle 13 is Ventures (live source `GET /v11/ventures`); circle 14 is Treasury, shown only as "gated — founder decision" and never with a balance until the money decision (Q-004) and the Mogul decision (Q-041) are made; circle 15 is the Queen (Nanuet), at the top, with a halo and a crown drawn as an original design inspired by the silhouette the founder named. Placement of the Queen (above the ring, with Town Hall directly beneath her, versus taking Town Hall's seat) is a proposed default the founder has not yet confirmed.
+
+### FE-003 — SOUL is a later DAO-phase idea; today's SOUL numbers are mock
+
+**Founder's words:** "Soul was an idea from turning the hive into a DAO later on down the line in which the soul was accumulation of each age any individual worth collectively in which it was mock data so that can now be placed later in the full map and full plan"
+**What this means:** no live SOUL figure in the header; the SOUL tab, the roadmap level bars, the SOUL leaderboard call and the Worker's +25 SOUL per arena win are labelled "mock, DAO phase" or leave the screen (nothing deleted). A "DAO / SOUL economy" phase is added to the full map; it touches the constitution's wealth formula (F-002, F-006), so it follows the amendment process in `soul.md`, not a normal build.
+
+### FE-004 — 432 Hz: header shows a labelled tone; the idea is parked
+
+**Founder's choice:** "a then b".
+**What this means:** the header shows "432Hz · Kai's tone (not measured)" and never presents it as a reading; the idea, its repo trail and the research are parked in `docs/founder/ideas/hive-tuned-to-432hz.md` (PR #262). A real "Hive Hz" or a 432 Hz audio tone remain options there.
+
+### FE-005 — The bottom bar keeps only honest tiles
+
+**Founder's choice:** "A" (keep only the honest tiles).
+**What this means:** the bottom bar shows latency and agent count. Uptime returns only if a Worker route for it is later approved. Hive Power, Memory GB, CPU and Temp are dropped; a Cloudflare Worker has no machine to measure.
+
+### FE-006 — The old voxel/gamified world code is PARKED until the Queen is 100% and the Hive has made $1,000 weekly
+
+**Founder's words:** "A, that won't get revisited until the queen is 100% in the hive has made $1000 weekly"
+**What this means:** the 34 files (11,169 lines: `frontend/src/worlds/`, `voxel/`, `xp/`, `avatars/`, `conversation/`), which `frontend/tsconfig.build.json` already excludes from the production build, stay in the repo, parked by founder decision. Revisit trigger: the Queen is 100% **and** the Hive has made $1,000 weekly. **Open detail:** no income ledger exists yet (Treasury and the Mogul are Q-004 / Q-041), so the second condition cannot be measured today; a measurement source must be named, or the trigger can never fire. Under the "No Plan Left Behind" rule, this is the PARKED state with a named revisit trigger.
+
+### FE-007 — Kai's real terminal stays in the Queen's Q-C stage
+
+**Founder's words:** "If it has already been placed in the Queens QC stage then let's keep it there and not try to rush ahead of it"
+**What this means:** this confirms `docs/AUTONOMY_STAGES_AND_GATES.md` (the real terminal is Q-C work). It is not built before Q-A, Q-B and Q-C's own stages. Until then the Hive Terminal panel is display-only and labelled "not connected: waiting on the Queen's Q-C stage". The two-step design in the plan (an authenticated route that dispatches `kai-sandbox-run.yml`, then a paid-plan live shell later) stays the design for when Q-C reaches it; the paid-plan step remains the founder's money decision. This replaces the earlier proposal that the founder's chat words "override" the gates doc; they do not.
+
+### FE-008 — The halt does not apply to front-end UI/UX work
+
+**Founder's words (the "hot" is the halt):** "the hot isn't applied to any front end user interface, UX work in which you can read the newest open issue to fully grasp why the halt was enacted"
+**Why the halt was enacted (read from the newest open issue, #243, 2026-11-14):** the Hive availability audit found that the Queen and Kai El cannot see what they are supposed to know: the founder's decisions, the constitution (the live Worker read the non-canonical `docs/GOVERNANCE.md`), the ventures, and an empty Nanuet brain. The pattern is "a file exists, nothing in the live system reads it". The halt was a Worker/Queen/knowledge problem, not a screen problem.
+**What this means:**
+- Front-end UI/UX work (React Command Center, `frontend/`, and the `docs/app/` bundle it builds) **is not under the halt.** Batches F1 to F9 in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md` no longer wait for Q-042 to be answered. Where that plan says a batch "waits for the halt to lift", this entry supersedes it for front-end work.
+- **Everything else the plan already requires still applies:** the preamble gate (a plain what / why / how / necessity / improvement / cost and risk before each batch, and the founder's go-ahead for consequential work); never self-merge; every other founder gate (F4 needs the Q-040 answers and its design doc; F5 needs Q-022 and Q-025; F6 needs the absorption and constitution routes live; F7 needs Q-030; F8 needs Q-041; Kai's real terminal stays in Q-C per FE-007).
+- **Claude's reading, not yet confirmed by the founder:** the exemption covers front-end UI/UX work only. Back-end work stays under the halt, including any **new Worker route** a front-end batch would want (for example an uptime or activity-rate route). Such a route is raised as its own question first.
+- Q-042 ("Lift the halt?") is unchanged and remains open.
+
+### FE-009 — The halt is lifted for all front-end work (design, coding, UI/UX, research, improvement, innovation, best practice, security) and only for that
+
+**Founder's words (2026-11-15), the first half of the message:** "You can lift the halt on all frontend work design coding programming ui/ux work research, improve improvements, innovative ideas, best practices, including security wise as well that don't limit the hive for applied hybrid lens so on and so forth, but limited to what I just named because limiting it would be abomination to the hive the halt is only lifted for the rebuild and improvement on design in wiring and coding testing the front end user in office, making it more user-friendly as well"
+**What this means:**
+- The halt of 2026-11-13 13:41 PST (Q-042) is lifted **for the front end only**: designing, coding and programming it; UI/UX; research; improvements; innovative ideas; best practices, including front-end security; wiring it to what is live; testing it; and making it more user-friendly. The hybrid lens (both lenses, `dual-lens`) applies, and the work is not to limit the Hive.
+- **Everything else stays halted.** This widens FE-008 (which named UI/UX work) to name research, innovation and security best practice explicitly. Q-042 ("Lift the halt?") is unchanged and still open for everything outside the front end.
+- **Other gates still apply:** the preamble gate (a plain what / why / how / necessity / improvement / cost and risk before each batch, and the founder's go-ahead for consequential work); never self-merge; and each batch's own founder gates.
+- **Claude's reading, not yet confirmed by the founder:** "wiring" means wiring the front end to things the Worker already serves. A **new Worker route** (back-end work) stays under the halt and is raised as its own question first; so do the constitution workflows, `soul.md` and anything else outside the front end. Where this is unclear, Claude asks before touching it.
+
+### FE-010 — No dead controls: every control on the screen must work and be connected to something live
+
+**Founder's words (2026-11-15), the second half of the same message:** "and being sure there aren't just random buttons that have no real application or calls. it's just a aesthetic it doesn't work and I don't want that because that would also be an abomination everything that's there needs to be working connected to something live and see if it's a switch that does nothing. There's a plan for all that switch needs so we can be alive switch that does whatever it needs to do such as but not limited to if you are to create a light mode in a dark mode and I flip the switch and nothing happened. That's an abomination than anything and everything like such as an abomination"
+**What this means:**
+- A **dead control** is any button, switch, toggle, input, menu, link or circle that looks usable and does nothing, or that exists only for looks. It is an **abomination**, under the same rule as "No Plan Left Behind" (SR-001).
+- **Every control that is shown must work and be connected to something live.** A switch must do what its label says. The founder's own example: a light/dark switch that changes nothing when flipped.
+- Each switch or control has a plan for what it needs to be live (for example, the light/dark switch needs a real design for both themes and a stored choice); that plan is part of building the control, not a later step.
+- **Where the front end stands today (from the F0 audit, `docs/audit/F0_FRONTEND_AUDIT_MAP_2026-11-14.md`, and a count on main `f0f37b0`):** 45 disabled "not wired" placeholder buttons across five command-center tabs (Govern, No Man's Sky, Arena, Missions, WOW); eight items shown as "soon" or "not connected" (Connectors and Training in the left nav, the Training circle, five of the eight Workflows); and **no light/dark switch on the screen at all** (the store has a toggle that nothing reads). The full dead-control list is being produced by the front-end audit and becomes a sweep batch.
+- **Open reading, flagged for the founder (not decided):** whether a greyed-out control honestly labelled "not connected yet" is acceptable while its feature is queued, or whether every such control must be removed until it works. Claude's working reading, until the founder answers: **new** controls ship live or not at all; existing placeholders are listed, and each is made live or removed in the sweep.
+- **Enforcement (honest limits):** a rule cannot force an AI to comply. A static check that fails a change which adds a control with no real handler is a front-end build step, allowed under FE-009, and queued in the plan. It is not built yet.
+
+### FE-011 — The old command center page (`docs/command-center.html`) is to be RETIRED (answers FQ-Q-023)
+
+**Founder's words (2026-11-18):** "You spoke of the old command center, which I believe was on GitHub pages which should've been retired. I already answered that question a while ago, which you can double check my answer before you do anything"
+**Record check, 2026-11-18, on main `2989af4` and every open PR:** no entry retires `docs/command-center.html`. `docs/FOUNDER_QUEUE` still lists FQ-Q-023 as **open**. The retire answers that ARE recorded are about other pages: Q-B1 (retire the legacy **biosystem** page `docs/biosystem.html`; done in PR #229) and FQ-Q-028 (Jasper is LEGACY, left as archive; open PR #255). If the founder's earlier answer was given in a chat that was never recorded, it is not in the repo; this entry records the answer now.
+**What this means:**
+- FQ-Q-023 is answered: **retire the page.** Treated as the same shape as Q-B1 (retire the page, keep its purposes; the purpose map `docs/COMMAND_CENTER_PURPOSE_MAP.md` lists them). If the founder's earlier answer said anything different, it overrides this wording.
+- **It is still being published.** `.github/workflows/pages.yml` uploads all of `docs/` to GitHub Pages, and `docs/index.html` links it as "Legacy · SOUL REALM", so the page is live on GitHub Pages and on the Worker today.
+- **Retirement is front-end work, allowed under FE-009.** It follows the Q-B1 / PR #229 pattern: move the page to the archive outside `docs/` (so nothing serves it), remove the link from `docs/index.html`, and say so honestly. It also removes the `?backend=` weakness the front-end audit found in that page. It is **queued, not done**, and needs its own preamble and the founder's go-ahead.
+- The legacy page's purposes (the 11 the purpose map lists as having no live home) stay on the plan as front-end batches; retiring the page does not retire the purposes.
+
+**Recorded by:** Claude, at founder direction. FE-001 to FE-008 decided in chat 2026-11-14; FE-009 and FE-010 decided in chat 2026-11-15; FE-011 decided in chat 2026-11-18; recorded here via a docs-only PR the founder merges.
+
+---
+
 ## FQ-Q-011 — DECIDED 2026-11-13
 
 **Question (as queued):** `POST /v11/command_text` (Commune with Kai El) is LIVE and UNAUTHENTICATED (30/min/IP rate limit only). Gate it — (a) a Cloudflare Access app on the route, or (b) in-handler founder auth? (Founder queue FQ-Q-011.)
