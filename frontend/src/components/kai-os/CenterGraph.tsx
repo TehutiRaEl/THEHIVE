@@ -31,7 +31,7 @@ interface CenterGraphProps {
 //
 // LIVE DATA ONLY (founder rule): a circle shows a number only when a live
 // Worker route returns the count of exactly the thing the circle names. Today
-// that is two circles: Tasks (/v11/tasks) and Agents (/v11/agents). Every other
+// that is three circles: Tasks (/v11/tasks), Agents (/v11/agents) and Ventures (/v11/ventures). Every other
 // circle says "no data" and its tooltip names what it still needs. Before this,
 // APIs and Workflows showed typed-in numbers (18 and 8), and Projects, Town
 // Hall, Memories, Dream Logs, Swarms and Skills showed some other thing's count
@@ -52,6 +52,8 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
     const openTasks = hive.tasks.filter(t => t.status !== 'completed').length;
     const tasksCount = live ? `${openTasks}${hive.tasks.length >= TASK_PAGE_SIZE ? '+' : ''}` : null;
     const agentsCount = live ? String(hive.agents.length) : null;
+    // Ventures: the manifest the Hive serves (GET /v11/ventures). null while the route is not answering.
+    const venturesCount = hive.ventures ? String(hive.ventures.ventures.length) : null;
     return [
       { id: 'world', label: 'Projects', icon: '📂', wired: true, count: null, about: 'no live count yet: no route counts projects' },
       { id: 'govern', label: 'Core · Town Hall', icon: '🏛', wired: true, count: null, about: 'no live count yet: the Town Hall board (/v11/townhall) is not shown on screen yet' },
@@ -65,6 +67,7 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
       { id: 'api', label: 'APIs', icon: '</>', wired: true, count: null, about: 'no live count yet: the Worker does not publish a measured route count' },
       { id: 'workflows-panel', label: 'Workflows', icon: '🕸', wired: true, count: null, about: 'no live count yet: no route counts workflows' },
       { id: 'soul', label: 'Agents', icon: '🤖', wired: true, count: agentsCount, about: 'active agents, from /v11/agents' },
+      { id: 'ventures', label: 'Ventures', icon: '🚀', wired: true, count: venturesCount, about: 'ventures in the manifest the Hive serves, from /v11/ventures' },
     ];
   }, [hive]);
 
