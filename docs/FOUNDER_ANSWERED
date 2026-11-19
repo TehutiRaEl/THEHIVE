@@ -9,6 +9,7 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 *Addendum 2026-11-13: this file now holds 64 decided entries (the 63 above plus FQ-Q-012, recorded in this batch).*
 *Addendum 2026-11-13: this file now holds 65 decided entries (the 64 above plus FQ-Q-013, recorded in this batch).*
 *Addendum 2026-11-14: this file now holds 66 decided entries (the 65 above plus FQ-Q-028, recorded in this batch).*
+*Addendum 2026-11-15: this file now holds 67 decided entries (the 66 above plus the standing rule "No Plan Left Behind", recorded in this batch).*
 
 ---
 
@@ -947,3 +948,23 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Restoring Jasper would be a large build conflicting with Queen 100% — it stays off the table unless Mac re-opens it.
 **Downstream chain:** Jasper disposition settled → the Jasper missing-items review proceeds against the legacy/archive decision; NAR2 remains the Security colony name; no rename, no restore; nothing else built until Queen is 100%.
 **Recorded by:** Decided by Mac 2026-11-14 (by tapping the option in chat); recorded here 2026-11-14 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## SR-001 — DECIDED 2026-11-14 (recorded 2026-11-15): "No Plan Left Behind" — orphaned work is an abomination
+
+**Founder's words (verbatim, unedited):**
+> "I'm not too sure how many features entered the repo and most recent PR's that haven't been established to enter the front end that we're on the left orphaned behind again and that entire process that I just explained is abomination if something is put in the repo and gets orphaned behindleft behind where it had a plan and the plan was never initiated that's an abomination which needs to be updated as well and ratified into the hive immediately"
+
+**Founder decision:** Anything that enters the Hive's repo and is then left behind is an abomination. That covers a feature, route, component or skill nothing uses; a feature the founder cannot see (built but not on the screen); a plan written and merged but never started; and a plan started and dropped without a word. Ratified immediately.
+
+**What this means:**
+- Every piece of work in the repo is, at all times, in exactly one of three states: **LIVE** (wired to what uses it — for anything the founder should see, that includes the front end — and verified live with a checkable reference); **QUEUED** (a named next step, a named owner, and an entry in `docs/FOUNDER_QUEUE` or a batch file in `docs/batches/`); or **PARKED / RETIRED by recorded founder decision** (the decision and its date are in this file; only the founder parks or retires).
+- Work in none of the three states is an abomination and goes into the Abominations Catalogue under Category 8, "Orphaned and left-behind work" (dated addendum to `docs/audit/ABOMINATIONS_CATALOGUE_2026-11-13.md`).
+- The duty on every AI: when you ship a feature, put it on the screen or queue its screen (a PR that adds a Worker route or capability the founder should see wires it into the front end in the same PR, or names the batch that will); when you file a plan, file its first step; when you stop work, say so on the record; sweep for left-behind work in an area before starting a new batch.
+- This is a recorded founder standing rule, the same kind as the preamble gate. It is **not an F-law and has no F-number**, and it does not touch `soul.md`.
+- **Honest limit:** a rule cannot force an AI to comply. A CI check that fails a PR adding a Worker route no front-end file references (and no batch file names), or a component with zero importers, is a later build batch — it waits for its own preamble and go-ahead. No timer or recurring sweep is created by this rule; recurring work costs money and only the founder arms it.
+
+**Downstream chain:** Abominations Catalogue Category 8 (AB-8.01–AB-8.07); BOOT.md Step 9 standing rules; front-end master plan Batch F0 (the audit re-verifies each left-behind item before any build); the 15-circle screen (each left-behind live route gets a home on it).
+
+**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-14 ("ratified into the hive immediately"); recorded here 2026-11-15 via a docs-only PR the founder merges, so it counts as a founder decision under soul.md F-005 Clause 1 only once merged.
