@@ -11,7 +11,7 @@ const FOUR_D: React.FC = () => {
       <main className="tab-content">
         <header className="tab-header">
           <h1>🔲 4D - Tesseract Visualization</h1>
-          <p>4D-to-3D projection with Option B implementation</p>
+          <p>A four-dimensional cube projected into 3D</p>
         </header>
 
         <section className="visualization-section">
@@ -21,50 +21,19 @@ const FOUR_D: React.FC = () => {
         </section>
 
         <section className="math-section">
-          <h2>Mathematical Specifications</h2>
+          <h2>What this is</h2>
           <div className="math-grid">
             <div className="math-card">
-              <h3>4D Rotation Matrices</h3>
-              <p>Rotations happen through 2D planes, not axes:</p>
-              <ul>
-                <li>XY plane rotation</li>
-                <li>XZ plane rotation</li>
-                <li>XW plane rotation</li>
-                <li>YZ plane rotation</li>
-                <li>YW plane rotation</li>
-                <li>ZW plane rotation</li>
-              </ul>
+              <h3>A real tesseract, computed in your browser</h3>
+              <p>16 vertices and 32 edges of a four-dimensional cube, rotated in the six planes (XY, XZ, XW, YZ, YW, ZW) and projected down to 3D with w as depth.</p>
             </div>
             <div className="math-card">
-              <h3>Projection</h3>
-              <p>4D→3D: Treat w as depth (z + w*0.3)</p>
-              <p>Custom shaders for efficient rendering</p>
+              <h3>Controls that work</h3>
+              <p>The panel on the picture changes the rotation speeds, colours and rotation modes live. Drag to orbit when Orbit Controls is on.</p>
             </div>
             <div className="math-card">
-              <h3>Implementation</h3>
-              <p>Option B: 4D-to-3D projection with custom shaders</p>
-              <p>All 6 plane rotations implemented</p>
-              <p>Isoclinic rotations with α=β</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="info-section">
-          <h2>Information</h2>
-          <div className="info-grid">
-            <div className="info-card">
-              <h3>Implementation</h3>
-              <p>Three.js + @react-three/fiber + @react-three/drei</p>
-            </div>
-            <div className="info-card">
-              <h3>Features</h3>
-              <p>WASD + mouse navigation supported</p>
-              <p>All 5 movement modes from user images</p>
-            </div>
-            <div className="info-card">
-              <h3>Status</h3>
-              <p>✅ Option B implemented</p>
-              <p>⚠️ Math needs real geometry (currently stubs)</p>
+              <h3>Not live Hive data</h3>
+              <p>This is a visualisation of the mathematics only. It is not connected to the Hive, to Kai El&apos;s memory or to any route.</p>
             </div>
           </div>
         </section>

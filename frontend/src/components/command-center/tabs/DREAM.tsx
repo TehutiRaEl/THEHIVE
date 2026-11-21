@@ -51,22 +51,6 @@ const DREAM: React.FC = () => {
           )}
         </section>
 
-        <section className="vision-section">
-          <h2>Sovereign Hive Vision</h2>
-          <div className="vision-card">
-            <h3>14-Layer System</h3>
-            <p>A comprehensive architecture spanning from physical infrastructure to meta-layer self-modification.</p>
-          </div>
-          <div className="vision-card">
-            <h3>SEE Command Center</h3>
-            <p>13-page interface covering all aspects of hive operations.</p>
-          </div>
-          <div className="vision-card">
-            <h3>Constitutional Governance</h3>
-            <p>F-001 through F-006 principles ensuring ethical and autonomous operation.</p>
-          </div>
-        </section>
-
         <section className="roadmap-section">
           <h2>Development Roadmap</h2>
           {/* Was a hand-written timeline frozen at 2026-07-09 that disagreed with the
@@ -103,16 +87,6 @@ const DREAM: React.FC = () => {
           )}
         </section>
 
-        <section className="goals-section">
-          <h2>Strategic Goals</h2>
-          <ol>
-            <li>Complete all 13 SEE command center tabs</li>
-            <li>Implement real 4D tesseract visualization</li>
-            <li>Integrate all colony consoles</li>
-            <li>Achieve constitutional compliance</li>
-            <li>Merge to main branch</li>
-          </ol>
-        </section>
       </main>
 
       <KaiChatBox />

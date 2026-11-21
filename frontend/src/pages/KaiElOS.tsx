@@ -115,6 +115,11 @@ export default function KaiElOS() {
   const handleSelect = useCallback((id: string) => {
     setNavOpen(false);
     if (id === 'commune') { openCommune(); return; }
+    // The menu's Swarms item opens the Hive tab, the same place the Swarms circle opens.
+    if (id === 'swarms') { setActiveSection('hive'); return; }
+    // 'dreaming' opens the DREAM tab (open propositions, the Hall of Fallen Ideas, the development
+    // roadmap); the 'dream' id belongs to the Dream Logs panel below.
+    if (id === 'dreaming') { setActiveSection('dream'); return; }
     // LeftNav uses 'dream'; panel key is 'dream-logs'
     if (id === 'dream') { setActiveSection('dream-logs'); return; }
     setActiveSection(id);

@@ -246,6 +246,15 @@ const IsoclinicTesseract: React.FC<{ rotationSpeed?: number; useShader?: boolean
   );
 };
 
+// useFrame only works INSIDE a <Canvas>. The rotation angles used to be advanced by a useFrame
+// call made in TesseractRenderer itself (outside the Canvas), which threw "Hooks can only be used
+// within the Canvas component" and sent the whole 4D tab to the error screen. This tiny child
+// lives inside the Canvas and reports each frame's time step up.
+const AngleDriver: React.FC<{ onTick: (delta: number) => void }> = ({ onTick }) => {
+  useFrame((_state, delta) => onTick(delta));
+  return null;
+};
+
 interface TesseractRendererProps {
   showDoubleRotation?: boolean;
   showIsoclinic?: boolean;
@@ -262,14 +271,13 @@ const TesseractRenderer: React.FC<TesseractRendererProps> = () => {
   const [colorA, setColorA] = useState('#ff1493');
   const [colorB, setColorB] = useState('#00ffff');
 
-  useFrame((_state, delta) => {
-    setWAngle(prev => prev + delta * 0.2);
-    setXwAngle(prev => prev + delta * 0.3);
-  });
-
   return (
     <div style={{ width: '100%', height: '100vh', background: '#000' }}>
       <Canvas>
+        <AngleDriver onTick={(delta) => {
+          setWAngle(prev => prev + delta * 0.2);
+          setXwAngle(prev => prev + delta * 0.3);
+        }} />
         <PerspectiveCamera makeDefault position={[0, 0, 10]} />
         {useOrbitControls && <OrbitControls enableDamping />}
         <ambientLight intensity={0.5} />
