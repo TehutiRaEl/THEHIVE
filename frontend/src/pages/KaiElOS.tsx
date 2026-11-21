@@ -14,6 +14,7 @@ import ConnectedModels from '../components/kai-os/ConnectedModels';
 import DreamLogs from '../components/kai-os/DreamLogs';
 import HiveUpdates from '../components/kai-os/HiveUpdates';
 import VenturesPanel from '../components/kai-os/VenturesPanel';
+import QueenPanel from '../components/kai-os/QueenPanel';
 import ProposalsPanel from '../components/kai-os/ProposalsPanel';
 import BodyLineagePanel from '../components/kai-os/BodyLineagePanel';
 import LegalLearning from '../components/kai-os/LegalLearning';
@@ -51,7 +52,7 @@ const FULL_TABS: Record<string, ComponentType> = {
   wow: WOW, 'no-mans-sky': NO_MANS_SKY, settings: SETTINGS,
 };
 
-type PanelId = 'ventures' | 'updates' | 'proposals' | 'body' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training' | 'roadmap' | 'grok-bridge';
+type PanelId = 'queen' | 'ventures' | 'updates' | 'proposals' | 'body' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training' | 'roadmap' | 'grok-bridge';
 
 function TabLoadFallback() {
   return (
@@ -124,6 +125,7 @@ export default function KaiElOS() {
   const panels: Partial<Record<PanelId, { title: string; body: React.ReactNode }>> = {
     updates: { title: 'Hive Updates', body: <HiveUpdates hive={hive} /> },
     ventures: { title: 'Ventures', body: <VenturesPanel hive={hive} /> },
+    queen: { title: 'The Queen · Nanuet', body: <QueenPanel /> },
     proposals: { title: 'Proposals — the hive suggests, you decide', body: <ProposalsPanel /> },
     body: { title: 'Body & Lineage · proprioception', body: <BodyLineagePanel /> },
     legal: { title: 'Legal Learning · Commerce Under Law', body: <LegalLearning /> },
