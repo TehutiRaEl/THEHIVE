@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
-import PlannedControl from '../../PlannedControl';
 import { getTasks } from '../../../services/api';
 
 interface Mission {
@@ -169,7 +168,6 @@ const MISSIONS: React.FC = () => {
           </div>
           
           <div className="missions-actions">
-            <PlannedControl label="Create New Mission" className="btn-primary" />
             <button className="btn-secondary" onClick={() => fetchMissions()}>
               Refresh Data
             </button>
@@ -226,10 +224,6 @@ const MISSIONS: React.FC = () => {
                         Colony: {mission.colonyId}
                       </span>
                     )}
-                    <div className="mission-actions">
-                      <PlannedControl label="View" className="btn-small" />
-                      <PlannedControl label="Edit" className="btn-small" />
-                    </div>
                   </div>
                 </div>
               ))}

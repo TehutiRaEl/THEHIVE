@@ -51,21 +51,6 @@ const WORLD: React.FC = () => {
           </div>
         </section>
 
-        <section className="world-visualization">
-          <h2>Global Visualization</h2>
-          <div className="visualization-actions">
-            <button onClick={() => setShowColonyPanel(true)} className="btn-primary">
-              View Colony Graph
-            </button>
-            <button className="btn-secondary">
-              View Memory Graph
-            </button>
-            <button className="btn-secondary">
-              View 4D Tesseract
-            </button>
-          </div>
-        </section>
-
         <section className="world-map">
           <h2>Colonies <span style={{ opacity: 0.6, fontSize: 13 }}>(federation roster, live status via /v11/debug/colony-ping)</span></h2>
           <ColonyGrid onSelect={(id) => { setSelectedColony(id); setShowColonyPanel(true); }} />
