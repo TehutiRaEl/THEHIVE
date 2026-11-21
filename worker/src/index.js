@@ -1093,11 +1093,19 @@ const FALLBACK_PROPS = [
 async function aiProposition(env, a, b) {
   try {
     if (!env.AI) return null;
+    // Gemma 4 is a reasoning chat model: it needs the {messages} shape, thinking
+    // explicitly off (otherwise the thinking consumes the whole output budget and
+    // leaves content empty), and its answer lives at choices[0].message.content —
+    // not the old text-generation `response` field. No max_tokens: the model page's
+    // parameters were not readable when verified (2026-11-20) and the canonical
+    // get-started example passes none. (2026-11-20, gemma call fix.)
     const r = await env.AI.run('@cf/google/gemma-4-26b-a4b-it', {
-      prompt: `Write one bold, arguable proposition (under 20 words) that agent ${a} challenges agent ${b} over, inside a constitutional AI hive concerned with governance, memory, and emergence. Reply with only the proposition — no quotes, no preamble.`,
-      max_tokens: 48,
+      messages: [
+        { role: 'user', content: `Write one bold, arguable proposition (under 20 words) that agent ${a} challenges agent ${b} over, inside a constitutional AI hive concerned with governance, memory, and emergence. Reply with only the proposition — no quotes, no preamble.` },
+      ],
+      chat_template_kwargs: { enable_thinking: false },
     });
-    const text = String((r && (r.response ?? r.result)) || '').trim().replace(/^["']|["']$/g, '');
+    const text = String((r?.choices?.[0]?.message?.content ?? r?.response ?? r?.result ?? '')).trim().replace(/^["']|["']$/g, '');
     return text ? text.slice(0, 200) : null;
   } catch { return null; }
 }
@@ -1648,14 +1656,23 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
     // own Free Models Router — but the router kept landing on reasoning models, which
     // spend the whole max_tokens budget thinking and return HTTP 200 with empty content
     // and finish_reason "length" (the "no usable text" failure in provider health).
-    // Default is now pinned (2026-11-18, verified live against the OpenRouter models
+    // Default was pinned (2026-11-18, verified live against the OpenRouter models
     // API + a daily free-tier checker): `nvidia/nemotron-3.5-lightning:free` — a
     // non-reasoning model, fastest free head, 1M context, answered 7/7 days. The first
     // candidate, `google/gemma-4-26b-a4b-it:free`, was rejected: it 429'd from Google
-    // AI Studio 0/7 days. OPENROUTER_MODEL still overrides, for when the founder wants
-    // one specific model pinned — and if this pin dies, change the default again; that
-    // is the maintenance point, not a one-time choice. OpenRouter is the SECOND voice
-    // only (50 requests/day per free model): Workers AI stays primary.
+    // AI Studio 0/7 days. That pin DIED 2026-11-19: OpenRouter returns HTTP 404 "0
+    // endpoints out of 1 requested are available matching your guardrail restrictions
+    // and data policy" — the account's privacy guardrail (ZDR-only / training opt-out)
+    // filters out the single free endpoint serving nemotron:free. The model is still
+    // listed and free; the filter is account-side, not a delisting. Default is now
+    // (2026-11-20, verified live against the OpenRouter models API):
+    // `google/gemma-4-26b-a4b-it:free` — non-reasoning, $0, 262k context, 15 providers
+    // behind the canonical slug (far more chances one passes the guardrail), with
+    // `google/gemma-4-31b-it:free` (18 providers) second in the `models` fallback array.
+    // OPENROUTER_MODEL still overrides, for when the founder wants one specific model
+    // pinned — and if this pin dies, change the default again; that is the maintenance
+    // point, not a one-time choice. OpenRouter is the SECOND voice only (50 requests/day
+    // per free model): Workers AI stays primary.
     deepseek: async () => {
       if (!env.DEEPSEEK_API_KEY) return null;
       const r = await fetch('https://api.deepseek.com/chat/completions', {
@@ -1723,7 +1740,12 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
     },
     openrouter: async () => {
       if (!env.OPENROUTER_API_KEY) return null;
-      const model = env.OPENROUTER_MODEL || 'nvidia/nemotron-3.5-lightning:free';
+      const model = env.OPENROUTER_MODEL || 'google/gemma-4-26b-a4b-it:free';
+      // Fallback array: if the primary is filtered by the account's data-policy
+      // guardrail, OpenRouter tries the next model in `models`. The 31B gemma has
+      // the widest free provider pool (18). When OPENROUTER_MODEL overrides, the
+      // fallback still applies unless the override IS the 31B model.
+      const models = model === 'google/gemma-4-31b-it:free' ? [model] : [model, 'google/gemma-4-31b-it:free'];
       // The completion budget is floored at 1024 tokens: a reasoning model can spend
       // the whole max_tokens budget thinking and return an empty `content` with
       // finish_reason "length" (OpenRouter's own docs name this exact failure) — the
@@ -1734,7 +1756,7 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
         method: 'POST',
         headers: { Authorization: `Bearer ${env.OPENROUTER_API_KEY}`, 'content-type': 'application/json' },
         body: JSON.stringify({
-          model, max_tokens: openRouterMaxTokens,
+          model, models, max_tokens: openRouterMaxTokens,
           messages: [{ role: 'system', content: system }, { role: 'user', content: prompt }],
         }),
         signal: timeout(15000),
@@ -1758,13 +1780,24 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
     },
     'workers-ai': async () => {
       if (!env.AI) return null;
-      // The proven-live path: same model + prompt-string shape as the heartbeat.
+      // Gemma 4 is a reasoning chat model: it needs the {messages} shape, thinking
+      // explicitly off (otherwise the thinking consumes the whole output budget and
+      // leaves content empty), and its answer lives at choices[0].message.content —
+      // not the old text-generation `response` field. No max_tokens: the model page's
+      // parameters were not readable when verified (2026-11-20) and the canonical
+      // get-started example passes none. (2026-11-20, gemma call fix.)
       const r = await env.AI.run('@cf/google/gemma-4-26b-a4b-it', {
-        prompt: system + '\n\n' + prompt,
-        max_tokens: maxTokens,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: prompt },
+        ],
+        chat_template_kwargs: { enable_thinking: false },
       });
-      const text = String((r?.response ?? r?.result ?? '')).trim();
-      if (!text) throw new Error('empty response');
+      const text = String((r?.choices?.[0]?.message?.content ?? r?.response ?? r?.result ?? '')).trim();
+      if (!text) {
+        const finishReason = r?.choices?.[0]?.finish_reason ?? 'unknown';
+        throw new Error(`empty response (finish_reason: ${finishReason})`);
+      }
       // Workers AI does not return token counts — report null honestly rather than
       // inventing an estimate that would then get logged as if it were measured.
       return { text, usage: null };
