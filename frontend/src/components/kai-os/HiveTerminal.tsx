@@ -23,7 +23,6 @@ export default function HiveTerminal({ hive }: HiveTerminalProps) {
     <div className="flex flex-col h-full bg-void-black/80 border border-white/10 rounded-lg overflow-hidden font-mono text-[11px]">
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10 bg-white/5">
         <span className="text-slate-300 tracking-wide">Hive Terminal</span>
-        <span className="text-slate-600">— □ ×</span>
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
         {lines.map((l, i) => (

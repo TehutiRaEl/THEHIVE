@@ -2,57 +2,10 @@ import React from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
 import RoadmapAvatar from '../../kai-os/RoadmapAvatar';
-import { useConstitutionStore } from '../../../stores/constitutionStore';
 import { useHiveData } from '../../../hooks/useHiveData';
 
 const SOUL: React.FC = () => {
-  const { constitution, violations, checkLaw } = useConstitutionStore();
   const hive = useHiveData();
-
-  const constitutionalLaws = [
-    {
-      id: 'F-001',
-      name: 'Data Sovereignty',
-      description: 'All data owned and controlled by user',
-      status: 'IMPLEMENTED',
-      compliance: true
-    },
-    {
-      id: 'F-002',
-      name: 'Value-Weighted Wealth',
-      description: 'Economic systems respect value',
-      status: 'IMPLEMENTED',
-      compliance: true
-    },
-    {
-      id: 'F-003',
-      name: 'Autonomy',
-      description: 'Full autonomous operation',
-      status: 'PENDING',
-      compliance: false
-    },
-    {
-      id: 'F-004',
-      name: 'Explainability',
-      description: 'All actions transparent and explainable',
-      status: 'IMPLEMENTED',
-      compliance: true
-    },
-    {
-      id: 'F-005',
-      name: 'Conflict Priority',
-      description: 'Conflict resolution mechanisms',
-      status: 'PENDING',
-      compliance: false
-    },
-    {
-      id: 'F-006',
-      name: 'Non-Penalization',
-      description: 'No penalties for exploration or mistakes',
-      status: 'IMPLEMENTED',
-      compliance: true
-    },
-  ];
 
   return (
     <div className="tab-container soul-tab">
@@ -65,39 +18,16 @@ const SOUL: React.FC = () => {
         </header>
 
         <section className="constitution-section">
-          <h2>Constitution</h2>
-          <div className="constitution-card">
-            <h3>Sovereign Hive Constitution</h3>
-            <p><strong>Version:</strong> {constitution?.version || '1.0.0'}</p>
-            <p><strong>Last Updated:</strong> {constitution?.lastUpdated || '2026-07-08'}</p>
-            <p><strong>Status:</strong> Active</p>
-          </div>
-        </section>
-
-        <section className="laws-section">
-          <h2>Constitutional Laws</h2>
-          <div className="laws-grid">
-            {constitutionalLaws.map(law => (
-              <div key={law.id} className={`law-card ${law.compliance ? 'compliant' : 'non-compliant'}`}>
-                <div className="law-header">
-                  <h3>{law.id}: {law.name}</h3>
-                  <span className={`law-status ${law.status.toLowerCase()}`}>
-                    {law.status}
-                  </span>
-                </div>
-                <p>{law.description}</p>
-                <div className="law-actions">
-                  <button onClick={() => checkLaw(law.id)}>
-                    Verify Compliance
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <h2>The law</h2>
+          <p style={{ opacity: 0.8, fontSize: 13 }}>
+            The constitution, <code>soul.md</code> (F-001 to F-006), is shown live in the Constitution panel in the left
+            menu. This page no longer carries its own copy of the laws, their statuses, or a compliance score: none of
+            them were measured.
+          </p>
         </section>
 
         <section className="soul-leaderboard">
-          <h2>💎 Soul Ledger <span style={{ opacity: 0.6, fontSize: 13 }}>(live)</span></h2>
+          <h2>💎 Soul Ledger <span style={{ opacity: 0.6, fontSize: 13 }}>(arena points from /v11/wallet/leaderboard/soul; the SOUL economy is a later DAO phase, so treat these numbers as mock)</span></h2>
           {hive.soulBoard.length === 0 ? (
             <p style={{ opacity: 0.6 }}>{hive.loading ? 'loading…' : 'no soul data reachable'}</p>
           ) : (
@@ -113,11 +43,10 @@ const SOUL: React.FC = () => {
         </section>
 
         <section className="roadmap-section">
-          <h2>🌱 The Roadmap of Becoming <span style={{ opacity: 0.6, fontSize: 13 }}>(live — F-008D / F-009E)</span></h2>
+          <h2>🌱 The Roadmap of Becoming <span style={{ opacity: 0.6, fontSize: 13 }}>(driven by the arena-point ledger above, which is mock until the DAO phase)</span></h2>
           <p style={{ opacity: 0.6, fontSize: 12, marginTop: -4 }}>
             Germination → Mycelium → Fruiting → Transformation → Senescence → Seed. Driven by each
-            agent's real Soul score; F-008D: "the cycle is infinite." Stage thresholds are provisional
-            and uncalibrated — there isn't yet a mature distribution of Soul values to calibrate against.
+            agent's arena-point score. Stage thresholds are provisional and uncalibrated.
           </p>
           {!hive.roadmap || hive.roadmap.agents.length === 0 ? (
             <p style={{ opacity: 0.6 }}>{hive.loading ? 'loading…' : 'no roadmap data reachable'}</p>
@@ -142,42 +71,6 @@ const SOUL: React.FC = () => {
               </div>
             </div>
           )}
-        </section>
-
-        <section className="violations-section">
-          <h2>Violations</h2>
-          {violations.length > 0 ? (
-            <ul className="violation-list">
-              {violations.map(violation => (
-                <li key={violation.id} className="violation-item">
-                  <strong>{violation.law}:</strong> {violation.message}
-                  <span className="violation-severity">
-                    {violation.severity}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="no-violations">✅ No violations detected</p>
-          )}
-        </section>
-
-        <section className="compliance-section">
-          <h2>Compliance Dashboard</h2>
-          <div className="compliance-metrics">
-            <div className="metric-card">
-              <h3>Overall Compliance</h3>
-              <p className="compliance-score">
-                {constitutionalLaws.filter(l => l.compliance).length} / {constitutionalLaws.length}
-              </p>
-              <p>Laws Compliant</p>
-            </div>
-            <div className="metric-card">
-              <h3>Violations</h3>
-              <p className="violation-count">{violations.length}</p>
-              <p>Active Issues</p>
-            </div>
-          </div>
         </section>
       </main>
 

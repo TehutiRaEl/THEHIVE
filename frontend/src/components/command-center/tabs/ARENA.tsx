@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
 import LiveArenaViewer from '../../LiveArenaViewer';
-import PlannedControl from '../../PlannedControl';
 import { useHiveData } from '../../../hooks/useHiveData';
 
 const ARENA: React.FC = () => {
@@ -30,51 +29,17 @@ const ARENA: React.FC = () => {
           </div>
         </section>
 
-        <section className="arena-controls">
-          <h2>Arena Controls</h2>
-          <div className="control-panel">
-            <div className="control-group">
-              <h3>View Mode</h3>
-              <div className="view-buttons">
-                <PlannedControl label="First Person" />
-                <PlannedControl label="Third Person" />
-                <PlannedControl label="Top Down" />
-                <PlannedControl label="Isometric" />
-              </div>
-            </div>
-
-            <div className="control-group">
-              <h3>Projection</h3>
-              <div className="projection-buttons">
-                <PlannedControl label="2D" />
-                <PlannedControl label="3D" />
-                <PlannedControl label="Voxel" />
-              </div>
-            </div>
-
-            <div className="control-group">
-              <h3>Rendering</h3>
-              <div className="render-buttons">
-                <PlannedControl label="Wireframe" />
-                <PlannedControl label="Solid" />
-                <PlannedControl label="Textured" />
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section className="arena-info">
           <h2>Arena Information</h2>
           <div className="info-grid">
             <div className="info-card">
               <h3>Technology</h3>
-              <p>Three.js + @react-three/fiber + @react-three/drei</p>
+              <p>Three.js + @react-three/fiber</p>
             </div>
             <div className="info-card">
               <h3>Features</h3>
-              <p>Real-time data streaming</p>
+              <p>Plays the recorded projection frames of a challenge</p>
               <p>Voxel-based rendering</p>
-              <p>Interactive camera controls</p>
             </div>
             <div className="info-card">
               <h3>Data Source</h3>
