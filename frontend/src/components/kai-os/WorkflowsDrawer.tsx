@@ -1,23 +1,20 @@
 import { useState } from 'react';
 
-interface WorkflowItem {
+interface Playbook {
   label: string;
-  wired: boolean;
+  skill: string;
   detail: string;
 }
 
-// Real mapping to skills the hive actually has, where one exists. The rest
-// are named in the brief but have no backing automation yet — marked "soon"
-// rather than presented as functional multi-agent launchers.
-const WORKFLOWS: WorkflowItem[] = [
-  { label: 'Coding', wired: true, detail: 'fable-debugger + pocket-dimensions' },
-  { label: 'Research', wired: true, detail: 'research-to-dna' },
-  { label: 'Automation', wired: true, detail: 'merge-readiness (verify → PR → CI-autofix → hold for founder review)' },
-  { label: 'Morning Routine', wired: false, detail: 'not yet built' },
-  { label: 'Content', wired: false, detail: 'not yet built' },
-  { label: 'Book Writing', wired: false, detail: 'not yet built' },
-  { label: 'Music', wired: false, detail: 'not yet built' },
-  { label: 'Business', wired: false, detail: 'not yet built' },
+// The Hive's written-down playbooks that really exist in the repo
+// (.claude/skills/). They are run by an AI working in a coding session, not
+// launched from this screen, so this list is information, not a set of
+// launchers: no status dots, no buttons that would pretend to start anything.
+// Playbooks that were only ever "not yet built" are not listed at all.
+const PLAYBOOKS: Playbook[] = [
+  { label: 'Coding', skill: 'fable-debugger + pocket-dimensions', detail: 'Find the root cause of a bug; try risky changes in a throwaway copy first.' },
+  { label: 'Research', skill: 'research-to-dna', detail: 'Check research before it becomes Hive knowledge.' },
+  { label: 'Automation', skill: 'merge-readiness', detail: 'Verify, open the PR, fix CI, then hold for the founder to merge.' },
 ];
 
 export default function WorkflowsDrawer() {
@@ -27,23 +24,25 @@ export default function WorkflowsDrawer() {
     <div className="border-t border-white/10">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="w-full flex items-center justify-between px-3 py-2 text-xs text-slate-300 hover:bg-white/5"
       >
         <span className="flex items-center gap-2">
           <span className={`transition-transform ${open ? 'rotate-0' : '-rotate-90'}`}>▾</span>
           Workflows
         </span>
+        <span className="text-[10px] text-slate-500">{PLAYBOOKS.length} playbooks</span>
       </button>
       {open && (
         <div className="px-3 pb-2 space-y-1">
-          {WORKFLOWS.map((w) => (
-            <div
-              key={w.label}
-              className={`flex items-center justify-between px-2 py-1.5 rounded-md text-[11px] ${w.wired ? 'bg-white/5' : 'opacity-45'}`}
-              title={w.detail}
-            >
-              <span className="text-slate-300">{w.label}</span>
-              <span className={w.wired ? 'text-cyan-glow' : 'text-slate-600'}>{w.wired ? '●' : 'soon'}</span>
+          <p className="text-[10px] text-slate-500 leading-snug px-1 pb-1">
+            Playbooks written into the repo. An AI follows them in a coding session; this screen does not start them.
+          </p>
+          {PLAYBOOKS.map((w) => (
+            <div key={w.label} className="px-2 py-1.5 rounded-md text-[11px] bg-white/5">
+              <div className="text-slate-200">{w.label}</div>
+              <div className="text-slate-500 font-mono text-[10px]">{w.skill}</div>
+              <div className="text-slate-400 leading-snug">{w.detail}</div>
             </div>
           ))}
         </div>

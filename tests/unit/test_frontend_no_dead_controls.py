@@ -31,6 +31,9 @@ SWEPT = [
     "kai-os/HiveTerminal.tsx",
     "kai-os/CenterGraph.tsx",
     "LiveArenaViewer.tsx",
+    "kai-os/WorkflowsDrawer.tsx",
+    "kai-os/KaiCommune.tsx",
+    "kai-os/LeftNav.tsx",
 ]
 
 

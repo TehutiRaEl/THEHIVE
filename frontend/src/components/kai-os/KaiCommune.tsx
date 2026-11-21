@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '../../utils/constants';
 import { useHiveData } from '../../hooks/useHiveData';
 
@@ -9,19 +9,30 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+// A request from elsewhere on the screen (the left menu's Commands box, the
+// centre "Kai EL" button, the phone's Commune bar). With `text` it is sent to
+// Kai El as a message; without, it just puts the cursor in the chat box.
+export interface CommuneRequest {
+  id: number;
+  text?: string;
+}
+
 interface KaiCommuneProps {
   onSpeakingChange?: (speaking: boolean) => void;
+  request?: CommuneRequest | null;
+  onRequestHandled?: (id: number) => void;
 }
 
 // Docked right-panel version of KaiChatBox's real logic (same /v11/command_text
 // call) — restyled to live in the OS shell's right rail instead of floating,
 // and reports "speaking" (a command_text call in flight) up so the center
 // sigil can animate on real state, not a fake audio waveform.
-export default function KaiCommune({ onSpeakingChange }: KaiCommuneProps) {
+export default function KaiCommune({ onSpeakingChange, request, onRequestHandled }: KaiCommuneProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   // "Founder" once FOUNDER_KEY is bound, "YOU" until then (task 35, 2026-08-04 request)
   // — same signal and same caveat as KaiChatBox.tsx's own copy of this check.
   const { debugEnv } = useHiveData();
@@ -65,6 +76,31 @@ export default function KaiCommune({ onSpeakingChange }: KaiCommuneProps) {
     }
   };
 
+  // Keep the newest send() reachable from the request effect without
+  // re-running it on every keystroke.
+  const sendRef = useRef(send);
+  sendRef.current = send;
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
+
+  const handleRequest = useCallback((req: CommuneRequest) => {
+    const text = req.text?.trim();
+    if (text) {
+      // Kai El is mid-answer: keep the words in the box instead of losing them.
+      if (loadingRef.current) setInputValue(text);
+      else void sendRef.current(text);
+    }
+    inputRef.current?.focus();
+  }, []);
+
+  const handledRequest = useRef<number | null>(null);
+  useEffect(() => {
+    if (!request || handledRequest.current === request.id) return;
+    handledRequest.current = request.id;
+    handleRequest(request);
+    onRequestHandled?.(request.id);
+  }, [request, handleRequest, onRequestHandled]);
+
   return (
     <div className="flex flex-col h-full bg-void-800/60 border border-white/10 rounded-lg overflow-hidden">
       <div className="px-3 py-2 border-b border-white/10 flex items-center gap-2">
@@ -93,6 +129,7 @@ export default function KaiCommune({ onSpeakingChange }: KaiCommuneProps) {
       </div>
       <div className="p-2 border-t border-white/10">
         <input
+          ref={inputRef}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && inputValue.trim()) send(inputValue.trim()); }}

@@ -39,7 +39,8 @@ const SECONDARY: NavItem[] = [
 interface LeftNavProps {
   activeSection: string | null;
   onSelect: (id: string) => void;
-  onCommune: () => void;
+  // With text: send it to Kai El. Without: just open / focus the chat.
+  onCommune: (text?: string) => void;
 }
 
 export default function LeftNav({ activeSection, onSelect, onCommune }: LeftNavProps) {
@@ -96,13 +97,13 @@ export default function LeftNav({ activeSection, onSelect, onCommune }: LeftNavP
           onChange={(e) => setCommandValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && commandValue.trim()) {
-              onCommune();
+              onCommune(commandValue.trim());
               setCommandValue('');
             }
           }}
-          placeholder="chat box"
+          placeholder="Type a command for Kai El"
           aria-labelledby="leftnav-commands-label"
-          aria-label="Command input — press Enter to open Commune"
+          aria-label="Command for Kai El — press Enter to send it"
           className="w-full bg-void-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-cyan-glow/50"
         />
       </div>

@@ -6,7 +6,7 @@ import TopStatusBar from '../components/kai-os/TopStatusBar';
 import LeftNav from '../components/kai-os/LeftNav';
 import CenterGraph from '../components/kai-os/CenterGraph';
 import KaiSigil from '../components/kai-os/KaiSigil';
-import KaiCommune from '../components/kai-os/KaiCommune';
+import KaiCommune, { type CommuneRequest } from '../components/kai-os/KaiCommune';
 import HiveTerminal from '../components/kai-os/HiveTerminal';
 import BottomActivityFeed from '../components/kai-os/BottomActivityFeed';
 import WorkflowsDrawer from '../components/kai-os/WorkflowsDrawer';
@@ -81,6 +81,18 @@ export default function KaiElOS() {
   const [fullPlanOverlay, setFullPlanOverlay] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [communeOpen, setCommuneOpen] = useState(false);
+  const [communeRequest, setCommuneRequest] = useState<CommuneRequest | null>(null);
+  const clearCommuneRequest = useCallback((id: number) => {
+    setCommuneRequest((r) => (r && r.id === id ? null : r));
+  }, []);
+  // One way into Kai El's chat from anywhere: opens the phone's drawer, and on
+  // both layouts either sends the text or puts the cursor in the chat box.
+  const openCommune = useCallback((text?: string) => {
+    setNavOpen(false);
+    setActiveSection(null);
+    setCommuneOpen(true);
+    setCommuneRequest({ id: Date.now() + Math.random(), text });
+  }, []);
 
   const desktop = wide || forceDesktop;
 
@@ -99,11 +111,11 @@ export default function KaiElOS() {
 
   const handleSelect = useCallback((id: string) => {
     setNavOpen(false);
-    if (id === 'commune') { setActiveSection(null); setCommuneOpen(true); return; }
+    if (id === 'commune') { openCommune(); return; }
     // LeftNav uses 'dream'; panel key is 'dream-logs'
     if (id === 'dream') { setActiveSection('dream-logs'); return; }
     setActiveSection(id);
-  }, []);
+  }, [openCommune]);
 
   if (activeSection && FULL_TABS[activeSection]) {
     const ActiveTab = FULL_TABS[activeSection];
@@ -203,7 +215,7 @@ export default function KaiElOS() {
 
   const rightRail = (
     <div className="w-80 shrink-0 h-full flex flex-col gap-3 p-3 bg-void-900 border-l border-white/5 overflow-y-auto">
-      <div className="h-72 shrink-0"><KaiCommune onSpeakingChange={setSpeaking} /></div>
+      <div className="h-72 shrink-0"><KaiCommune onSpeakingChange={setSpeaking} request={communeRequest} onRequestHandled={clearCommuneRequest} /></div>
       <div className="h-40 shrink-0"><HiveTerminal hive={hive} /></div>
       <WorkflowsDrawer />
       <div className="border-t border-white/10 pt-3">
@@ -227,7 +239,7 @@ export default function KaiElOS() {
             </button>
           )}
           <div className="flex flex-1 min-h-0">
-            <LeftNav activeSection={activeSection} onSelect={handleSelect} onCommune={() => { setActiveSection(null); setCommuneOpen(true); }} />
+            <LeftNav activeSection={activeSection} onSelect={handleSelect} onCommune={openCommune} />
             <div className="flex-1 min-w-0 relative flex flex-col">
               {centerContent}
               <BottomActivityFeed hive={hive} />
@@ -272,7 +284,7 @@ export default function KaiElOS() {
       <BottomActivityFeed hive={hive} />
 
       <button
-        onClick={() => setCommuneOpen(true)}
+        onClick={() => openCommune()}
         className="shrink-0 h-12 flex items-center justify-center gap-2 bg-yale/40 border-t border-cyan-glow/30 text-cyan-glow font-body text-sm"
       >
         💬 Commune with Kai El
@@ -282,7 +294,7 @@ export default function KaiElOS() {
         <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/60" onClick={() => setNavOpen(false)} />
           <div className="relative h-full animate-slideIn">
-            <LeftNav activeSection={activeSection} onSelect={handleSelect} onCommune={() => { setNavOpen(false); setActiveSection(null); setCommuneOpen(true); }} />
+            <LeftNav activeSection={activeSection} onSelect={handleSelect} onCommune={openCommune} />
           </div>
           <button
             onClick={() => setNavOpen(false)}
@@ -308,7 +320,7 @@ export default function KaiElOS() {
                 ✕
               </button>
             </div>
-            <div className="h-80 shrink-0"><KaiCommune onSpeakingChange={setSpeaking} /></div>
+            <div className="h-80 shrink-0"><KaiCommune onSpeakingChange={setSpeaking} request={communeRequest} onRequestHandled={clearCommuneRequest} /></div>
             <div className="h-40 shrink-0"><HiveTerminal hive={hive} /></div>
             <div className="border-t border-white/10 pt-3">
               <ConnectedModels hive={hive} />
