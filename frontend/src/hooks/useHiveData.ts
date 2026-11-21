@@ -28,6 +28,27 @@ export interface RoadmapEntry {
 export interface RoadmapHoard extends RoadmapEntry { agentCount: number; totalSoul: number }
 export interface Roadmap { agents: RoadmapEntry[]; hoard: RoadmapHoard | null; stages: string[]; note?: string }
 export interface DebugEnv { bindings: Record<string, boolean>; secrets_present: string[] }
+// GET /v11/ventures: the venture manifest (a mirror of the private venture repo's
+// manifest.yaml, with its source SHA and mirror date) plus the business-plans inventory.
+export interface VentureInfo {
+  id: string
+  real_name: string
+  real_purpose: string
+  status: string
+  repos?: string[]
+  notes?: string
+}
+export interface VenturePlan { slug: string; words?: number; path?: string }
+export interface VenturesData {
+  available: boolean
+  reason?: string
+  source?: { repo?: string; path?: string; sha?: string; mirrored_at?: string; note?: string } | null
+  ventures: VentureInfo[]
+  plans: VenturePlan[]
+  plans_total_words?: number | null
+  plans_note?: string | null
+  hash?: string
+}
 export interface RoadmapCard { title: string; status: string; statusLabel: string; body: string }
 export interface DevelopmentRoadmap {
   founderActions: RoadmapCard[]
@@ -66,6 +87,7 @@ export interface HiveData {
   memoryBound: boolean
   aiBound: boolean
   debugEnv: DebugEnv | null
+  ventures: VenturesData | null
   refresh: () => void
 }
 
@@ -87,11 +109,11 @@ export function useHiveData(pollMs = 30000): HiveData {
     agents: [], challenges: [], pulse: [], governance: [], soulBoard: [],
     eloBoard: [], tasks: [], fallen: [], llm: null, tier3: null, updates: [],
     roadmap: null, developmentRoadmap: null,
-    memoryBound: false, aiBound: false, debugEnv: null,
+    memoryBound: false, aiBound: false, debugEnv: null, ventures: null,
   })
 
   const load = useCallback(async () => {
-    const [health, agents, challenges, pulse, gov, soul, mem, elo, tasks, fallen, llm, tier3, updates, roadmap, devRoadmap, debugEnv] = await Promise.all([
+    const [health, agents, challenges, pulse, gov, soul, mem, elo, tasks, fallen, llm, tier3, updates, roadmap, devRoadmap, debugEnv, ventures] = await Promise.all([
       j<{ status: string; version: string; runtime: string }>('/health'),
       j<{ agents: Agent[] }>('/agents'),
       j<{ challenges: Challenge[] }>('/arena/challenges'),
@@ -108,6 +130,7 @@ export function useHiveData(pollMs = 30000): HiveData {
       j<Roadmap>('/roadmap'),
       j<DevelopmentRoadmap>('/roadmap/development'),
       j<DebugEnv>('/debug/env'),
+      j<VenturesData>('/ventures'),
     ])
     setState({
       online: !!health,
@@ -129,6 +152,7 @@ export function useHiveData(pollMs = 30000): HiveData {
       memoryBound: !!mem?.vectorize_bound,
       aiBound: !!mem?.ai_bound,
       debugEnv: debugEnv ?? null,
+      ventures: ventures && ventures.available === true && Array.isArray(ventures.ventures) ? ventures : null,
     })
   }, [])
 
