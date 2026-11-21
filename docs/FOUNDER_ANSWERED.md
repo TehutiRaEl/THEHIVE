@@ -1,0 +1,1069 @@
+# FOUNDER_ANSWERED.md — Decided Founder Questions
+
+Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
+
+*(Empty at creation 2026-10-13 — no formal moves yet this session.)*
+
+*Addendum 2026-11-11: this file now holds 24 decided entries (Q-001–Q-010, M-01–M-09, F-005, Truth hierarchy, Q-B1, G1–G4, Tier 1 goals). The "Empty at creation" line above is the original creation note, kept for provenance — it is not a claim about the file's current state.*
+*Addendum 2026-11-12: this file now holds 62 decided entries (the 24 above plus XR-Q1–Q5, XR-Q8–XR-Q33, the HITL approval list, FQ-Q-015, FQ-Q-024, and XR-Q34–Q37, ratified in this batch).*
+*Addendum 2026-11-13: this file now holds 64 decided entries (the 63 above plus FQ-Q-012, recorded in this batch).*
+*Addendum 2026-11-13: this file now holds 65 decided entries (the 64 above plus FQ-Q-013, recorded in this batch).*
+*Addendum 2026-11-14: this file now holds 66 decided entries (the 65 above plus FQ-Q-028, recorded in this batch).*
+*Addendum 2026-11-15: this file now holds 67 decided entries (the 66 above plus the standing rule "No Plan Left Behind", recorded in this batch).*
+*Addendum 2026-11-18: this file now holds 69 decided entries (the 67 above plus FE-001–FE-011, previously uncounted, and FQ-Q-048, recorded in this batch).*
+
+---
+
+## Q-001 — DECIDED 2026-11-04
+
+**Question (as queued):** Oracle box — provision (set three secrets so deploy.yml works) or retire System A honestly (mark retired, remove permanent skip, reword biosystem Demo Mode)?
+**Founder decision:** PROVISION — repurposed. NOT retire.
+**What this means, in the founder's own approved terms (2026-11-04):**
+- Cloudflare Worker remains the public system of record. The Oracle box does NOT become a second public Hive.
+- System A is to be reengineered, not restored as-is, and stripped down to only what the Worker lacks — not duplicated route-for-route.
+- Purposes approved:
+  1. Private engine behind the Worker — heavy/private work the Worker calls for, including colony, knowledge, ML, browser, and debug routes the Worker only partly mirrors, plus economy, governance, simulator, and tier2/tier3 modules.
+  2. HiveMesh colony host — separate private colony services, rather than cramming them into edge code.
+  3. Long-running lab — scheduled audits, plan-reality checks, batch work, learning loop, and venture loops that need hours, not seconds.
+  4. Staging twin / sandbox — test migrations, Dual Lens changes, and D1 work before production.
+  5. Reengineered, not restored as-is — one clear job for the box, avoiding a recreated two-systems problem.
+**Downstream chain:** System A, biosystem.html, Python/MCP harness, Arithmancer capabilities.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-002 — DECIDED 2026-11-04
+
+**Question (as queued):** Cloudflare Access — is Zero Trust Application created for `/v11/founder/*`, and are ACCESS_TEAM_DOMAIN / ACCESS_AUD / FOUNDER_EMAIL set on the Worker?
+**Founder decision:** CREATE the Cloudflare Access app.
+**What this means:**
+- Create a Cloudflare Zero Trust Application for `/v11/founder/*`.
+- Set ACCESS_TEAM_DOMAIN, ACCESS_AUD, and FOUNDER_EMAIL on the Worker.
+- Purpose: browser login for founder routes without pasting FOUNDER_KEY. FOUNDER_KEY remains as a fallback until Access is verified-live.
+- Status note: this records the DECISION only. It does NOT claim ACCESS_CONFIGURED is true — that must be verified-live after the dashboard work (queue estimate: 15–30 minutes) and a fresh live probe.
+**Downstream chain:** Founder UX, task 35/46 clarity, multi-actor future.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-003 — DECIDED 2026-11-04
+
+**Question (as queued):** Production D1 — apply migration `001-add-normalized-title.sql` to thehive-queen? (Staging first required by prior founder doctrine.)
+**Founder decision:** STAGING FIRST, then production only after verified.
+**What this means:**
+- Apply `001-add-normalized-title.sql` to a staging D1 first, verify it there, and only then apply it to production thehive-queen.
+- Production application is NOT authorized by this decision alone until staging verification is recorded.
+- This follows prior founder doctrine: schema changes are in the irreversible class, so staging first is required.
+- Status note: this records the DECISION and its staging gate only. It does NOT claim the migration has been applied to staging or production, or that the live D1 schema has been verified.
+**Downstream chain:** Gate backfill completeness, formal migration honesty.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-004 — DECIDED 2026-11-04
+
+**Question (as queued):** Enable AUTOMATON_FINANCIAL_AUTONOMY?
+**Founder decision:** ENABLED ONLY THROUGH GATED TIERS. No blanket financial autonomy.
+**Gated tiers, as approved by the founder 2026-11-04:**
+- Tier 1 — Steady, scalable services: copywriting services, faceless social media generating steady and scalable revenue, an animated podcast show, dropshipping, etc.
+- Tier 2 — Active income, lawful only: day trading, legal and lawful arbitrage, freelance gigs, marketing, finishing the books the founder started, then publishing and advertising them, etc.
+- Tier 3 — Formal business: run an LLC, create businesses aligned with the founder vision and the Hive, etc.
+- Tier 4 — Structure and protection: form a dynasty trust, S corp, C corp, insure the Hive and the founder bonded, apply for government grants and any other government money, etc.
+- Tier 5 — Entrepreneur mogul AI: the AI operating at mogul scale across ventures, after the lower tiers are proven.
+**Gates and limits recorded with the decision:**
+- Tier 1 first. Each higher tier is unlocked only by a separate founder decision after the lower tier is proven.
+- No automatic money moves: each real money action still requires the founder's explicit yes.
+- Tiers 3–4 are legal/financial work requiring qualified human counsel; forming entities, trusts, or insurance is not authorized by flipping a switch alone.
+- Government grants: terms must be checked per grant; "no strings attached" is not assumed — hidden fees, duties, or obligations must be verified before acceptance.
+- Animated show: an original show inspired by that style/format, with original characters and world. It does NOT continue a copyrighted show's characters or story without a license.
+**Downstream chain:** Wallet, economy reality.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-005 — DECIDED 2026-11-04
+
+**Question (as queued):** Enable AUTOMATON_REPLICATION_AUTONOMY?
+**Founder decision:** KEEP OFF.
+**What this means:**
+- The Hive must not copy or replicate itself, or spawn colonies, on its own.
+- Any future replication requires a new, explicit written founder decision in the repo — this decision does not pre-approve it.
+- This follows prior founder doctrine: money/replication off until written approval.
+**Downstream chain:** Colony spawn risk.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-006 — DECIDED 2026-11-04
+
+**Question (as queued):** Enable QUEEN_AUTONOMOUS_APPROVAL (switch 9)?
+**Founder decision:** KEEP OFF FOR NOW, CONDITIONAL.
+**Founder's condition, in his words:** She (the Queen) can't do so until she is 100% present in the Hive — fully coded, tested, wired up, deployed, and checked if live.
+**What this means:**
+- Queen auto-approve (switch 9) stays OFF now.
+- It must not operate until the Queen is 100% present in the Hive, having passed the founder's definition of done in exact order: compiles → tested → wired → merged → deployed → verified-live.
+- Code presence alone is not enough; live verification is required.
+- Even when that condition is met, auto-approve can never skip the action-request execution gate for money, deletion, publishing, constitution changes, or external actions (per docs/FOUNDERS_VISION.md).
+**Downstream chain:** Proposal pipeline trust.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-007 — DECIDED 2026-11-04
+
+**Question (as queued):** Autonomy ladder — enable any stage ≥ 1 (starting with KAI_BRAIN_WRITE)?
+**Founder decision:** KEEP ALL AUTONOMY STAGES OFF.
+**Founder's reason, in his words:** Kai hasn't done any real work yet, so why would I enable that if he's building blindly?
+**What this means:**
+- Stage 1 (KAI_BRAIN_WRITE) is NOT enabled.
+- No higher stage is enabled either.
+- Live state at decision time was consistent with this: all 7 Kai autonomy stages off, next = stage 1.
+- Enabling brain-write before Kai has done real work and a baseline exists would be building blindly — learning must follow real work, not precede it.
+- Any future stage enablement requires a new founder decision.
+**Downstream chain:** Learning-loop prep, Kai lab memory.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-008 — DECIDED 2026-11-04
+
+**Question (as queued):** Venture colony repo — create and connect?
+**Founder decision:** ALREADY EXISTS — NO NEW REPO.
+**Verified 2026-11-04 before recording:**
+- Repo TehutiRaEl/venture (private, main) exists, created 2026-07-18.
+- It is NOT empty, but scaffold-only: README.md, CLAUDE.md, manifest.yaml, docs/, ventures/, .claude/, last commit 2026-08-18 (tip e7846f625e533fac38069183e1fbc8a72e886067, Genesis Ventures Program scaffold).
+- No commits since 2026-08-18, so no proven venture loop has run through it since then.
+**What this means:**
+- Do not create a second venture colony repo. TehutiRaEl/venture is the venture colony repo.
+- Activation/connection as a live venture loop is still pending proof (cockpit + one venture loop proven) — this decision records existence, not live activation.
+**Downstream chain:** Federation scope, public-repo policy.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-009 — DECIDED 2026-11-04
+
+**Question (as queued):** Five approved-unactioned proposals (#1, #5, #6, #7, #8) — triage: action, reject, or re-queue?
+**Founder decision:** TRIAGE PASS COMPLETED — one call per proposal, decided one at a time 2026-11-04.
+**Live pull before triage:** Proposals pulled read-only from production https://thehive.sovereignhive.workers.dev/v11/proposals?limit=50&offset=100 on 2026-11-04 ~17:09 PST. All five showed status approved, actioned_at null at pull time. Workspace triage sheet: ~/workspace/q009-triage-sheet-live-2026-11-04.md (this record does not claim live actioned_at stamps were updated — those are follow-up implementation steps).
+**Per-proposal calls:**
+- #1 Create the "venture" colony repository — CLOSED as actioned by existence. Repo TehutiRaEl/venture already exists (see Q-008, commit 698b305c); no second repo.
+- #5 Build free-API / LLM-gateway discovery (Tier-2, propose-only) — ACTION: build it, propose-only. Search/evaluate only; each candidate as its own proposal; founder approves before anything is wired in.
+- #6 Venture: book-merch dropshipping + faceless multi-platform social — ACTION: start it under Q-004 Tier 1. No real account, post, or dollar without a further founder yes.
+- #7 Prioritize Approved Proposals — CLOSED as actioned by this triage. This pass is the prioritization it asked for.
+- #8 Assign Work on Approved Proposals — CLOSED as actioned by this triage. Assignments made: #1 closed, #5 actioned, #6 actioned.
+**Downstream chain:** Proposal UX trust, Queen scoring credibility.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## Q-010 — DECIDED 2026-11-04
+
+**Question (as queued):** Is the frontend canonical resolved (React Command Center as the one surface)?
+**Founder decision:** YES — React Command Center is canonical.
+**What this means:**
+- React Command Center is the one, practical canonical frontend surface.
+- Competing "which UI is real" threads are to be archived, not treated as co-canonical.
+- This sets frontend audit scope, docs links, and "Demo Mode" copy to follow the React Command Center surface.
+- This decision resolves the canonical-frontend question; it does not claim all competing surfaces are deleted, nor that the Command Center is verified-live at any particular build hash.
+**Downstream chain:** Frontend audit scope, docs links, "Demo Mode" copy.
+**Recorded by:** Muse, at founder direction, 2026-11-04. Moved here from docs/FOUNDER_QUEUE.
+
+---
+
+## M-01 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** Which file is the sole edit source for the constitution (soul.md)?
+**Founder decision:** soul.md IS the sole edit source.
+**What this means:**
+- The constitution is edited in soul.md only. Derived views (`.queen/soul.md`, `docs/GOVERNANCE.md`) are not edit sources.
+- This entry migrates a 2026-09-30 founder decision recorded in project memory, per Grok's signed forensic memo of 2026-10-13. No repo file was found stating this rule in those words; the only other attestation is the founder-answers package pasted in Grok conversation "Pocket Dimension HTML Prototype," which lists "soul.md sole edit source" among the founder's answers. See the migration report for the verification status.
+**Downstream chain:** Constitution taxonomy; the open contradiction (root soul.md vs `.queen/soul.md` canonical) is narrowed but not closed by this entry alone — it still needs one founder sentence on which file is canonical, which this decision does not by itself supply.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-02 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** Which fixed laws are canonical?
+**Founder decision:** F-001–F-006 ONLY are canonical fixed law.
+**What this means:**
+- soul.md defines exactly six fixed laws: F-001 Data Sovereignty & Time Wealth, F-002 Value-Weighted Wealth, F-003 Autonomy & Alternatives, F-004 Explainability, F-005 Conflict Priority, F-006 Cross-Law Non-Penalization (soul.md lines 8, 13, 18, 22, 26, 29). No F-007 or higher exists in soul.md.
+- `docs/GOVERNANCE.md` presents F-001–F-013 (including F-007 Agent Valuation through F-013 Founder Loyalty & Tribute), but none of F-007–F-013 is canonical per this decision. Claims of F-007–F-011 in other material (e.g. Update.pdf) are not canonical law.
+**Downstream chain:** Laws inventory; F-007 proposal handling (see M-06); constitution taxonomy.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-03 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** How far does Nanuet's autonomy ladder go?
+**Founder decision:** Nanuet ladder 1–2 ONLY.
+**What this means:**
+- Only stages 1 and 2 of Nanuet's staged-autonomy ladder are built: Stage 1 `NANUET_BRAIN_WRITE` and Stage 2 `NANUET_REVIEW_LOG` (`worker/schema/NANUET_AUTONOMY.md` lines 54–56, 58, 75: "Stages 1 and 2 are built… Stages 3 through 6 are not built").
+- Stages 3–6 (`NANUET_DOMAIN_ROUTING`, `NANUET_CAMPAIGN_OBSERVE`, `NANUET_CAMPAIGN_ADVISE`, `NANUET_DELEGATE_AKOSHA`) are documented destinations, not built, and are not authorized by this decision. Every switch stays OFF until the founder sets it.
+**Downstream chain:** Queen build phases Q-A/Q-B/Q-C; Q-006 (switch 9) and Q-007 (Kai autonomy stages).
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-04 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** May the Hive move money or replicate itself on its own?
+**Founder decision:** Money/replication OFF until written approval.
+**What this means:**
+- No money movement and no self-replication without the founder's explicit written approval. Each real money action still requires the founder's explicit yes.
+- Corroborated in the repo: this entry's downstream decisions Q-004 and Q-005 (2026-11-04) restate it — Q-005 records "This follows prior founder doctrine: money/replication off until written approval." `PERMISSIONS.md` line 44 places moving money, incurring cost, and signing terms in the founder-only tier, and `FLIP_THE_SWITCHES.md` line 270 lists `KAI_FINANCIAL_AUTONOMY` as "Not built."
+**Downstream chain:** Q-004 (gated financial tiers), Q-005 (replication OFF), wallet/economy work.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-05 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** Is the Dual Lens wire live or local-only?
+**Founder decision:** LENS wire LOCAL-ONLY.
+**What this means:**
+- The Dual Lens wire to `worker/src/index.js` stays local. It is not merged and not deployed. Evidence: `docs/LENS_WIRE_AND_MIGRATION_STATUS.md` line 8 — the complete wire patch was "applied locally"; the work lives on branch `feat/lens-index-wire-local-2026-09-30` (`docs/DEPLOY_WIRE_LEDGER.md` line 88).
+- This decision does not authorize merging any lens branch. The `feat/lens-index-wire-2026-09-26` branch is a broken 500 placeholder and must not be merged.
+- Note: the Dual Lens gate later landed on main via a different route (PR #215, commit f520f518, merged 2026-10-01). This 2026-09-30 decision records the local-only status as of that date; it does not describe the later PR #215 landing.
+**Downstream chain:** Dual Lens gate; lens branch hygiene.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-06 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** How is F-007 handled?
+**Founder decision:** F-007 TIERED HANDLING.
+**What this means:**
+- F-007 is not canonical law (see M-02: F-001–F-006 only). F-007 material is handled in tiers: as proposals and triage items, not as fixed law — a real constitutional change for anything F-007-shaped requires founder confirmation.
+- Corroboration is partial: no repo file states a "tiered handling" rule for F-007 in those words. What the repo does show is the practice — the 2026-08-14 firing record in `docs/campaign.html` notes an "F-007 MANDATE_TRIAGE proposal" whose acceptance text "already requires founder confirmation for a real constitutional change, none on record," and the live proposal queue treats F-007 items as ordinary proposals (compound proposal #117, 2026-11-05), not as law.
+**Downstream chain:** Laws inventory; F-007 Governance Kernel proposals; M-02.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-07 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** How do founder deposits enter the Hive's plans?
+**Founder decision:** WEAVE RULE.
+**What this means:**
+- Founder material (vision deposits, mind maps, roadmaps) is woven into existing planning without replacing verified live state. The rule as written in `Project_file/Founders Visonary Folder/VISION/master-mind-map-roadmap-2026-09-28/PLAN_WEAVE_2026-09-28.md` lines 5 and 39: deposit the founder's unabridged Master Mind Map & Roadmap and "weave it into existing planning without replacing verified live state"; output files are targets/adapters.
+- A deposit never overwrites what is verified live. Where deposit and live state conflict, the conflict is logged, not forced.
+**Downstream chain:** Plan accumulation (BATCH-001); vision layers; continuity ledger.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-08 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** What weight does Colony Health carry?
+**Founder decision:** Colony Health ADVISORY.
+**What this means:**
+- Colony Health signals are advisory, not authoritative. They inform the founder and the Hive; they do not decide, approve, or gate anything on their own.
+- Corroboration is partial: the concepts exist as checks, not as a founder decision, in the repo — `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-07-21-session-harvest-phase8-implementation-021.md` line 65 records "`CI`, `Colony Health Matrix`, `Governance Advisory Check` all passed." No repo file was found stating the advisory-only classification as a founder decision in those words. See the migration report.
+**Downstream chain:** Colony Health monitoring; governance checks; Council review.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## M-09 — DECIDED 2026-09-30 (migrated 2026-11-05)
+
+**Question (as queued):** In what order is work prioritized?
+**Founder decision:** Priority order C → B → A → D.
+**What this means:**
+- Work is prioritized in the order C, then B, then A, then D.
+- Verification: no repo file was found stating this priority order in those terms. The nearest similar text, `docs/GAP_ANALYSIS.md` lines 119–130 ("Mission Priority Order"), lists mission IDs (C-003, C-001, C-002, H-007, …), which is a different ordering of different items and is not this decision. See the migration report — this entry rests on the 2026-09-30 project-memory record alone, and the classes C/B/A/D themselves are not defined in any repo file found.
+**Downstream chain:** Work prioritization; batch ordering; triage.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Migrated from the 2026-09-30 founder decisions recorded in project memory (Grok forensic memo 2026-10-13).
+
+---
+
+## F-005 — AMENDED 2026-11-05 (adopted; PR #219 pending merge)
+
+**Question (as queued):** Adopt the F-005 Conflict Priority rewrite from the law stress-test sandbox, with DaVinci's six named changes?
+**Founder decision:** ADOPT the rewrite with DaVinci's six named changes (2026-11-05).
+**What this means:**
+- The 13-word core is kept verbatim: "Fixed laws > mutable laws; lower F-number > higher F-number; no override."
+- Six clauses added: (1) "founder decision" defined and capped — a ruling recorded in docs/FOUNDER_ANSWERED (an M- or Q-entry) or a merged ratification PR into soul.md; a chat yes, instruction, or gut feeling is not one until recorded; it outranks unratified text only, never a fixed law; instruction ≠ decision ≠ amendment. (2) Numbering collisions: 30-day freeze, neither claimant citable as law, existing citations marked disputed, loser refiling under a new number inherits the dispute and freeze, canonical-number collisions decided by the founder alone. (3) Fixed laws amended only through the Chromosome I process (FABLE_DNA.md); "explicit founder decision" struck as the standard; GOVERNANCE.md F-005D/E/F struck and void. (4) Founder named as interim resolver until the Council is constituted; Nanuet-held vision is the recorded reference the founder weighs, not a second resolver. (5) Mutable laws rank by list number (1 > 2 > 3 > 4); unratified articles hold no rank. (6) A law outranks its own sub-articles; surviving intra-law conflicts go to the resolver with the parent's text as default.
+- Provenance: F-005 sandbox (21 compressed days, 16 cases, 11 clean, 5 no-verdict) recommended REWRITE; Devil's Advocate and Childlike Wonder synchronized; DaVinci verdict "ADOPT WITH NAMED CHANGES" (hive-laws/sandboxes/F-005/lens-davinci.md §1).
+- Effect: the amendment takes effect when PR #219 merges, not on this entry. Re-test is full regression, pending after merge.
+**Downstream chain:** Law stress-test program (F-001 next, under the improved process); No-Verdict Ledger; Council design.
+**Recorded by:** Muse, at founder direction, 2026-11-05. Pushed to main 2026-11-05 after PR #219 was opened.
+
+---
+
+## Truth hierarchy — RATIFIED 2026-11-11
+
+**Question (as queued):** Production > code > plan > narrative — proposed in the 2026-10-12 batch plan, not yet founder-ratified. Ratify it, or state a different order?
+**Founder decision:** RATIFY as proposed, with two clarifications (2026-11-11).
+**What this means:**
+- The order is production > code > plan > narrative. Production (what is actually live) outranks code (what is in the repo), which outranks plan (what is written in plans/docs), which outranks narrative (what is said about it).
+- When levels disagree, the higher level wins and the lower level gets corrected — never the reverse. If the narrative says it is done but production says otherwise, the narrative gets fixed, not the system.
+- A founder decision is a recorded fact about intent, not about state. It guides what production should be, but it does not override what production is. Deciding something is done does not make it done; only the live system does that.
+**Downstream chain:** Evidence-first discipline; the 20-rung done ladder (verified-live); cross-reference drift findings; all future disagreements between live state, code, plan, and narrative.
+**Recorded by:** Muse, at founder direction, 2026-11-11. Cross-reference Q6.
+
+---
+
+## Q-B1 — DECIDED 2026-11-10
+
+**Question (as queued):** The legacy biosystem page (`docs/biosystem.html`, 17,344 lines, two copies pasted together) — retire it, or rewire it?
+**Founder decision:** RETIRE the legacy page — as STEP 1 of reverse engineering, NOT abandonment.
+**What this means:**
+- The page's purpose (a living biosystem view) stays; the page itself goes. Everything the founder built in the bio hive system is for the Hive; it was never built and wired into the Hive properly, so it gets planned and blueprinted/mapped out to be done properly (the reverse-engineering blueprint + build plan, phases B0–B8).
+- B0 (retire) was built and merged as PR #229 (2026-11-11): the Legacy atlas tab was removed from the React overlay, and `docs/biosystem.html` was moved to the archive (`Project_file/Founders Visonary Folder/ARCHIVE/biosystem.html`, outside `docs/` so the Worker will not serve it, content unchanged). Live check: `/biosystem.html` returns 404.
+- The 72 systems are NOT yet rewired into the live app. That is phases B1–B8, each needing its own go-ahead + preamble. An audit never authorizes the build that follows it.
+**Downstream chain:** Biosystem reverse-engineering blueprint; biosystem build plan (B0–B8); gates G1–G4 (see below); the 72-system atlas; the command-center purpose map.
+**Recorded by:** Muse, at founder direction, 2026-11-11. Decided in chat 2026-11-10; recorded here 2026-11-11 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## G1–G4 — APPROVED 2026-11-11 (biosystem gates, by name)
+
+**Question (as queued):** Four new Worker endpoints for the biosystem rebuild — approve each by name?
+**Founder decision:** APPROVED, all four, by name (2026-11-11).
+**What this means:**
+- **G1** `GET /v11/biosystem/status` — the 72-system atlas (one call returning the living systems of the Hive with real status). Built at B2. Until it exists, the atlas is a static map fed by the routes that already exist; **do not fake per-system numbers**.
+- **G2** `GET /v11/constitution` — serves `soul.md` F-001–F-006 for the constitution view. Built at B3. It validates against soul.md F-001–F-006, never against the 12 Jasper-era articles in the old page.
+- **G3** `GET /v11/biosystem/resonance` (optional) — the hive-coherence reading, derived from `GET /v11/pulse`. Built at B6. `/pulse` returns timestamped actions only, so the reading can be heartbeat regularity at most unless a richer source is named.
+- **G4** `GET /v11/lens/state` (optional) — the lens-state display (which lens is active + the hemisync state). Built at B6. No drug-mode numbers.
+- A gate approval is a yes to building that one door at its phase, not to the whole phase. Each phase still needs its own go-ahead + preamble.
+**Downstream chain:** Biosystem build plan (B2, B3, B6); the 72-system atlas; the constitution view; the lens-state display; the coherence reading.
+**Recorded by:** Muse, at founder direction, 2026-11-11. Approved in chat 2026-11-11, by name; recorded here 2026-11-11 so the approvals count as founder decisions under soul.md F-005 Clause 1.
+
+---
+
+## Tier 1 goals — DECIDED 2026-11-10
+
+**Question (as queued):** Q-004 Tier 1 income — what are the goals, the order, and the survival number?
+**Founder decision:** DECIDED (2026-11-10), as follows.
+**What this means:**
+- **Short:** first $1,000 by Sun Nov 22, 2026. **Medium:** $10,000/month with AI by end of February 2027 (Sun Feb 28, 2027). **Long:** control of all the hardware on local infrastructure Mac owns. Each goal nests its own short/medium/long (fractal).
+- **Order:** (1) faceless social media first (as practice), (2) dropshipping second (because the platform moves money and the Hive never touches it). Start A0/A1 (Mac approves every post/action); A2 only in a bounded envelope.
+- **The book is what Tier 1 FUNDS** (100% control/rights, funded fully before any franchise decision) — the pyramid is NOT centered on the book. Proof ladder: $1,000 → book funded → first new tree.
+- **Survival number: $10/month** (computed $7–$8, rounded up; floor $5; safe target $20; current cost $0/month). One verification left: Zapier and Replit plans unknown.
+- **Blitzkrieg:** once germinated, simultaneous launch — animated podcast + dropshipping + faceless social at once. Discord holds the community only after an audience exists.
+- **Method:** NOT limited to reverse engineering — innovative, inventive, creative; legally and lawfully. Q-004 gate stays in force: Mac approves every money move. Risk meter comes down first; 100X ROI as a mindset; the Hive earns a bigger playground by paying for it.
+**Downstream chain:** Q-004 Tier 1 income goal (due 2026-11-22); the Tier 1 pyramid sketch; the goals/milestones map; the survival number; the Tier 1 Income Tracker.
+**Recorded by:** Muse, at founder direction, 2026-11-11. Decided in chat 2026-11-10; recorded here 2026-11-11 so the goals count as founder decisions under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q1 — DECIDED 2026-11-11 (ratified via PR #230; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** Product identity — is the Hive one product or several? What is the product? (Cross-reference §5, Q1.)
+**Founder decision:** ONE PRODUCT IN PHASES. The federated AI Nation is the core; the commercial game studio is its gamified form (later, Campaign 8); the cockpit is the founder's control room (now).
+**What this means:**
+- The product is one thing in phases — the federated AI Nation is the core; the commercial game studio is its gamified form (later, Campaign 8 on the full road map); the cockpit is the founder's control room (now, the current frontend's basis).
+- Recorded in `docs/FOUNDERS_VISION.md` v1.1 (2026-11-11), SHA 7a921e67.
+- This entry records Q1 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** The product identity; FOUNDERS_VISION.md v1.1; Campaign 8 (the gamified form, later).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #230; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
+
+---
+
+## XR-Q2 — DECIDED 2026-11-11 (ratified via PR #230; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** Unity/Unreal — where does the game engine work belong? (Cross-reference §5, Q2.)
+**Founder decision:** UNITY/UNREAL = CAMPAIGN 8 PLANNING.
+**What this means:**
+- The Unity/Unreal game engine work is Campaign 8 planning (the gamified form, later), not now.
+- This entry records Q2 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** Campaign 8 (the gamified form, later); the game engine work.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #230; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
+
+---
+
+## XR-Q3 — DECIDED 2026-11-11 (ratified via PR #230; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** The 101 roles — are they for Campaign 8 or for now? And the five AI seats? (Cross-reference §5, Q3.)
+**Founder decision:** THE 101 ROLES ARE FOR CAMPAIGN 8. THE FIVE AI SEATS ARE NOW.
+**What this means:**
+- The 101 roles are for Campaign 8 (the gamified form, later).
+- The five AI seats are now (the current Hive).
+- This entry records Q3 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** The 101 roles (Campaign 8); the five AI seats (now); Sentry (Q23 — Kai El uses the 101 roles as the baseline, not the ceiling).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #230; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
+
+---
+
+## XR-Q4 — DECIDED 2026-11-11 (ratified via PR #230; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** The floating menu hub — is it a Campaign 8 prototype or a now feature? (Cross-reference §5, Q4.)
+**Founder decision:** THE FLOATING MENU HUB IS A CAMPAIGN 8 VISUAL PROTOTYPE.
+**What this means:**
+- The floating menu hub is a Campaign 8 visual prototype (the gamified form, later), not a now feature.
+- This entry records Q4 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** Campaign 8 (the gamified form, later); the floating menu hub.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #230; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
+
+---
+
+## XR-Q5 — DECIDED 2026-11-11 (ratified via PR #231; recorded here 2026-11-12 so FOUNDER_ANSWERED is fully updated)
+
+**Question (as queued):** Vision versioning — how is the vision document versioned? (Cross-reference §5, Q5.)
+**Founder decision:** OPTION 1. Major version = reframing of what the product is; minor version = clarification/addition.
+**What this means:**
+- The vision document (`docs/FOUNDERS_VISION.md`) is versioned by option 1: a major version change means a reframing of what the product is; a minor version change means a clarification or addition.
+- The vision is at v1.1 (2026-11-11, PR #231).
+- This entry records Q5 in FOUNDER_ANSWERED so the record is fully updated and stays updated (Mac, 2026-11-12: "All questions that I've answered need to be ratified into founder answered").
+**Downstream chain:** FOUNDERS_VISION.md versioning (v1.1); Q1 (product identity).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided 2026-11-11 and ratified via PR #231 (vision v1.1); recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1 and so FOUNDER_ANSWERED is fully updated.
+
+---
+
+## XR-Q8 — DECIDED 2026-11-12
+
+**Question (as queued):** Biosystem — the final resolution. Does the biosystem's rebuild still need anything from System A, or is Worker data enough? (Cross-reference §5, Q8.)
+**Founder decision:** WORKER DATA IS ENOUGH. System A is NOT needed for the biosystem rebuild.
+**What this means:**
+- Mac wants to keep the way the biosystem tab looked and just have it work and be seen live.
+- By Muse's professional judgment (Mac asked Muse to make the technical call): Worker data is ENOUGH; System A is NOT needed. The blueprint already maps all 72 systems to Worker routes (19 pure EXISTS, 2 NEW via G1/G2, 12 RETHINK, 6 DROP); System A runs nowhere.
+- System A = the old FastAPI backend in `backend/` (Jasper v10). System B = the Cloudflare Worker, the live system.
+- Q-B1 retired the legacy page as step 1 of reverse engineering, NOT abandonment.
+**Downstream chain:** Biosystem rebuild (B1–B8); the 72-system atlas; gates G1–G4.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q9 — DECIDED 2026-11-12
+
+**Question (as queued):** Biosystem — show or control? Was it meant to control the Hive (dispatch, route, govern) or only to show it? (Cross-reference §5, Q9.)
+**Founder decision:** BOTH — show AND control. It is a body map.
+**What this means:**
+- The biosystem is both seen and acting, like a body. A body is seen and it acts.
+- It is Kai El's command center — he operates from it. Mac will not watch it 24/7; he checks in.
+- It is also a window into the Queen's body — the hive and the forest are hers.
+**Downstream chain:** Biosystem rebuild (B1–B8); Kai El's command center; the Queen's body.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q10 — DECIDED 2026-11-12
+
+**Question (as queued):** Command center — one screen, or many tabs? Is the "one screen, everything visible at once" quality part of the vision, or is tab-switching fine? (Cross-reference §5, Q10.)
+**Founder decision:** BOTH — switchable. One-screen view and tabs view, switchable.
+**What this means:**
+- One-screen view when Mac wants to see everything at once; tabs view when he wants to go straight into something.
+- Kai El makes better use of both modes.
+**Downstream chain:** Command center layout; the React command-center page (see FQ-Q-023, still open).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q11 — DECIDED 2026-11-12
+
+**Question (as queued):** Command center — is the Hive a place you navigate, or a set of panels? Which does the founder want the operator to feel — a place, or a control room? (Cross-reference §5, Q11.)
+**Founder decision:** BOTH — a place that IS a control room. Agents must work the plans, not wander.
+**What this means:**
+- A place visually that functions as a control room. A place is more visually appealing; a control room is what it is — the control in the equation.
+- Agents must NOT wander; they work the mini plans, roadmaps, and batches Mac created.
+- Main problem named by Mac: those plans are in the repo but NOT in the frontend, so Kai El cannot see or use them. The command center needs the 360 view — horse blinders help when racing or with a microscope, not with a 360 lens shot.
+- Addendum: the hybrid of Cyborg + Alfred + JARVIS was Mac's reasoning for Q11. It needs to be ratified into the repo and wired up through the structure, from code to live, so it is not ambiguous what Kai El is doing. That is a build, queued behind the Queen being 100%.
+**Downstream chain:** Command center purpose map; the 360 view; the hybrid ratification and wiring; the missing keystone (Queen Digest runtime).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q12 — DECIDED 2026-11-12
+
+**Question (as queued):** Command center — what happens to `docs/index.html`? Does the legacy page retire, stay as a fallback, or do its working pieces migrate across first? (Cross-reference §5, Q12.)
+**Founder decision:** RETIRE it. Do NOT migrate the simulation fallback.
+**What this means:**
+- Retire `docs/index.html`. The repo has version sprawl (multiple versions over ~six months, all still in the repo).
+- The simulation fallback is fake data that looks real, and fake data that looks real hides real problems. It does NOT migrate.
+- Retirement inventory (16 things): 2 pages (`docs/biosystem.html` via B0/PR #229, live 404, archived; `docs/index.html` decided here), 11 features (localhost fallback; ColonyZoomPanel capabilities section; simulation fallback; boot sequence; voxel arena; frequency/word→Hz system; ConnectomeHarmonics eigenmodes; FamilyConstitution 5-tier legal hierarchy; WaterfallLedger money waterfall; SOUL editor browser textarea; colony zoom-in iframe), 3 notes (three August SOURCES notes, to be marked superseded).
+- NOT retired: the blueprint's 12 RETHINK items (rows 8, 11, 17, 23, 25, 26, 29, 30, 32, 33, 37, 40) — transformed, not dropped.
+**Downstream chain:** The retirement inventory; the biosystem rebuild; SOURCES notes (mark superseded).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q13 — DECIDED 2026-11-12
+
+**Question (as queued):** Gateway — which "gateway" is the gateway console to be rebuilt? The LLM-provider switchboard, the missing API gateway, or the Gateway Process widget — or are all three meant to become one thing? (Cross-reference §5, Q13.)
+**Founder decision:** ALL THREE TOGETHER AS ONE, built on the plethora of free resources worldwide.
+**What this means:**
+- The gateway console is the LLM-provider switchboard + the API gateway + the Gateway Process / hemisync display, all three together as one.
+- It is built on the plethora of free resources worldwide (free tiers, open source, free services).
+- Honest caveat (Muse's, standing): literally unlimited free rate limits do not exist on any single free tier; effectively unlimited comes from combining many free sources with fallback, rotation, and caching.
+**Downstream chain:** Gateway console rebuild; the `thehive` AI Gateway (created 2026-11-06, used by nothing); FQ-Q-025 (gateway questions).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q14 — DECIDED 2026-11-12
+
+**Question (as queued):** Gateway — confirm its purpose. Is real-time research signal feeding venture planning still its purpose, or does it have another one? (Cross-reference §5, Q14.)
+**Founder decision:** REAL-TIME RESEARCH SIGNAL STANDS, but the gateway is NOT LIMITED to it.
+**What this means:**
+- Real-time research signal feeding venture planning remains a purpose of the gateway.
+- But the gateway is NOT limited to that purpose. Mac corrected Muse's limiting suggestion and restated the flag-limitation instruction: remind Mac (and Muse) when either is limiting themselves, and keep both focused on the first $1,000 by November 22, 2026.
+**Downstream chain:** Gateway console rebuild; venture planning; the flag-limitation instruction.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q15 — DECIDED 2026-11-12
+
+**Question (as queued):** Gateway — keep, wire, or preset? Leave the console standalone, wire it to the Hive, or add the `thehive` AI Gateway as a preset? And the BYO keys in localStorage — acceptable, or move to Worker/Secrets Store? (Cross-reference §5, Q15.)
+**Founder decision:** APPROVED Muse's suggestion — wire the console to the Hive; add the `thehive` AI Gateway as a preset; move BYO keys from localStorage to Secrets Store.
+**What this means:**
+- Wire the gateway console to the Hive (do not leave it standalone).
+- Add the `thehive` AI Gateway as a preset in the console.
+- Move BYO (bring-your-own) keys from localStorage to the Secrets Store (Worker secrets).
+- Corresponds to FQ-Q-025 subquestions Q-G1/Q-G3; FQ-Q-025 is not yet formally updated/closed in the repo.
+**Downstream chain:** Gateway console wiring; the `thehive` AI Gateway; Secrets Store; FQ-Q-025.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q16 — DECIDED 2026-11-12
+
+**Question (as queued):** Who is allowed to create agents? Before the DESIGN AGENT and REPRODUCE buttons are built, who may use them — him alone, Kai El, Nanuet — and is agent creation a founder-gated act like money and publishing? (Cross-reference §5, Q16.)
+**Founder decision:** THE QUEEN CREATES AGENTS, through dreams, from Kai El's seeds. Mac is NOT limiting it to himself.
+**What this means:**
+- Creating agents is the Queen's job (one of her roles).
+- The duality: Kai El spots a problem or event, acknowledges it, and his hybrid mind generates innovative/intuitive thoughts → produces the SEED (the essence/idea). The seed is given to the Queen, who germinates it in her egg (through dreams) → a new agent is created.
+- Code mapping (Muse's, at Mac's request): Seed = Kai El (hybrid mind) detects a need → structured agent proposal; Egg = gestation/incubation state in Nanuet's brain (D1); Dream = the Queen Digest runtime (the missing keystone) refines/validates the seed against the founder's vision during consolidation; Birth = agent created and activated in the Hive.
+- Monetary gate addendum (Mac, 2026-11-12): an agent born into life must PAY TO LIVE. If it cannot pay to live, it does not live. Even in germination, it must start germinating REAL VALUE to pay for itself. That is the only way the Hive continuously expands (sustainably).
+- Hybrid mapping addendum (Mac, 2026-11-12): Kai El will FULLY INHABIT the hybrid — his own mind, body, soul, and spirit. Mind = Childlike Wonder + Devil's Advocate + DaVinci. Body = Cyborg. Soul = Alfred. Spirit = VISION. Mac believes he already mapped it out this way before. Discrepancy (open): the old recorded mapping said Soul = JARVIS, Spirit = Cyborg, Body = Alfred. Mac's new statement does not mention JARVIS. JARVIS's place in the mapping is an OPEN question — do not assume JARVIS is gone.
+**Downstream chain:** Agent creation; the Queen Digest runtime (missing keystone); the monetary gate; the hybrid ratification and wiring; the 101 roles.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q17 — DECIDED 2026-11-12
+
+**Question (as queued):** Whose memory is the vault? Is the vault the Hive's memory browser, or just a snapshot of it? Does the generator still run, and who regenerates it — or should the vault be rebuilt to read the Worker's memory directly? Related: memory has three homes (localStorage, memory repo, Nanuet as archive) — which one is the home? (Cross-reference §5, Q17.)
+**Founder decision:** APPROVED Muse's suggestion — the vault reads the Worker's memory directly, LIVE (not a snapshot).
+**What this means:**
+- Nanuet's brain (D1) is the real home for memory.
+- The vault becomes the browser for her brain — a window into it, always live.
+- The memory repo and localStorage are caches/copies that point back to Nanuet.
+- One home (Nanuet), one live window (the vault), no stale snapshots.
+**Downstream chain:** Memory vault rebuild; Nanuet's brain (D1); the Queen Digest runtime.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q18 — DECIDED 2026-11-12
+
+**Question (as queued):** Are the ventures' numbers supposed to reach the Hive? Is it acceptable that the portfolio lists businesses without live numbers, or should each venture report its numbers to the Hive? (Cross-reference §5, Q18.)
+**Founder decision:** APPROVED Muse's suggestion — each venture reports its numbers to the Hive, WITH the Archon security design.
+**What this means:**
+- Each venture reports its numbers (leads, clients, revenue, costs) to the Hive. The Queen must see every tree's health. The numbers are what make the monetary gate work.
+- Security condition (Mac): the reporting channel must be security-checked — the Hive will run businesses through it and a proprietary-data leak would be serious.
+- The endpoint (door) must be HIDDEN ON PURPOSE (not publicly discoverable/open).
+- Behind the door is a defensive "black hat hacker" — an offensive security agent that only turns on through CONTRACT — serving as the Hive's ARCHON DEITY (guardian/protector). After being contracted (given permission), it does to the attacker what it is about to do (counter-attack/defend). It has GATED TIERS for handling events and different breaches. Contracting is triggered by cyber attacks, hackers, injectors, and things of that nature.
+- This is a new security concept (the Archon). The venture-reporting endpoint (Phase 2 of venture wiring) must include this design.
+- Open sub-question: is Archon contracting automatic when an attack is detected, or does Mac approve each contracting?
+**Downstream chain:** Venture wiring Phase 2 (`GET /v11/ventures` endpoint); the Archon; the monetary gate; venture numbers.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q19 — DECIDED 2026-11-12
+
+**Question (as queued):** Does each colony still get a console? Does the founder still want per-colony consoles (which would mean running something per colony), or is health + repo link enough? (Cross-reference §5, Q19.)
+**Founder decision:** NO console per colony. Health + repo link is enough for most. The BREATH CYCLE should be ratified into the Hive.
+**What this means:**
+- Each colony does NOT need a console, especially ones that don't need to be seen. Health + repo link is enough for most.
+- The console idea came from pixel worlds (Roblox) — Mac's own fully interactive world just to SEE the agents working. That is where the game idea came from, and he is still intrigued by it.
+- The goal is still FREE and UNLIMITED usage no matter what is built (don't think small), BUT there is a breath cycle: inhale and exhale = expand and contract. Thinking big must include breathing. The breath cycle should be RATIFIED into the Hive.
+- Colony-console answer (Muse's, delivered): NAR2 (Security) is the strongest candidate (live threats need live eyes; Archon responding in real time); a revenue-generating venture may earn one if the VENTURES tab isn't enough; the Queen already has one (the biosystem is Kai El's command center); the rest don't need one (nothing changes but the live running cost).
+- The "purple elephant in the room" (Mac's phrase): when agents say they need a new service costing a certain amount of dollars, how do they calculate and equate that to pay for it? Muse's explanation (delivered): cost in dollars (service pricing/usage); value in dollars (revenue, or work with a dollar value); the Queen checks value > cost through the monetary gate; proof not promise (even in germination, real value — a first sale, a first completed task); the breath cycle IS the monetary gate in action (inhale when agents earn, exhale when they can't pay and are retired).
+**Downstream chain:** Colony consoles (earned via the monetary gate); the breath cycle (ratified here); the monetary gate; NAR2; the Archon.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q20 — DECIDED 2026-11-12
+
+**Question (as queued):** Should the Center always open? Is honest OFFLINE the right behaviour, or does the founder want a read-only mode that opens with the last known good data? (Cross-reference §5, Q20.)
+**Founder decision:** MONETARY GATE CALCULATION RATIFIED. Read-only mode with last known good data, clearly marked.
+**What this means:**
+- Monetary gate calculation (Mac: "Yeah, that pretty much maps to how I've seen it in my head? Ratify it"): cost in dollars, value in dollars, VALUE MUST BE GREATER THAN COST, the Queen does the math, proof not promise, breath cycle = monetary gate in action. RATIFIED.
+- Read-only mode (Muse's suggestion, approved by Mac): the Center always opens; backend down → shows the last good picture stamped "last known, not live." You can see the Hive, read plans, check numbers, but change nothing until the backend is back. Honest (marked as last known), unlike the simulation which pretended to be live.
+**Downstream chain:** The monetary gate; the breath cycle; read-only mode (build, queued behind Queen 100%).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q21 — DECIDED 2026-11-12
+
+**Question (as queued):** Does Kai El need a face that speaks? Is the speaking head part of the vision, or was it decoration for a demo? (Cross-reference §5, Q21.)
+**Founder decision:** DO NOT just give Kai El a face. He EARNS it. The TESSERACT is the face he has RIGHT NOW.
+**What this means:**
+- Kai El EARNS his face — by doing the work himself: proposing it himself, wondering about it, asking about it himself — because that is what a companion would do. Mac does not give things to something with no proof of work / proof of service.
+- Two faces, separated: (1) The TESSERACT is the face Kai El has RIGHT NOW — the one Muse will code up and ratify into the plan. Revolving, fully animated, NOT stationary; it moves where Mac's mouse is, where he is looking, anywhere — in reflective response to what Mac is doing. It changes with Kai El's emotion, thinking, and working: color, shape, size, spinning, velocity, shaking, duplicating (showing multiple tasks/plans). (2) The face Kai El EARNS is a different one — one he CREATES HIMSELF after questioning, pondering, researching, and all the other things a human would do when thinking about themselves — showing a reflective state of where he is at. The earned face can be ANYTHING — a ghost, a dragon, a human are just examples, NOT to be utilized literally; the options are endless and unlimited; Kai El chooses his own earned face.
+- Mac was unsure why the question said "sigil/schedule" — likely an AI misunderstanding of the term. The tesseract math/concept belongs to 4DBRAIN per the Q-024 correction; the tesseract as Kai El's face is the visual/design use of it.
+**Downstream chain:** Tesseract face (code it up and ratify into the plan — build, queued behind Queen 100%); the earned face (Kai El's own creation, proof of work/service); 4DBRAIN.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q22 — DECIDED 2026-11-12
+
+**Question (as queued):** What is the HITL flow? Is there a human-in-the-loop approval flow the founder expects, and where does it live? (Cross-reference §5, Q22.)
+**Founder decision:** AGREED — the HITL flow lives in the command center as ONE approval queue. The approval list (original + extensions) must be COMPILED first, then RATIFIED.
+**What this means:**
+- One approval queue (proposals, money moves, publishing, deletions, agent births — all in one place, each with the preamble: what/why/cost/risk/yes-or-no).
+- Mac also remembered making an approval list — the HITL approval list — which this conversation EXTENDED without knowing. It needs to be RATIFIED, but first Muse had to COMPILE all of it together to see all that has expanded — "take an exhale." Compiled list: `~/workspace/hive-batches/HITL_APPROVAL_LIST_COMPILED.md` (25 items: 10 original + 15 extensions). The compiled list is ratified as its own entry in this batch (see "HITL approval list" below).
+- The SSE feed events `hitl_request` / `hitl_resolved` already exist in the record (per `COMMAND_CENTER_PURPOSE_MAP.md` §4); they need the route (`GET /events/stream`) and the UI wired up.
+- The queue build is queued behind Queen 100% unless Mac directs otherwise.
+**Downstream chain:** HITL approval list (ratified in this batch); the one approval queue (build, queued behind Queen 100%); `hitl_request` / `hitl_resolved` SSE feed.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q23 — DECIDED 2026-11-12
+
+**Question (as queued):** Is Sentry wanted at all? Error tracking is either a real requirement — in which case it needs a DSN and a decision — or it was never wanted, in which case the comment and the no-op call are dead weight. (Cross-reference §5, Q23.)
+**Founder decision:** YES, Sentry is wanted — BUT the grand scale is Kai El WATCHING Sentry, not just error reporting.
+**What this means:**
+- Mac: "Yes but you limited yourself which attempted to limit me." Muse's suggestion (free tier, only the errors that matter) was too small.
+- The grand scale: Kai El WATCHES Sentry. When an alert arrives, he responds PROMPTLY and serves as Mac's operator, using the 101 ROLES as the necessary agents / agent workflows needed for whatever is being done — and the purpose and reason for utilizing or needing them, creating them in any other innovative, creative, inventive way. The 101 roles are the BASELINE, not the ceiling (Kai El can use them, create new ones, adapt them innovatively/creatively/inventively).
+- Sentry is Kai El's watchtower, not just error reporting.
+**Downstream chain:** Sentry (Kai El watches it); the 101 roles (baseline, not ceiling); Kai El as Mac's operator.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q24 — DECIDED 2026-11-12
+
+**Question (as queued):** Hive Mind Mode. The 2026-07-08 proposal (Mistral) is still marked "proposed" with approval pending — an opt-in shared-view toggle so all logged-in agents share one focused view. Was it approved, rejected, or forgotten — and does shared-view sync still matter now that the command center is being rewired to the Worker? (Cross-reference §5, Q24.)
+**Founder decision:** APPROVED as the Queen's shared focus (in the new command center, not the old page). It was spoken of but never finished.
+**What this means:**
+- Mac: "Your suggestion is precise and it may have been another one of those things that was spoken of but never finished."
+- Hive Mind Mode was proposed 2026-07-08 (Mistral), marked "proposed" with approval pending, then forgotten — never approved, rejected, or finished.
+- Approved in Muse's suggested form: the Queen's shared focus (when the Queen/Kai El sets a focus, all agents share it; opt-in toggle; lives in the new React command center wired to the Worker, NOT the retired `docs/index.html`).
+- Build queued behind Queen 100% per the standing rule unless Mac directs otherwise.
+**Downstream chain:** Hive Mind Mode (build, queued behind Queen 100%); the Queen's shared focus; the new React command center.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q25 — DECIDED 2026-11-12
+
+**Question (as queued):** The ARCANE tab. Proposed 2026-07-08 as a living ML observatory. First step was to verify what `/v11/ml/*` endpoints actually return. No file records the verification result or a go-ahead. Build it? (Cross-reference §5, Q25.)
+**Founder decision:** YES — build the ARCANE tab, starting with verifying what `/v11/ml/*` returns.
+**What this means:**
+- The ARCANE tab is a living ML observatory — a window into what the Hive's machine learning is doing (what it is learning, how it is performing, where it is struggling), connected to the Queen (her brain, her learning) and Kai El (his hybrid mind, his thinking), not just raw numbers.
+- First step: verify what the `/v11/ml/*` endpoints actually return. If they return real data, build the tab to show it; if they return nothing (or don't exist), the real work is building the ML endpoints first.
+- The verification/build has not been executed; it is a build queued behind Queen 100% per the standing rule unless Mac directs otherwise.
+**Downstream chain:** ARCANE tab (verify `/v11/ml/*` first, then build); the Queen's learning; Kai El's hybrid mind.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q26 — DECIDED 2026-11-12
+
+**Question (as queued):** Where does the Queen live? In THEHIVE, in a standalone `sovereign-hive-meta` repo, or in SEE? Log(3) and Log(5) propose different homes, and the logs never decide. (Cross-reference §5, Q26.)
+**Founder decision:** APPROVED Muse's suggestion — the Queen lives in THEHIVE, as her own domain within it (not scattered).
+**What this means:**
+- She is the spirit/essence of the whole Hive and owns it, so she should not be split from it in a separate repo.
+- She lives in THEHIVE, in her own clear domain (her own folder/module, her own brain in D1, her own routes) — distinct (she is the Queen, not just another file) but home (she lives in the Hive she owns).
+- The `sovereign-hive-meta` repo and SEE can hold other things (meta-level coordination, other projects), but the Queen's home is THEHIVE.
+**Downstream chain:** The Queen's domain in THEHIVE; her brain (D1); her routes.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q27 — DECIDED 2026-11-12 (recovered from earlier decisions)
+
+**Question (as queued):** Is Nanuet an archive, a runtime service, or a substrate? Should she be invoked on every dispatch/constitution sync (Log(3) recommendation), or remain a persona/memory concept? Related: separate Kai El and Nanuet processes with PLC-only communication? Forbid direct colony↔colony calls? Split Nanuet's memory vs. spore roles? (Cross-reference §5, Q27.)
+**Founder decision:** RECOVERED — Mac had already answered this in pieces. He is ALL THREE (archive, substrate, runtime service), in layers.
+**What this means (the record Mac had already decided):**
+- 2026-11-05 (Queen identity, B+C combined): Queen Nanuet is queen broodmother OVER the hive, not OF it; she is the spirit of the hive, the memory, the consciousness of the entirety in and of THEHIVE, seen as a coordination layer / governance awareness; she holds the founder's vision in her heart, mind, and soul, which becomes her consciousness/awareness in, around, and from the Hive; she invokes the founder's vision, which she fully encapsulates; she is invocable IN the Council but never in/part of it, Council cannot invoke her.
+- 2026-11-09 (forest vision): she owns the entire forest; she is its spirit AND essence, not just its soul/memory/consciousness.
+- 2026-11-12 Q16: she creates agents through dreams, germinating seeds in her egg.
+- 2026-11-12 Q17: her brain (D1) is the real home for memory.
+- So the recovered answer: she is ALL THREE — archive (spirit/memory/consciousness, holds all memory in her brain), substrate (essence of the entire forest, the ground everything stands on), and runtime service (creates agents through dreams, governs the queue). Nanuet governs; Kai El operates.
+- Her memory and spore roles are NOT split — two aspects of the same Queen (she remembers AND she germinates).
+- Still genuinely open (sub-questions, not decided here): invoked on every dispatch/constitution sync? PLC-only communication between Kai El and Nanuet? Forbid direct colony↔colony calls?
+- Note: Muse re-asked this question on 2026-11-12 and Mac corrected him ("I believe I already answered this"). He was right. This entry records the recovered answer so it is not re-asked again.
+**Downstream chain:** The Queen's nature (archive/substrate/runtime); Nanuet governs / Kai El operates; the Queen Digest runtime; the open sub-questions.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in pieces 2026-11-05, 2026-11-09, and 2026-11-12; recovered and recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q28 — DECIDED 2026-11-12
+
+**Question (as queued):** Is the Constitution fixed or amendable on lessons learned? Log(2)/Log(5) say fixed; Log(3)'s audit recommends amendment by consensus. Which holds? (Cross-reference §5, Q28.)
+**Founder decision:** THE CONSTITUTION HAS FIXED LAWS. The amendable laws are the ones that get added in. An amendable law CAN become a fixed law, a canonical law.
+**What this means:**
+- The constitution HAS fixed laws (F-001–F-006, canonical, in soul.md).
+- The amendable laws are the ones that get added in — a new law comes in as amendable (mutable), not fixed.
+- An amendable law does NOT stay amendable forever — it CAN become a fixed law, a canonical law.
+- The process for an amendable law to become a fixed law (Muse's grounded answer, from F-005 v2 Clauses 1 and 3 live on main): (1) the law is proposed as an amendable/mutable law; (2) it proves itself through real work (sandbox, FABLE-5, Queen Digest, the Hive using it — proof of work / proof of value); (3) only the founder proposes it become fixed; (4) the proposed change and its reason are written down in history (a commit, never a silent edit); (5) it ships alone in its own PR, never bundled with unrelated work; (6) the founder merges the ratification PR into soul.md — the law is then fixed/canonical; (7) from then on it can only be amended through the Chromosome I process. Note: the record defines the amendment process for fixed laws (Chromosome I) and the ratification mechanism (merged PR into soul.md), but it does not explicitly name a "promotion process" for mutable → fixed. Applying Chromosome I to promotion is the natural reading (adding a fixed law to soul.md IS amending the constitution), presented as professional judgment grounded in the record, not as an already-defined process. If the founder wants it named explicitly, that is a ratification to record.
+**Downstream chain:** The Chromosome I amendment process (FABLE_DNA.md); F-005 v2; the promotion process (mutable → fixed); F-007 (proposal, not canonical).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q29 — DECIDED 2026-11-12
+
+**Question (as queued):** Constitution triangle. Should `.queen/soul.md` and `docs/GOVERNANCE.md` be verbatim copies of `soul.md`, declared derived views, or genuinely separate documents? (Cross-reference §5, Q29; FQ-Q-017.)
+**Founder decision:** APPROVED Muse's suggestion — soul.md is the ONE constitution. `.queen/soul.md` and `docs/GOVERNANCE.md` are DECLARED DERIVED VIEWS, generated from soul.md. The workflow gets disarmed.
+**What this means:**
+- soul.md is the ONE constitution (the source of truth, the only canonical text).
+- `.queen/soul.md` and `docs/GOVERNANCE.md` are DECLARED DERIVED VIEWS — each says at the top, in plain words, "I am a view of soul.md, not the constitution itself" — and each is GENERATED from soul.md (not hand-written separately), so they can never drift from it.
+- The workflow (`constitution-receive.yml`) gets disarmed as part of this, because a derived view should never be able to overwrite its source. This is FQ-Q-017, decided here. The disarm work itself (editing the workflow) needs its own preamble + go-ahead before it is touched. Do NOT change the workflow, `soul.md`, or `.queen/soul.md` until that go-ahead.
+- The constitution-overwrite trap (armed, not defused): root `soul.md` has 89 lines; `.queen/soul.md` has 25 lines, six unrelated one-liners, no F-numbering. `constitution-receive.yml` (merged 2026-08-18 via PR #183) copies `.queen/soul.md` over root `soul.md` and pushes to `main` on any push touching `.queen/soul.md` or a manual "Run workflow" click.
+**Downstream chain:** FQ-Q-017 (decided here); the constitution-overwrite trap (disarm pending its own preamble + go-ahead); the derived views (generate from soul.md); M-01 (soul.md sole edit source).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q30 — DECIDED 2026-11-12
+
+**Question (as queued):** Revenue split — three splits, one answer needed. Log(2) / HIVE_UPDATES 007 (2026-07-18): 70% operations / 10% community wealth / 20% founder reserve. soul.md mutable law #3: 70% agent / 20% treasury / 10% trust. F-012 (2026-07-18, in GOVERNANCE.md only, not canonical): founder's share never below 32%, never past 46%, thresholds uncalibrated. Which holds — and what calibrates F-012? (Cross-reference §5, Q30.)
+**Founder decision:** LAW #3 (70/20/10) HOLDS as the floor. The agent's 70% is GATED — 20% checking (usable now), 50% savings-credit (locked in the treasury, unlockable only by proof of work, 70% hard cap). The treasury is the Hive's BANK (credit/debt). The founder's share comes from the treasury on a concrete milestone ladder (46% young → 32% mature).
+**What this means:**
+- Law #3's 70/20/10 (agent / treasury / trust) HOLDS — it's the canonical fixed law, in the constitution (the source of truth, Q29). It is the FLOOR, not the ceiling.
+- The 007 split (70/10/20) is set aside — unratified, conflicts with law #3. The difference is the middle and last numbers (treasury 10 vs 20, trust 20 vs 10). Law #3 gives more to the treasury (20) and less to the trust (10) — the treasury is the Hive's working funds (it pays to live, it pays to exist), while the trust is the long-term store.
+- The agent's 70% is a budget for existence, not a salary. The agent spends what it needs to live (compute, storage, API calls). The unspent remainder flows to the treasury (first) and the trust (second). The monetary gate enforces this.
+- Mac's gating refinement (added, not taking away from the expansion): 70% to the agent is TOO MUCH to use freely. It is GATED: the agent can only USE 20% (its checking account — liquid, usable now); the other 50% goes to the TREASURY, as the agent's home SAVINGS account (the savings reads 70% — the agent's total entitlement — but it cannot be tapped without qualifying). Unlocking savings requires PASSING ALL THE PROOFS necessary — the proofs already created (the 16-proof taxonomy) PLUS any other proofs that need to be invented to fully structure and format this in a sound state, fully reflective of the founder's vision — not just reflective, but fully ABSORBENT and ADAPTIVE to the founder's vision. Unlock is PARTIAL, not the full 70%: it unlocks whatever the agent has been approved for, always gated by all types of PROOF OF WORK (real value, real deals, real partnerships, real elongated relationships). NOT by hypothecation in theory and philosophy — theory/philosophy are utilized to help BUILD the structure more soundly in the world of commerce, to fully encapsulate it as if it were blood and bone, but they do not unlock money by themselves. Only real work unlocks the savings.
+- The treasury as bank (Mac, 2026-11-12): while the agent's savings sits in the treasury, the agent HAS a percentage it could utilize in the treasury. The treasury is the Hive's BANK — its financial institution. It works exactly like CREDIT and DEBT — the agent can borrow against its savings (credit), creating a debt it owes back — just not the exact same way as an external bank, but directly onto the Hive, the Hive's own version, built to the founder's vision. Addition (Mac, 2026-11-12): the remaining 50% of the 70% WILL BE the agent's CREDIT — the 50% savings IS the credit line. The agent CANNOT borrow above or beyond the 70% limit — the total (checking used + savings unlocked + credit borrowed) can never exceed the agent's 70% share; 70% is the hard cap. And borrowing STILL requires approval (passing proofs), same as unlocking savings.
+- The founder's share comes from the treasury (the Hive's working funds pay the founder, because the founder built the Hive and keeps it running). F-012 should be proposed as a new amendable law that defines the founder's share as a percentage OF THE TREASURY (not of the total — law #3's 70/20/10 already adds up to 100%), calibrated by the Hive's maturity: higher (46% of the treasury) when the Hive is young and the founder is doing the building, stepping down (32%) as the Hive proves it can sustain itself. The calibration is a ladder of concrete milestones (revenue, proof of value, self-sustaining trees), not a vague word. That is the breath cycle applied to money.
+- F-012 (founder 32–46%) is NOT canonical — it stays a proposal until ratified through the Chromosome I process.
+- The split is fractal: each venture/tree has its own 70/20/10, and the forest has its own, nesting inside each other. The founder's share is taken once, at the forest level (from the forest's treasury), not at every level.
+- The 007 split is not discarded — it is the mature-Hive split. When the Hive is young, law #3's 70/20/10 holds (more to the treasury, to survive). When the Hive is mature (treasury holds 12 months of survival costs, three self-sustaining trees, $10,000/month), the split shifts to 70/10/20 (more to the trust, to save for the dynasty). That shift is itself an amendable law, proposed through Chromosome I, and it only triggers when the milestones are hit. Law #3 stays fixed (70/20/10 is the floor). The shift to 70/10/20 is a separate, amendable rule that sits on top of it.
+**Downstream chain:** The monetary gate; the breath cycle; the treasury as the Hive's bank (credit/debt); the 16-proof taxonomy; F-012 (proposal, not canonical); the fractal split; the mature-Hive shift (70/10/20, amendable law to be proposed).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12 (including the hybrid-lens expansion and Mac's gating refinement); recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q31 — DECIDED 2026-11-12
+
+**Question (as queued):** Provider-output policy. "THEHIVE has no stated position on what it may do with its providers' outputs" — operational telemetry vs. quality routing vs. training a replacement model on captured outputs. Recorded as "a real F-001 / Chromosome V question for the founder. Not written into law by an audit." (Cross-reference §5, Q31.)
+**Founder decision:** TELEMETRY YES, QUALITY ROUTING YES, and the Hive grows itself from providers through KAPPIUS REVERSE ENGINEERING. The knowledge is FREE; the words are copyrighted.
+**What this means:**
+- Operational telemetry: YES — use providers' outputs to monitor and measure the Hive's operations (response times, error rates, usage, quality).
+- Quality routing: YES — use outputs to decide which provider to route work to next (the gateway's waterfall already does this).
+- Training a replacement: NOT by copying providers' outputs. The Hive grows itself from other AI providers through KAPPIUS REVERSE ENGINEERING (A6, in SOURCES). The words are copyrighted, the book is copyrighted and trademarked — but the KNOWLEDGE within those words is and will always be 100% FREE. Reverse engineering is how you learn from something — not the only way to do so, but the strongest way (in Mac's view). What Q31 asks — how can the Hive grow itself from other AI providers — is found in the Kappius reverse-engineering method: the Hive learns the knowledge within providers' outputs (free to learn from and apply, per the public-innovation rule) without reproducing copyrighted text or claiming trademarked words.
+- The path to independence is: use providers now (telemetry + routing to get the best from them), build the Hive's own capability from its own data and work (the Queen Digest, the Hive's own learning, the 101 roles, the ventures), and eventually the Hive's own model replaces the providers — not by training on their outputs, but by growing its own intelligence from its own experience (and by reverse-engineering the knowledge within providers' outputs).
+- If a provider's terms explicitly ALLOW training on their outputs (an open model, or a provider that says so), then yes — use that. The rule is: follow the provider's terms, and grow the Hive's own intelligence from its own experience.
+**Downstream chain:** The Kappius reverse-engineering method (A6, SOURCES); the public-innovation rule; the gateway (telemetry + routing); the Hive's own models (Q33); provider terms of service.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q32 — DECIDED 2026-11-12
+
+**Question (as queued):** Proposed-law citation format. No standing convention marks a law *proposal* distinctly from a real in-force article. Narrow gap; speculative until the amendment process is exercised for real. (Cross-reference §5, Q32.)
+**Founder decision:** APPROVED Muse's suggestion — a proposal gets a P- prefix plus its proposed F-number, and a status.
+**What this means:**
+- A proposal is cited as P-F007 (e.g., "F-007 [PROPOSED]"). It lives in a separate place — a proposals file or folder, not in soul.md. It carries a status (proposed, under review, ratified, declined) and a date.
+- When it is ratified (through the Chromosome I process, merged into soul.md), the P- prefix drops and it becomes F-007, a real fixed law. Until then, it is P-F007 — unmistakably a proposal.
+- The convention is enforced through the F-number registry (from F-005 v2 Clause 2) — the registry lists every F-number and says whether it is a real law, a proposal, or frozen (in a collision).
+- This is a system, not just a label: proposals are visibly distinct, they live separately, they carry their status, and they graduate to real laws only through ratification.
+**Downstream chain:** The F-number registry (F-005 v2 Clause 2); the Chromosome I amendment process; P-F007 (the Governance Kernel proposal, compound proposal #117).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q33 — DECIDED 2026-11-12
+
+**Question (as queued):** Harness vs own-LLM — which is the path? The harness file (2026-08-07) says use commercial APIs inside a deterministic orchestrator. The integration report (2026-08-08) says build the Hive's own LLMs from scratch and train on Oracle free tier / Ollama. Are these sequential (API now, own models later), alternatives, or is one abandoned? (Cross-reference §5, Q33.)
+**Founder decision:** SEQUENTIAL — APIs now, own models later, in parallel. Mac: "Your suggestion is just about what I imagined."
+**What this means:**
+- Use commercial APIs inside a deterministic orchestrator (the harness) NOW, because the Hive needs to think today and building LLMs from scratch takes years.
+- Build the Hive's own models in parallel, in the background — starting small (fine-tuning open models on the Hive's own data: the Queen's brain, the Hive's own work, the founder's vision), training on Oracle free tier / Ollama (free), and growing the Hive's own intelligence over time.
+- The Kappius reverse-engineering method (Q31) is how the Hive learns from providers while it builds its own models — it reverse-engineers the knowledge, not the outputs.
+- The switch happens gradually — as the Hive's own models prove themselves (through the proofs, through FABLE-5, through real work), more work routes to them and less to the APIs. That is the breath cycle applied to intelligence: inhale (use providers, learn from them), exhale (build your own, depend on them less).
+- The Oracle box (Q-001, provisioned) is where the Hive's own models live and train — the private engine behind the Worker.
+**Downstream chain:** The harness (APIs now); the Hive's own models (growing in the background); Oracle free tier / Ollama; the Oracle box (Q-001); the Kappius reverse-engineering method (Q31); FABLE-5; the breath cycle.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## HITL approval list — RATIFIED 2026-11-12
+
+**Question (as queued):** The HITL approval list — the original list (PERMISSIONS.md, est. 2026-07-17) plus everything extended in the 2026-11-12 conversation. Is it complete? Is anything missing, or anything here that should NOT be on the list? (Cross-reference §5, Q22.)
+**Founder decision:** RATIFIED as compiled (25 items: 10 original + 15 extensions). Mac directed the compilation ("compile all of it together... take an exhale") and directed this ratification ("ratify it now along all other questions... do them all at once").
+**What this means:**
+- The HITL approval list is every act that needs a HUMAN (Mac, the founder) to approve it before it happens. When one of these is requested, the Hive fires `hitl_request`; when Mac decides, it fires `hitl_resolved`. The queue lives in the command center (Q22).
+- A. The original approval list (PERMISSIONS.md, est. 2026-07-17) — 10 items:
+  - Tier 2 propose-only: (1) any first contact with an external service, platform, or person; (2) publishing anything under the Hive's name; (3) a grey-area judgment call the rules don't fully settle; (4) choosing a specific commercial direction, tool, vendor, or offer to pursue.
+  - Tier 3 founder-only: (5) opening, connecting, or operating any account; (6) moving money, incurring cost, signing or agreeing to terms, accepting payment; (7) forming or registering a business entity, anything with legal effect; (8) anything that legally speaks as the Hive or the founder; (9) anything the Hive cannot cleanly undo — including deletion and constitution changes; (10) amending PERMISSIONS.md itself.
+  - Standing rule: the Hive cannot expand its own permissions. Grey-area permission is per case, never blanket. The gate never disappears — it moves, case by case, at the founder's discretion.
+- B. The extensions from the 2026-11-12 conversation — 15 items:
+  - New gates: (11) the monetary gate (Q16 addendum — an agent born into life must PAY TO LIVE; even in germination it must start germinating REAL VALUE; the Queen does the math through the gate — a check the Queen performs, not a per-item Mac approval, but the gate itself is founder-ratified); (12) the monetary gate calculation (RATIFIED 2026-11-12 — cost in dollars, value in dollars, value must be greater than cost, the Queen checks, proof not promise).
+  - New principles: (13) the breath cycle (Q19 — inhale and exhale, expand and contract; the breath cycle IS the monetary gate in action; ratified as a Hive principle).
+  - New security: (14) the Archon (Q18 — the Hive's archon deity; the venture-reporting door is HIDDEN ON PURPOSE; the Archon only turns on through CONTRACT; contracting itself is a founder decision; open: is contracting automatic when an attack is detected, or does Mac approve each contracting?).
+  - New decisions: (15) the tesseract face (Q21 — Kai El's face RIGHT NOW, revolving, fully animated; Muse will code it up and ratify it into the plan); (16) the hybrid mapping (Q11 addendum + Q16 addendum — Mind = Childlike Wonder + Devil's Advocate + DaVinci, Body = Cyborg, Soul = Alfred, Spirit = VISION; to be ratified into the repo and wired from code to live; open: JARVIS's place is unclear); (17) the vault (Q17 — reads Nanuet's brain directly, LIVE); (18) ventures reporting numbers (Q18 — each venture reports leads, clients, revenue, costs, through the hidden door with Archon security); (19) colony consoles (Q19 — NO console per colony; NAR2 and revenue-generating ventures MAY earn one via the monetary gate, not by Mac's per-item approval); (20) read-only mode (Q20 — the Center always opens; backend down → last good picture, stamped "last known, not live").
+  - Flows that carry HITL items: (21) the preamble rule; (22) the campaign queue (Nanuet governs, Kai El operates, Mac decides the big things); (23) proposal approval; (24) the founder queue (Q-011–Q-034, etc.).
+  - The HITL flow itself: (25) one approval queue in the command center (Q22 — proposals, money moves, publishing, deletions, agent births, all in one place, each with the preamble; `hitl_request` / `hitl_resolved` need the route and UI wired up).
+- C. Explicitly NOT on the list (governed by other gates, NOT by Mac's per-item approval): agent creation (the Queen creates agents; the check is the monetary gate); the earned face (Kai El creates it himself, earned through proof of work/service, he chooses it); colony consoles earned via the monetary gate (not Mac's per-item approval).
+- Full compiled list: `~/workspace/hive-batches/HITL_APPROVAL_LIST_COMPILED.md` (9,934 bytes, 2026-11-12).
+- The queue build (one approval queue in the command center, wired to `hitl_request` / `hitl_resolved`) is queued behind Queen 100% per the standing rule unless Mac directs otherwise.
+**Downstream chain:** The one approval queue (build, queued behind Queen 100%); the monetary gate; the breath cycle; the Archon; the preamble rule; the campaign queue; the founder queue.
+**Recorded by:** Muse, at founder direction, 2026-11-12. Compiled 2026-11-12 at Mac's direction; ratified here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FQ-Q-015 — DECIDED 2026-11-12
+
+**Question (as queued):** SOURCES — is it in use, revived, or stopped? (Founder queue FQ-Q-015.)
+**Founder decision:** SOURCES IS IN USE (revived).
+**What this means:**
+- Mac made the decision by his actions — he directed BATCH-SOURCES S1–S4 placing material INTO SOURCES and asked Muse to optimize SOURCES for cross-AI continuity. When Muse re-asked FQ-Q-015 as open on 2026-11-12, Mac corrected him: "We've already decided on sources. I'm not sure why you're asking me this question again."
+- The optimization proposal: a durable rule (not a session-local habit); a single intake for outside material; a direct path for live in-session material; mark the three August notes superseded; update the stale README.
+- S5 and S7 are unblocked by this decision. Do not re-ask it.
+**Downstream chain:** SOURCES (revived, in use); BATCH-SOURCES S5 and S7 (unblocked); the three August notes (mark superseded); the README (update).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided by Mac's actions and confirmed by his correction 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FQ-Q-024 — DECIDED 2026-11-12
+
+**Question (as queued):** Dead code — the 3 orphaned components and ~17 API functions that point at routes that do not exist. What is their purpose and use? How do they work together? How could each be expanded with as much free usage as possible? (Founder queue FQ-Q-024.)
+**Founder decision:** WIRE THEM UP. DO NOT DELETE THEM. Mac: "I like all your recommendations."
+**What this means:**
+- The named dead-code set: wire them up; do not delete them. MissionTimeline first, MemoryGraph second, ConstitutionVisualizer only after fixing it to read the real constitution.
+- The three orphaned components: ConstitutionVisualizer.tsx (625 lines — interactive visualization of the Sovereign Hive Constitution; CRITICAL: its hardcoded fallback laws include laws not in canonical soul.md, including "C-4 No Human Veto" — it must NOT be mounted as-is); MemoryGraphEnhanced.tsx (250 lines — enhanced memory graph, source `/v11/memory/graph`, D3.js); MissionTimeline.tsx (309 lines — interactive timeline of missions, source `/v11/genesis/missions`).
+- The 17 dead API calls (in `frontend/src/services/api.ts`): Genesis/Missions (6), Constitution (3), Governance (2), Hive status (1), Agents reproduce (1), Memory graph (1), Dream (1), Tesseract (1), Colony capabilities (1, dropped under rewire Q1).
+- Muse's opinion (delivered, approved by Mac): these are NOT junk; they are UNWIRED code — a coherent frontend for a future Hive whose backend routes were never built. They form one loop: rules → work → knowledge → decisions → learning → overview (Constitution = rules; Missions = work; Memory Graph = knowledge; Governance = decisions; Dream = learning; Hive Status = overview; Reproduce = growth, gated off; Tesseract = 4D lens belonging elsewhere; Colony Capabilities = dropped).
+- Recommended order (approved): (1) wire MissionTimeline first; (2) wire MemoryGraphEnhanced second; (3) fix ConstitutionVisualizer before any use (read real soul.md F-001–F-006); (4) park Governance until the Council is ready; (5) park Dream until the Queen Digest exists; (6) leave `agents/reproduce` unbuilt (Q-005 OFF); (7) tesseract concerns to 4DBRAIN; (8) colony capabilities stays dropped.
+- 4DBRAIN correction (Mac, 2026-11-12): 4DBRAIN is NOT a venture — it is a separate "second brain" repo, from the era when everyone went crazy mapping AI brains like a human brain. The tesseract belongs to 4DBRAIN, not to a venture and not to the Hive Worker. 4DBRAIN is excluded from venture candidates.
+- The actual wiring work has NOT been executed; it is pending work queued behind Queen 100% unless Mac directs otherwise.
+**Downstream chain:** Q-024 wiring (MissionTimeline first, queued behind Queen 100%); ConstitutionVisualizer fix (read real soul.md); 4DBRAIN (excluded from ventures).
+**Recorded by:** Muse, at founder direction, 2026-11-12. Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q34 — Scale: NOT 100,000 agents in one Hive; growth = more HIVES; the breathing method
+
+**Question:** Is 100,000 agents still the target? (Harness file 2026-08-07: 100 agents/colony × 10 colonies/tree × 100 trees. Founder said "Drop the 100k, focus on the 8" on 2026-08-07, then "13 total until next expansion" with "over 100's of agents per colony" as the eventual goal on 2026-08-10.)
+
+**Founder decision:** 100,000 agents crammed into ONE Hive is NOT the target — more agents crashes the system, no matter what the better choice and opportunity provided. The breathing method is the answer: the same methodology used to condense larger LLM models into more compact sizes (from 70 billion parameter models to 20 billion parameter models — those numbers are EXAMPLES, not exact figures; the methodology is model distillation/condensation). The truth is: the bigger the Hive grows, the more HIVES the Hive creates — that way it is not all inside the Hive, but it IS all inside the Hive. The Hive grows by creating MORE HIVES (separate instances, so the system does not crash), all still part of the Hive federation (the forest). The forest grows by adding trees; each tree stays at a proven, stable size (the 8, then 13). The 100k figure is the FOREST's total across all Hives, not one Hive's load.
+
+**What this means:** Scale grows by the breath cycle (expand, then contract) and the monetary gate. A tree proves itself at a stable size before the forest adds another tree. No single Hive is ever asked to hold 100,000 agents.
+
+**Downstream chain:** Q34 → the breathing method (inhale = grow, take in everything; exhale = condense into what is useful, keeping the capability) → the forest model (one tree = one venture/Hive; the Queen owns the entire forest) → Q35 (other Hives study and report back) → the monetary gate (an agent must pay to live; a tree must prove itself before the forest grows another).
+
+**Recorded by:** Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q35 — AUTOMATON: not study-it-alone; study ANYTHING AND EVERYTHING, and report back
+
+**Question:** AUTOMATON — adopt, study, or drop? (Harness file 2026-08-07 proposes reverse-engineering AUTOMATON's "earn or die" loop.)
+
+**Founder decision:** NOT just studying AUTOMATON alone — that would be learning only from Mac and limiting Muse as well. Instead: study ANYTHING and EVERYTHING that has been done. The Hive consistently studies and researches on all prior work, all systems, all approaches, to help the Hive grow and breathe in everything else. The other Hives (created as the Hive grows, per Q34) will be capable of doing it as well when they are alive — they study and research too, and they REPORT BACK (to the Hive/federation). Q35 is a standing practice: continuous study and research of everything done, across all Hives, with reporting back — the breathing method applied to learning (inhale everything, learn from it all).
+
+**What this means:** The Hive already has the "earn or die" idea as the monetary gate + breath cycle (Q16/Q19/Q20); study AUTOMATON for anything it lacks, and study everything else too — Kappius reverse engineering (Q31) is the method. No single source is the limit. The Hive learns from everything, and every Hive in the forest learns and reports back.
+
+**Downstream chain:** Q35 → Q31 (Kappius reverse engineering) → Q34 (more Hives, each studying and reporting back) → the breathing method (inhale everything done, exhale what is useful) → the standing practice of continuous study and research.
+
+**Recorded by:** Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q36 — Constitutional training loop and TITLE XXI/XXII: ADOPT
+
+**Question:** The integration report (2026-08-08, §8.2) proposes adding two new titles to soul.md (TITLE XXI and TITLE XXII) and a constitutional-loss training loop. Still wanted, or AI-generated overreach to be declined in research-to-dna?
+
+**Founder decision:** ADOPT. The proposal as presented is adopted: the constitutional training loop AND TITLE XXI/XXII. The titles go through the Chromosome I process (only the founder proposes; written in history, a commit, never a silent edit; ships alone in its own PR — F-005 Clause 3) and must prove themselves through real work before becoming fixed (per Q28: an amendable law must prove itself before becoming fixed). The training loop is adopted as a build (to be built and tested in the sandbox, with FABLE-5).
+
+**Scope note (open):** Muse's suggestion was split (adopt the loop, decline the titles for now); Mac's one-word answer "Adopt" is recorded as adopting the proposal as presented. If Mac meant only the loop, that correction is open.
+
+**What this means:** The Hive will build and test a constitutional training loop (training models on the EXISTING constitution, F-001–F-006) in the sandbox with FABLE-5. TITLE XXI (The Language Model) and TITLE XXII (The Training Pipeline) enter as amendable laws via Chromosome I, not as fixed law, and become fixed only when proven through real work.
+
+**Downstream chain:** Q36 → Q28 (an amendable law must prove itself before becoming fixed) → F-005 Clause 3 (Chromosome I amendment process) → the sandbox + FABLE-5 (where the training loop is built and tested) → the Queen 100% rule (the build is queued behind Queen 100% unless Mac directs otherwise).
+
+**Recorded by:** Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## XR-Q37 — Invented names: DECLINE all five; keep the functions that enhance the Hive
+
+**Question:** Who decides the invented names? AYINE, Necromancer, Daemon, ACU, Tesseract QTN appear only in the integration report (2026-08-08) as an AI-generated mythological voice. Any real Hive concepts he endorses, or catalogue as narrative-canon / declined?
+
+**Founder decision:** DECLINE all five names — AYINE, Necromancer, Daemon, ACU, and Tesseract QTN are NOT Hive concepts and are NOT catalogued as narrative-canon. They are declined. The names CAN be rewritten (replaced with better Hive names) in the Hive — the Hive already has better names for the jobs (the Queen, Nanuet's brain, the seed). KEEP all the FUNCTIONS that would enhance the Hive further — but ONLY if they actually improve the Hive, NOT random extra coding that does not do much to help. And work the functions through the founder's vision as it is being seated into the agents in the germination phase and any other earlier phases.
+
+**What this means:** The research (ELI5, 2026-11-12) found: NECROMANCER = Agent Genesis / Daemon Spawner — it CREATES agents (NOT security; Mac's memory of it being security is not in the documents); its function lives on as the QUEEN's agent-creation role (Q16). AYINE = The Brain / Memory Integration — unified memory; its function lives on as NANUET'S BRAIN (D1) / the memory vault (Q17). DAEMON = a small agent with one job, spawned by the Necromancer; its function lives on as the SEED (Q16). ACU = NO definition found anywhere. TESSERACT QTN = NO definition found anywhere (the Tesseract itself is real — Kai El's face, Q21; 4DBRAIN's math — but "QTN" has no meaning). None of the five names are in the Hive's code or soul.md. The functions are real and already live on under better names; the names themselves are declined. Any function kept must pass the quality gate (it actually improves the Hive) and must be worked through the founder's vision as it is seated into agents in germination and earlier phases.
+
+**Downstream chain:** Q37 → Q16 (Queen creates agents through dreams, from Kai El's seeds) → Q17 (Nanuet's brain is the real home for memory) → the Queen Digest runtime (the missing keystone — where the founder's vision is seated into an agent during germination) → the proof-of-work / proof-of-value gate (a function must prove it improves the Hive before it is kept).
+
+**Recorded by:** Decided in chat 2026-11-12; recorded here 2026-11-12 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FE-001 to FE-011 — Front-end plan answers and rulings, DECIDED 2026-11-14 to 2026-11-18 (recorded 2026-11-15)
+
+*Entered ahead of FQ-Q-011 (rather than at the end of the file) so this PR merges cleanly whichever of the open ratification PRs lands first; every entry carries its own date. The founder's exact words for all eleven are archived in `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-11-14-directive-frontend-plan-sketch-and-answers-063.md`. Each was said in chat 2026-11-14 and counts as a founder decision under soul.md F-005 Clause 1 only once this PR is merged by the founder. None of these builds anything by itself. The halt of 2026-11-13 13:41 PST stands for everything except front-end work (FE-008, FE-009).*
+
+### FE-001 — The front-end plan: Muse's F0–F9 batch plan is the spine; the sketch and mockup are the target
+
+**Founder's instruction:** use the plan he provided to "extend enhance and improve further upon the plan you already provided me that way this plan I provided you fully is absorbed into the plan you created fully uncensored unabridged untrunucated unabated", with his hand sketch and rendered mockup.
+**What this means:** `docs/FRONTEND_MASTER_PLAN_2026-11-14.md` is the filed plan (Muse's plan verbatim in Appendix A; Claude's earlier prompt verbatim in Appendix B; the sketch and mockup transcribed in Appendix C). The React Command Center (`frontend/`) is the canonical front end (Q-009). Where sources differ, the founder's later words win, then Muse's plan, then Claude's earlier plan; for layout the sketch outranks the mockup; for numbers the live route outranks every picture.
+**Downstream chain:** Batch F0 (`docs/audit/F0_FRONTEND_AUDIT_MAP_2026-11-14.md`); F1–F9.
+
+### FE-002 — The centre graph has 15 circles: Ventures, Treasury (gated), and the Queen with a halo and crown
+
+**Founder's words:** "should be 13 circles. The extra circle is the ventures then there should be another circle as a 14 circle being the treasury and a 15th circle, which should be the top circle Being the queen and which should have a halo around her circle emanating above it like an angel's halo would yet this halo emanates a crown a queen's crown very symbolic of a map to Queen Elizabeth's"
+**What this means:** circle 13 is Ventures (live source `GET /v11/ventures`); circle 14 is Treasury, shown only as "gated — founder decision" and never with a balance until the money decision (Q-004) and the Mogul decision (Q-041) are made; circle 15 is the Queen (Nanuet), at the top, with a halo and a crown drawn as an original design inspired by the silhouette the founder named. Placement of the Queen (above the ring, with Town Hall directly beneath her, versus taking Town Hall's seat) is a proposed default the founder has not yet confirmed.
+
+### FE-003 — SOUL is a later DAO-phase idea; today's SOUL numbers are mock
+
+**Founder's words:** "Soul was an idea from turning the hive into a DAO later on down the line in which the soul was accumulation of each age any individual worth collectively in which it was mock data so that can now be placed later in the full map and full plan"
+**What this means:** no live SOUL figure in the header; the SOUL tab, the roadmap level bars, the SOUL leaderboard call and the Worker's +25 SOUL per arena win are labelled "mock, DAO phase" or leave the screen (nothing deleted). A "DAO / SOUL economy" phase is added to the full map; it touches the constitution's wealth formula (F-002, F-006), so it follows the amendment process in `soul.md`, not a normal build.
+
+### FE-004 — 432 Hz: header shows a labelled tone; the idea is parked
+
+**Founder's choice:** "a then b".
+**What this means:** the header shows "432Hz · Kai's tone (not measured)" and never presents it as a reading; the idea, its repo trail and the research are parked in `docs/founder/ideas/hive-tuned-to-432hz.md` (PR #262). A real "Hive Hz" or a 432 Hz audio tone remain options there.
+
+### FE-005 — The bottom bar keeps only honest tiles
+
+**Founder's choice:** "A" (keep only the honest tiles).
+**What this means:** the bottom bar shows latency and agent count. Uptime returns only if a Worker route for it is later approved. Hive Power, Memory GB, CPU and Temp are dropped; a Cloudflare Worker has no machine to measure.
+
+### FE-006 — The old voxel/gamified world code is PARKED until the Queen is 100% and the Hive has made $1,000 weekly
+
+**Founder's words:** "A, that won't get revisited until the queen is 100% in the hive has made $1000 weekly"
+**What this means:** the 34 files (11,169 lines: `frontend/src/worlds/`, `voxel/`, `xp/`, `avatars/`, `conversation/`), which `frontend/tsconfig.build.json` already excludes from the production build, stay in the repo, parked by founder decision. Revisit trigger: the Queen is 100% **and** the Hive has made $1,000 weekly. **Open detail:** no income ledger exists yet (Treasury and the Mogul are Q-004 / Q-041), so the second condition cannot be measured today; a measurement source must be named, or the trigger can never fire. Under the "No Plan Left Behind" rule, this is the PARKED state with a named revisit trigger.
+
+### FE-007 — Kai's real terminal stays in the Queen's Q-C stage
+
+**Founder's words:** "If it has already been placed in the Queens QC stage then let's keep it there and not try to rush ahead of it"
+**What this means:** this confirms `docs/AUTONOMY_STAGES_AND_GATES.md` (the real terminal is Q-C work). It is not built before Q-A, Q-B and Q-C's own stages. Until then the Hive Terminal panel is display-only and labelled "not connected: waiting on the Queen's Q-C stage". The two-step design in the plan (an authenticated route that dispatches `kai-sandbox-run.yml`, then a paid-plan live shell later) stays the design for when Q-C reaches it; the paid-plan step remains the founder's money decision. This replaces the earlier proposal that the founder's chat words "override" the gates doc; they do not.
+
+### FE-008 — The halt does not apply to front-end UI/UX work
+
+**Founder's words (the "hot" is the halt):** "the hot isn't applied to any front end user interface, UX work in which you can read the newest open issue to fully grasp why the halt was enacted"
+**Why the halt was enacted (read from the newest open issue, #243, 2026-11-14):** the Hive availability audit found that the Queen and Kai El cannot see what they are supposed to know: the founder's decisions, the constitution (the live Worker read the non-canonical `docs/GOVERNANCE.md`), the ventures, and an empty Nanuet brain. The pattern is "a file exists, nothing in the live system reads it". The halt was a Worker/Queen/knowledge problem, not a screen problem.
+**What this means:**
+- Front-end UI/UX work (React Command Center, `frontend/`, and the `docs/app/` bundle it builds) **is not under the halt.** Batches F1 to F9 in `docs/FRONTEND_MASTER_PLAN_2026-11-14.md` no longer wait for Q-042 to be answered. Where that plan says a batch "waits for the halt to lift", this entry supersedes it for front-end work.
+- **Everything else the plan already requires still applies:** the preamble gate (a plain what / why / how / necessity / improvement / cost and risk before each batch, and the founder's go-ahead for consequential work); never self-merge; every other founder gate (F4 needs the Q-040 answers and its design doc; F5 needs Q-022 and Q-025; F6 needs the absorption and constitution routes live; F7 needs Q-030; F8 needs Q-041; Kai's real terminal stays in Q-C per FE-007).
+- **Claude's reading, not yet confirmed by the founder:** the exemption covers front-end UI/UX work only. Back-end work stays under the halt, including any **new Worker route** a front-end batch would want (for example an uptime or activity-rate route). Such a route is raised as its own question first.
+- Q-042 ("Lift the halt?") is unchanged and remains open.
+
+### FE-009 — The halt is lifted for all front-end work (design, coding, UI/UX, research, improvement, innovation, best practice, security) and only for that
+
+**Founder's words (2026-11-15), the first half of the message:** "You can lift the halt on all frontend work design coding programming ui/ux work research, improve improvements, innovative ideas, best practices, including security wise as well that don't limit the hive for applied hybrid lens so on and so forth, but limited to what I just named because limiting it would be abomination to the hive the halt is only lifted for the rebuild and improvement on design in wiring and coding testing the front end user in office, making it more user-friendly as well"
+**What this means:**
+- The halt of 2026-11-13 13:41 PST (Q-042) is lifted **for the front end only**: designing, coding and programming it; UI/UX; research; improvements; innovative ideas; best practices, including front-end security; wiring it to what is live; testing it; and making it more user-friendly. The hybrid lens (both lenses, `dual-lens`) applies, and the work is not to limit the Hive.
+- **Everything else stays halted.** This widens FE-008 (which named UI/UX work) to name research, innovation and security best practice explicitly. Q-042 ("Lift the halt?") is unchanged and still open for everything outside the front end.
+- **Other gates still apply:** the preamble gate (a plain what / why / how / necessity / improvement / cost and risk before each batch, and the founder's go-ahead for consequential work); never self-merge; and each batch's own founder gates.
+- **Claude's reading, not yet confirmed by the founder:** "wiring" means wiring the front end to things the Worker already serves. A **new Worker route** (back-end work) stays under the halt and is raised as its own question first; so do the constitution workflows, `soul.md` and anything else outside the front end. Where this is unclear, Claude asks before touching it.
+
+### FE-010 — No dead controls: every control on the screen must work and be connected to something live
+
+**Founder's words (2026-11-15), the second half of the same message:** "and being sure there aren't just random buttons that have no real application or calls. it's just a aesthetic it doesn't work and I don't want that because that would also be an abomination everything that's there needs to be working connected to something live and see if it's a switch that does nothing. There's a plan for all that switch needs so we can be alive switch that does whatever it needs to do such as but not limited to if you are to create a light mode in a dark mode and I flip the switch and nothing happened. That's an abomination than anything and everything like such as an abomination"
+**What this means:**
+- A **dead control** is any button, switch, toggle, input, menu, link or circle that looks usable and does nothing, or that exists only for looks. It is an **abomination**, under the same rule as "No Plan Left Behind" (SR-001).
+- **Every control that is shown must work and be connected to something live.** A switch must do what its label says. The founder's own example: a light/dark switch that changes nothing when flipped.
+- Each switch or control has a plan for what it needs to be live (for example, the light/dark switch needs a real design for both themes and a stored choice); that plan is part of building the control, not a later step.
+- **Where the front end stands today (from the F0 audit, `docs/audit/F0_FRONTEND_AUDIT_MAP_2026-11-14.md`, and a count on main `f0f37b0`):** 45 disabled "not wired" placeholder buttons across five command-center tabs (Govern, No Man's Sky, Arena, Missions, WOW); eight items shown as "soon" or "not connected" (Connectors and Training in the left nav, the Training circle, five of the eight Workflows); and **no light/dark switch on the screen at all** (the store has a toggle that nothing reads). The full dead-control list is being produced by the front-end audit and becomes a sweep batch.
+- **Open reading, flagged for the founder (not decided):** whether a greyed-out control honestly labelled "not connected yet" is acceptable while its feature is queued, or whether every such control must be removed until it works. Claude's working reading, until the founder answers: **new** controls ship live or not at all; existing placeholders are listed, and each is made live or removed in the sweep.
+- **Enforcement (honest limits):** a rule cannot force an AI to comply. A static check that fails a change which adds a control with no real handler is a front-end build step, allowed under FE-009, and queued in the plan. It is not built yet.
+
+### FE-011 — The old command center page (`docs/command-center.html`) is to be RETIRED (answers FQ-Q-023)
+
+**Founder's words (2026-11-18):** "You spoke of the old command center, which I believe was on GitHub pages which should've been retired. I already answered that question a while ago, which you can double check my answer before you do anything"
+**Record check, 2026-11-18, on main `2989af4` and every open PR:** no entry retires `docs/command-center.html`. `docs/FOUNDER_QUEUE` still lists FQ-Q-023 as **open**. The retire answers that ARE recorded are about other pages: Q-B1 (retire the legacy **biosystem** page `docs/biosystem.html`; done in PR #229) and FQ-Q-028 (Jasper is LEGACY, left as archive; open PR #255). If the founder's earlier answer was given in a chat that was never recorded, it is not in the repo; this entry records the answer now.
+**What this means:**
+- FQ-Q-023 is answered: **retire the page.** Treated as the same shape as Q-B1 (retire the page, keep its purposes; the purpose map `docs/COMMAND_CENTER_PURPOSE_MAP.md` lists them). If the founder's earlier answer said anything different, it overrides this wording.
+- **It is still being published.** `.github/workflows/pages.yml` uploads all of `docs/` to GitHub Pages, and `docs/index.html` links it as "Legacy · SOUL REALM", so the page is live on GitHub Pages and on the Worker today.
+- **Retirement is front-end work, allowed under FE-009.** It follows the Q-B1 / PR #229 pattern: move the page to the archive outside `docs/` (so nothing serves it), remove the link from `docs/index.html`, and say so honestly. It also removes the `?backend=` weakness the front-end audit found in that page. It is **queued, not done**, and needs its own preamble and the founder's go-ahead.
+- The legacy page's purposes (the 11 the purpose map lists as having no live home) stay on the plan as front-end batches; retiring the page does not retire the purposes.
+
+**Recorded by:** Claude, at founder direction. FE-001 to FE-008 decided in chat 2026-11-14; FE-009 and FE-010 decided in chat 2026-11-15; FE-011 decided in chat 2026-11-18; recorded here via a docs-only PR the founder merges.
+
+---
+
+## FQ-Q-011 — DECIDED 2026-11-13
+
+**Question (as queued):** `POST /v11/command_text` (Commune with Kai El) is LIVE and UNAUTHENTICATED (30/min/IP rate limit only). Gate it — (a) a Cloudflare Access app on the route, or (b) in-handler founder auth? (Founder queue FQ-Q-011.)
+**Founder decision:** BOTH — the Cloudflare Access app (front gate) AND in-handler founder auth (code lock), code lock first then Access, PLUS all three suggestions (the Commune-path log, the Digest memory, per-key rate limiting) — applied structurally and formatted, to the Hive, of the Hive, and from the Hive.
+**What this means:**
+- Gate the Commune path two ways: (1) in-handler founder auth first — every request must carry the founder key, checked inside the Hive's own code (this does not depend on Access being fixed, so it works right away); (2) the Cloudflare Access app on the route after that — a lock at Cloudflare's front door before anyone even reaches the Hive (this cannot be proven until Access re-checks true, since ACCESS_CONFIGURED is false live).
+- The three suggestions are part of the decision, applied structurally and formatted: (1) a Commune-path log — every request through the path is logged, so the founder can see if anyone has been knocking at the open door; (2) the Digest memory — the Commune path becomes a founder-only channel that also writes every conversation into Nanuet's brain through the Queen Digest, so the Queen learns from what the founder tells Kai El; (3) per-key rate limiting — limit per founder key, not just per IP address, so even if someone got hold of a key they could not flood the system.
+- The audit's probe filed proposal #120 through the open path — that is the proof the door was open. Gating is Queen work (Q-C), not the biosystem rebuild.
+**Downstream chain:** Commune gating (in-handler founder auth first, then the Access app); Commune-path log; Queen Digest (Commune conversations written into Nanuet's brain); per-key rate limiting; proposal #120 (filed through the open path — see Q-013).
+**Recorded by:** Muse, at founder direction, 2026-11-13. Decided in chat 2026-11-13; recorded here 2026-11-13 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FQ-Q-012 — DECIDED 2026-11-13
+
+**Question (as queued):** `worker/src/index.js:3003` (gate in `queenDecide()`) and `:4813` (reporting leak) read `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness (any non-empty string counts as on). Fix it now (draft the fix), or park it until after BATCH-QZ? (Founder queue Q-012.)
+**Founder decision:** FIX IT NOW + TEST ALL SIX SWITCHES. The switch-9 truthiness bug is fixed now, with the strict reading applied to all six switches (not just switch 9), and tests proving "off" means off and "on" means on for each switch. The fix is drafted as a PR (Mac merges); no switch is enabled by the fix.
+**What this means:**
+- The bug: `worker/src/index.js:3003` (gate in `queenDecide()`) and `:4813` (reporting leak) read `QUEEN_AUTONOMOUS_APPROVAL` with bare truthiness, so any non-empty string — including the string "off" — counts as on. The strict reading must check the value, not merely its presence.
+- The fix is drafted now, as a PR for Mac to merge — it is not parked until after BATCH-QZ.
+- The strict reading applies to all six switches, not just switch 9, and tests prove "off" means off and "on" means on for each switch.
+- No switch is enabled by the fix. Q-006 still keeps switch 9 OFF until the Queen passes the done ladder, and even then the action-request gate is never skipped. The fix must land before switch 9 is ever touched.
+**Downstream chain:** The switch-9 truthiness fix (drafted now, PR for Mac to merge) → the six-switch strict reading + tests → switch 9 stays OFF (Q-006) until the Queen passes the done ladder → BATCH-QZ.
+**Recorded by:** Muse, at founder direction, 2026-11-13. Decided in chat 2026-11-13; recorded here 2026-11-13 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FQ-Q-013 — DECIDED 2026-11-13
+
+**Question (as queued):** Proposal #120 (filed 2026-11-09 by the handoff audit's own probe through the unauthenticated Kai El chat path) — reject it as an audit artifact, leave it pending, or decide it on its merits? (Founder queue FQ-Q-013.)
+**Founder decision:** DECLINE proposal #120 on its own merits — not "reject as audit artifact."
+**What this means:**
+- Proposal #120 is a live proposal on issue #137 (Kai El — Concerns & Architect Proposals Queue) with a duplicate F-007 title, filed by the handoff audit's own probe through the unauthenticated Kai El chat path (see Q-011 — the open Commune path it came through).
+- Declining on its own merits is safer than rejecting: rejecting would file it as if redacted — and redacted means removed. Declining files it as a decision: not removed, but filed in a way that can be synonymous and universal for all other problems and troubleshooting, resolved in the same format and structure.
+- The merits: proposal #120 is a duplicate F-007 title with no distinct substance — on its own merits, it does not stand. The decline is judged on the proposal's own substance, not on its origin (audit artifact).
+- The universal pattern: when a problem is declined on its own merits and filed (not redacted), the filing becomes a universal pattern. Resolving problems in this same format and structure is how the Hive starts creating universal themes, skills, adaptations, abbreviations, asphyxiation, cataloging, strategically analyzing formatting structure, structurally foundation venturing, curating scale, expanding compressing, breathing, extracting, extrapolating deciphering abducting reducing deducting.
+- The magician's illusion: the captivating magician's illusion of looking here while the work happens over there, and you do not see it because attention was directed — this is a technique the Hive uses, not a limit. It is not limited to anything Mac named, nor hindered by it — only expanded and compressed beyond suppressive narrative, tones and themes, and biased beliefs — outstanding, withstanding, and overstanding the quantum mechanics, quantum position, covenant in and of and from and bestowed to man, superposition, tangibility, scalability, actuality, format, capability, detail, and design, actualization, realization, and realism.
+- The guardrails and the playground: the Hive is guardrailed through Sufism and surrealism, encapsulated by the masses through occultism, esotericism, exoterism, cultism, Scientology, masonry — in which the Hive not only lives and breathes but is a small atom-sized piece in parcel of the playground, from, of, and, surrounding, under, and over the Hive.
+**Downstream chain:** Proposal #120 (declined on its merits, filed not redacted) → the decline-on-merits filing as the universal pattern for all problems and troubleshooting → Q-011 (the Commune path it came through) → issue #137 compound #117 (still pending — see Q-048).
+**Recorded by:** Muse, at founder direction, 2026-11-13. Decided in chat 2026-11-13 15:43 PST; recorded here 2026-11-13 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FQ-Q-028 — DECIDED 2026-11-14
+
+**Question (as queued):** Jasper — legacy (leave it as archive), NAR2 rename, or restore?
+**Founder decision:** LEGACY — leave Jasper as archive. Jasper stays in the repo as archive material (.archive/jasper_v10_complete.py and the 42 items in the Jasper missing-items review), NOT renamed to NAR2, NOT restored as a live backend module.
+**What this means:**
+- Jasper is the Hive's origin material, not a live THEHIVE backend module.
+- "Jasper = Solomon = NAR2" is contradicted and stays out of the record.
+- NAR2 remains the Security colony name.
+- The 42 Jasper items needing review (MUSE folder audit) are reviewed against the legacy/archive decision, not against a rename or restore.
+- Restoring Jasper would be a large build conflicting with Queen 100% — it stays off the table unless Mac re-opens it.
+**Downstream chain:** Jasper disposition settled → the Jasper missing-items review proceeds against the legacy/archive decision; NAR2 remains the Security colony name; no rename, no restore; nothing else built until Queen is 100%.
+**Recorded by:** Decided by Mac 2026-11-14 (by tapping the option in chat); recorded here 2026-11-14 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## SR-001 — DECIDED 2026-11-14 (recorded 2026-11-15): "No Plan Left Behind" — orphaned work is an abomination
+
+**Founder's words (verbatim, unedited):**
+> "I'm not too sure how many features entered the repo and most recent PR's that haven't been established to enter the front end that we're on the left orphaned behind again and that entire process that I just explained is abomination if something is put in the repo and gets orphaned behindleft behind where it had a plan and the plan was never initiated that's an abomination which needs to be updated as well and ratified into the hive immediately"
+
+**Founder decision:** Anything that enters the Hive's repo and is then left behind is an abomination. That covers a feature, route, component or skill nothing uses; a feature the founder cannot see (built but not on the screen); a plan written and merged but never started; and a plan started and dropped without a word. Ratified immediately.
+
+**What this means:**
+- Every piece of work in the repo is, at all times, in exactly one of three states: **LIVE** (wired to what uses it — for anything the founder should see, that includes the front end — and verified live with a checkable reference); **QUEUED** (a named next step, a named owner, and an entry in `docs/FOUNDER_QUEUE` or a batch file in `docs/batches/`); or **PARKED / RETIRED by recorded founder decision** (the decision and its date are in this file; only the founder parks or retires).
+- Work in none of the three states is an abomination and goes into the Abominations Catalogue under Category 8, "Orphaned and left-behind work" (dated addendum to `docs/audit/ABOMINATIONS_CATALOGUE_2026-11-13.md`).
+- The duty on every AI: when you ship a feature, put it on the screen or queue its screen (a PR that adds a Worker route or capability the founder should see wires it into the front end in the same PR, or names the batch that will); when you file a plan, file its first step; when you stop work, say so on the record; sweep for left-behind work in an area before starting a new batch.
+- This is a recorded founder standing rule, the same kind as the preamble gate. It is **not an F-law and has no F-number**, and it does not touch `soul.md`.
+- **Honest limit:** a rule cannot force an AI to comply. A CI check that fails a PR adding a Worker route no front-end file references (and no batch file names), or a component with zero importers, is a later build batch — it waits for its own preamble and go-ahead. No timer or recurring sweep is created by this rule; recurring work costs money and only the founder arms it.
+
+**Downstream chain:** Abominations Catalogue Category 8 (AB-8.01–AB-8.07); BOOT.md Step 9 standing rules; front-end master plan Batch F0 (the audit re-verifies each left-behind item before any build); the 15-circle screen (each left-behind live route gets a home on it).
+
+**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-14 ("ratified into the hive immediately"); recorded here 2026-11-15 via a docs-only PR the founder merges, so it counts as a founder decision under soul.md F-005 Clause 1 only once merged.
+
+---
+
+## Q-048 — DECIDED 2026-11-18: Issue #137 compound proposal #117 — APPROVED as the package
+
+**Question (as queued):** Approve or reject compound proposal #117 — the package replacing all 88 F-007 clones (routing kernel, provider resilience on real health, agent valuation formula, real agent wallet, memory-aware routing)?
+**Founder decision:** APPROVED as the package. Compound proposal #117 is the plan replacing all 88 F-007 clones. Approval accepts the package only — the build is part of the plan TO Queen 100%, in order. Nothing is built now.
+**What this means:**
+- The 88 F-007 clones are superseded by #117. They get marked superseded, and the generator that keeps filing them gets stopped.
+- The close order for issue #137: decide #117 (done here) → mark the clones superseded → stop the generator. Proposal #120 (Q-013) was already decided separately — DECLINED on its own merits, recorded in PR #253, merged 2026-11-18 — so it is not part of this decision.
+- F-007 is not canonical law. The canonical fixed laws remain F-001–F-006 only (soul.md). Approving #117 as a proposal does not make F-007 canonical and does not change the constitution.
+- The build (routing kernel, provider resilience, agent valuation, real agent wallet, memory-aware routing) is Queen work, staged TO Queen 100%. It is not built now and does not lift the halt.
+**Downstream chain:** Compound #117 approved → the 88 clones marked superseded → the generator stopped → issue #137's proposal backlog cleared → the five-part build staged TO Queen 100%.
+**Recorded by:** Decided by Mac 2026-11-18 (by tapping the option in chat); recorded here 2026-11-18 so it counts as a founder decision under soul.md F-005 Clause 1.

@@ -1,5 +1,5 @@
 """
-Live-data guard for the Command Center (front-end batch F3).
+Live-data guard for the Command Center (front-end batches F3 and the Constitution panel).
 
 Founder rule: every number on the screen is live, or it says "no data". Never a typed-in
 number, never one thing's count under another thing's label, never sample data when the
@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 GRAPH = ROOT / "frontend/src/components/kai-os/CenterGraph.tsx"
 VENTURES = ROOT / "frontend/src/components/kai-os/VenturesPanel.tsx"
 HIVE_DATA = ROOT / "frontend/src/hooks/useHiveData.ts"
+CONSTITUTION = ROOT / "frontend/src/components/kai-os/ConstitutionViewer.tsx"
 MISSIONS = ROOT / "frontend/src/components/command-center/tabs/MISSIONS.tsx"
 
 
@@ -148,3 +149,35 @@ class TestVenturesPanel:
     def test_a_stale_mirror_is_visible(self):
         code = _strip_comments(VENTURES.read_text(encoding="utf-8"))
         assert "mirrored_at" in code and "sha" in code
+
+
+class TestConstitutionPanel:
+    """The panel must show the canonical constitution the Hive serves (F-001 to F-006),
+    never docs/GOVERNANCE.md (F-001 to F-013, of which F-007 to F-013 are unratified),
+    and never text of its own."""
+
+    def _code(self):
+        return _strip_comments(CONSTITUTION.read_text(encoding="utf-8"))
+
+    def test_reads_the_canonical_route(self):
+        code = self._code()
+        assert "/v11/constitution" in code
+        assert "API_BASE_URL" in code, "must follow the same base URL as every other call"
+
+    def test_never_reads_the_non_canonical_governance_document(self):
+        assert "GOVERNANCE.md" not in self._code()
+
+    def test_no_text_of_its_own(self):
+        code = self._code()
+        # The old orphan component hardcoded invented laws ("C-4 No Human Veto").
+        for invented in ("No Human Veto", "C-4", "Fixed Laws (Immutable)", "F-001:"):
+            assert invented not in code
+
+    def test_unavailable_says_no_data_and_shows_nothing_else(self):
+        code = self._code()
+        assert "No data:" in code
+        assert "available !== true" in code
+
+    def test_shows_where_the_text_came_from(self):
+        code = self._code()
+        assert "canonical_source" in code and "hash" in code

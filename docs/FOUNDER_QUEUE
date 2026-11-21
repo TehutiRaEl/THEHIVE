@@ -75,14 +75,6 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-023 — Rewire Q2: command-center.html — retire or rewire? (open)
-
-**Question:** `docs/command-center.html` — retire the page (keep the purposes) or rewire it into the live app?
-**Context:** Gated by cross-reference Q10/Q11. The purpose map (2026-11-11) recommends retire-the-page-keep-the-purposes: the page was the one screen from which the founder runs the Hive (never a separate site); 26 sections, 17 with a live Worker route, 20 covered at least in part by a live-app panel, 11 missing purposes (biggest: the world-as-place). Retiring it retires a build, not the purpose. Needs Mac's explicit yes. The biosystem half of Q2 is decided + done (B0, PR #229).
-**Status:** open.
-
----
-
 ## Q-025 — Gateway Q-G1–Q-G4 (open)
 
 **Question:** (G1) Which of the three "gateways" — the Worker route, the Cloudflare AI Gateway `thehive`, or the gateway console page? (G2) Confirm the gateway's purpose + the DeepCrawl relay. (G3) Standalone vs wire vs preset + BYO keys?
