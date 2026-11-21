@@ -17,6 +17,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 GRAPH = ROOT / "frontend/src/components/kai-os/CenterGraph.tsx"
+VENTURES = ROOT / "frontend/src/components/kai-os/VenturesPanel.tsx"
+HIVE_DATA = ROOT / "frontend/src/hooks/useHiveData.ts"
 CONSTITUTION = ROOT / "frontend/src/components/kai-os/ConstitutionViewer.tsx"
 MISSIONS = ROOT / "frontend/src/components/command-center/tabs/MISSIONS.tsx"
 
@@ -33,10 +35,10 @@ def _node_rows(code):
 
 
 class TestCentreGraph:
-    def test_file_exists_and_has_the_twelve_circles(self):
+    def test_file_exists_and_has_the_thirteen_circles(self):
         assert GRAPH.is_file()
         rows = _node_rows(_strip_comments(GRAPH.read_text(encoding="utf-8")))
-        assert len(rows) == 12, f"expected 12 circles, found {len(rows)}"
+        assert len(rows) == 13, f"expected 13 circles, found {len(rows)}"
 
     def test_no_circle_has_a_typed_in_count(self):
         # The bug: `count: 18` (APIs) and `count: 8` (Workflows).
@@ -47,8 +49,8 @@ class TestCentreGraph:
             assert not re.fullmatch(r"['\"`][^'\"`]*['\"`]", value), f"typed-in text count on a circle: {row.strip()}"
 
     def test_every_count_is_null_or_a_named_live_value(self):
-        # A count is either null ("no data") or one of the two values computed from live data.
-        allowed = {"null", "tasksCount", "agentsCount"}
+        # A count is either null ("no data") or one of the values computed from live data.
+        allowed = {"null", "tasksCount", "agentsCount", "venturesCount"}
         for row in _node_rows(_strip_comments(GRAPH.read_text(encoding="utf-8"))):
             value = re.search(r"count:\s*([^,}]+)", row).group(1).strip()
             assert value in allowed, (
@@ -65,6 +67,8 @@ class TestCentreGraph:
                 assert label == "Tasks", f"the task count is shown under '{label}'"
             if value == "agentsCount":
                 assert label == "Agents", f"the agent count is shown under '{label}'"
+            if value == "venturesCount":
+                assert label == "Ventures", f"the venture count is shown under '{label}'"
 
     def test_borrowed_sources_are_gone(self):
         # The bug: heartbeat and governance page sizes shown as Memories / Dream Logs / Town Hall.
@@ -117,6 +121,34 @@ class TestMissionsTab:
     def test_empty_and_error_states_say_no_data(self):
         code = _strip_comments(MISSIONS.read_text(encoding="utf-8"))
         assert code.count("No data:") >= 2
+
+
+class TestVenturesPanel:
+    """The Ventures circle and panel show only what GET /v11/ventures returns."""
+
+    def test_the_hook_reads_the_ventures_route(self):
+        code = _strip_comments(HIVE_DATA.read_text(encoding="utf-8"))
+        assert "'/ventures'" in code
+        # The route answering available:false must leave the slice empty, not half-filled.
+        assert "ventures.available === true" in code
+
+    def test_the_circle_count_comes_from_the_route_and_is_null_without_it(self):
+        code = _strip_comments(GRAPH.read_text(encoding="utf-8"))
+        assert re.search(r"venturesCount\s*=\s*hive\.ventures\s*\?", code)
+
+    def test_no_venture_is_typed_into_the_panel(self):
+        code = _strip_comments(VENTURES.read_text(encoding="utf-8"))
+        for typed in ("Sovereign Forge", "SVFG", "pipeline369", "dispatcher-dao", "TehutiRaEl/"):
+            assert typed not in code, f"'{typed}' is typed into the panel; it must come from the route"
+
+    def test_unavailable_says_no_data_and_shows_nothing_else(self):
+        code = _strip_comments(VENTURES.read_text(encoding="utf-8"))
+        assert "No data:" in code
+        assert "if (!data)" in code
+
+    def test_a_stale_mirror_is_visible(self):
+        code = _strip_comments(VENTURES.read_text(encoding="utf-8"))
+        assert "mirrored_at" in code and "sha" in code
 
 
 class TestConstitutionPanel:
