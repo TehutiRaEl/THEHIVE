@@ -1,43 +1,67 @@
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../../utils/constants';
 
 interface ConstState {
   loading: boolean;
   text: string | null;
+  hash?: string;
+  source?: string;
+  canonicalSource?: string;
   error?: string;
 }
 
-// The live Constitution, straight from docs/GOVERNANCE.md — served same-origin
-// as a static file (same pattern as /biosystem.html), so whatever the founder
-// commits there is what this panel shows. No caching, no stale copy pasted
-// into a component: fetched fresh every time the panel opens.
+// The Constitution, as the live Hive serves it: GET /v11/constitution, which returns
+// docs/CONSTITUTION.md, a generated view of soul.md (the ONE constitution, F-001 to
+// F-006). This panel used to read docs/GOVERNANCE.md, which presents F-001 to F-013 as
+// "the constitution"; F-007 to F-013 were never ratified. It no longer reads that file,
+// and it never falls back to it or to any text of its own: if the route does not answer,
+// the panel says so and shows nothing in its place.
+// Guarded by tests/unit/test_frontend_live_data.py (TestConstitutionPanel).
 export default function ConstitutionViewer() {
   const [state, setState] = useState<ConstState>({ loading: true, text: null });
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/GOVERNANCE.md?ts=${Date.now()}`, { signal: AbortSignal.timeout(8000) })
+    fetch(`${API_BASE_URL}/v11/constitution`, { signal: AbortSignal.timeout(8000) })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.text();
+        return r.json();
       })
-      .then((text) => { if (!cancelled) setState({ loading: false, text }); })
-      .catch((e) => { if (!cancelled) setState({ loading: false, text: null, error: String(e) }); });
+      .then((d) => {
+        if (!d || d.available !== true || typeof d.content !== 'string' || !d.content.trim()) {
+          throw new Error(d?.reason || 'the Hive reports the constitution as not available');
+        }
+        if (!cancelled) {
+          setState({
+            loading: false,
+            text: d.content,
+            hash: typeof d.hash === 'string' ? d.hash : undefined,
+            source: typeof d.source === 'string' ? d.source : undefined,
+            canonicalSource: typeof d.canonical_source === 'string' ? d.canonical_source : undefined,
+          });
+        }
+      })
+      .catch((e) => { if (!cancelled) setState({ loading: false, text: null, error: String(e?.message || e) }); });
     return () => { cancelled = true; };
   }, []);
 
   if (state.loading) return <p className="text-slate-500 text-sm">Reading the Constitution…</p>;
-
   if (!state.text) {
     return (
       <p className="text-amber-300 text-sm">
-        Couldn't reach the live Constitution ({state.error || 'unknown error'}). It lives at{' '}
-        <code className="text-cyan-glow">docs/GOVERNANCE.md</code> in the repo.
+        No data: couldn't read the Constitution from the Hive ({state.error || 'unknown error'}). The canonical text
+        is <code className="text-cyan-glow">soul.md</code> in the repo. Nothing else is shown in its place.
       </p>
     );
   }
-
   return (
     <div className="max-w-3xl space-y-1 text-sm leading-relaxed">
+      <p className="text-[11px] text-slate-500 mb-3">
+        Live from <code className="text-cyan-glow">GET /v11/constitution</code>
+        {state.source ? <> · {state.source}</> : null}
+        {state.canonicalSource ? <> · derived from <code className="text-cyan-glow">{state.canonicalSource}</code>, the one constitution</> : null}
+        {state.hash ? <> · sha256 <code className="text-cyan-glow">{state.hash.slice(0, 12)}…</code></> : null}
+      </p>
       {renderMarkdown(state.text)}
     </div>
   );
