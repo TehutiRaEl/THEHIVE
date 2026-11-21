@@ -78,16 +78,16 @@ export default function VenturesPanel({ hive }: { hive: HiveData }) {
       <div className="grid gap-3 sm:grid-cols-2">
         {data.ventures.map((v) => <VentureCard key={v.id} v={v} />)}
       </div>
-      {data.plans.length > 0 && (
+      {(data.plans?.length ?? 0) > 0 && (
         <section>
           <h3 className="font-display text-gold-neon text-sm tracking-wide mb-1">Business plans</h3>
           <p className="text-xs text-slate-400 mb-2">
-            {data.plans.length} plans
+            {data.plans?.length ?? 0} plans
             {typeof data.plans_total_words === 'number' ? <> · {data.plans_total_words.toLocaleString('en-US')} words in all</> : null}
             . Only the inventory is shown; the plan texts stay in the private venture repo.
           </p>
           <ul className="grid gap-x-6 gap-y-0.5 text-xs text-slate-300 sm:grid-cols-2">
-            {data.plans.map((p) => (
+            {(data.plans ?? []).map((p) => (
               <li key={p.slug} className="flex justify-between gap-3 border-b border-white/5 py-0.5">
                 <span className="truncate">{p.slug}</span>
                 {typeof p.words === 'number' && <span className="text-slate-500 tabular-nums shrink-0">{p.words.toLocaleString('en-US')} words</span>}

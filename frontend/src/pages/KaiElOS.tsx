@@ -6,6 +6,7 @@ import TopStatusBar from '../components/kai-os/TopStatusBar';
 import LeftNav from '../components/kai-os/LeftNav';
 import CenterGraph from '../components/kai-os/CenterGraph';
 import KaiSigil from '../components/kai-os/KaiSigil';
+import ThemeToggle from '../components/kai-os/ThemeToggle';
 import KaiCommune, { type CommuneRequest } from '../components/kai-os/KaiCommune';
 import HiveTerminal from '../components/kai-os/HiveTerminal';
 import BottomActivityFeed from '../components/kai-os/BottomActivityFeed';
@@ -52,7 +53,7 @@ const FULL_TABS: Record<string, ComponentType> = {
   wow: WOW, 'no-mans-sky': NO_MANS_SKY, settings: SETTINGS,
 };
 
-type PanelId = 'queen' | 'ventures' | 'updates' | 'proposals' | 'body' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'connectors' | 'training' | 'roadmap' | 'grok-bridge';
+type PanelId = 'queen' | 'ventures' | 'updates' | 'proposals' | 'body' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'roadmap' | 'grok-bridge';
 
 function TabLoadFallback() {
   return (
@@ -169,8 +170,6 @@ export default function KaiElOS() {
         </div>
       ),
     },
-    connectors: { title: 'Connectors', body: <p className="text-slate-500 text-sm">Not yet connected — planned.</p> },
-    training: { title: 'Training', body: <p className="text-slate-500 text-sm">Not yet built — planned.</p> },
     roadmap: {
       title: 'Development Roadmap',
       body: (
@@ -258,7 +257,7 @@ export default function KaiElOS() {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-void-black text-slate-200 font-body overflow-hidden">
-      <TopStatusBar hive={hive} onOpenBiosystem={() => setBiosystem(true)} onOpenGatewayConsole={() => setGatewayConsole(true)} />
+      <TopStatusBar hive={hive} showThemeToggle={false} onOpenBiosystem={() => setBiosystem(true)} onOpenGatewayConsole={() => setGatewayConsole(true)} />
 
       <div className="flex items-center gap-2 px-3 h-12 shrink-0 border-b border-white/5 bg-void-900/80">
         <button
@@ -269,9 +268,10 @@ export default function KaiElOS() {
           ☰
         </button>
         <span className="font-display text-gold tracking-[0.18em] text-sm">KAI EL OS</span>
+        <span className="ml-auto"><ThemeToggle /></span>
         <button
           onClick={() => setForceDesktop(true)}
-          className="ml-auto px-2.5 py-1.5 rounded-lg bg-void-800 border border-cyan-glow/30 text-cyan-glow text-[11px] whitespace-nowrap"
+          className="px-2.5 py-1.5 rounded-lg bg-void-800 border border-cyan-glow/30 text-cyan-glow text-[11px] whitespace-nowrap"
         >
           Desktop view
         </button>

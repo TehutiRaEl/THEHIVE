@@ -1,163 +1,32 @@
-import React, { useState } from 'react';
+import React from 'react';
 import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
-import { useUIStore } from '../../../stores/uiStore';
 import { API_BASE_URL } from '../../../utils/constants';
+import {
+  useDisplayPreferences,
+  setTheme,
+  setAnimations,
+  resetDisplayPreferences,
+  type ThemeChoice,
+} from '../../../theme/preference';
 
-interface Setting {
-  id: string;
-  label: string;
-  value: any;
-  type: 'text' | 'number' | 'boolean' | 'select';
-  options?: string[];
-  description: string;
-}
+// Settings that actually do something. Every control here changes the app the
+// moment you touch it and is remembered in this browser. Controls for things the
+// app does not have (language packs, desktop notifications, sound effects, a
+// results-per-page limit, auto-save) were removed instead of being shown inert.
+const THEME_OPTIONS: { id: ThemeChoice; label: string; hint: string }[] = [
+  { id: 'system', label: 'System', hint: 'Follow this device’s light/dark setting' },
+  { id: 'light', label: 'Light', hint: 'Light surfaces, dark text' },
+  { id: 'dark', label: 'Dark', hint: 'The original dark look' },
+];
 
 const SETTINGS: React.FC = () => {
-  const [settings, setSettings] = useState<Setting[]>([
-    {
-      id: 'theme',
-      label: 'Theme',
-      value: 'dark',
-      type: 'select',
-      options: ['light', 'dark', 'system'],
-      description: 'Application color theme'
-    },
-    {
-      id: 'language',
-      label: 'Language',
-      value: 'en',
-      type: 'select',
-      options: ['en', 'es', 'fr', 'de'],
-      description: 'Application language'
-    },
-    {
-      id: 'notifications',
-      label: 'Notifications',
-      value: true,
-      type: 'boolean',
-      description: 'Enable desktop notifications'
-    },
-    {
-      id: 'sounds',
-      label: 'Sound Effects',
-      value: true,
-      type: 'boolean',
-      description: 'Enable UI sound effects'
-    },
-    {
-      id: 'animation',
-      label: 'Animations',
-      value: true,
-      type: 'boolean',
-      description: 'Enable UI animations'
-    },
-    {
-      id: 'maxResults',
-      label: 'Max Results',
-      value: 50,
-      type: 'number',
-      description: 'Maximum items to display per page'
-    },
-    {
-      id: 'autoSave',
-      label: 'Auto Save',
-      value: true,
-      type: 'boolean',
-      description: 'Automatically save changes'
-    },
-  ]);
-
-  const handleSettingChange = (id: string, newValue: any) => {
-    setSettings(prev => 
-      prev.map(s => s.id === id ? { ...s, value: newValue } : s)
-    );
-  };
-
-  const addNotification = useUIStore((s) => s.addNotification);
-
-  const handleSave = () => {
-    // Save settings to localStorage or API
-    console.log('Settings saved:', settings);
-    localStorage.setItem('appSettings', JSON.stringify(settings));
-    // Task 6 (2026-08-02): was a raw browser alert() — swapped for the real
-    // centralized notification store, rendered by App.tsx's NotificationHost.
-    addNotification({ type: 'success', title: 'Settings saved', message: 'Your changes were saved locally.' });
-  };
-
-  const handleReset = () => {
-    // Reset to defaults
-    if (window.confirm('Reset all settings to defaults?')) {
-      setSettings(prev => 
-        prev.map(s => ({
-          ...s,
-          value: getDefaultValue(s.type, s.options)
-        }))
-      );
-    }
-  };
-
-  const getDefaultValue = (type: string, options?: string[]) => {
-    switch (type) {
-      case 'boolean': return true;
-      case 'number': return 0;
-      case 'select': return options?.[0] || '';
-      default: return '';
-    }
-  };
-
-  const renderSettingInput = (setting: Setting) => {
-    switch (setting.type) {
-      case 'text':
-        return (
-          <input
-            type="text"
-            value={setting.value}
-            onChange={(e) => handleSettingChange(setting.id, e.target.value)}
-            className="setting-input"
-          />
-        );
-      case 'number':
-        return (
-          <input
-            type="number"
-            value={setting.value}
-            onChange={(e) => handleSettingChange(setting.id, parseInt(e.target.value) || 0)}
-            className="setting-input"
-          />
-        );
-      case 'boolean':
-        return (
-          <label className="setting-toggle">
-            <input
-              type="checkbox"
-              checked={setting.value}
-              onChange={(e) => handleSettingChange(setting.id, e.target.checked)}
-            />
-            <span className="toggle-slider" />
-          </label>
-        );
-      case 'select':
-        return (
-          <select
-            value={setting.value}
-            onChange={(e) => handleSettingChange(setting.id, e.target.value)}
-            className="setting-input"
-          >
-            {setting.options?.map(option => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-        );
-      default:
-        return null;
-    }
-  };
+  const { theme, resolved, animations } = useDisplayPreferences();
 
   return (
     <div className="tab-container settings-tab">
       <SpaceNavigation />
-      
+
       <main className="tab-content">
         <header className="tab-header">
           <h1>⚙️ SETTINGS - Configuration</h1>
@@ -165,28 +34,54 @@ const SETTINGS: React.FC = () => {
         </header>
 
         <section className="settings-section">
-          <h2>Application Settings</h2>
+          <h2>Display</h2>
           <div className="settings-grid">
-            {settings.map(setting => (
-              <div key={setting.id} className="setting-card">
-                <div className="setting-header">
-                  <h3>{setting.label}</h3>
-                  <span className="setting-type">{setting.type}</span>
-                </div>
-                <p className="setting-description">{setting.description}</p>
-                <div className="setting-input-container">
-                  {renderSettingInput(setting)}
-                </div>
+            <div className="setting-card">
+              <div className="setting-header"><h3>Theme</h3></div>
+              <p className="setting-description">
+                Colour theme for the whole app. Currently showing the {resolved} theme.
+              </p>
+              <div className="setting-input-container" role="radiogroup" aria-label="Colour theme">
+                {THEME_OPTIONS.map((o) => (
+                  <label key={o.id} className="flex items-center gap-2 py-1 cursor-pointer" title={o.hint}>
+                    <input
+                      type="radio"
+                      name="hive-theme"
+                      checked={theme === o.id}
+                      onChange={() => setTheme(o.id)}
+                    />
+                    <span>{o.label}</span>
+                    <span className="opacity-60 text-xs">{o.hint}</span>
+                  </label>
+                ))}
               </div>
-            ))}
+            </div>
+            <div className="setting-card">
+              <div className="setting-header"><h3>Animations</h3></div>
+              <p className="setting-description">
+                Turn off to stop pulsing, fading and sliding everywhere in the app.
+              </p>
+              <div className="setting-input-container">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={animations}
+                    onChange={(e) => setAnimations(e.target.checked)}
+                  />
+                  <span>{animations ? 'On' : 'Off'}</span>
+                </label>
+              </div>
+            </div>
           </div>
-
+          <p className="setting-description" style={{ marginTop: 12 }}>
+            Changes apply immediately and are remembered in this browser only.
+          </p>
           <div className="settings-actions">
-            <button className="btn-primary" onClick={handleSave}>
-              Save Settings
-            </button>
-            <button className="btn-secondary" onClick={handleReset}>
-              Reset to Defaults
+            <button
+              className="btn-secondary"
+              onClick={() => { if (window.confirm('Reset theme and animations to their defaults?')) resetDisplayPreferences(); }}
+            >
+              Reset to defaults
             </button>
           </div>
         </section>
@@ -195,21 +90,9 @@ const SETTINGS: React.FC = () => {
           <h2>System Information</h2>
           <div className="system-grid">
             <div className="system-card">
-              <h3>Application</h3>
-              <p><strong>Name:</strong> Sovereign Hive Command Center</p>
-              <p><strong>Version:</strong> 1.0.0</p>
-            </div>
-            <div className="system-card">
               <h3>Environment</h3>
               <p><strong>Mode:</strong> {import.meta.env.DEV ? 'Development' : 'Production'}</p>
               <p><strong>API Base:</strong> {API_BASE_URL || 'same-origin (/v11 on this Worker)'}</p>
-              <p><strong>Branch:</strong> main</p>
-            </div>
-            <div className="system-card">
-              <h3>Dependencies</h3>
-              <p><strong>React:</strong> 18.2.0</p>
-              <p><strong>TypeScript:</strong> 5.3.3</p>
-              <p><strong>Vite:</strong> 5.0.8</p>
             </div>
           </div>
         </section>

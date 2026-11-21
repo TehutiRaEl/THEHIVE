@@ -88,13 +88,13 @@ const ARENA: React.FC = () => {
                   style={{
                     padding: '10px 12px', margin: '8px 0', borderRadius: 8, cursor: 'pointer',
                     background: c.id === effectiveId ? 'rgba(0,232,136,0.08)' : 'rgba(255,255,255,0.03)',
-                    borderLeft: `3px solid ${c.status === 'completed' ? '#00e888' : '#ffbb33'}`,
+                    borderLeft: `3px solid ${c.status === 'completed' ? 'var(--legacy-ok)' : 'var(--legacy-warn)'}`,
                     outline: c.id === effectiveId ? '1px solid rgba(0,232,136,0.4)' : 'none',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
                     <strong>#{c.id} · {c.challenger} vs {c.challenged}</strong>
-                    <span style={{ color: c.status === 'completed' ? '#00e888' : '#ffbb33' }}>
+                    <span style={{ color: c.status === 'completed' ? 'var(--legacy-ok)' : 'var(--legacy-warn)' }}>
                       {c.status}{c.winner ? ` · ${c.winner} prevailed` : ''}
                     </span>
                   </div>

@@ -34,6 +34,8 @@ SWEPT = [
     "kai-os/WorkflowsDrawer.tsx",
     "kai-os/KaiCommune.tsx",
     "kai-os/LeftNav.tsx",
+    "kai-os/ThemeToggle.tsx",
+    "command-center/tabs/SETTINGS.tsx",
 ]
 
 

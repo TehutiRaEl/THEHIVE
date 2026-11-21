@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { HiveData } from '../../hooks/useHiveData';
 import { computeReadiness } from '../../utils/readiness';
+import ThemeToggle from './ThemeToggle';
 
 // Thematic constant, not a computed metric — same spirit as utils/constants.ts's
 // SCHUMANN_HZ. Displayed plainly as branding, never implied to be measured.
@@ -10,9 +11,11 @@ interface TopStatusBarProps {
   hive: HiveData;
   onOpenBiosystem?: () => void;
   onOpenGatewayConsole?: () => void;
+  // The phone layout has its own switch in its header; the desktop bar shows this one.
+  showThemeToggle?: boolean;
 }
 
-export default function TopStatusBar({ hive, onOpenBiosystem, onOpenGatewayConsole }: TopStatusBarProps) {
+export default function TopStatusBar({ hive, onOpenBiosystem, onOpenGatewayConsole, showThemeToggle = true }: TopStatusBarProps) {
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
 
   useEffect(() => {
@@ -108,7 +111,8 @@ export default function TopStatusBar({ hive, onOpenBiosystem, onOpenGatewayConso
           <span aria-hidden="true">⬡ </span>Gateway
         </button>
       )}
-      <span className={onOpenBiosystem || onOpenGatewayConsole ? 'text-slate-500' : 'ml-auto text-slate-500'}>
+      {showThemeToggle && <span className={onOpenBiosystem || onOpenGatewayConsole ? 'shrink-0' : 'ml-auto shrink-0'}><ThemeToggle /></span>}
+      <span className="text-slate-500">
         Latency <span className="text-emerald-300">{latencyMs != null ? `${latencyMs}ms` : '—'}</span>
       </span>
     </header>

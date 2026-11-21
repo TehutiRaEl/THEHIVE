@@ -14,7 +14,7 @@ const DREAM: React.FC = () => {
         <header className="tab-header">
           <h1>💭 DREAM - Vision and Planning</h1>
           <p>Strategic roadmap and future vision
-            <span style={{ marginLeft: 10, fontSize: 12, color: hive.online ? '#00e888' : '#ff6b6b' }}>
+            <span style={{ marginLeft: 10, fontSize: 12, color: hive.online ? 'var(--legacy-ok)' : 'var(--legacy-bad)' }}>
               {hive.online ? '● live' : hive.loading ? '○ connecting…' : '○ offline'}
             </span>
           </p>

@@ -19,7 +19,7 @@ const WORLD: React.FC = () => {
         <header className="tab-header">
           <h1>🌍 WORLD - Global State</h1>
           <p>Real-time overview of the Sovereign Hive ecosystem
-            <span style={{ marginLeft: 10, fontSize: 12, color: hive.online ? '#00e888' : '#ff6b6b' }}>
+            <span style={{ marginLeft: 10, fontSize: 12, color: hive.online ? 'var(--legacy-ok)' : 'var(--legacy-bad)' }}>
               {hive.online ? '● live' : hive.loading ? '○ connecting…' : '○ offline'}
             </span>
           </p>

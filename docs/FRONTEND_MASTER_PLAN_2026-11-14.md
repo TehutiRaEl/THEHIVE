@@ -1063,3 +1063,18 @@ Per the ideas README rule 8 (Muse/Claude make technical calls and explain them p
 **Open reading, asked of the founder, not decided:** is a greyed-out control honestly labelled "not connected yet" acceptable while its feature is queued, or must every such control be removed until it works? Until answered, the working reading is that new controls ship live or not at all, and existing placeholders are listed and swept.
 
 **What stays halted:** everything outside the front end, including any new Worker route a front-end batch would want (raised as its own question first), the constitution workflows, `soul.md`, and the Queen's back-end work. Q-042 is unchanged.
+
+---
+
+## Addendum A10 — Removed until they work: what is queued, and what must exist first (Mac, 2026-11-21, FE-013)
+
+Rule (FE-013): a greyed "not connected yet" control is removed, not left as a placeholder. Under SR-001 nothing removed is forgotten; it is QUEUED here with the condition for its return.
+
+| Removed item | Where it was | What must exist before it comes back | Queued in |
+|---|---|---|---|
+| **Connectors** (left-menu item, empty panel) | Left menu, secondary list | A real list of connections the Hive actually holds (the Gateway Console's saved provider keys, GitHub, the colonies) read from a live route, each with a working connect / disconnect or status. Nothing exists today that enumerates them in one place. | Batch F6 (Queen's front end) / the Gateway Console work; owner: next front-end session |
+| **Training** (left-menu item, empty panel) | Left menu, secondary list | Live training data: Nanuet's brain already counts `training_samples` and `training_eligible` (shown read-only in the Queen panel). The Training panel returns when it can show those counts and the Queen's Q-A/Q-B/Q-C training stage state from a live route. | Circle-wiring batch (with the Training circle below) and Queen stage Q-C |
+| **Training** circle (still shown greyed) | Centre graph | Wire it to a live count (`GET /v11/kai/brain` or the Nanuet brain's training counts) in the circle-wiring batch, or remove it there if no live route can feed it. | Circle-wiring batch |
+| **Treasury** circle (kept, gated) | Centre graph | Stays as a gated circle per FE-002; shows no balance until Q-004 / Q-041 decide the treasury. | F8, gated |
+| Settings: language, notifications, sound effects, max results, auto-save | Settings tab | Language needs translations to exist; desktop notifications need something that sends them; sound effects need sounds; max results needs a list that reads it; auto-save needs something that is not already applied instantly. Each returns only together with the thing it controls. | Future batches, as each feature appears |
+
