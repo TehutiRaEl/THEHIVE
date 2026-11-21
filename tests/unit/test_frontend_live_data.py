@@ -51,7 +51,8 @@ class TestCentreGraph:
 
     def test_every_count_is_null_or_a_named_live_value(self):
         # A count is either null ("no data") or one of the values computed from live data.
-        allowed = {"null", "tasksCount", "agentsCount", "venturesCount"}
+        allowed = {"null", "tasksCount", "agentsCount", "venturesCount",
+                   "memoriesCount", "trainingCount", "townhallCount", "filesCount"}
         for row in _node_rows(_strip_comments(GRAPH.read_text(encoding="utf-8"))):
             value = re.search(r"count:\s*([^,}]+)", row).group(1).strip()
             assert value in allowed, (
@@ -70,6 +71,10 @@ class TestCentreGraph:
                 assert label == "Agents", f"the agent count is shown under '{label}'"
             if value == "venturesCount":
                 assert label == "Ventures", f"the venture count is shown under '{label}'"
+            for v, want in (("memoriesCount", "Memories"), ("trainingCount", "Training"),
+                            ("townhallCount", "Core · Town Hall"), ("filesCount", "Files")):
+                if value == v:
+                    assert label == want, f"{v} is shown under '{label}', not '{want}'"
 
     def test_borrowed_sources_are_gone(self):
         # The bug: heartbeat and governance page sizes shown as Memories / Dream Logs / Town Hall.

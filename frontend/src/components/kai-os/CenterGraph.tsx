@@ -100,18 +100,28 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
     const agentsCount = live ? String(hive.agents.length) : null;
     // Ventures: the manifest the Hive serves (GET /v11/ventures). null while the route is not answering.
     const venturesCount = hive.ventures ? String(hive.ventures.ventures.length) : null;
+    // Kai El's brain (GET /v11/kai/brain). Counts exist only when his memory database is bound.
+    const brainCounts = hive.kaiBrain?.counts ?? null;
+    const memoriesCount = brainCounts && typeof brainCounts.memories === 'number' ? String(brainCounts.memories) : null;
+    const trainingCount = brainCounts && typeof brainCounts.training_samples === 'number' ? String(brainCounts.training_samples) : null;
+    // Town Hall board (GET /v11/townhall): one page of items, "+" when the page is full.
+    const th = hive.townhall;
+    const townhallCount = th ? `${th.items.length}${th.items.length >= (th.limit ?? 50) ? '+' : ''}` : null;
+    // Files (GET /v11/files): the R2 store. Not provisioned is a real answer, shown as such.
+    const filesCount = hive.files && hive.files.available ? `${hive.files.files.length}${hive.files.files.length >= 200 ? '+' : ''}` : null;
+    const filesBadge = hive.files && !hive.files.available ? 'not set up' : undefined;
     return [
       // The Queen takes the top seat (the 12 o'clock position of the ring), with a halo and crown.
       { id: 'queen', label: 'Queen', icon: '👑', wired: true, count: null, badge: 'Nanuet', about: 'the Queen, Nanuet: her brain, her switches (display only) and what she has learned' },
       { id: 'world', label: 'Projects', icon: '📂', wired: true, count: null, about: 'no live count yet: no route counts projects' },
-      { id: 'govern', label: 'Core · Town Hall', icon: '🏛', wired: true, count: null, about: 'no live count yet: the Town Hall board (/v11/townhall) is not shown on screen yet' },
-      { id: 'dream-logs', label: 'Memories', icon: '🧠', wired: true, count: null, about: "no live count yet: Kai El's memory count (/v11/kai/brain) is not wired to this circle yet" },
+      { id: 'townhall', label: 'Core · Town Hall', icon: '🏛', wired: true, count: townhallCount, about: 'items on the Town Hall board (the latest page, up to 50), from /v11/townhall' },
+      { id: 'kai-brain', label: 'Memories', icon: '🧠', wired: true, count: memoriesCount, about: "memories in Kai El's brain, from /v11/kai/brain (no number while his memory database is not bound)" },
       { id: 'hive', label: 'Swarms', icon: '🐝', wired: true, count: null, about: 'no live count yet: no route counts swarms' },
       { id: 'missions', label: 'Tasks', icon: '✓', wired: true, count: tasksCount, about: `open tasks among the latest ${TASK_PAGE_SIZE} loaded from /v11/tasks` },
       { id: 'dream', label: 'Dream Logs', icon: '🌙', wired: true, count: null, about: 'no live count yet: no route counts dream logs' },
-      { id: 'training', label: 'Training', icon: '🎓', wired: false, count: null, about: 'not connected yet: there is no Training panel to open' },
+      { id: 'kai-brain', label: 'Training', icon: '🎓', wired: true, count: trainingCount, about: "training samples in Kai El's brain, from /v11/kai/brain" },
       { id: 'arena', label: 'Skills', icon: '⚡', wired: true, count: null, about: 'no live count yet: no route counts skills' },
-      { id: 'sources', label: 'Files', icon: '📁', wired: true, count: null, about: 'no live count yet: the file store count is not wired to this circle yet' },
+      { id: 'sources', label: 'Files', icon: '📁', wired: true, count: filesCount, badge: filesBadge, about: 'files in the Hive file store, from /v11/files (the store is not set up until the R2 bucket exists)' },
       { id: 'api', label: 'APIs', icon: '</>', wired: true, count: null, about: 'no live count yet: the Worker does not publish a measured route count' },
       { id: 'workflows-panel', label: 'Workflows', icon: '🕸', wired: true, count: null, about: 'no live count yet: no route counts workflows' },
       { id: 'soul', label: 'Agents', icon: '🤖', wired: true, count: agentsCount, about: 'active agents, from /v11/agents' },
@@ -203,7 +213,7 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
         const pos = positions[i];
         return (
           <button
-            key={n.id}
+            key={n.label}
             type="button"
             disabled={!n.wired}
             onClick={n.wired ? () => onSelect(n.id) : undefined}
