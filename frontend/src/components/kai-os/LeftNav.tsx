@@ -29,8 +29,12 @@ const SECONDARY: NavItem[] = [
   { id: 'venture', label: 'Venture Planner', icon: '🚀', wired: true },
   { id: 'sources', label: 'Upload Files', icon: '📁', wired: true },
   { id: 'skills', label: 'Active Skills', icon: '⚡', wired: true },
+  { id: 'wow', label: 'Colonies', icon: '🌐', wired: true },
   { id: 'world', label: 'Projects', icon: '📂', wired: true },
   { id: 'dream', label: 'Dream Logs', icon: '🌙', wired: true },
+  { id: 'dreaming', label: 'The Hive Dreaming', icon: '🌌', wired: true },
+  { id: '4d', label: '4D Tesseract', icon: '🔲', wired: true },
+  { id: 'arcane', label: 'Arcane Wiring', icon: '🔮', wired: true },
   { id: 'grok-bridge', label: 'Grok Bridge', icon: '🌉', wired: true },
 ];
 

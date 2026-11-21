@@ -36,6 +36,10 @@ SWEPT = [
     "kai-os/LeftNav.tsx",
     "kai-os/ThemeToggle.tsx",
     "command-center/tabs/SETTINGS.tsx",
+    "command-center/tabs/WOW.tsx",
+    "command-center/tabs/4D.tsx",
+    "command-center/tabs/ARCANE.tsx",
+    "command-center/tabs/DREAM.tsx",
 ]
 
 
