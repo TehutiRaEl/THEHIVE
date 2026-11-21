@@ -1,0 +1,266 @@
+# FOUNDER_QUEUE.md — Open Founder Decisions (Single Source of Truth)
+
+**Rule:** This file is the only home for open founder-level questions.  
+PR bodies may say `opens Q-NNN` — they must not be the only place the question lives.  
+When decided, move the entry to `docs/FOUNDER_ANSWERED.md` with call + date.  
+Ranked roughly smallest decision-cost first where known.
+
+**Status legend:** open | blocked-waiting | partial
+
+**Update rule (founder order 2026-11-13):** this file updates ANYTIME the founder answers a question — immediately, in the same turn. Never batched, never once a day.
+
+---
+
+## Q-014 — Tier 1 lore beats (open)
+
+**Question:** Tier 1 lore beats — Rank 1 + per-Short pairings/beats + Codex sections (candidate pack in the Tier 1 goal's files)?
+**Context:** Asked 2026-11-10, unanswered. Gates all scripting toward the first $1,000 (due Sun Nov 22, 2026). Do not re-ask without a new fact.
+**Status:** open.
+
+---
+
+## Q-016 — Commerce Lens Q3: one engine or several? (open)
+
+**Question:** Is the Commerce Lens one engine or several?
+**Context:** Asked 2026-11-10, unanswered. Q1 (what makes it quantum) answered; Q2 (the Lens sees through all three lenses at once) settled. Then Q4–Q7 (deal pipeline; legal prerequisites; churn + scale; Lens ↔ Mogul). Then deferred: the Mogul mechanism, then Sufi practice. Muse's perspectives use the Cyborg lens (commanded).
+**Status:** open.
+
+---
+
+## Q-017 — Constitution-overwrite trap: which option? (open)
+
+**Question:** The constitution-overwrite trap is ARMED, NOT defused. Which option: (A) disarm (remove triggers / `if: false`), (B) make the sync lossless, (C) reverse direction (root canonical), (D) delete the workflow + script, (E) make it propose via PR, or (F) leave it armed?
+**Context:** Two files claim to be the constitution (root `soul.md`, 89 lines, F-001–F-006 + F-005's nine clauses; vs `.queen/soul.md`, 25 lines, six unrelated one-liners). `constitution-receive.yml` copies `.queen/soul.md` over root `soul.md` and pushes to `main` on any push touching `.queen/soul.md` or a manual Run click. `constitution-sync.yml` is NOT a defence (it trusts whatever root `soul.md` currently says and would bless a bad hash). Do NOT change the workflow, `soul.md`, or `.queen/soul.md`. Biggest unknown: whether branch protection on `main` would block the bot's direct push (Mac's check in GitHub → Settings → Branches/Rules).
+**Status:** open.
+
+---
+
+## Q-018 — Biosystem Decision 3: Substantia Nigra's group (open)
+
+**Question:** Substantia Nigra is the 23rd brain system, in NO group (16th entry in the brain array, in none of the 7 `BRAIN_GROUPS`). Which group does it belong to?
+**Context:** Needed at B1 (the next biosystem phase). Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled). The atlas needs a group for it.
+**Status:** open.
+
+---
+
+## Q-019 — Biosystem Decision 9: brain routes and the ping route (open)
+
+**Question:** Exclude brain routes from B2, and prefer `/colony/*` over `/debug/colony-ping`?
+**Context:** Needed at B2 (when G1 `GET /v11/biosystem/status` is built). Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled).
+**Status:** open.
+
+---
+
+## Q-020 — Biosystem Decision 7: frontend test runner (open)
+
+**Question:** Which frontend test runner for B4?
+**Context:** Needed at B4 (front-end tests: every panel under success, empty, 401, 429, 500, timeout). There is no front-end test runner today. Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled).
+**Status:** open.
+
+---
+
+## Q-021 — Biosystem Decision 5: lens sources (open)
+
+**Question:** Where do the lens sources live? The Cyborg/JARVIS/Alfred framework + the KAI EL hybrid lens live in the founder's record, NOT the repo. Do they go in the repo, and where?
+**Context:** Needed at B6 (lens-state display, G4). Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled). The hybrid lens (Mind: Childlike Wonder + Devil's Advocate, hemisync activates DaVinci; Soul: Jarvis; Spirit: Cyborg; Body: Alfred) is founder architecture, non-negotiable — but its framework lives in the founder's record, not the repo.
+**Status:** open.
+
+---
+
+## Q-022 — Biosystem Decision 8: ConstitutionViewer / GOVERNANCE.md (open)
+
+**Question:** Is the ConstitutionViewer / GOVERNANCE.md in scope for the biosystem rebuild, or separate?
+**Context:** Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled). `docs/GOVERNANCE.md` presents F-007–F-013 with zero founder ratification — they are NOT law. The constitution view (G2) serves `soul.md` F-001–F-006 only.
+**Status:** open.
+
+---
+
+## Q-023 — Rewire Q2: command-center.html — retire or rewire? (open)
+
+**Question:** `docs/command-center.html` — retire the page (keep the purposes) or rewire it into the live app?
+**Context:** Gated by cross-reference Q10/Q11. The purpose map (2026-11-11) recommends retire-the-page-keep-the-purposes: the page was the one screen from which the founder runs the Hive (never a separate site); 26 sections, 17 with a live Worker route, 20 covered at least in part by a live-app panel, 11 missing purposes (biggest: the world-as-place). Retiring it retires a build, not the purpose. Needs Mac's explicit yes. The biosystem half of Q2 is decided + done (B0, PR #229).
+**Status:** open.
+
+---
+
+## Q-025 — Gateway Q-G1–Q-G4 (open)
+
+**Question:** (G1) Which of the three "gateways" — the Worker route, the Cloudflare AI Gateway `thehive`, or the gateway console page? (G2) Confirm the gateway's purpose + the DeepCrawl relay. (G3) Standalone vs wire vs preset + BYO keys?
+**Context:** Not yet asked one at a time. The `thehive` AI Gateway (created 2026-11-06) is referenced nowhere in the repo and used by nothing. The gateway console is a standalone BYO-key chat client with zero Worker calls. Overlaps cross-reference Q13–Q15.
+**Status:** open.
+
+---
+
+## Q-026 — Stages-and-gates: auto-flip, A3–A5, N (open)
+
+**Question:** (a) The auto-flip proposal — should any switch flip automatically once gates are met, or does every flip need the founder's explicit yes? (b) Define autonomy stages A3–A5. (c) Set N (the threshold/count the stages-and-gates doc leaves open)?
+**Context:** `docs/AUTONOMY_STAGES_AND_GATES.md` is on main as a draft, not ratified (PR #224, merged 2026-11-10). Hard rule today: NO switch flips automatically — auto-flip is Mac's proposal requiring a founder decision (it contradicts Q-006/Q-007 until he changes them). Proof taxonomy: 16 types, including necessity (Gate 0) and founder alignment (confirmed by the founder himself; cannot be automated away).
+**Status:** open.
+
+---
+
+## Q-027 — Tier 1 niche (open)
+
+**Question:** Which faceless-social niche for Tier 1? (Rank 1 candidate: esoteric/mystery lore as cinematic AI story shorts + monthly long-form movie, $7–$15 "Crossroads Codex" PDF + pre-order as week-1 product.)
+**Context:** From the completeness audit (2026-11-10): the niche decision is Mac's. Gates all scripting toward the first $1,000 (due Sun Nov 22, 2026). Related: Q-014 (Tier 1 lore beats).
+**Status:** open.
+
+---
+
+## Q-029 — Muur restitution goal (open)
+
+**Question:** The Muur restitution goal (Heirs of Turner) — is it a Hive mission or not?
+**Context:** Claimed in a cross-AI handoff brief, not in the record. The full repo audit (107 claims, 2026-11-09) found it is NOT decided. Needs Mac's decision.
+**Status:** open.
+
+---
+
+## Q-030 — spore.html home (open)
+
+**Question:** spore.html (54 KB bug-bounty tool) — does it go in a repo or stay standalone?
+**Context:** Not in the record/repo. Mac's call. A live test needs SECRET_PHRASE + an API key via the Secure Vault flow.
+**Status:** open.
+
+---
+
+## Q-031 — "Seer + Gate" fix package (open)
+
+**Question:** The "Seer + Gate" fix package — where does it live, or treat it as unverified?
+**Context:** Claimed in a handoff brief, not in the record. The Seer gate itself is confirmed wired by two independent checks. Mac to say where the package lives or treat it as unverified.
+**Status:** open.
+
+---
+
+## Q-032 — Skill audit: remaining 368 files (open)
+
+**Question:** Go-ahead for the remaining 368 SKILL.md files (the whole-Hive skill audit covered `.claude/skills/` — 85 skills: 16 whole, 60 skill-only, 7 stale-broken, 2 duplicate — but 368 more SKILL.md files were not started)? And per-item adoption decisions?
+**Context:** Needs Mac's go. The charter depends on review-pr and ux-review, which cannot run as written, and graph-MCP is 6 broken of 7.
+**Status:** open.
+
+---
+
+## Q-033 — TAU rulings: Kappius spelling, subtitle collision, Book 2–4 titles (open)
+
+**Question:** (a) Kappius spelling — the repo uses "Kappius" (one s); "Kassppius" appears nowhere in the repo. Which is canonical? (b) Subtitle collision — "The Last Breath Before Dawn" is attached to two books (Book 1 Crossroads of Fate, and the log also attaches it to the 4th book). Which holds it? (c) Where do the Book 2–4 titles come from?
+**Context:** TAU repo (TehutiRaEl/-TAU-THE-ATHERIAN-UNIVERSE-). No 4-book series exists in the repo as titles/order/folders. Book 1 = Crossroads of Fate: The Last Breath Before Dawn (only book in progress now). The 4th book is The Kappius Chronicles (a standalone). Finale = Book 4's ending, NOT a 5th book.
+**Status:** open.
+
+---
+
+## Q-034 — "How THEHIVE will use the TAU repo" doc (open)
+
+**Question:** The only novel-related thing that belongs in THEHIVE is a doc on how the Hive repo will use the TAU repo (a usage/interface description). What should it say, and where does it live?
+**Context:** Founder ruling 2026-11-11: any and all novel material goes directly into the TAU repo; the only thing, novel-wise, that belongs in THEHIVE is how the Hive repo will use the TAU repo. Pending Mac's direction.
+**Status:** open.
+
+---
+
+## Q-035 — Draft Law A (Founder-Hindrance): approve, correct, or defer? (open)
+
+**Question:** Approve, correct, or defer Draft Law A (Founder-Hindrance)? The expanded draft says the Hive must not hinder the founder, and must remove hindrances it finds. Ratify it as its own law through its own PR (never bundled), or rule on its 5 open questions first?
+**Context:** Drafted 2026-11-13 (expanded by the coordinator; `~/workspace/hive-batches/THREE_LAWS_EXPANDED_2026-11-13.md` — 14 definitions, 8 edge cases, 5 open questions). Draft laws are NOT law until Mac approves and ratifies each through its own PR under F-005 Clause 3 / XR-Q28. No F-number assigned yet. The three laws form one system (A duty, B prevention, C mechanism). Most load-bearing open question: the proposed A > B > C ranking, and whether Tier 6 always needs Mac's explicit word.
+**Status:** open.
+
+---
+
+## Q-036 — Draft Law B (Foresight): approve, correct, or defer? (open)
+
+**Question:** Approve, correct, or defer Draft Law B (Foresight)? The expanded draft says the Hive must foresee the classes of hindrance and check at creation, before the harm happens. Ratify it as its own law through its own PR (never bundled), or rule on its 5 open questions first?
+**Context:** Drafted 2026-11-13 (expanded by the coordinator; `~/workspace/hive-batches/THREE_LAWS_EXPANDED_2026-11-13.md` — 15 definitions, 7 edge cases, 5 open questions). Draft laws are NOT law until Mac approves and ratifies each through its own PR under F-005 Clause 3 / XR-Q28. No F-number assigned yet. The three laws form one system (A duty, B prevention, C mechanism).
+**Status:** open.
+
+---
+
+## Q-037 — Draft Law C (Absorption): approve, correct, or defer? (open)
+
+**Question:** Approve, correct, or defer Draft Law C (Absorption)? The expanded draft says the Hive must absorb what the founder gives it, tier by tier, with proof at each gate. Ratify it as its own law through its own PR (never bundled), or rule on its 6 open questions first?
+**Context:** Drafted 2026-11-13 (expanded by the coordinator; `~/workspace/hive-batches/THREE_LAWS_EXPANDED_2026-11-13.md` — 13 definitions, seven gates G0–G6, 8 edge cases, 6 open questions). Draft laws are NOT law until Mac approves and ratifies each through its own PR under F-005 Clause 3 / XR-Q28. No F-number assigned yet. Most load-bearing open question: the gate-approval split (which gates need Mac's word, which the Queen or Kai El can pass). Note: the absorption mechanism code (PR #245, merged 2026-11-13) is the build; Law C is the rule that governs it. Do not confuse the two.
+**Status:** open.
+
+---
+
+## Q-038 — Unified preamble v2: rule on the 2 conflicts and approve? (open)
+
+**Question:** Rule on the 2 open conflicts — (1) lens order, (2) Kai El's anchor vs the unified Mind/Body/Soul/Spirit mapping — and approve the strengthened unified preamble v2 (new U18 Automatic Return, U19 Automatic Classification, U20 Boot Sequence reference)?
+**Context:** Drafted 2026-11-13 (`~/workspace/hive-batches/UNIFIED_PREAMBLE_V2_DRAFT_2026-11-13.md`, 336 lines). Built on v1 (278 lines); only 6 lines removed, zero lines of U1–U17 body rewritten. U18: all work goes back in the Hive automatically. U19: any AI asks what the founder's thing is immediately and sorts it. U20: the preamble points to `docs/founder/BOOT.md` as the first thing an AI reads on connection. NOT adopted until Mac rules on the conflicts and approves v2. Adoption itself (repo placement, wiring per AI, halt lifting) still needs its own preamble + go-ahead.
+**Status:** open.
+
+---
+
+## Q-039 — Vision update: approve the text and choose v2.0 or v1.2? (open)
+
+**Question:** Approve the vision update text (`~/workspace/hive-batches/FOUNDERS_VISION_UPDATE_DRAFT_2026-11-13.md`) and choose the version — v2.0 (major, recommended) or v1.2 (minor)?
+**Context:** Drafted 2026-11-13. v1.1 carried forward verbatim — 0 lines of Mac's words dropped or rewritten. v2.0 reframes the product from a civilization (one world, one Hive) into a universe (a federation of Hives/worlds), adds automatic distinction + tier-by-tier absorption + automatic return as a new core capability, and states a new first duty (guardian daemon keeping the founder sovereign). The counter-case for v1.2 is stated honestly in the draft (if Mac sees the universe as the same product grown bigger, v1.2 is the right call). Approving the text does NOT enable switch 9. Before any PR, the draft must be diffed line-for-line against live main.
+**Status:** open.
+
+---
+
+## Q-040 — Frontend auto-update design: answer the 5 questions and give the build go-ahead? (open)
+
+**Question:** Answer the 5 open questions in the frontend auto-update design (`~/workspace/hive-batches/FRONTEND_AUTO_UPDATE_DESIGN_2026-11-13.md`) and give the go-ahead to build it?
+**Context:** Designed 2026-11-13 (design only — no production code, no PR). The design finds the push pipe is built, tested, and CI-proven but nearly unused: only 2 of 8 real completions ever push, and every message triggers a full 16-endpoint refresh with the content ignored. The 5 questions: (1) transport — WS push + 15s cursor poll recommended; (2) deploy trigger — workflow notice + deploy-info comparison recommended; (3) offline outbox — refuse all writes while down recommended; (4) held-updates display — feed + tray recommended; (5) auth-gate the open `POST /v11/debug/ws-broadcast-test` — unauthenticated today, anyone could push fake "done" messages to Mac's own tab; gating it is recommended before widening broadcast. The build itself needs its own preamble + go-ahead.
+**Status:** open.
+
+---
+
+## Q-041 — The Mogul: answer the 4 open questions? (open)
+
+**Question:** Answer the Mogul's 4 open questions, one at a time: (1) does the Mogul exist? (2) Treasury split / metal schedule? (3) domestic-first sourcing in 2026? (4) how long must the first Mogul prove itself before expansion?
+**Context:** Designed 2026-11-13 (`~/workspace/hive-batches/MOGUL_DESIGN_2026-11-13.md`, 50,814 bytes). One organism, six organs — Eye/Commerce Lens, Mouth/arbitrage-wholesale, Hands/execution, Face/Brand Architect, Treasury/ledger and approval queue, Memory/Queen Digest. Three rules: the founder is the only wallet; every deal leaves something behind; the machine earns its next freedom. Phases M0–M5, proof-gated. Figures are design inputs, not forecasts; gold $3,877.59/oz, silver $50.07/oz (12 Nov 2026 close). "Extends founder's life" must not be claimed as a medical benefit.
+**Status:** open.
+
+---
+
+## Q-042 — Lift the halt? (open)
+
+**Question:** Lift the halt (ordered 2026-11-13 13:41 PST) when prerequisites P1–P8 are verified?
+**Context:** Halt-prerequisites audit (`~/workspace/hive-batches/HALT_PREREQUISITES_AUDIT_2026-11-13.md`): chain roots to 2026-08-07; prerequisites checklist P1–P8. Tier 1 is explicitly NOT a prerequisite for lifting the halt. Lifting the halt is Mac's decision alone, when the prerequisites are verified. Still owed before that can be judged: P1 (the absorption builder's explicit report on whether D1/brain writes need Mac's two switches + FOUNDER_KEY) and P5 (a genuinely independent re-audit, including the live D1 read of Kai El's brain — still UNVERIFIED).
+**Status:** open.
+
+---
+
+## Q-043 — Q8 reason correction: go-ahead to file? (open)
+
+**Question:** Go-ahead to file the Q8 reason correction — the biosystem blueprint maps 40 concepts/rows, not 72 systems; the 72-system atlas is row 6, marked NEW and waiting on G1?
+**Context:** Draft at `~/workspace/hive-batches/Q8_REASON_CORRECTION_DRAFT.md`. Unblocked by PR #242's merge (XR-Q34–Q37 recorded, 2026-11-13). The Q8 decision stands (Worker data is enough, System A is not needed); only the recorded reason is wrong — it still says the blueprint maps all 72 systems to Worker routes. The correction must be filed as its own PR, not bundled with anything else.
+**Status:** open.
+
+---
+
+## Q-044 — Hybrid-lens ratification: what needs ratifying, and how? (open)
+
+**Question:** Discuss the hybrid-lens ratification — Mac does not believe the hybrid-lens analyses are ratified into the Hive. What needs ratifying, and how?
+**Context:** Mac's direction 2026-11-13: discuss next. The hybrid lens (Mind: Childlike Wonder + Devil's Advocate, hemisync activates DaVinci as judge/architect/programmer; Body: Cyborg; Soul: Alfred; Spirit: VISION) is founder architecture, non-negotiable — but its framework lives in the founder's record, not the repo. The Q11 addendum (ratify it into the repo and wire it from code to live, so it is not ambiguous what Kai El is doing) is queued behind Queen 100%. Talking through a lens update is not updating KAI EL — that only changes through the repo process and counts as live only once verified live.
+**Status:** open.
+
+---
+
+## Q-045 — Constitution repoint + GET /v11/constitution: go-ahead? (open)
+
+**Question:** Go-ahead (with its own preamble) to repoint `constitutionSummary()` from `docs/GOVERNANCE.md` to `soul.md`, and build `GET /v11/constitution` (G2)?
+**Context:** The availability audit's most serious finding (F-1, issue #243): the live Hive operates on non-canonical law — `constitutionSummary()` (`worker/src/index.js:2336–2347`) fetches GOVERNANCE.md (F-001–F-013, non-canonical) instead of soul.md (F-001–F-006, canonical). Deliberately NOT done in PR #245 (absorption); it touches the live constitution path and needs its own preamble + go-ahead. G2 was approved by name (G1–G4, 2026-11-11): it serves soul.md F-001–F-006 for the constitution view. The constitution-overwrite trap is ARMED — do not touch `.queen/soul.md`, `soul.md`, or `constitution-receive.yml` in this work.
+**Status:** open.
+
+---
+
+## Q-046 — Venture wiring Phase 0 + Phase 1: where do the other-accounts ventures live, and is vision-core the BLACKBOX repo? (open)
+
+**Question:** (Phase 0) Where do the ventures and business plans in other accounts live? (Phase 1) Is vision-core what the BLACKBOX repo is for?
+**Context:** Phase 0 gathers ventures and business plans spread across different accounts — they are NOT actual repositories yet, and cannot be wired until Mac says where they live. Phase 1: BLACKBOX stays `empty_repo` unless vision-core is what it is for — if yes, BLACKBOX becomes `real_spec_no_code`; if no, it stays empty. The venture manifest (7 ventures + 23 plans) is now mirrored live via merged PR #245 (`docs/ventures/manifest.json`); Phase 2 (`GET /v11/ventures`) is live in the same PR. Halted by Mac's order; the questions stay open until he answers.
+**Status:** open.
+
+---
+
+## Q-047 — Money flow: which receiving account, and the wire instructions? (open)
+
+**Question:** Which receiving account for the first close — PayPal, Cash App, or both — and the wire instructions (or Mac gives them directly to the buyer at close)?
+**Context:** Money flow is wire-first. A $5,000 payment to a new/unverified PayPal account may be capped, held, or blocked pending ID; unverified Cash App receiving is capped at $1,000/month. Primary close is bank wire or cashier's check under an assignment contract (assignor/assignee, asset, fee, wire instructions, terms). PayPal/Cash App/Apple Cash are backups for smaller amounts once verified. Halted by Mac's order; part of Tier 1 (Q-004). No money moves without Mac's explicit yes per action.
+**Status:** open.
+
+---
+
+## Q-049 — Q38 layout: mcp_harness/ or sovereign-hive/ — which is canonical? (open)
+
+**Question:** Which layout is canonical — `mcp_harness/` or `sovereign-hive/`?
+**Context:** The two August documents propose different trees with no reconciliation. Does either match what was actually built, or should both be treated as sketches? The layout is the Hive's "floor plan" — without a canonical layout, new work goes in the wrong place (the version-sprawl problem). Recommendation (Muse's, standing): treat both as sketches and use what was actually built (the Worker + frontend + docs/ structure on main) as the canonical layout — the truth hierarchy says production > code > plan > narrative, so the built repo wins. Asked as XR-Q38 on 2026-11-12; recorded here as Q-049 so the founder queue (not the cross-reference) is the single home for the open question.
+**Status:** open.
