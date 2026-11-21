@@ -86,7 +86,7 @@ export default function RoadmapPanel({ onOpenCampaign, onOpenFullPlan }: Roadmap
         pulled from <code className="text-cyan-glow">GET /v11/roadmap/development</code>{' '}
         every 30s, never a hand-maintained file that can drift out of date.
         {' '}
-        <span style={{ color: hive.online ? '#00e888' : '#ff6b6b' }}>
+        <span style={{ color: hive.online ? 'var(--legacy-ok)' : 'var(--legacy-bad)' }}>
           {hive.online ? '● live' : hive.loading ? '○ connecting…' : '○ offline (showing last known / none)'}
         </span>
         {' '}Completed history and the federation table below remain a static,

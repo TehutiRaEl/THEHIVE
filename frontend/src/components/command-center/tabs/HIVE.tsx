@@ -23,8 +23,8 @@ const HIVE: React.FC = () => {
                 fontSize: 12,
                 fontWeight: 600,
                 background: hive.online ? 'rgba(0,232,136,0.14)' : 'rgba(255,68,68,0.14)',
-                color: hive.online ? '#00e888' : '#ff6b6b',
-                border: `1px solid ${hive.online ? '#00e88855' : '#ff444455'}`,
+                color: hive.online ? 'var(--legacy-ok)' : 'var(--legacy-bad)',
+                border: `1px solid ${hive.online ? 'rgb(var(--c-ok-400) / 0.35)' : 'rgb(var(--c-bad-400) / 0.35)'}`,
               }}
             >
               {hive.loading ? '◍ connecting…' : hive.online ? '● live Queen' : '○ simulation / offline'}
@@ -68,7 +68,7 @@ const HIVE: React.FC = () => {
                     <strong>#{c.id}</strong> {c.challenger} vs {c.challenged}
                     <span style={{
                       marginLeft: 6, fontSize: 11,
-                      color: c.status === 'completed' ? '#00e888' : '#ffbb33',
+                      color: c.status === 'completed' ? 'var(--legacy-ok)' : 'var(--legacy-warn)',
                     }}>
                       {c.status}{c.winner ? ` · ${c.winner} won` : ''}
                     </span>

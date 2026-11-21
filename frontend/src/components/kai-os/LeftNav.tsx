@@ -27,11 +27,9 @@ const SECONDARY: NavItem[] = [
   { id: 'ml-status', label: 'Cloudflare Workers AI', icon: '☁', wired: true },
   { id: 'legal', label: 'Legal Learning', icon: '⚖', wired: true },
   { id: 'venture', label: 'Venture Planner', icon: '🚀', wired: true },
-  { id: 'connectors', label: 'Connectors', icon: '🔌', wired: false },
   { id: 'sources', label: 'Upload Files', icon: '📁', wired: true },
   { id: 'skills', label: 'Active Skills', icon: '⚡', wired: true },
   { id: 'world', label: 'Projects', icon: '📂', wired: true },
-  { id: 'training', label: 'Training', icon: '🎓', wired: false },
   { id: 'dream', label: 'Dream Logs', icon: '🌙', wired: true },
   { id: 'grok-bridge', label: 'Grok Bridge', icon: '🌉', wired: true },
 ];

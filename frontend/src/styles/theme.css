@@ -1,0 +1,179 @@
+/*
+  THE TWO THEMES. One place defines every colour; tailwind.config.js points its
+  palette at these variables, so a class like `text-slate-200` or `bg-void-800`
+  means the right thing in both themes.
+
+  Values are "R G B" channels (so Tailwind can add opacity: `border-white/10`).
+  Dark is the original look. Light is a deliberate second design, not an
+  inversion: warm-neutral paper surfaces, deepened accents (a bright neon cyan or
+  gold on white would be unreadable), the same layout.
+
+  The theme is chosen by data-theme="dark|light" on <html>, set by
+  src/theme/preference.ts from the user's choice (Light / Dark / System, saved in
+  this browser, default System). Contrast of the main text pairs is checked in
+  tests/unit/test_frontend_theme.py.
+*/
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* surfaces */
+  --c-void-black: 10 10 13;
+  --c-void-900: 13 14 18;
+  --c-void-800: 20 22 28;
+  --c-void-700: 28 31 40;
+  --c-yale: 15 61 110;
+  --c-yale-light: 26 84 144;
+
+  /* ink: borders / hairlines / soft fills sit on the surface in this colour */
+  --c-white: 255 255 255;
+
+  /* accents */
+  --c-cyan-glow: 34 211 238;
+  --c-cyan-neon: 0 229 255;
+  --c-cyan-100: 207 250 254;
+  --c-cyan-300: 103 232 249;
+  --c-gold: 232 193 90;
+  --c-gold-neon: 255 209 102;
+  --c-violet-neon: 139 92 246;
+  --c-violet-bright: 167 139 250;
+  --c-electric-blue: 59 130 246;
+  --c-electric-green: 52 211 153;
+
+  /* status text */
+  --c-ok-300: 110 231 183;
+  --c-ok-400: 52 211 153;
+  --c-warn-300: 252 211 77;
+  --c-warn-400: 251 191 36;
+  --c-bad-300: 252 165 165;
+  --c-bad-400: 248 113 113;
+  --c-purple-200: 233 213 255;
+  --c-purple-300: 216 180 254;
+  --c-purple-400: 192 132 252;
+  --c-orange-300: 253 186 116;
+  --c-orange-400: 251 146 60;
+
+  /* slate (Tailwind's defaults) */
+  --c-slate-50: 248 250 252;
+  --c-slate-100: 241 245 249;
+  --c-slate-200: 226 232 240;
+  --c-slate-300: 203 213 225;
+  --c-slate-400: 148 163 184;
+  --c-slate-500: 100 116 139;
+  --c-slate-600: 71 85 105;
+  --c-slate-700: 51 65 85;
+  --c-slate-800: 30 41 59;
+  --c-slate-900: 15 23 42;
+  --c-slate-950: 2 6 23;
+
+  /* page backdrop + the older CSS variables the legacy tabs read */
+  --page-bg:
+    radial-gradient(ellipse 55% 40% at 22% 8%, rgba(139, 92, 246, 0.10), transparent 60%),
+    radial-gradient(ellipse 50% 45% at 80% 90%, rgba(59, 130, 246, 0.09), transparent 60%),
+    radial-gradient(ellipse 40% 35% at 65% 20%, rgba(0, 229, 255, 0.05), transparent 60%),
+    linear-gradient(160deg, #05060f 0%, #0a0d1c 50%, #05060f 100%);
+  --bg-dark: #0f172a;
+  --bg-darker: #020617;
+  --bg-card: rgba(30, 41, 59, 0.8);
+  --bg-card-hover: rgba(51, 65, 85, 0.9);
+  --border-color: rgba(107, 114, 128, 0.3);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --legacy-accent: #22d3ee;
+  --legacy-gold: #ffd166;
+  --legacy-ok: #34d399;
+  --legacy-bad: #f87171;
+  --legacy-warn: #ffbb33;
+  --overlay-scrim: rgba(5, 6, 15, 0.75);
+  /* crown + halo of the Queen circle */
+  --queen-crown: #e8c15a;
+  --queen-crown-deep: #b8892c;
+  --queen-halo: rgba(232, 193, 90, 0.55);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --c-void-black: 241 244 249;
+  --c-void-900: 235 239 246;
+  --c-void-800: 255 255 255;
+  --c-void-700: 226 232 241;
+  --c-yale: 186 214 245;
+  --c-yale-light: 147 188 235;
+
+  --c-white: 15 23 42;
+
+  --c-cyan-glow: 14 116 144;
+  --c-cyan-neon: 8 145 178;
+  --c-cyan-100: 22 78 99;
+  --c-cyan-300: 14 116 144;
+  --c-gold: 146 90 4;
+  --c-gold-neon: 180 110 5;
+  --c-violet-neon: 109 40 217;
+  --c-violet-bright: 124 58 237;
+  --c-electric-blue: 37 99 235;
+  --c-electric-green: 4 120 87;
+
+  --c-ok-300: 4 120 87;
+  --c-ok-400: 5 150 105;
+  --c-warn-300: 146 64 14;
+  --c-warn-400: 180 83 9;
+  --c-bad-300: 185 28 28;
+  --c-bad-400: 220 38 38;
+  --c-purple-200: 91 33 182;
+  --c-purple-300: 109 40 217;
+  --c-purple-400: 124 58 237;
+  --c-orange-300: 154 52 18;
+  --c-orange-400: 194 65 12;
+
+  /* slate mirrored: text-slate-200 (main text on dark) -> a dark slate here */
+  --c-slate-50: 2 6 23;
+  --c-slate-100: 15 23 42;
+  --c-slate-200: 30 41 59;
+  --c-slate-300: 51 65 85;
+  --c-slate-400: 71 85 105;
+  --c-slate-500: 100 116 139;
+  --c-slate-600: 100 116 139;
+  --c-slate-700: 148 163 184;
+  --c-slate-800: 203 213 225;
+  --c-slate-900: 226 232 240;
+  --c-slate-950: 241 245 249;
+
+  --page-bg:
+    radial-gradient(ellipse 55% 40% at 22% 8%, rgba(109, 40, 217, 0.07), transparent 60%),
+    radial-gradient(ellipse 50% 45% at 80% 90%, rgba(37, 99, 235, 0.07), transparent 60%),
+    linear-gradient(160deg, #f6f8fc 0%, #eef2f8 50%, #f6f8fc 100%);
+  --bg-dark: #eef2f8;
+  --bg-darker: #e6ebf3;
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-card-hover: rgba(241, 245, 249, 1);
+  --border-color: rgba(51, 65, 85, 0.22);
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --legacy-accent: #0e7490;
+  --legacy-gold: #92400e;
+  --legacy-ok: #047857;
+  --legacy-bad: #b91c1c;
+  --legacy-warn: #b45309;
+  --overlay-scrim: rgba(226, 232, 241, 0.82);
+  --queen-crown: #b8892c;
+  --queen-crown-deep: #8a6118;
+  --queen-halo: rgba(184, 137, 44, 0.5);
+}
+
+/* The "Animations" setting: when off, nothing moves or fades. */
+:root[data-motion='off'] *,
+:root[data-motion='off'] *::before,
+:root[data-motion='off'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Neon text glows are a dark-theme effect; on a light surface they just smudge. */
+:root[data-theme='light'] [style*='text-shadow'] {
+  text-shadow: none !important;
+}

@@ -13,7 +13,7 @@ const GOVERN: React.FC = () => {
         <header className="tab-header">
           <h1>🏛️ GOVERN</h1>
           <p>The governance log and the Hive's live status
-            <span style={{ marginLeft: 10, fontSize: 12, color: hive.online ? '#00e888' : '#ff6b6b' }}>
+            <span style={{ marginLeft: 10, fontSize: 12, color: hive.online ? 'var(--legacy-ok)' : 'var(--legacy-bad)' }}>
               {hive.online ? '● live' : '○ offline'}
             </span>
           </p>
@@ -28,7 +28,7 @@ const GOVERN: React.FC = () => {
               {hive.governance.slice(0, 12).map((g, i) => (
                 <li key={i} style={{ padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: 13 }}>
                   <span style={{ color: '#88aaff', fontWeight: 600 }}>{g.action}</span>
-                  <span style={{ marginLeft: 8, color: '#ffbb33', fontSize: 11 }}>{g.article}</span>
+                  <span style={{ marginLeft: 8, color: 'var(--legacy-warn)', fontSize: 11 }}>{g.article}</span>
                   {g.ts && <span style={{ marginLeft: 8, opacity: 0.5, fontSize: 11 }}>{(g.ts || '').slice(0, 19).replace('T', ' ')}</span>}
                 </li>
               ))}

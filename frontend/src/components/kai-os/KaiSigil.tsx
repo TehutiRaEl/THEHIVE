@@ -20,8 +20,8 @@ export default function KaiSigil({ size = 160, speaking = false, online = true }
     });
   }, []);
 
-  const ringColor = online ? '#22d3ee' : '#3a4150';
-  const coreColor = online ? '#e8c15a' : '#5a5f6b';
+  const ringColor = online ? 'rgb(var(--c-cyan-glow))' : 'rgb(var(--c-slate-600))';
+  const coreColor = online ? 'rgb(var(--c-gold))' : 'rgb(var(--c-slate-500))';
 
   return (
     <div

@@ -40,7 +40,7 @@
   right: 0;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(90deg, rgba(0,229,255,0.55) 0%, rgba(139,92,246,0.45) 55%, transparent 90%);
+  background: linear-gradient(90deg, rgb(var(--c-cyan-neon) / 0.55) 0%, rgb(var(--c-violet-neon) / 0.45) 55%, transparent 90%);
 }
 
 .tab-header h1 {
@@ -61,7 +61,7 @@
   font-family: 'Orbitron', sans-serif;
   font-size: 1rem;
   letter-spacing: 0.03em;
-  color: #ffd166; /* gold-neon — matches Kai EL OS section headers */
+  color: var(--legacy-gold); /* gold-neon — matches Kai EL OS section headers */
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
@@ -84,8 +84,8 @@
 }
 
 [class$="-card"]:hover {
-  border-color: rgba(34, 211, 238, 0.35);
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.08);
+  border-color: rgb(var(--c-cyan-glow) / 0.35);
+  box-shadow: 0 0 20px rgb(var(--c-cyan-glow) / 0.08);
 }
 
 [class$="-card"] h3 {
@@ -104,7 +104,7 @@
 .stat-value {
   font-family: 'Orbitron', sans-serif;
   font-size: 1.6rem;
-  color: #22d3ee;
+  color: var(--legacy-accent);
 }
 
 .stat-label {
@@ -119,9 +119,9 @@
  * PlannedControl buttons override opacity/cursor inline, so they still read
  * as visibly inactive on top of this. */
 [class$="-tab"] button {
-  background: rgba(15, 61, 110, 0.25);
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  color: #22d3ee;
+  background: rgb(var(--c-yale) / 0.25);
+  border: 1px solid rgb(var(--c-cyan-glow) / 0.35);
+  color: var(--legacy-accent);
   border-radius: 8px;
   padding: 6px 14px;
   font-size: 0.78rem;
@@ -131,14 +131,14 @@
 }
 
 [class$="-tab"] button:not(:disabled):hover {
-  background: rgba(15, 61, 110, 0.45);
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+  background: rgb(var(--c-yale) / 0.45);
+  box-shadow: 0 0 12px rgb(var(--c-cyan-glow) / 0.25);
 }
 
 [class$="-tab"] .btn-primary {
-  background: rgba(232, 193, 90, 0.15);
-  border-color: rgba(232, 193, 90, 0.4);
-  color: #ffd166;
+  background: rgb(var(--c-gold) / 0.15);
+  border-color: rgb(var(--c-gold) / 0.4);
+  color: var(--legacy-gold);
 }
 
 .control-panel {
@@ -168,12 +168,12 @@
 }
 
 .status-online {
-  color: #34d399;
+  color: var(--legacy-ok);
   font-weight: 600;
 }
 
 .status-offline {
-  color: #f87171;
+  color: var(--legacy-bad);
   font-weight: 600;
 }
 
@@ -197,26 +197,26 @@
 
 [class$="-table"] td {
   padding: 8px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgb(var(--c-white) / 0.06);
   color: var(--text-primary);
 }
 
 .progress-bar {
   height: 6px;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(var(--c-white) / 0.12);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #22d3ee, #8b5cf6);
+  background: linear-gradient(90deg, rgb(var(--c-cyan-glow)), rgb(var(--c-violet-neon)));
 }
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 6, 15, 0.75);
+  background: var(--overlay-scrim);
   display: flex;
   align-items: center;
   justify-content: center;

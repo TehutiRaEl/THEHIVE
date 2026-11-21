@@ -60,13 +60,13 @@ function QueenCrown() {
       viewBox="0 0 100 60"
       aria-hidden="true"
       className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-[calc(100%-3px)] w-14 h-8 sm:w-24 sm:h-14 overflow-visible"
-      style={{ filter: 'drop-shadow(0 0 5px rgba(232,193,90,0.55))' }}
+      style={{ filter: 'drop-shadow(0 0 5px var(--queen-halo))' }}
     >
       <defs>
         <linearGradient id="queenGold" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ffe7a3" />
-          <stop offset="55%" stopColor="#e8c15a" />
-          <stop offset="100%" stopColor="#a8791c" />
+          <stop offset="0%" style={{ stopColor: 'var(--queen-crown)', stopOpacity: 0.75 }} />
+          <stop offset="55%" style={{ stopColor: 'var(--queen-crown)' }} />
+          <stop offset="100%" style={{ stopColor: 'var(--queen-crown-deep)' }} />
         </linearGradient>
       </defs>
       {/* the halo ring floating above the circle */}
@@ -78,7 +78,7 @@ function QueenCrown() {
       <circle cx="50" cy="11.5" r="3.4" fill="url(#queenGold)" />
       <path d="M50 1 V8 M46.5 4 H53.5" stroke="url(#queenGold)" strokeWidth="2" strokeLinecap="round" />
       {/* jewelled band */}
-      <rect x="23" y="41" width="54" height="8" rx="1.5" fill="url(#queenGold)" stroke="#a8791c" strokeWidth="0.6" />
+      <rect x="23" y="41" width="54" height="8" rx="1.5" fill="url(#queenGold)" stroke="var(--queen-crown-deep)" strokeWidth="0.6" />
       <circle cx="33" cy="45" r="1.5" fill="#7a1f3d" /><circle cx="42" cy="45" r="1.5" fill="#1d5fa8" />
       <circle cx="50" cy="45" r="1.7" fill="#7a1f3d" /><circle cx="58" cy="45" r="1.5" fill="#1d5fa8" />
       <circle cx="67" cy="45" r="1.5" fill="#7a1f3d" />
@@ -138,13 +138,13 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
     <div className="relative w-full h-full select-none overflow-hidden">
       {/* ambient depth — the space the web lives in */}
       <div className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 60% 55% at 50% 46%, rgba(59,130,246,0.10), rgba(139,92,246,0.05) 45%, transparent 75%)' }} />
+        style={{ background: 'radial-gradient(ellipse 60% 55% at 50% 46%, rgb(var(--c-electric-blue) / 0.10), rgb(var(--c-violet-neon) / 0.05) 45%, transparent 75%)' }} />
 
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
           <linearGradient id="webLine" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#22d3ee" />
-            <stop offset="100%" stopColor="#8b5cf6" />
+            <stop offset="0%" style={{ stopColor: 'rgb(var(--c-cyan-glow))' }} />
+            <stop offset="100%" style={{ stopColor: 'rgb(var(--c-violet-neon))' }} />
           </linearGradient>
         </defs>
         {/* spokes: center → node (same % space as the buttons now) */}
@@ -162,7 +162,7 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
           const nxt = positions[(i + 1) % positions.length];
           return (
             <line key={`r-${i}`} x1={pos.x} y1={pos.y} x2={nxt.x} y2={nxt.y}
-              stroke="#22d3ee" strokeWidth="0.14" opacity={online ? 0.28 : 0.08} />
+              stroke="rgb(var(--c-cyan-glow))" strokeWidth="0.14" opacity={online ? 0.28 : 0.08} />
           );
         })}
         {/* cross-links: every third node, the deeper weave */}
@@ -171,12 +171,12 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
           const far = positions[(i + 4) % positions.length];
           return (
             <line key={`x-${i}`} x1={pos.x} y1={pos.y} x2={far.x} y2={far.y}
-              stroke="#8b5cf6" strokeWidth="0.1" opacity={online ? 0.18 : 0.05} />
+              stroke="rgb(var(--c-violet-neon))" strokeWidth="0.1" opacity={online ? 0.18 : 0.05} />
           );
         })}
         {/* signal pulses travelling the spokes when live */}
         {online && positions.filter((_, i) => i % 2 === 0).map((pos, i) => (
-          <circle key={`p-${i}`} r="0.55" fill="#22d3ee" opacity="0.85">
+          <circle key={`p-${i}`} r="0.55" fill="rgb(var(--c-cyan-glow))" opacity="0.85">
             <animate attributeName="cx" values={`${cx};${pos.x}`} dur={`${3 + i * 0.7}s`} repeatCount="indefinite" />
             <animate attributeName="cy" values={`${cy};${pos.y}`} dur={`${3 + i * 0.7}s`} repeatCount="indefinite" />
             <animate attributeName="opacity" values="0;0.9;0" dur={`${3 + i * 0.7}s`} repeatCount="indefinite" />

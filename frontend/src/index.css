@@ -1,5 +1,6 @@
 /* @import must precede all other rules (CSS spec) — moved above @tailwind. */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
+@import './styles/theme.css';
 @import './styles/legacy-tabs.css';
 
 @tailwind base;
@@ -16,17 +17,9 @@
   --color-success: #10b981;
   --color-info: #3b82f6;
   
-  --bg-dark: #0f172a;
-  --bg-darker: #020617;
-  --bg-card: rgba(30, 41, 59, 0.8);
-  --bg-card-hover: rgba(51, 65, 85, 0.9);
   
-  --border-color: rgba(107, 114, 128, 0.3);
   --border-glow: rgba(147, 51, 234, 0.3);
   
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
 
   /* ===== M1 canonical hive aliases (D1 unify map, PR #132) =====
      Mirror Tailwind Kai EL OS theme so CSS and Tailwind can converge.
@@ -68,11 +61,7 @@ html, body {
   /* Deep-space neon backdrop (the cyberfuture feel of the founder's mockup):
      near-black navy with faint violet/blue nebulas — glows come from panels
      and lines on top of it, keeping text readable. */
-  background:
-    radial-gradient(ellipse 55% 40% at 22% 8%, rgba(139, 92, 246, 0.10), transparent 60%),
-    radial-gradient(ellipse 50% 45% at 80% 90%, rgba(59, 130, 246, 0.09), transparent 60%),
-    radial-gradient(ellipse 40% 35% at 65% 20%, rgba(0, 229, 255, 0.05), transparent 60%),
-    linear-gradient(160deg, #05060f 0%, #0a0d1c 50%, #05060f 100%);
+  background: var(--page-bg);
   color: var(--text-primary);
   overflow-x: hidden;
 }
