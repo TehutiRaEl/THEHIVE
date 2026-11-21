@@ -67,6 +67,23 @@ export interface DevelopmentRoadmap {
   note?: string
 }
 
+// Kai El's brain status (GET /v11/kai/brain), the Town Hall board (GET /v11/townhall) and the
+// file store (GET /v11/files). Each is null when its route does not answer.
+export interface KaiBrainStatus {
+  bound?: boolean
+  write_enabled?: boolean
+  counts?: { memories?: number; decisions?: number; training_samples?: number; training_eligible?: number } | null
+  error?: string
+  recency?: { half_life_days?: number; floor?: number }
+  fourdbrain?: { switch_on?: boolean; url_set?: boolean; note?: string }
+}
+export interface TownHallItem {
+  id: number; ts?: string; author_agent?: string; kind?: string; title: string; body?: string
+  status?: string; priority?: number; signal_score?: number; claimed_by?: string | null; requires_founder?: number
+}
+export interface TownHallData { items: TownHallItem[]; limit?: number; offset?: number; detail?: string }
+export interface FilesStatus { available: boolean; files: { key: string; size: number; uploaded?: string }[]; note?: string; error?: string }
+
 export interface HiveData {
   online: boolean
   loading: boolean
@@ -88,6 +105,9 @@ export interface HiveData {
   aiBound: boolean
   debugEnv: DebugEnv | null
   ventures: VenturesData | null
+  kaiBrain: KaiBrainStatus | null
+  townhall: TownHallData | null
+  files: FilesStatus | null
   refresh: () => void
 }
 
@@ -109,11 +129,11 @@ export function useHiveData(pollMs = 30000): HiveData {
     agents: [], challenges: [], pulse: [], governance: [], soulBoard: [],
     eloBoard: [], tasks: [], fallen: [], llm: null, tier3: null, updates: [],
     roadmap: null, developmentRoadmap: null,
-    memoryBound: false, aiBound: false, debugEnv: null, ventures: null,
+    memoryBound: false, aiBound: false, debugEnv: null, ventures: null, kaiBrain: null, townhall: null, files: null,
   })
 
   const load = useCallback(async () => {
-    const [health, agents, challenges, pulse, gov, soul, mem, elo, tasks, fallen, llm, tier3, updates, roadmap, devRoadmap, debugEnv, ventures] = await Promise.all([
+    const [health, agents, challenges, pulse, gov, soul, mem, elo, tasks, fallen, llm, tier3, updates, roadmap, devRoadmap, debugEnv, ventures, kaiBrain, townhall, files] = await Promise.all([
       j<{ status: string; version: string; runtime: string }>('/health'),
       j<{ agents: Agent[] }>('/agents'),
       j<{ challenges: Challenge[] }>('/arena/challenges'),
@@ -131,6 +151,9 @@ export function useHiveData(pollMs = 30000): HiveData {
       j<DevelopmentRoadmap>('/roadmap/development'),
       j<DebugEnv>('/debug/env'),
       j<VenturesData>('/ventures'),
+      j<KaiBrainStatus>('/kai/brain'),
+      j<TownHallData>('/townhall'),
+      j<FilesStatus>('/files'),
     ])
     setState({
       online: !!health,
@@ -153,6 +176,9 @@ export function useHiveData(pollMs = 30000): HiveData {
       aiBound: !!mem?.ai_bound,
       debugEnv: debugEnv ?? null,
       ventures: ventures && ventures.available === true && Array.isArray(ventures.ventures) ? ventures : null,
+      kaiBrain: kaiBrain && typeof kaiBrain === 'object' && 'bound' in kaiBrain ? kaiBrain : null,
+      townhall: townhall && Array.isArray(townhall.items) && !townhall.detail ? townhall : null,
+      files: files && typeof files.available === 'boolean' ? files : null,
     })
   }, [])
 
