@@ -1128,3 +1128,17 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Tested: `worker/test/command-text-gate.test.js` (6; lock removed: 4 fail), `tests/unit/test_frontend_founder_lock.py`; driven in Chromium against a stand-in server that behaves like the locked Worker (no key: nothing sent; wrong key: refused; right key: answered; survives reload; forget works; phone drawer works).
 
 **Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged. **Not deployed or verified-live until merged and the Worker redeploys; the edge-health-probe's new step is the live proof.**
+
+---
+
+## WS-005 — Files are never served as pages, and uploading is founder-only (Worker security list, item S-5)
+
+**Question asked (2026-11-22), item S-5 (found while checking S-4):** the Worker serves uploaded files from the SAME origin as the Command Center, inline, with the content type the uploader chose, and anyone could upload (the free visitor speed bump only; the R2 bucket is live since 2026-08-03). An uploaded HTML page would have run as a page on that origin and could have read the founder key that S-4 now keeps in the browser. Option A (recommended): fix both halves (safe serving; founder-key upload). Option B: safe serving only. Option C: leave it and do not keep the key in the browser. **Founder's answer:** "A".
+**What this means:**
+- `GET /v11/files/get` always serves a stored file as a download with a harmless type, whatever the uploader claimed: `content-type: application/octet-stream`, `content-disposition: attachment` with a sanitised file name, `x-content-type-options: nosniff`, `content-security-policy: sandbox; default-src 'none'`. A file can no longer be a page, which closes the path to the founder key. Files already stored are covered too (the stored type is ignored).
+- `POST /v11/files/upload` requires the founder key (`founderAuthOk`, fails closed), which also stops strangers filling the 9 GB store. The Files panel now sends the key from the same key box, and hides the upload button until a key is set.
+- Tested: `worker/test/files-safety.test.js` (8: HTML and SVG come back as downloads, a hostile file name cannot break the header, no key / visitor token / no key bound: 401 and nothing stored, founder key stores; with safe serving removed 2 fail, with the upload lock removed 3 fail) and `tests/unit/test_frontend_files_safety.py`.
+- **Merge note:** this PR is stacked on the Commune lock (S-4). The key box is only safe to use once this has landed, so merge the S-4 PR and this one together.
+- Not covered by this decision (still open, lower risk, nothing reads them into a prompt): the Town Hall post (S-6) and the Queen digest write (S-7) still sit behind only the free speed bump. `constitution-receive.yml` not touched.
+
+**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged.

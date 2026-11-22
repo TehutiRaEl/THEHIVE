@@ -5,7 +5,7 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import FounderKeyBox from './FounderKeyBox';
-import { founderAuthHeader, getFounderKey } from '../utils/founderKey';
+import { founderAuthHeader, getFounderKey, useFounderKey } from '../utils/founderKey';
 import { API_BASE_URL } from '../utils/constants';
 import { useHiveData } from '../hooks/useHiveData';
 
@@ -26,6 +26,9 @@ const KaiChatBox = () => {
   const [minimized, setMinimized] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [refused, setRefused] = useState(false);
+  const founderKey = useFounderKey();
+  // A newly saved key gets a fresh chance: forget the last refusal.
+  useEffect(() => { setRefused(false); }, [founderKey]);
   // "Founder" once FOUNDER_KEY is bound, "YOU" until then (task 35, 2026-08-04 request).
   // debugEnv.secrets_present.includes('FOUNDER_KEY') is only correct as of the same
   // firing that added FOUNDER_KEY to worker/src/index.js's expectedSecrets list — see

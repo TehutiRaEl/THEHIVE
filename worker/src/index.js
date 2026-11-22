@@ -4820,8 +4820,16 @@ export default {
       }
       if (p === '/files/upload' && method === 'POST') {
         if (!env.FILES) return json({ available: false, detail: 'R2 bucket not provisioned' }, 503);
-        // Same gate as arena challenge creation: a visitor token from /auth/token.
-        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        // Founder-only (2026-11-22, founder decision S-5 "A"). It used to need only the free visitor
+        // speed bump, so any stranger could fill the 9 GB store or host files on this origin. Fails
+        // CLOSED like the other founder-only routes.
+        if (!(await founderAuthOk(request, env))) {
+          return json({
+            detail: (await founderKeyBound(env))
+              ? 'invalid or missing founder key — uploading files is founder-only'
+              : 'no FOUNDER_KEY bound yet — uploading files is founder-only (see FLIP_THE_SWITCHES.md)',
+          }, 401);
+        }
         const key = (url.searchParams.get('key') || '').replace(/[^A-Za-z0-9._ /-]/g, '').replace(/^\/+|\.\.+/g, '').slice(0, 200);
         if (!key) return json({ detail: 'key query param required (filename)' }, 400);
         const len = +(request.headers.get('content-length') || 0);
@@ -4855,11 +4863,20 @@ export default {
         const key = url.searchParams.get('key') || '';
         const obj = await env.FILES.get(key);
         if (!obj) return json({ detail: 'not found', key }, 404);
+        // SAFE SERVING (2026-11-22, founder decision S-5 "A"). This route lives on the SAME origin as
+        // the Command Center, where the founder's key is kept in the browser (S-4). It used to serve
+        // each file inline with whatever content type the uploader chose, so an uploaded HTML page
+        // would have run as a page on this origin and could have read that key. Now a file can never
+        // be a page: always a download, a harmless type that ignores what the uploader claimed,
+        // no content sniffing, and a sandbox policy as a last line of defence.
+        const safeName = (key.split('/').pop() || 'file').replace(/[^A-Za-z0-9._ -]/g, '_').slice(0, 120) || 'file';
         return new Response(obj.body, {
           headers: {
-            'content-type': obj.httpMetadata?.contentType || 'application/octet-stream',
-            'content-disposition': `inline; filename="${key.split('/').pop()}"`,
             ...corsHeaders,
+            'content-type': 'application/octet-stream',
+            'content-disposition': `attachment; filename="${safeName}"`,
+            'x-content-type-options': 'nosniff',
+            'content-security-policy': "sandbox; default-src 'none'",
           },
         });
       }
