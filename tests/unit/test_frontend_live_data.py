@@ -52,7 +52,7 @@ class TestCentreGraph:
     def test_every_count_is_null_or_a_named_live_value(self):
         # A count is either null ("no data") or one of the values computed from live data.
         allowed = {"null", "tasksCount", "agentsCount", "venturesCount",
-                   "memoriesCount", "trainingCount", "townhallCount", "filesCount"}
+                   "memoriesCount", "trainingCount", "townhallCount", "filesCount", "dreamCount"}
         for row in _node_rows(_strip_comments(GRAPH.read_text(encoding="utf-8"))):
             value = re.search(r"count:\s*([^,}]+)", row).group(1).strip()
             assert value in allowed, (
@@ -72,14 +72,18 @@ class TestCentreGraph:
             if value == "venturesCount":
                 assert label == "Ventures", f"the venture count is shown under '{label}'"
             for v, want in (("memoriesCount", "Memories"), ("trainingCount", "Training"),
-                            ("townhallCount", "Core · Town Hall"), ("filesCount", "Files")):
+                            ("townhallCount", "Core · Town Hall"), ("filesCount", "Files"),
+                            ("dreamCount", "Dream Logs")):
                 if value == v:
                     assert label == want, f"{v} is shown under '{label}', not '{want}'"
 
     def test_borrowed_sources_are_gone(self):
         # The bug: heartbeat and governance page sizes shown as Memories / Dream Logs / Town Hall.
         code = _strip_comments(GRAPH.read_text(encoding="utf-8"))
-        assert "hive.pulse" not in code
+        # The heartbeat list may be used ONLY for the Dream Logs count (the panel lists those same
+        # heartbeats). Every other use is the old bug: a page size shown as someone else's number.
+        uses = [l for l in code.splitlines() if "hive.pulse" in l]
+        assert all("dreamCount" in l for l in uses), f"hive.pulse used outside the Dream Logs count: {uses}"
         assert "hive.governance" not in code
 
     def test_offline_shows_no_data_not_zero(self):
