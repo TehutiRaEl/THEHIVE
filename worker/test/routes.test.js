@@ -12,7 +12,7 @@
 // purpose, and getting one backwards would be a real security bug that reads as
 // a typo:
 //   rateLimitOk   — fails OPEN on infra trouble (anti-spam, not a boundary)
-//   tokenOk       — fails OPEN with no WORKER_ADMIN_KEY (dev mode)
+//   visitorSpeedBumpOk (was tokenOk) — fails OPEN with no WORKER_ADMIN_KEY (dev mode)
 //   founderAuthOk — fails CLOSED with no FOUNDER_KEY (approving proposals is
 //                   high-stakes; "the founder said yes" must be verifiably true)
 // Each is asserted in both directions here so a future edit cannot quietly
@@ -195,7 +195,7 @@ describe('the rate-limit gate (30 POSTs/min/IP)', () => {
   });
 });
 
-describe('the token gate (tokenOk) — fails OPEN by design', () => {
+describe('the visitor speed bump (visitorSpeedBumpOk, was tokenOk) — fails OPEN by design', () => {
   test('with no WORKER_ADMIN_KEY, an unauthenticated request is allowed (dev mode)', async () => {
     withMistral(JSON.stringify({ goal: 'g', departments: [] }));
 

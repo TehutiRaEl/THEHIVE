@@ -210,8 +210,15 @@ async function rateLimitPeek(DB, ip, env) {
   } catch { return null; }
 }
 
-// Token validation for write endpoints. Fails open when WORKER_ADMIN_KEY is unset (dev mode).
-async function tokenOk(DB, request, env) {
+// THE VISITOR SPEED BUMP — an anti-spam speed bump, NOT a lock (renamed from tokenOk 2026-11-22,
+// founder decision S-3 "A", so the name stops promising protection it never gave).
+// What it really is: a visitor must present a Bearer token from GET /v11/auth/token, and that route
+// hands one to ANYONE, with no credentials, valid for an hour. It also lets EVERY request through
+// when WORKER_ADMIN_KEY is unset (dev mode) or when the database errors. So it slows scripts that do
+// not bother to fetch a token; it does not stop anyone who does. Never use it to protect anything whose
+// misuse costs money or changes what a mind believes: use founderAuthOk (fails closed) for that, as
+// /memory/remember and /automaton/infer now do (S-1, S-2).
+async function visitorSpeedBumpOk(DB, request, env) {
   if (!env.WORKER_ADMIN_KEY) return true; // dev mode — permissive
   const auth = request.headers.get('Authorization') || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
@@ -257,7 +264,7 @@ async function founderKeyBound(env) {
 }
 
 // Founder-only gate for deciding hive proposals — deliberately the OPPOSITE
-// default of tokenOk above. tokenOk fails OPEN when no admin key is set
+// default of visitorSpeedBumpOk above. visitorSpeedBumpOk fails OPEN when no admin key is set
 // (fine for anti-spam on a chat message). Approving a hive-evolution
 // proposal is a much higher-stakes action — "the founder said yes" must be
 // verifiably true, so this fails CLOSED: with no FOUNDER_KEY secret bound,
@@ -3831,7 +3838,7 @@ export default {
         } catch (e) { return json({ items: [], detail: String(e) }); }
       }
       if (p === '/townhall' && method === 'POST') {
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const ipTh = request.headers.get('CF-Connecting-IP') || 'unknown';
         if (!(await rateLimitOk(DB, ipTh, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
         await ensureTables(DB);
@@ -3882,10 +3889,10 @@ export default {
         } catch { return json({ proposals: [], founder_auth_bound: await founderKeyBound(env) }); }
       }
       if (p === '/proposals' && method === 'POST') {
-        // Anti-spam only (same permissive-if-unbound tokenOk as other public
+        // Anti-spam only (same permissive-if-unbound visitorSpeedBumpOk as other public
         // writes) — creating a suggestion is Tier 1, reversible, and never
         // itself changes anything. Deciding it is the gated action.
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         // 'kind' is freely-typed on purpose (Phase 2, 2026-08-18) — no allow-list
         // here, unlike 'action-request' below. Two sanctioned conventions Kai El
@@ -3935,7 +3942,7 @@ export default {
       // "rejected before it ever reaches the founder's approval queue" means
       // in practice: an invalid request never becomes a pending row at all.
       if (p === '/proposals/action-request' && method === 'POST') {
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         const action = (body.action || '').toString();
         const params = body.params || {};
@@ -4085,7 +4092,7 @@ export default {
         } catch { return json({ gaps: [], founder_auth_bound: await founderKeyBound(env) }); }
       }
       if (p === '/ventures/gaps' && method === 'POST') {
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         const venture = (body.venture || '').toString().trim().slice(0, 80);
         const title = (body.title || '').toString().trim().slice(0, 200);
@@ -4155,7 +4162,7 @@ export default {
         } catch { return json({ runs: [], founder_auth_bound: await founderKeyBound(env) }); }
       }
       if (p === '/ventures/sandbox-runs' && method === 'POST') {
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         const venture = (body.venture || '').toString().trim().slice(0, 80);
         const task = (body.task || '').toString().trim().slice(0, 1000);
@@ -4208,7 +4215,7 @@ export default {
       if (p === '/venture/plan' && method === 'POST') {
         const ipVenture = request.headers.get('CF-Connecting-IP') || 'unknown';
         if (!await rateLimitOk(DB, ipVenture, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         const brief = (body.brief || '').toString().trim().slice(0, 2000);
         if (!brief) return json({ detail: 'brief required' }, 400);
@@ -4263,7 +4270,7 @@ export default {
       if (p === '/legal/research' && method === 'POST') {
         const ipLegal = request.headers.get('CF-Connecting-IP') || 'unknown';
         if (!await rateLimitOk(DB, ipLegal, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         const question = (body.question || '').toString().trim().slice(0, 1000);
         if (!question) return json({ detail: 'question required' }, 400);
@@ -4799,7 +4806,7 @@ export default {
       if (p === '/files/upload' && method === 'POST') {
         if (!env.FILES) return json({ available: false, detail: 'R2 bucket not provisioned' }, 503);
         // Same gate as arena challenge creation: a visitor token from /auth/token.
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const key = (url.searchParams.get('key') || '').replace(/[^A-Za-z0-9._ /-]/g, '').replace(/^\/+|\.\.+/g, '').slice(0, 200);
         if (!key) return json({ detail: 'key query param required (filename)' }, 400);
         const len = +(request.headers.get('content-length') || 0);
@@ -5165,7 +5172,7 @@ export default {
         });
       }
       if (p === '/nanuet/digest' && method === 'POST') {
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        if (!(await visitorSpeedBumpOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
         const body = await request.json().catch(() => ({}));
         const result = await writeQueenDigest(env, {
           kind: body.kind,
@@ -5423,7 +5430,7 @@ export default {
       if (p === '/arena/challenge' && method === 'POST') {
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
         if (!await rateLimitOk(DB, ip, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
-        if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
+        if (!await visitorSpeedBumpOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const b = await request.json();
         const r = await DB.prepare('INSERT INTO arena_challenges (challenger, challenged, proposition) VALUES (?,?,?)')
           .bind(b.challenger, b.challenged, b.proposition).run();
@@ -5434,7 +5441,7 @@ export default {
       if (m && method === 'POST') {
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
         if (!await rateLimitOk(DB, ip, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
-        if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
+        if (!await visitorSpeedBumpOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const ch = await DB.prepare('SELECT * FROM arena_challenges WHERE id=?').bind(+m[1]).first();
         if (!ch) return json({ detail: 'challenge not found' }, 404);
         const { winner, loser } = await resolveChallenge(DB, ch);
@@ -5445,7 +5452,7 @@ export default {
       if (m && method === 'POST') {
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
         if (!await rateLimitOk(DB, ip, env)) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
-        if (!await tokenOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
+        if (!await visitorSpeedBumpOk(DB, request, env)) return json({ detail: 'valid visitor token required — call /v11/auth/token first' }, 401);
         const ch = await DB.prepare('SELECT * FROM arena_challenges WHERE id=?').bind(+m[1]).first();
         if (!ch) return json({ detail: 'challenge not found' }, 404);
         const { wa, wb } = await projectChallenge(DB, ch);

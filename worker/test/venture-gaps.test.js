@@ -4,7 +4,7 @@
 // sandbox-run routes (2026-08-18) — same discipline as routes.test.js: the
 // gates are the point. Two boundaries matter here, each asserted in both
 // directions so a future edit cannot quietly flip one:
-//   tokenOk       — fails OPEN with no WORKER_ADMIN_KEY (creating a gap/run
+//   visitorSpeedBumpOk (was tokenOk) — fails OPEN with no WORKER_ADMIN_KEY (creating a gap/run
 //                   is Tier 1, anti-spam only)
 //   founderAuthOk — fails CLOSED with no FOUNDER_KEY (deciding a gap or a
 //                   sandbox run is the founder's real approval)
