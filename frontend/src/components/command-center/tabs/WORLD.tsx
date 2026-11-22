@@ -3,6 +3,7 @@ import SpaceNavigation from '../../SpaceNavigation';
 import KaiChatBox from '../../KaiChatBox';
 import ColonyZoomPanel from '../../ColonyZoomPanel';
 import ColonyGrid from '../../ColonyCard/ColonyGrid';
+import { colonies } from '../../../data/colonies';
 import { useHiveData } from '../../../hooks/useHiveData';
 import type { ColonyId } from '../../../types';
 
@@ -30,8 +31,8 @@ const WORLD: React.FC = () => {
           <div className="world-stats">
             <div className="stat-card">
               <h3>Colonies</h3>
-              <p className="stat-value">10</p>
-              <p className="stat-label">Federated</p>
+              <p className="stat-value">{colonies.length}</p>
+              <p className="stat-label">In the federation roster</p>
             </div>
             <div className="stat-card">
               <h3>Agents</h3>

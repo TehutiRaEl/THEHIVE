@@ -75,3 +75,22 @@ class TestPanelsBehindTheCircles:
     def test_panels_read_the_route_their_circle_counts(self):
         assert "/v11/kai/brain" in _code("components/kai-os/KaiBrainPanel.tsx")
         assert "/v11/townhall" in _code("components/kai-os/TownHallPanel.tsx")
+
+
+class TestDreamLogsSkillsAndWorld:
+    GRAPH = _code("components/kai-os/CenterGraph.tsx")
+
+    def test_dream_logs_counts_the_heartbeats_the_panel_lists(self):
+        assert re.search(r"label: 'Dream Logs'.*?count: dreamCount", self.GRAPH)
+        assert "p.action === 'heartbeat'" in self.GRAPH  # same filter as DreamLogs.tsx
+        assert "p.action === 'heartbeat'" in _code("components/kai-os/DreamLogs.tsx")
+
+    def test_skills_circle_opens_the_skills_panel_not_the_arena(self):
+        row = next(l for l in self.GRAPH.splitlines() if "label: 'Skills'" in l)
+        assert "id: 'skills'" in row and "id: 'arena'" not in row
+        assert "skills:" in _code("pages/KaiElOS.tsx")  # the panel it opens exists
+
+    def test_world_tab_colony_count_is_the_roster_not_a_typed_number(self):
+        world = _code("components/command-center/tabs/WORLD.tsx")
+        assert "colonies.length" in world
+        assert not re.search(r'className="stat-value">\s*10\s*<', world)

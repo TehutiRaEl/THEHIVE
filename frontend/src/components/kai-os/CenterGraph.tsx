@@ -110,6 +110,8 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
     // Files (GET /v11/files): the R2 store. Not provisioned is a real answer, shown as such.
     const filesCount = hive.files && hive.files.available ? `${hive.files.files.length}${hive.files.files.length >= 200 ? '+' : ''}` : null;
     const filesBadge = hive.files && !hive.files.available ? 'not set up' : undefined;
+    // Dream Logs: heartbeat "dreams" among the latest page of GET /v11/pulse (the page is 20 rows).
+    const dreamCount = live ? `${hive.pulse.filter((p) => p.action === 'heartbeat').length}${hive.pulse.length >= 20 ? '+' : ''}` : null;
     return [
       // The Queen takes the top seat (the 12 o'clock position of the ring), with a halo and crown.
       { id: 'queen', label: 'Queen', icon: '👑', wired: true, count: null, badge: 'Nanuet', about: 'the Queen, Nanuet: her brain, her switches (display only) and what she has learned' },
@@ -118,9 +120,9 @@ export default function CenterGraph({ hive, speaking, onSelect }: CenterGraphPro
       { id: 'kai-brain', label: 'Memories', icon: '🧠', wired: true, count: memoriesCount, about: "memories in Kai El's brain, from /v11/kai/brain (no number while his memory database is not bound)" },
       { id: 'hive', label: 'Swarms', icon: '🐝', wired: true, count: null, about: 'no live count yet: no route counts swarms' },
       { id: 'missions', label: 'Tasks', icon: '✓', wired: true, count: tasksCount, about: `open tasks among the latest ${TASK_PAGE_SIZE} loaded from /v11/tasks` },
-      { id: 'dream', label: 'Dream Logs', icon: '🌙', wired: true, count: null, about: 'no live count yet: no route counts dream logs' },
+      { id: 'dream', label: 'Dream Logs', icon: '🌙', wired: true, count: dreamCount, about: 'heartbeat dreams among the latest 20 pulses, from /v11/pulse' },
       { id: 'kai-brain', label: 'Training', icon: '🎓', wired: true, count: trainingCount, about: "training samples in Kai El's brain, from /v11/kai/brain" },
-      { id: 'arena', label: 'Skills', icon: '⚡', wired: true, count: null, about: 'no live count yet: no route counts skills' },
+      { id: 'skills', label: 'Skills', icon: '⚡', wired: true, count: null, about: 'no live count yet: no route counts skills' },
       { id: 'sources', label: 'Files', icon: '📁', wired: true, count: filesCount, badge: filesBadge, about: 'files in the Hive file store, from /v11/files (the store is not set up until the R2 bucket exists)' },
       { id: 'api', label: 'APIs', icon: '</>', wired: true, count: null, about: 'no live count yet: the Worker does not publish a measured route count' },
       { id: 'workflows-panel', label: 'Workflows', icon: '🕸', wired: true, count: null, about: 'no live count yet: no route counts workflows' },

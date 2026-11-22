@@ -1081,3 +1081,15 @@ Rule (FE-013): a greyed "not connected yet" control is removed, not left as a pl
 
 Reached since 2026-11-21 (batch 5, no longer left behind): **Colonies** (the old WOW tab, rebuilt on the real federation roster and `GET /v11/colony/reports`), **4D Tesseract** (a real rendering; its crash, a `useFrame` outside the Canvas, was fixed), **Arcane Wiring** (live binding status only), **The Hive Dreaming** (the DREAM tab), and the **Swarms** menu item (opens the Hive tab). Their false claims were removed.
 
+### A10b — Centre-graph circles that still show "no data", and what would make each real (2026-11-22)
+
+Rule (F3 / FE-010): a circle shows a number only if a live route really counts that thing. Wired so far: Tasks, Agents, Ventures, Memories, Training, Core · Town Hall, Files, Dream Logs. The rest have **no real thing to count**, so no Worker route was invented for them. Each is QUEUED under SR-001 with what must exist first:
+
+| Circle | Opens | Why it says "no data" | What would make it real |
+|---|---|---|---|
+| **Skills** | the Active Skills panel | The skills live as files in `.claude/skills/`; the Worker cannot read them (only `docs/` is served). | A generated, committed index of skills (like the ventures mirror) plus a small route to count it; costs one workflow run per change. Founder call: worth the automation? |
+| **APIs** | the API tab | `/v11/routes` is a hand-written list, not measured, and the API tab lists 14 of the real routes. | A test that fails when `/routes` drifts from the `p === '...'` routes in `worker/src/index.js`, then the circle can show that length. |
+| **Workflows** | the playbooks list | The playbooks are repo files an AI follows in a coding session, not something the Worker runs. | Only meaningful if workflows become runnable by the Hive (a Queen stage); until then "no data" is the truth. |
+| **Swarms** | the Hive tab | The Worker has agents, not swarms. | A founder definition of what a swarm is, then a route. |
+| **Projects** | the World tab | The World tab is a world overview, not a project list; `docs/FULL_PLAN` projects are roadmap cards. | Decide whether Projects means roadmap projects (count exists in `/v11/roadmap/development` snapshot) and re-point the circle, or rename it. Founder call. |
+
