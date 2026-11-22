@@ -1460,7 +1460,7 @@ const PROVIDERS = [
   { id: 'groq', label: 'Groq', role: 'Speed', secret: 'GROQ_API_KEY' },
   { id: 'mistral', label: 'Mistral', role: 'Local intelligence', secret: 'MISTRAL_API_KEY' },
   { id: 'openai', label: 'OpenAI', role: 'General', secret: 'OPENAI_API_KEY' },
-  { id: 'deepseek', label: 'DeepSeek', role: 'Reasoning / code', secret: 'DEEPSEEK_API_KEY' },
+  { id: 'deepseek', label: 'DeepSeek', role: 'Reasoning / code', secret: 'MUSE_LOCAL_MCP' },
   { id: 'kimi', label: 'Kimi', role: 'Long-context / agentic', secret: 'MOONSHOT_API_KEY' },
   { id: 'openrouter', label: 'OpenRouter', role: 'Open-source + free-tier models', secret: 'OPENROUTER_API_KEY' },
   { id: 'workers-ai', label: 'Cloudflare Workers AI', role: 'Deployment + runtime inference', secret: null },
@@ -1541,6 +1541,139 @@ function providerOrder(env, { prefer = null, only = null, health = {} } = {}) {
 // than assuming the documented waterfall ran.
 // External calls use each provider's plain HTTP API with a hard timeout so a down
 // provider degrades to the next, never hangs the commune.
+// ── One (Withone) MCP — DeepSeek via One ──
+// The One API key lives in the Cloudflare Secrets Store as "Muse-local-mcp"
+// (confirmed from the founder's dashboard 2026-11-21) and is bound as
+// MUSE_LOCAL_MCP in wrangler.jsonc. Like FOUNDER_KEY it resolves at runtime
+// to an object with an async .get(), so it is read through resolveSecret().
+// One's MCP (https://mcp.withone.ai/mcp) exposes exactly three tools:
+// list_one_integrations, find_one_actions, execute_one_action. DeepSeek is
+// reached by discovering the DeepSeek connectionKey and the chat-completion
+// actionId at runtime (cached per isolate), then executing. Discovery is
+// runtime, not hardcoded, because the connectionKey and actionId are One-side
+// identifiers that only exist inside the founder's One account.
+const ONE_MCP_ENDPOINT = 'https://mcp.withone.ai/mcp';
+let oneDiscoveryCache = null;
+
+function oneMcpText(result) {
+  const blocks = Array.isArray(result?.content) ? result.content : [];
+  return blocks.filter((b) => b?.type === 'text' && typeof b.text === 'string').map((b) => b.text).join('\n');
+}
+
+async function oneMcpCall(key, method, params, sessionId) {
+  const headers = {
+    'content-type': 'application/json',
+    'accept': 'application/json, text/event-stream',
+    'MCP-Protocol-Version': '2025-11-25',
+    'x-one-secret': key,
+  };
+  if (sessionId) headers['Mcp-Session-Id'] = sessionId;
+  const id = Math.floor(Math.random() * 1e9) + 1;
+  const r = await fetch(ONE_MCP_ENDPOINT, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!r.ok) {
+    const body = await r.text().catch(() => '');
+    throw new Error(`One MCP HTTP ${r.status}: ${body.slice(0, 200)}`);
+  }
+  const session = r.headers.get('Mcp-Session-Id') || sessionId || null;
+  const ctype = (r.headers.get('content-type') || '').toLowerCase();
+  let payload;
+  if (ctype.includes('application/json')) {
+    payload = await r.text();
+  } else if (ctype.includes('text/event-stream')) {
+    const text = await r.text();
+    const dataLines = [];
+    for (const line of text.split(/\r?\n/)) {
+      if (line.startsWith('data:')) dataLines.push(line.slice(5).trim());
+      else if (line === '' && dataLines.length) break;
+    }
+    payload = dataLines.join('\n');
+  } else {
+    throw new Error(`One MCP unsupported content-type: ${ctype}`);
+  }
+  let msg;
+  try { msg = JSON.parse(payload); } catch { throw new Error('One MCP returned invalid JSON'); }
+  if (msg?.id !== id) throw new Error('One MCP returned the wrong request id');
+  if (msg?.error) throw new Error(`One MCP error: ${JSON.stringify(msg.error).slice(0, 200)}`);
+  if (!msg || typeof msg.result !== 'object') throw new Error('One MCP returned no result object');
+  return { result: msg.result, session };
+}
+
+async function oneMcpInit(key) {
+  const { result, session } = await oneMcpCall(key, 'initialize', {
+    protocolVersion: '2025-11-25',
+    capabilities: {},
+    clientInfo: { name: 'thehive-worker', version: '1' },
+  });
+  if (!result?.protocolVersion || typeof result?.capabilities?.tools !== 'object') {
+    throw new Error('One MCP did not negotiate a supported tool protocol');
+  }
+  try {
+    await fetch(ONE_MCP_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json, text/event-stream',
+        'MCP-Protocol-Version': result.protocolVersion,
+        'x-one-secret': key,
+        ...(session ? { 'Mcp-Session-Id': session } : {}),
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized', params: {} }),
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch { /* notification is best-effort */ }
+  return session;
+}
+
+async function oneDeepSeekDiscover(key, session) {
+  if (oneDiscoveryCache) return { ...oneDiscoveryCache, session };
+  let s = session;
+  const listCall = await oneMcpCall(key, 'tools/call', { name: 'list_one_integrations', arguments: {} }, s);
+  s = listCall.session || s;
+  let connectionKey = null;
+  try {
+    const parsed = JSON.parse(oneMcpText(listCall.result) || '{}');
+    const items = parsed?.integrations || parsed?.connections || parsed?.result || [];
+    const list = Array.isArray(items) ? items : [];
+    for (const it of list) {
+      const slug = String(it?.platform || it?.slug || it?.name || '').toLowerCase();
+      const label = String(it?.label || it?.title || '').toLowerCase();
+      if (slug.includes('deepseek') || slug.includes('deep-seek') || label.includes('deepseek')) {
+        connectionKey = it?.connectionKey || it?.key || it?.id || null;
+        if (connectionKey) break;
+      }
+    }
+  } catch { /* fall through to the error below */ }
+  if (!connectionKey) throw new Error('One MCP: no DeepSeek connection found in list_one_integrations');
+  const findCall = await oneMcpCall(key, 'tools/call', {
+    name: 'find_one_actions',
+    arguments: {
+      requests: [{ platform: 'deep-seek', intent: 'create chat completion' }],
+      task: 'Create a chat completion with DeepSeek',
+      ai_model: 'thehive-worker',
+    },
+  }, s);
+  s = findCall.session || s;
+  let actionId = null;
+  try {
+    const parsed = JSON.parse(oneMcpText(findCall.result) || '{}');
+    const actions = parsed?.actions || parsed?.results || parsed?.result || [];
+    const list = Array.isArray(actions) ? actions : [];
+    for (const a of list) {
+      const id = String(a?.actionId || a?.id || '');
+      const name = String(a?.name || a?.title || '').toLowerCase();
+      if (id && name.includes('chat') && name.includes('completion')) { actionId = id; break; }
+    }
+    if (!actionId && list.length) actionId = String(list[0]?.actionId || list[0]?.id || '');
+  } catch { /* fall through */ }
+  if (!actionId) throw new Error('One MCP: no DeepSeek chat completion action found in find_one_actions');
+  oneDiscoveryCache = { connectionKey, actionId };
+  return { connectionKey, actionId, session: s };
+}
 async function generate(env, { system, prompt, maxTokens = 400, only = null, prefer = null }) {
   const timeout = (ms) => AbortSignal.timeout(ms);
   const DB = env.DB;
@@ -1674,36 +1807,45 @@ async function generate(env, { system, prompt, maxTokens = 400, only = null, pre
     // point, not a one-time choice. OpenRouter is the SECOND voice only (50 requests/day
     // per free model): Workers AI stays primary.
     deepseek: async () => {
-      if (!env.DEEPSEEK_API_KEY) return null;
-      const r = await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
-          'content-type': 'application/json',
+      // DeepSeek via One (founder-directed 2026-11-21): the One API key is
+      // the "Muse-local-mcp" secret in the Cloudflare Secrets Store, bound
+      // as MUSE_LOCAL_MCP. One signs the DeepSeek call with the founder's
+      // own DeepSeek connection, so no direct DeepSeek key is ever needed
+      // here. The direct api.deepseek.com path is deliberately NOT used.
+      const key = await resolveSecret(env.MUSE_LOCAL_MCP);
+      if (!key) return null;
+      const session = await oneMcpInit(key);
+      const { connectionKey, actionId, session: s2 } = await oneDeepSeekDiscover(key, session);
+      const model = env.DEEPSEEK_MODEL || 'deepseek-flash';
+      const execCall = await oneMcpCall(key, 'tools/call', {
+        name: 'execute_one_action',
+        arguments: {
+          platform: 'deep-seek',
+          actionId,
+          connectionKey,
+          data: {
+            model,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: prompt },
+            ],
+            max_tokens: maxTokens,
+          },
         },
-        body: JSON.stringify({
-          model: env.DEEPSEEK_MODEL || 'deepseek-v4-pro',
-          max_tokens: maxTokens,
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: prompt },
-          ],
-        }),
-        signal: timeout(20000),
-      });
-      if (!r.ok) {
-        const body = await r.text().catch(() => '');
-        throw new Error(`HTTP ${r.status}: ${body.slice(0, 200)}`);
+      }, s2);
+      const raw = oneMcpText(execCall.result);
+      let text = '';
+      let usage = null;
+      try {
+        const parsed = JSON.parse(raw || '{}');
+        const data = parsed?.responseData || parsed?.data || parsed;
+        text = String(data?.choices?.[0]?.message?.content || data?.content || '').trim();
+        if (data?.usage) usage = { in: data.usage.prompt_tokens ?? null, out: data.usage.completion_tokens ?? null };
+      } catch {
+        text = raw.trim();
       }
-      const d = await r.json();
-      const text = (d?.choices?.[0]?.message?.content || '').trim();
-      if (!text) throw new Error('HTTP 200 but no usable text in response');
-      return {
-        text,
-        usage: d?.usage
-          ? { in: d.usage.prompt_tokens ?? null, out: d.usage.completion_tokens ?? null }
-          : null,
-      };
+      if (!text) throw new Error('One MCP DeepSeek returned no usable text');
+      return { text, usage };
     },
     kimi: async () => {
       const key = env.MOONSHOT_API_KEY || env.KIMI_API_KEY;

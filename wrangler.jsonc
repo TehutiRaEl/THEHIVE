@@ -153,7 +153,12 @@
       "binding": "FOUNDER_KEY",
       "store_id": "88799ba02bfb497b830a1bf0e337467a",
       "secret_name": "FOUNDER_KEY"
-    }
+    },
+    {
+      "binding": "MUSE_LOCAL_MCP",
+      "store_id": "88799ba02bfb497b830a1bf0e337467a",
+      "secret_name": "Muse-local-mcp"
+  }
   ],
   // P1 switch, stage 1 (2026-11-14): the founder set NANUET_BRAIN_WRITE = on
   // in the dashboard. It is mirrored here so Cloudflare Workers Builds
