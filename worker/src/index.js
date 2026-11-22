@@ -4302,7 +4302,20 @@ export default {
       // chat, venture-planner, Legal Guild, and now automaton/) shares it.
       // Same token gate + rate limit as every other write-adjacent endpoint.
       if (p === '/automaton/infer' && method === 'POST') {
-        if (!(await tokenOk(DB, request, env))) return json({ detail: 'token required (GET /v11/auth/token first)' }, 401);
+        // Founder-only AND rate-limited (2026-11-22, founder decision S-2 "A"). This route runs the
+        // language model, so every call costs money; it used to need only a free visitor token (anyone
+        // can mint one at /auth/token) and had no per-minute limit. Now: the founder key first
+        // (fails CLOSED, like the other founder-only routes), then the same 30/min/IP cap as the
+        // chat route. Callers (automaton's thehive-provider, kai-sandbox-run.yml) send the key.
+        if (!(await founderAuthOk(request, env))) {
+          return json({
+            detail: (await founderKeyBound(env))
+              ? 'invalid or missing founder key — this route spends AI money and is founder-only'
+              : 'no FOUNDER_KEY bound yet — this route spends AI money and is founder-only (see FLIP_THE_SWITCHES.md)',
+          }, 401);
+        }
+        const ipInfer = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!(await rateLimitOk(DB, ipInfer, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
         const body = await request.json().catch(() => ({}));
         const system = (body.system || '').toString().slice(0, 4000);
         const prompt = (body.prompt || '').toString().slice(0, 4000);

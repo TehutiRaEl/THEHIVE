@@ -1089,3 +1089,16 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 
 **Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged. **Not deployed or verified-live until that PR is merged and the Worker redeploys.**
 
+---
+
+## WS-002 — The AI route is founder-only and rate-limited (Worker security list, item S-2)
+
+**Question asked (2026-11-22), item S-2:** `POST /v11/automaton/infer` runs the language model (it costs money on every call), needed only a free visitor token, and had no per-minute limit. Option A (recommended): founder key required plus the 30-per-minute-per-IP limit the chat route has. Option B: rate limit only. Option C: leave it. **Founder's answer:** "A, and I don't think it does so check first" (asked Claude to check whether the automaton already carries a founder key).
+**What this means:**
+- **Checked first (2026-11-22):** the founder was right. `automaton/src/inference/thehive-provider.js` sent **no** Authorization header at all, and `kai-sandbox-run.yml` step 3b passed no key. (Today the call is accepted only because the visitor-token check lets everything through when `WORKER_ADMIN_KEY` is not bound; whether it is bound live was not verifiable from here.)
+- The route now requires the founder key (`founderAuthOk`, fails closed), then the 30/min/IP rate limit.
+- The automaton's inference provider now sends `AUTOMATON_THEHIVE_API_KEY` as a Bearer token; with no key it does not call the Worker and falls back to the simulate provider (one warning on stderr). `kai-sandbox-run.yml` step 3b sets that variable from the `FOUNDER_KEY` secret.
+- Tested: `worker/test/automaton-infer-gate.test.js` (no key, visitor token, wrong key, no key bound: 401 and the model is never called; founder key: reaches the model; rate-limited: 429 and no model call; lock removed: 4 of 6 fail, limit removed: 1 of 6 fails) and `automaton/test/thehive-provider.test.js`.
+- Scope: this route only. S-3 (the free-token "gate") and S-4 (the Commune lock of FQ-Q-011) wait for their own answers. Not touched: `constitution-receive.yml`. **Side note, not changed:** `kai-sandbox-run.yml` interpolates the manual `task` input straight into a shell line; only the founder can dispatch it, but it is worth fixing separately.
+
+**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged. **Not deployed or verified-live until merged, the Worker redeploys, and the sandbox workflow is run once.**
