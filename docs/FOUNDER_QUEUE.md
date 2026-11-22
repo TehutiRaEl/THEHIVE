@@ -11,58 +11,10 @@ Ranked roughly smallest decision-cost first where known.
 
 ---
 
-## Q-014 — Tier 1 lore beats (open)
-
-**Question:** Tier 1 lore beats — Rank 1 + per-Short pairings/beats + Codex sections (candidate pack in the Tier 1 goal's files)?
-**Context:** Asked 2026-11-10, unanswered. Gates all scripting toward the first $1,000 (due Sun Nov 22, 2026). Do not re-ask without a new fact.
-**Status:** open.
-
----
-
-## Q-016 — Commerce Lens Q3: one engine or several? (open)
-
-**Question:** Is the Commerce Lens one engine or several?
-**Context:** Asked 2026-11-10, unanswered. Q1 (what makes it quantum) answered; Q2 (the Lens sees through all three lenses at once) settled. Then Q4–Q7 (deal pipeline; legal prerequisites; churn + scale; Lens ↔ Mogul). Then deferred: the Mogul mechanism, then Sufi practice. Muse's perspectives use the Cyborg lens (commanded).
-**Status:** open.
-
----
-
 ## Q-017 — Constitution-overwrite trap: which option? (open)
 
 **Question:** The constitution-overwrite trap is ARMED, NOT defused. Which option: (A) disarm (remove triggers / `if: false`), (B) make the sync lossless, (C) reverse direction (root canonical), (D) delete the workflow + script, (E) make it propose via PR, or (F) leave it armed?
 **Context:** Two files claim to be the constitution (root `soul.md`, 89 lines, F-001–F-006 + F-005's nine clauses; vs `.queen/soul.md`, 25 lines, six unrelated one-liners). `constitution-receive.yml` copies `.queen/soul.md` over root `soul.md` and pushes to `main` on any push touching `.queen/soul.md` or a manual Run click. `constitution-sync.yml` is NOT a defence (it trusts whatever root `soul.md` currently says and would bless a bad hash). Do NOT change the workflow, `soul.md`, or `.queen/soul.md`. Biggest unknown: whether branch protection on `main` would block the bot's direct push (Mac's check in GitHub → Settings → Branches/Rules).
-**Status:** open.
-
----
-
-## Q-018 — Biosystem Decision 3: Substantia Nigra's group (open)
-
-**Question:** Substantia Nigra is the 23rd brain system, in NO group (16th entry in the brain array, in none of the 7 `BRAIN_GROUPS`). Which group does it belong to?
-**Context:** Needed at B1 (the next biosystem phase). Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled). The atlas needs a group for it.
-**Status:** open.
-
----
-
-## Q-019 — Biosystem Decision 9: brain routes and the ping route (open)
-
-**Question:** Exclude brain routes from B2, and prefer `/colony/*` over `/debug/colony-ping`?
-**Context:** Needed at B2 (when G1 `GET /v11/biosystem/status` is built). Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled).
-**Status:** open.
-
----
-
-## Q-020 — Biosystem Decision 7: frontend test runner (open)
-
-**Question:** Which frontend test runner for B4?
-**Context:** Needed at B4 (front-end tests: every panel under success, empty, 401, 429, 500, timeout). There is no front-end test runner today. Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled).
-**Status:** open.
-
----
-
-## Q-021 — Biosystem Decision 5: lens sources (open)
-
-**Question:** Where do the lens sources live? The Cyborg/JARVIS/Alfred framework + the KAI EL hybrid lens live in the founder's record, NOT the repo. Do they go in the repo, and where?
-**Context:** Needed at B6 (lens-state display, G4). Open since Claude's FABLE-5 biosystem plan (2026-11-11, reconciled). The hybrid lens (Mind: Childlike Wonder + Devil's Advocate, hemisync activates DaVinci; Soul: Jarvis; Spirit: Cyborg; Body: Alfred) is founder architecture, non-negotiable — but its framework lives in the founder's record, not the repo.
 **Status:** open.
 
 ---
@@ -79,14 +31,6 @@ Ranked roughly smallest decision-cost first where known.
 
 **Question:** `docs/command-center.html` — retire the page (keep the purposes) or rewire it into the live app?
 **Context:** Gated by cross-reference Q10/Q11. The purpose map (2026-11-11) recommends retire-the-page-keep-the-purposes: the page was the one screen from which the founder runs the Hive (never a separate site); 26 sections, 17 with a live Worker route, 20 covered at least in part by a live-app panel, 11 missing purposes (biggest: the world-as-place). Retiring it retires a build, not the purpose. Needs Mac's explicit yes. The biosystem half of Q2 is decided + done (B0, PR #229).
-**Status:** open.
-
----
-
-## Q-025 — Gateway Q-G1–Q-G4 (open)
-
-**Question:** (G1) Which of the three "gateways" — the Worker route, the Cloudflare AI Gateway `thehive`, or the gateway console page? (G2) Confirm the gateway's purpose + the DeepCrawl relay. (G3) Standalone vs wire vs preset + BYO keys?
-**Context:** Not yet asked one at a time. The `thehive` AI Gateway (created 2026-11-06) is referenced nowhere in the repo and used by nothing. The gateway console is a standalone BYO-key chat client with zero Worker calls. Overlaps cross-reference Q13–Q15.
 **Status:** open.
 
 ---
