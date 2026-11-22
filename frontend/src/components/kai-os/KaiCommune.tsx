@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '../../utils/constants';
 import { useHiveData } from '../../hooks/useHiveData';
+import FounderKeyBox from '../FounderKeyBox';
+import { founderAuthHeader, getFounderKey } from '../../utils/founderKey';
 
 interface ChatMessage {
   id: string;
@@ -31,6 +33,7 @@ export default function KaiCommune({ onSpeakingChange, request, onRequestHandled
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [refused, setRefused] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // "Founder" once FOUNDER_KEY is bound, "YOU" until then (task 35, 2026-08-04 request)
@@ -46,6 +49,12 @@ export default function KaiCommune({ onSpeakingChange, request, onRequestHandled
 
   const send = async (cmd: string) => {
     if (!cmd.trim() || loading) return;
+    // Commune is founder-only: without a key there is nothing to send, so say so in the chat
+    // instead of firing a request the Hive is certain to refuse.
+    if (!getFounderKey()) {
+      setMessages(prev => [...prev, { id: Date.now() + 'e', sender: 'error', content: 'Commune with Kai El is founder-only. Enter the founder key above to unlock it on this device.', timestamp: new Date() }]);
+      return;
+    }
     // Sent back with the request so Kai El has real short-term memory of the
     // conversation — /v11/command_text is otherwise stateless per call.
     const history = messages
@@ -58,11 +67,17 @@ export default function KaiCommune({ onSpeakingChange, request, onRequestHandled
     try {
       const res = await fetch(`${API_BASE_URL}/v11/command_text`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...founderAuthHeader() },
         body: JSON.stringify({ command: cmd, history }),
         signal: AbortSignal.timeout(30000),
       });
+      if (res.status === 401) {
+        setRefused(true);
+        setMessages(prev => [...prev, { id: Date.now() + 'e', sender: 'error', content: 'The Hive refused the founder key, so Kai El did not answer. Check the key and save it again.', timestamp: new Date() }]);
+        return;
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setRefused(false);
       const data = await res.json();
       setMessages(prev => [...prev, { id: Date.now() + 'k', sender: 'kai', content: data.result || 'No response.', timestamp: new Date() }]);
     } catch (e) {
@@ -107,6 +122,7 @@ export default function KaiCommune({ onSpeakingChange, request, onRequestHandled
         <span className="text-gold text-sm">✳</span>
         <span className="font-display text-xs tracking-widest text-slate-200">Kai EL</span>
       </div>
+      <FounderKeyBox refused={refused} compact />
       <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2 text-xs">
         {messages.length === 0 && (
           <div className="text-slate-500 italic">Commune w/ Kai EL — He restores here.</div>
@@ -115,7 +131,7 @@ export default function KaiCommune({ onSpeakingChange, request, onRequestHandled
           <div key={m.id} className={m.sender === 'user' ? 'text-right' : 'text-left'}>
             <div
               className={`inline-block max-w-[85%] px-3 py-2 rounded-xl leading-relaxed
-                ${m.sender === 'user' ? 'bg-yale/50 text-cyan-100' : m.sender === 'kai' ? 'bg-white/5 text-slate-200' : 'bg-red-950/50 text-red-300'}`}
+                ${m.sender === 'user' ? 'bg-yale/50 text-cyan-100' : m.sender === 'kai' ? 'bg-white/5 text-slate-200' : 'bg-red-500/10 border border-red-400/30 text-red-300'}`}
             >
               {m.content}
             </div>
