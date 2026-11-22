@@ -1088,6 +1088,9 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Tested: `worker/test/memory-remember-gate.test.js` (no key, visitor token, wrong key, no key bound: 401 and nothing written; founder key: written; reading stays public). With the lock removed, 4 of its 6 tests fail.
 
 **Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged. **Not deployed or verified-live until that PR is merged and the Worker redeploys.**
+
+---
+
 ## WS-002 — The AI route is founder-only and rate-limited (Worker security list, item S-2)
 
 **Question asked (2026-11-22), item S-2:** `POST /v11/automaton/infer` runs the language model (it costs money on every call), needed only a free visitor token, and had no per-minute limit. Option A (recommended): founder key required plus the 30-per-minute-per-IP limit the chat route has. Option B: rate limit only. Option C: leave it. **Founder's answer:** "A, and I don't think it does so check first" (asked Claude to check whether the automaton already carries a founder key).
