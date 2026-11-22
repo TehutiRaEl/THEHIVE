@@ -128,7 +128,7 @@ export function stubCtx() {
 /**
  * Build an env. Bindings are absent unless asked for, because presence itself is
  * load-bearing all over this Worker — founderAuthOk() fails CLOSED with no
- * FOUNDER_KEY, tokenOk() fails OPEN with no WORKER_ADMIN_KEY, rateLimitOk()
+ * FOUNDER_KEY, visitorSpeedBumpOk() (was tokenOk) fails OPEN with no WORKER_ADMIN_KEY, rateLimitOk()
  * falls back from KV to D1, and the async job path only exists when LLM_QUEUE is
  * bound. A stub env that silently binds everything would hide all four.
  */

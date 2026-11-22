@@ -1102,3 +1102,15 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Scope: this route only. S-3 (the free-token "gate") and S-4 (the Commune lock of FQ-Q-011) wait for their own answers. Not touched: `constitution-receive.yml`. **Side note, not changed:** `kai-sandbox-run.yml` interpolates the manual `task` input straight into a shell line; only the founder can dispatch it, but it is worth fixing separately.
 
 **Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged. **Not deployed or verified-live until merged, the Worker redeploys, and the sandbox workflow is run once.**
+
+---
+
+## WS-003 — The visitor-token check is named for what it is, an anti-spam speed bump (Worker security list, item S-3)
+
+**Question asked (2026-11-22), item S-3:** anyone can get a token free at `GET /v11/auth/token`, and the check also lets everything through if the admin key is missing or the database errors, so the routes behind it (town hall posts, file uploads, Queen digest writes, arena writes, venture plans) are effectively open. Option A (recommended): change no route; rename the check to what it really is and say so in code and docs; handle each write route on its own answer. Option B: make the check fail closed (risks breaking the public arena and town hall). Option C: leave it. **Founder's answer:** "A".
+**What this means:**
+- `tokenOk` is renamed `visitorSpeedBumpOk` everywhere it is called (14 call sites). **No behavior change.** A comment at the definition says it is an anti-spam speed bump, not a lock, why, and to use `founderAuthOk` for anything that costs money or changes what a mind believes. `docs/SECURITY_DEEP_PASS.md` says the same.
+- The routes behind the speed bump are NOT made safer by this; they are named honestly. Each gets its own decision: the two that mattered most were done (S-1 memory write, S-2 AI route). Still to decide one at a time: the Town Hall post, file upload and Queen digest write (S-5 to S-7 on the list), and the Commune lock (S-4, FQ-Q-011).
+- Tested: `worker/test/speed-bump-honesty.test.js` (the old name is gone, the warning sits beside the function and in the doc, and `/auth/token` really does hand a token to a caller with no credentials); the existing `routes.test.js` still pins the fail-open behavior.
+
+**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged.
