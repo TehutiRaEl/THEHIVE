@@ -1114,3 +1114,17 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - Tested: `worker/test/speed-bump-honesty.test.js` (the old name is gone, the warning sits beside the function and in the doc, and `/auth/token` really does hand a token to a caller with no credentials); the existing `routes.test.js` still pins the fail-open behavior.
 
 **Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged.
+
+---
+
+## WS-004 — Commune with Kai El is locked by the founder key (Worker security list, item S-4; executes FQ-Q-011 part 1)
+
+**Question asked (2026-11-22), item S-4:** FQ-Q-011 (decided 2026-11-13) says to lock `POST /v11/command_text` with in-handler founder auth first, then a Cloudflare Access app, plus a Commune-path log, writing conversations into Nanuet's digest, and per-key rate limiting. It was never built (listed as Queen work, Q-C, still halted). Option A (recommended): build the in-handler founder-key lock now plus a founder-key box on the screen; the founder's answer counts as the go-ahead to lift the halt for this one item. Option B: keep chat public with a stricter cap and logging. Option C: wait for Q-C. **Founder's answer:** "A".
+**What this means:**
+- `POST /v11/command_text` requires the founder key (`founderAuthOk`, fails closed: no `FOUNDER_KEY` bound means nobody can chat), then the 30/min/IP cap. **Visitors can no longer talk to Kai El on the public site.**
+- The Command Center asks for the founder key once in the chat panel (both the docked Commune and the older floating chat), keeps it in this browser's localStorage, sends it only as a Bearer header to this app's own Worker, and offers "Forget key". With no key the chat says so and sends nothing; a refused key is reported as refused. Honest limit: anything stored in a browser can be read by a script running on that page, so only use it on a device you trust.
+- `edge-health-probe.yml` now proves the lock live ("WITHOUT a key must be 401") and still checks the chat works with the `FOUNDER_KEY` secret.
+- **Still queued for Q-C (not done, halt stays for these):** the Cloudflare Access app in front of the route; the Commune-path log; writing Commune conversations into Nanuet's digest; per-key rate limiting.
+- Tested: `worker/test/command-text-gate.test.js` (6; lock removed: 4 fail), `tests/unit/test_frontend_founder_lock.py`; driven in Chromium against a stand-in server that behaves like the locked Worker (no key: nothing sent; wrong key: refused; right key: answered; survives reload; forget works; phone drawer works).
+
+**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged. **Not deployed or verified-live until merged and the Worker redeploys; the edge-health-probe's new step is the live proof.**

@@ -4,6 +4,8 @@
  * with graceful offline handling. All keyboard input works uninterrupted.
  */
 import { useState, useRef, useEffect } from 'react';
+import FounderKeyBox from './FounderKeyBox';
+import { founderAuthHeader, getFounderKey } from '../utils/founderKey';
 import { API_BASE_URL } from '../utils/constants';
 import { useHiveData } from '../hooks/useHiveData';
 
@@ -23,6 +25,7 @@ const KaiChatBox = () => {
   // pill until clicked, and collapses back down on close.
   const [minimized, setMinimized] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [refused, setRefused] = useState(false);
   // "Founder" once FOUNDER_KEY is bound, "YOU" until then (task 35, 2026-08-04 request).
   // debugEnv.secrets_present.includes('FOUNDER_KEY') is only correct as of the same
   // firing that added FOUNDER_KEY to worker/src/index.js's expectedSecrets list — see
@@ -36,6 +39,11 @@ const KaiChatBox = () => {
 
   const send = async (cmd: string) => {
     if (!cmd.trim() || loading) return;
+    // Commune is founder-only: without a key there is nothing to send (see utils/founderKey.ts).
+    if (!getFounderKey()) {
+      setMessages(prev => [...prev, { id: Date.now() + 'e', sender: 'error', content: 'Commune with Kai El is founder-only. Enter the founder key above to unlock it on this device.', timestamp: new Date() }]);
+      return;
+    }
     // Sent back with the request so Kai El has real short-term memory of the
     // conversation — /v11/command_text is otherwise stateless per call.
     const history = messages
@@ -48,11 +56,17 @@ const KaiChatBox = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/v11/command_text`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...founderAuthHeader() },
         body: JSON.stringify({ command: cmd, history }),
         signal: AbortSignal.timeout(30000),
       });
+      if (res.status === 401) {
+        setRefused(true);
+        setMessages(prev => [...prev, { id: Date.now() + 'e', sender: 'error', content: 'The Hive refused the founder key, so Kai El did not answer. Check the key and save it again.', timestamp: new Date() }]);
+        return;
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setRefused(false);
       const data = await res.json();
       setMessages(prev => [...prev, { id: Date.now() + 'k', sender: 'kai', content: data.result || 'No response.', timestamp: new Date() }]);
     } catch (e) {
@@ -109,6 +123,7 @@ const KaiChatBox = () => {
           –
         </button>
       </div>
+      <FounderKeyBox refused={refused} compact />
       <div style={{ flex: 1, overflowY: 'auto', marginBottom: 8 }}>
         {messages.length === 0 && (
           <div style={{ fontSize: 11, color: '#446' }}>Speak, and the Hive will answer.</div>

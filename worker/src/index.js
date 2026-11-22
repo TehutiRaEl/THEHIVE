@@ -4417,6 +4417,21 @@ export default {
       // Kai El answers in persona, grounded in live hive state + (when provisioned)
       // semantic memory recall. Degrades to a constitutional canned reply if AI is unbound.
       if (p === '/command_text' && method === 'POST') {
+        // Founder-only (2026-11-22, founder decision S-4 "A", executing FQ-Q-011's in-handler lock).
+        // Every message runs the language model (money) and feeds Kai El's context, and the route
+        // used to be open to the whole internet (the audit's probe filed proposal #120 through it).
+        // Fails CLOSED like the other founder-only routes: with no FOUNDER_KEY bound, nobody can chat.
+        // The Command Center asks the founder for the key once and sends it as a Bearer token.
+        // NOT done here (queued with the Queen stage Q-C): the Cloudflare Access app in front, the
+        // Commune-path log, writing conversations into Nanuet's digest, per-key rate limiting.
+        if (!(await founderAuthOk(request, env))) {
+          return json({
+            detail: (await founderKeyBound(env))
+              ? 'invalid or missing founder key — Commune with Kai El is founder-only'
+              : 'no FOUNDER_KEY bound yet — Commune with Kai El is founder-only (see FLIP_THE_SWITCHES.md)',
+            founder_only: true,
+          }, 401);
+        }
         // S1 (PR #132): anti-spam rate limit — same 30/min/IP as arena writes.
         // Docs (SECURITY_DEEP_PASS.md/S1_RATE_LIMIT_PATCH.md) already claimed this was
         // applied; the actual worker/src/index.js code was missing — added here to make
