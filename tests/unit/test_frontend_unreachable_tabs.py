@@ -4,7 +4,7 @@ Four tabs (WOW, 4D, ARCANE and, before the Dream Logs circle, DREAM) shipped in 
 control could open them, and they told things that were not true (a "World of Warcraft integration",
 "stub math", "Implemented" capabilities that were not, a goals list frozen in July). They are now
 reachable from the left menu, say only true things, and the one tab that has nothing real to show
-(NO_MANS_SKY) is listed here as a known, named exception until the founder decides its fate.
+(NO_MANS_SKY) was PARKED by founder decision FE-014 (2026-11-22): moved out of the build.
 
 WHAT THIS CANNOT PROVE: that a tab's content is complete, only that it is reachable, honest about
 its source, and free of the removed false claims.
@@ -41,7 +41,7 @@ def _reachable_ids():
 
 
 # Tabs no control opens, each named here with the reason. Shrink this set; never grow it silently.
-KNOWN_UNREACHABLE = {"no-mans-sky"}  # PlannedControl flight buttons + a Phaser scene; waits for a founder ruling
+KNOWN_UNREACHABLE = set()  # empty since FE-014 parked the last one; do not add to it silently
 
 
 class TestEveryTabIsReachable:
@@ -109,3 +109,32 @@ class TestTesseractRendererDoesNotCrash:
         top = c[c.index("const TesseractRenderer:"): c.index("<Canvas>")]
         assert "useFrame(" not in top, "useFrame outside <Canvas> throws and sends the 4D tab to the error screen"
         assert "<AngleDriver" in c and "useFrame((_state, delta) => onTick(delta))" in c
+
+
+class TestNoMansSkyIsParkedNotLeftBehind:
+    """FE-014: parked (kept, out of the build), not deleted and not left unreachable in the bundle."""
+
+    def test_the_files_are_kept_under_parked(self):
+        assert (SRC / "parked/NO_MANS_SKY.tsx").is_file() and (SRC / "parked/PhaserScene.tsx").is_file()
+        assert "PARKED" in _raw("parked/NO_MANS_SKY.tsx") and "FE-014" in _raw("parked/NO_MANS_SKY.tsx")
+
+    def test_the_old_locations_are_gone(self):
+        assert not (SRC / "components/command-center/tabs/NO_MANS_SKY.tsx").exists()
+        assert not (SRC / "components/PhaserScene.tsx").exists()
+
+    def test_the_shell_no_longer_registers_it(self):
+        shell = _code("pages/KaiElOS.tsx")
+        assert "NO_MANS_SKY" not in shell and "no-mans-sky" not in shell
+
+    def test_parked_code_is_excluded_from_the_build(self):
+        assert '"src/parked"' in (ROOT / "frontend/tsconfig.build.json").read_text(encoding="utf-8")
+
+    def test_nothing_in_the_built_app_imports_parked_code(self):
+        for f in SRC.rglob("*.ts*"):
+            if "parked" in f.parts:
+                continue
+            assert "/parked/" not in f.read_text(encoding="utf-8"), f"{f} imports parked code"
+
+    def test_return_condition_is_on_the_plan(self):
+        plan = (ROOT / "docs/FRONTEND_MASTER_PLAN_2026-11-14.md").read_text(encoding="utf-8")
+        assert "PARKED" in plan and "FE-014" in plan
