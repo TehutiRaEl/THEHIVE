@@ -18,8 +18,8 @@ name: Kai El Bridge
 #   one issue instead of needing production reach themselves.
 #   
 #   Harness -> Kai El: optional workflow_dispatch input `directive_text` POSTs
-#   straight into Kai El's own memory (POST /v11/memory/remember, already a
-#   public, rate-limited, no-new-secret-needed endpoint) tagged
+#   straight into Kai El's own memory (POST /v11/memory/remember, founder-only
+#   since 2026-11-22: this step sends the FOUNDER_KEY secret) tagged
 #   kind=architect-directive, so recall() can surface it in a later chat.
 #
 #   Kai El -> Orchestra (new): Kai El is now the active orchestrator of all
@@ -72,10 +72,13 @@ jobs:
         # would be a shell-injection hole even though this trigger is manual-only.
         env:
           DIRECTIVE_TEXT: ${{ github.event.inputs.directive_text }}
+          # Writing to Kai El's memory is founder-only (S-1, 2026-11-22): the Worker now requires this key.
+          FOUNDER_KEY: ${{ secrets.FOUNDER_KEY }}
         run: |
           payload=$(jq -n --arg t "$DIRECTIVE_TEXT" '{text: $t, kind: "architect-directive"}')
           curl -sS -m 20 -X POST "${BASE}/v11/memory/remember" \
             -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${FOUNDER_KEY}" \
             --data "$payload" | tee /tmp/directive_result.json
           echo "── posted directive to Kai El's memory (recall() will surface it when relevant) ──"
 

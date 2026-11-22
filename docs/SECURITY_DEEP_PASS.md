@@ -32,7 +32,7 @@
 | `POST /automaton/infer` | `tokenOk` | LLM cost / spam |
 | `POST /command_text` | **`rateLimitOk` (S1 PR #132)** | LLM cost / spam if providers bound |
 | `POST /files/upload` | `tokenOk` + R2 bound + 10MB cap | Storage abuse if R2 live |
-| `POST /memory/remember` | **`rateLimitOk` (S1 PR #132)** | Writes to Vectorize if bound |
+| `POST /memory/remember` | **founder key (`founderAuthOk`, S-1, 2026-11-22), then `rateLimitOk` (S1 PR #132)** | Writes to Vectorize if bound; recalled into Kai El's chat, so founder-only |
 | `POST /arena/challenge` | rate limit + `tokenOk` | Arena spam |
 | `POST /arena/resolve/{id}` | rate limit + `tokenOk` | Elo/soul mutation |
 | `POST /arena/project/{id}` | rate limit + `tokenOk` | Projection write |

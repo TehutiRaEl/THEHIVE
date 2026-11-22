@@ -1075,3 +1075,17 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 **Downstream chain:** Abominations Catalogue Category 8 (AB-8.01–AB-8.07); BOOT.md Step 9 standing rules; front-end master plan Batch F0 (the audit re-verifies each left-behind item before any build); the 15-circle screen (each left-behind live route gets a home on it).
 
 **Recorded by:** Claude, at founder direction. Decided in chat 2026-11-14 ("ratified into the hive immediately"); recorded here 2026-11-15 via a docs-only PR the founder merges, so it counts as a founder decision under soul.md F-005 Clause 1 only once merged.
+
+---
+
+## WS-001 — Writing to Kai El's memory is founder-only (Worker security list, item S-1)
+
+**Question asked (2026-11-22), item S-1 of the Worker security list:** `POST /v11/memory/remember` was open (30 writes a minute per IP, nothing else), and Kai El's chat recalls stored memories into his instructions every time, so any stranger could plant text he then treats as remembered. Option A (recommended): require the founder key for memory writes. Option B: keep it open but mark recalled text as untrusted. Option C: leave it. **Founder's answer:** "A".
+**What this means:**
+- The route now requires the founder key (`founderAuthOk`, the same check the other founder-only routes use). It **fails closed**: with no `FOUNDER_KEY` bound, nobody can write. Reading (`/memory/search`, `/memory/status`) stays public.
+- The one legitimate caller, `.github/workflows/kai-el-bridge.yml` (the manual "directive to Kai El" step), now sends the `FOUNDER_KEY` secret it already has for the digest workflows.
+- Back-end change under FE-012, made with this specific go-ahead; it covers only this route. The other items on the list (S-2 the AI route with no rate limit, S-3 the free-token "gate", S-4 the Commune lock of FQ-Q-011) each wait for their own answer.
+- Tested: `worker/test/memory-remember-gate.test.js` (no key, visitor token, wrong key, no key bound: 401 and nothing written; founder key: written; reading stays public). With the lock removed, 4 of its 6 tests fail.
+
+**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged. **Not deployed or verified-live until that PR is merged and the Worker redeploys.**
+

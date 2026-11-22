@@ -4850,6 +4850,19 @@ export default {
       }
       // POST /v11/memory/remember {text, kind?} — admin-lite manual memory write
       if (p === '/memory/remember' && method === 'POST') {
+        // Founder-only (2026-11-22, founder decision S-1 "A"). What is written here is recalled
+        // straight into Kai El's chat instructions (kaiRecall in /command_text), so an open write
+        // let any stranger plant text he then treats as something he remembers. Fails CLOSED like
+        // the other founder-only routes: with no FOUNDER_KEY bound, nobody can write. Reading
+        // (/memory/search, /memory/status) stays public. The kai-el-bridge workflow, the one
+        // legitimate caller, sends the founder key.
+        if (!(await founderAuthOk(request, env))) {
+          return json({
+            detail: (await founderKeyBound(env))
+              ? 'invalid or missing founder key — writing to Kai El\'s memory is founder-only'
+              : 'no FOUNDER_KEY bound yet — writing to Kai El\'s memory is founder-only (see FLIP_THE_SWITCHES.md)',
+          }, 401);
+        }
         // S1 (PR #132): anti-spam rate limit — writes to Vectorize when bound.
         const ipMem = request.headers.get('CF-Connecting-IP') || 'unknown';
         if (!(await rateLimitOk(DB, ipMem, env))) return json({ detail: 'rate limit exceeded — 30 POSTs/min' }, 429);
