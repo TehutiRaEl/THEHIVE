@@ -29,7 +29,7 @@
 | `POST /proposals/{id}/decide` | **`founderAuthOk` (fail closed)** | Approves/rejects evolution proposals |
 | `POST /venture/plan` | `tokenOk` | LLM cost / spam; no real-world execution |
 | `POST /legal/research` | `tokenOk` | LLM cost / spam |
-| `POST /automaton/infer` | `tokenOk` | LLM cost / spam |
+| `POST /automaton/infer` | **founder key (`founderAuthOk`) then `rateLimitOk` (S-2, 2026-11-22)**; was `tokenOk` only | LLM cost: founder-only and 30/min/IP |
 | `POST /command_text` | **`rateLimitOk` (S1 PR #132)** | LLM cost / spam if providers bound |
 | `POST /files/upload` | `tokenOk` + R2 bound + 10MB cap | Storage abuse if R2 live |
 | `POST /memory/remember` | **founder key (`founderAuthOk`, S-1, 2026-11-22), then `rateLimitOk` (S1 PR #132)** | Writes to Vectorize if bound; recalled into Kai El's chat, so founder-only |

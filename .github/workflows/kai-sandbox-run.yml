@@ -111,6 +111,9 @@ jobs:
         id: work
         env:
           AUTOMATON_REPO_ROOT: /tmp/venture-checkout
+          # /v11/automaton/infer spends AI money and is founder-only (S-2, 2026-11-22):
+          # the automaton's inference provider sends this as a Bearer token.
+          AUTOMATON_THEHIVE_API_KEY: ${{ secrets.FOUNDER_KEY }}
         run: |
           set -euo pipefail
           # Fresh, throwaway state per run — never automaton's own real

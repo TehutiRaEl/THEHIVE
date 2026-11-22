@@ -101,7 +101,8 @@ Summary, and where the fix lives:
   `src/inference/thehive-provider.js` replaces Conway's inference gateway with a call
   to THEHIVE's own Worker (a new `POST /v11/automaton/infer` route reusing the exact
   same `generate()` waterfall already backing `/v11/venture/plan` and
-  `/v11/legal/research`), falling back to `src/inference/simulate-provider.js` when
+  `/v11/legal/research`; founder-only and rate-limited since 2026-11-22, so the provider sends
+  `AUTOMATON_THEHIVE_API_KEY` as a Bearer token and, without one, does not call the Worker), falling back to `src/inference/simulate-provider.js` when
   unreachable — the same "always degrade honestly, never fabricate infrastructure
   that isn't there" pattern already established across `worker/src/index.js`.
 - **Zero native/npm dependencies** (see README's "Why zero dependencies").
