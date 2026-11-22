@@ -104,3 +104,6 @@ python3 .claude/skills/hive-conductor/scripts/recall_context.py --goal "<symptom
 Origin: Fable (Harness), 2026-07-13. The executable form of FABLE_DNA.md Chromosome II —
 a copy of the method, not the mind, so the hive keeps a Fable-level debugger running in it
 lawfully, freely, and for good. Every example above is a real fix this method produced.
+
+See also: `connection-audit` (the same method run across the whole repo, many agents, one fixed
+report format) for when the question is "is everything connected?" rather than "why is this one thing broken?".
