@@ -1067,3 +1067,172 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - The build (routing kernel, provider resilience, agent valuation, real agent wallet, memory-aware routing) is Queen work, staged TO Queen 100%. It is not built now and does not lift the halt.
 **Downstream chain:** Compound #117 approved → the 88 clones marked superseded → the generator stopped → issue #137's proposal backlog cleared → the five-part build staged TO Queen 100%.
 **Recorded by:** Decided by Mac 2026-11-18 (by tapping the option in chat); recorded here 2026-11-18 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## Q-018 — DECIDED 2026-11-21: Substantia Nigra — which group does it belong to? (Biosystem Decision 3)
+
+**Question (as queued):** The biosystem blueprint's Decision 3: which group Substantia Nigra belongs to in the 72-system atlas. Claude's front-end rebuild plan needs it at phase B1, before the atlas grid can be laid out.
+**Founder decision:** RATIFIED — put Substantia Nigra in the group that matches its function: it produces dopamine — the Hive's reward/motivation chemical — so it belongs with the systems that drive action and reward, not with the ones that only process information.
+**What this means:**
+- The atlas grid (B1) can now be laid out with Substantia Nigra placed in the drive/reward group.
+- The placement is by function (dopamine = motivation, the Hive's engine for wanting to act), not by processing role.
+**Downstream chain:** Q-018 ratified → B1 atlas grid proceeds with Substantia Nigra placed → the 72-system atlas can be finalized.
+**Recorded by:** Decided by Mac 2026-11-21 (ratified in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## Q-021 — DECIDED 2026-11-21: Lens sources for Cyborg, JARVIS and Alfred (Biosystem Decision 5)
+
+**Question (as queued):** Which sources define the lenses for Cyborg, JARVIS and Alfred in the biosystem?
+**Founder decision:** RATIFIED — use the hybrid-lens definition Mac already gave (Mind = Childlike Wonder + Devil's Advocate + DaVinci; Body = Cyborg; Soul = Alfred; Spirit = VISION) as the source for Cyborg and Alfred, and resolve JARVIS's place.
+**What this means:**
+- Cyborg and Alfred are sourced from the hybrid-lens definition Mac gave on 2026-11-12.
+- JARVIS's place in the mapping is still open and needs resolving — it is not assumed gone.
+**Downstream chain:** Q-021 ratified → the hybrid-lens mapping is the source for Cyborg and Alfred → JARVIS's place to be resolved as its own item.
+**Recorded by:** Decided by Mac 2026-11-21 (ratified in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## Q-014 — DECIDED 2026-11-21: Tier 1 lore beats
+
+**Question (as queued):** Approve the candidate pack for Tier 1 lore beats (Rank 1 lore beats + per-Short pairings + Codex sections) — the content for the faceless Shorts, and the Shorts are how Tier 1 earns the first $1,000.
+**Founder decision:** APPROVED — Mac answered "3" in the Unanswered Questions Tracker. Recorded verbatim as given; the specific meaning of "3" (which rank/pack) is to be confirmed against the candidate pack before the Shorts are built.
+**What this means:**
+- The Tier 1 lore-beats pack has a founder answer, recorded here so it counts under F-005 Clause 1.
+- Before building Shorts from the pack, confirm which "3" Mac meant (Rank 3, pack 3, or option 3) — do not guess.
+**Downstream chain:** Q-014 answered → confirm the meaning of "3" → build the faceless Shorts from the approved pack.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## Q-016 — DECIDED 2026-11-21: Commerce Lens Q3 — one engine or several?
+
+**Question (as queued):** Commerce Lens Q3: is the Commerce Lens one engine or several?
+**Founder decision:** SEVERAL ENGINES, ONE LENS. Mac answered "Several engines one lens" in the Unanswered Questions Tracker.
+**What this means:**
+- The Lens is the eye (it sees); the engines are the hands (each one does a different job — one finds deals, one prices them, one contracts them). One eye, many hands.
+- The Commerce Lens is a single Lens with several engines behind it, not a single engine and not several separate lenses.
+**Downstream chain:** Q-016 decided → the Commerce Lens is built as one Lens with several engines → the quantum Commerce Lens work proceeds on that architecture.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## Q-019 — DECIDED 2026-11-21: Biosystem Decision 9 — brain routes and the ping route
+
+**Question (as queued):** Biosystem Decision 9: which routes belong in the atlas — the brain routes, and the ping route?
+**Founder decision:** EXCLUDE BRAIN ROUTES + PREFER /colony/*. Mac answered "Exclude brain routes + prefer /colony/*" in the Unanswered Questions Tracker.
+**What this means:**
+- The brain routes are excluded from B2 — they are Nanuet's private memory, not for the atlas panels.
+- Prefer /colony/* over /debug/colony-ping — the colony routes are the real, stable routes; the debug ping route is not preferred.
+**Downstream chain:** Q-019 decided → B2 excludes the brain routes and uses /colony/* → the atlas panels show the real colony routes.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## Q-020 — DECIDED 2026-11-21: Biosystem Decision 7 — frontend test runner
+
+**Question (as queued):** Biosystem Decision 7: which frontend test runner?
+**Founder decision:** PROCEED WITH THE RECOMMENDATION — Vitest, plus Worker route tests. Mac answered "Proceed with your recommendation" in the Unanswered Questions Tracker.
+**What this means:**
+- Vitest is the test runner (the standard for a Vite/React frontend, free, fast).
+- Add Worker route tests — one per route the biosystem panels display, starting with the /command_text route.
+**Downstream chain:** Q-020 decided → Vitest is the frontend test runner → Worker route tests are added per displayed route.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FQ-Q-025 — DECIDED 2026-11-21: Gateway questions Q-G1–Q-G4
+
+**Question (as queued):** Gateway questions Q-G1–Q-G4 — record FQ-Q-025 as answered, and decide the gateway build.
+**Founder decision:** RECORD FQ-Q-025 AS ANSWERED-BY-XR-Q13–Q15. Leave the gateway build queued behind Queen 100% (as the standing rule requires).
+**What this means:**
+- FQ-Q-025 is formally closed in the repo — XR-Q13–Q15 answered it. Do not re-ask the Gateway questions; they are answered.
+- The gateway build/wiring stays queued behind Queen 100%. Nothing else is built until the Queen is 100%.
+**Downstream chain:** FQ-Q-025 recorded as answered → the Gateway questions are closed → the gateway build remains queued behind Queen 100%.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## B1 — DECIDED 2026-11-21: Disarm the constitution-overwrite workflow (constitution-receive.yml)
+
+**Question (as queued):** XR-Q29 decided the direction: soul.md is the one constitution; the other two become generated derived views; the workflow gets disarmed. The disarm work itself has not been done. The workflow is still armed — one push to .queen/soul.md or one "Run workflow" click can overwrite the constitution.
+**Founder decision:** DISARM IT NOW. Mac answered "Disarm it now" in the Unanswered Questions Tracker.
+**What this means:**
+- The disarm is a safety fix: remove the triggers / set if: false on constitution-receive.yml, as its own PR, alone, with no other changes.
+- Do NOT push anything touching .queen/soul.md before the disarm. The workflow is a loaded gun pointed at the constitution until it is disarmed.
+- Once disarmed, the derived views can be generated from soul.md and the constitution is safe.
+**Downstream chain:** B1 decided → disarm constitution-receive.yml in its own PR → the constitution cannot be overwritten by the workflow → the derived-view work can proceed safely.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FABLE-5 — DECIDED 2026-11-21: Act on the FABLE-5 limitations audit's three exhale items
+
+**Question (as queued):** Act on the FABLE-5 limitations audit's three exhale items.
+**Founder decision:** WORK THE THREE IN ORDER. Mac answered "Work the three in order" in the Unanswered Questions Tracker.
+**What this means:**
+- Work the three exhale items in order: (1) Ambiguity — when a message is ambiguous, the agent names the ambiguity and the interpretation it chose, in the record, so the correction is cheap. (2) Foundation. (3) Record.
+- The order matters — do not skip ahead.
+**Downstream chain:** FABLE-5 decided → the three exhale items are worked in order → the FABLE-5 limitations audit is closed out.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## S7 — DECIDED 2026-11-21: Place the Map in SOURCES (S7)
+
+**Question (as queued):** Place the Map in SOURCES — the Map (SOURCES/MAP.md) belongs in the repo's SOURCES so any AI can read it.
+**Founder decision:** UPDATE THE MAP, THEN OPEN A FRESH PR TO PLACE IT. Mac answered "Play sit down and updated then open it freshly new PR ratified to that PR so it could be merged to me" in the Unanswered Questions Tracker (read as: sit down, update it, then open a fresh new PR, ratified to that PR, so it can be merged).
+**What this means:**
+- Update the Map first: repo paths (PR #237 merged, so repo paths work), a "last verified" line per section, the new main tip, and the stale dates corrected. Keep the account identifiers OUT of the Map (per Mac's 2026-11-11 decision).
+- Then open a fresh PR to place the updated Map in SOURCES, so Mac can merge it.
+**Downstream chain:** S7 decided → the Map is updated → a fresh PR places it in SOURCES → Mac merges it.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## F0-PROBE — DECIDED 2026-11-21: Run the live bundle check (ui-live-probe)
+
+**Question (as queued):** Run the live bundle check (ui-live-probe) — the bundle has been stale since 2026-09-24.
+**Founder decision:** GO WITH THE RECOMMENDATION AND IMPROVE, INCLUDING THE INNOVATIVE IDEAS. Mac answered "Go with your recommendation and improve including your innovative ideas" in the Unanswered Questions Tracker.
+**What this means:**
+- Trigger pages.yml now (a small frontend/docs push, or a manual dispatch), then run the probe. The bundle has been stale since 2026-09-24 — seven weeks. It is time to know what the live site actually serves.
+- Improve on the recommendation, including the innovative ideas from the tracker item.
+**Downstream chain:** F0-probe decided → pages.yml is triggered → the live bundle check runs → the live site's actual bundle is known.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## VENTURE-CLASSIFICATION — DECIDED 2026-11-21: Which of the 14 other repos are ventures?
+
+**Question (as queued):** Which of the 14 other repos are ventures? Classify each as venture, infrastructure, or archive.
+**Founder decision:** 3. Mac answered "3" in the Unanswered Questions Tracker. Recorded verbatim as given; the specific meaning of "3" (which three repos are ventures) is to be confirmed before the classification is applied.
+**What this means:**
+- The venture repo (venture) is the registry, not a venture; NAR2 is a colony, not a venture; -sovereign-hive-meta is meta, not a venture; THEHIVE is the federation, not a venture.
+- Mac's answer "3" means three of the fourteen are ventures. Which three is to be confirmed — do not guess.
+**Downstream chain:** Venture classification answered ("3") → confirm which three repos are ventures → classify the rest as infrastructure or archive.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## PAT-RENEWAL — DECIDED 2026-11-21: Renew the GitHub PAT secret
+
+**Question (as queued):** The PAT secret used by pages.yml and six other workflows, including constitution-sync.yml and memory-vault-update.yml. It appears expired — created late July / early August 2026 for about 90 days, matching the checkout failures that began in October.
+**Founder decision:** RATIFIED — renew it. Mac ratified the recommendation in the Unanswered Questions Tracker.
+**What this means:**
+- Renew the PAT in GitHub → Settings → Secrets and variables → Actions. It is a 5-minute job and it restores 6 workflows (including the constitution sync and the memory-vault update).
+- After renewal, check the six sibling workflows' runs to confirm they are green. Set a reminder for 80 days from now (before the next 90-day expiry) so the PAT never silently dies again.
+- This is Mac's action — he renews it.
+**Downstream chain:** PAT renewal ratified → Mac renews the PAT → the six sibling workflows are restored → a PAT-age check is added to the morning briefing so it never silently dies again.
+**Recorded by:** Decided by Mac 2026-11-21 (ratified in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
+
+---
+
+## FOUR-DECISIONS-2026-11-10 — DECIDED 2026-11-21: The four 2026-11-10 decisions
+
+**Question (as queued):** The four decisions from 2026-11-10 — are they recorded in FOUNDER_ANSWERED?
+**Founder decision:** RUN THE SWEEP NOW TO RECONCILE THEM. IF THEY ARE RECORDED, CLOSE THE GROUP. Mac answered "Run the sweep now to reconcile them. (2) If they are recorded, close the group." in the Unanswered Questions Tracker.
+**What this means:**
+- The daily sweep verifies the four decisions against FOUNDER_ANSWERED (now that PR #236 merged). If they are recorded, this group closes. If any is missing, it comes back as its own item.
+**Downstream chain:** Four-decisions group decided → the sweep reconciles them against FOUNDER_ANSWERED → the group closes if recorded, or the missing one comes back as its own item.
+**Recorded by:** Decided by Mac 2026-11-21 (answered in the Unanswered Questions Tracker); recorded here 2026-11-21 so it counts as a founder decision under soul.md F-005 Clause 1.
