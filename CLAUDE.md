@@ -47,7 +47,8 @@ only one exists.** Reconciling them into one coherent story is real, open work, 
   devil's-advocate critique first, genuine value extracted second, nothing rubber-stamped.
 - **`.claude/skills/`** (this session's additions): `fable-debugger`, `research-to-dna`,
   `session-harvest`, `pocket-dimensions`, `anomaly-triage`, `merge-readiness`,
-  `nine-miss-truths`, `skill-census`.
+  `nine-miss-truths`, `skill-census`, `connection-audit` (the Fable-5-level
+  audit of whether everything is actually connected to what it should serve; 2026-11-22).
 - **`.claude/Fable_memory.md`** — this session's continuity log (moved here from
   `Project_file/Fable_memory.md` by a parallel session on 2026-07-16; this file's stale path
   corrected 2026-07-22).

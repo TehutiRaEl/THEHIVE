@@ -539,3 +539,15 @@ Decided by Mac 2026-11-07 10:11 PST:
 Open founder decisions (do NOT assume):
 3. Kai subagent architecture: adopt the 4-rule design (mixed gate, independent register, mandatory audit on every fix, hard scope) — queued behind the Queen 100% rule, like all builds. No code, no CI change, no repo push authorized by this filing.
 4. Interpretation Framework: adopt the taxonomy + hemisync as Kai's bounded interpretation method, with Reruling now decided for [wonder-da-disagree].
+
+---
+
+## Addendum — the whole-repo form of this method (2026-11-22)
+
+The five levels above are applied to one artifact at a time by `fable-debugger`. The skill
+`.claude/skills/connection-audit/SKILL.md` runs the same levels across every file, route, table,
+workflow, skill and instruction in the repo: the Hive modelled as producers and consumers joined by
+edges, five classes of broken edge, a fixed report format, and an orchestration recipe (at most two
+read-only agents at a time, reports saved as they go). It complements this spec and does not change
+the level definitions; where they differ, this spec wins.
+
