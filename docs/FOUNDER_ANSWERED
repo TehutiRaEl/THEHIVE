@@ -893,7 +893,7 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 
 ---
 
-## FE-001 to FE-013 — Front-end plan answers and rulings, DECIDED 2026-11-14 to 2026-11-21
+## FE-001 to FE-014 — Front-end plan answers and rulings, DECIDED 2026-11-14 to 2026-11-22
 
 *Entered ahead of FQ-Q-011 (rather than at the end of the file) so this PR merges cleanly whichever of the open ratification PRs lands first; every entry carries its own date. The founder's exact words for FE-001 to FE-011 are archived in `Project_file/Founders Visonary Folder/HIVE_UPDATES/2026-11-14-directive-frontend-plan-sketch-and-answers-063.md`. Each was said in chat 2026-11-14 and counts as a founder decision under soul.md F-005 Clause 1 only once this PR is merged by the founder. None of these builds anything by itself. The halt of 2026-11-13 13:41 PST stands for everything except front-end work (FE-008, FE-009) and the command-center work, back end included (FE-012).*
 
@@ -995,6 +995,18 @@ Entries move here from FOUNDER_QUEUE.md when decided. Chronological. Permanent.
 - The same PR makes the **Settings tab** show only controls that work (Theme and Animations) and adds a working light / dark / system switch (FE-010's own example).
 
 **Recorded by:** Claude, at founder direction. Decided in chat 2026-11-21; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged.
+
+---
+
+### FE-014 — The NO MAN'S SKY tab is parked (kept, out of the build)
+
+**Question asked (2026-11-21):** the NO MAN'S SKY tab is a Phaser space scene with 12 greyed flight buttons; nothing in the Hive gives a spaceship anything to do. Option A (recommended): park it, moved out of the build like the voxel world (FE-006). Option B: give it a real purpose. **Founder's answer (2026-11-22):** "A".
+**What this means:**
+- `NO_MANS_SKY.tsx` and `PhaserScene.tsx` move to `frontend/src/parked/` and are excluded from the build (`frontend/tsconfig.build.json`). Nothing imports them. The tab is no longer registered in the shell, so the bundle no longer ships the Phaser scene.
+- **Kept, not deleted.** To bring it back: the founder names a real purpose, the controls are wired to it, the files move back, a menu entry opens it, and the reachability test is updated in the same change. Queued with that condition in master plan Addendum A10.
+- Under SR-001 this is the "PARKED by recorded founder decision" state, so the tab is no longer an abomination (left behind).
+
+**Recorded by:** Claude, at founder direction. Decided in chat 2026-11-22; counts as a founder decision under soul.md F-005 Clause 1 only once the PR recording it is merged.
 
 ---
 

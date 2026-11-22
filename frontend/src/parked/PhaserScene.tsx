@@ -1,3 +1,4 @@
+// PARKED 2026-11-22 with NO_MANS_SKY.tsx (founder decision FE-014): only that tab used this scene.
 import { useEffect, useRef } from 'react'
 
 interface Props {

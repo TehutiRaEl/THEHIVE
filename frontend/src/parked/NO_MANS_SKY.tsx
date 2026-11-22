@@ -1,8 +1,20 @@
+/*
+ * PARKED 2026-11-22 (founder decision FE-014). Not reachable, not built, not shipped.
+ *
+ * A Phaser space scene with 12 greyed flight buttons. Nothing in the Hive gives a spaceship
+ * anything to do, so the tab was a dead surface. It is kept (not deleted) per the founder's
+ * "park, do not delete" rule, like the voxel world (FE-006). src/parked/ is excluded from the
+ * build (tsconfig.build.json) and is not imported by anything.
+ *
+ * To bring it back: the founder names a real purpose, the flight controls are wired to it (no
+ * PlannedControl placeholders), the file moves back to components/command-center/tabs/, a menu
+ * entry opens it, and tests/unit/test_frontend_unreachable_tabs.py is updated in the same change.
+ */
 import React from 'react';
-import SpaceNavigation from '../../SpaceNavigation';
-import KaiChatBox from '../../KaiChatBox';
-import PhaserScene from '../../PhaserScene';
-import PlannedControl from '../../PlannedControl';
+import SpaceNavigation from '../components/SpaceNavigation';
+import KaiChatBox from '../components/KaiChatBox';
+import PhaserScene from './PhaserScene';
+import PlannedControl from '../components/PlannedControl';
 
 const NO_MANS_SKY: React.FC = () => {
   return (

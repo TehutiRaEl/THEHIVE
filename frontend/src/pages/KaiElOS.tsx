@@ -46,13 +46,12 @@ const API = lazy(() => import('../components/command-center/tabs/API'));
 const FOUR_D = lazy(() => import('../components/command-center/tabs/4D'));
 const ARENA = lazy(() => import('../components/command-center/tabs/ARENA'));
 const WOW = lazy(() => import('../components/command-center/tabs/WOW'));
-const NO_MANS_SKY = lazy(() => import('../components/command-center/tabs/NO_MANS_SKY'));
 const SETTINGS = lazy(() => import('../components/command-center/tabs/SETTINGS'));
 
 const FULL_TABS: Record<string, ComponentType> = {
   hive: HIVE, dream: DREAM, arcane: ARCANE, world: WORLD, soul: SOUL,
   govern: GOVERN, missions: MISSIONS, api: API, '4d': FOUR_D, arena: ARENA,
-  wow: WOW, 'no-mans-sky': NO_MANS_SKY, settings: SETTINGS,
+  wow: WOW, settings: SETTINGS,
 };
 
 type PanelId = 'kai-brain' | 'townhall' | 'queen' | 'ventures' | 'updates' | 'proposals' | 'body' | 'legal' | 'venture' | 'constitution' | 'dream-logs' | 'workflows-panel' | 'sources' | 'skills' | 'ml-status' | 'roadmap' | 'grok-bridge';
