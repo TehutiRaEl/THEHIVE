@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '../../utils/constants';
 import { useHiveData } from '../../hooks/useHiveData';
 import FounderKeyBox from '../FounderKeyBox';
-import { founderAuthHeader, getFounderKey } from '../../utils/founderKey';
+import { founderAuthHeader, getFounderKey, useFounderKey } from '../../utils/founderKey';
 
 interface ChatMessage {
   id: string;
@@ -34,6 +34,9 @@ export default function KaiCommune({ onSpeakingChange, request, onRequestHandled
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [refused, setRefused] = useState(false);
+  const founderKey = useFounderKey();
+  // A newly saved key gets a fresh chance: forget the last refusal.
+  useEffect(() => { setRefused(false); }, [founderKey]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // "Founder" once FOUNDER_KEY is bound, "YOU" until then (task 35, 2026-08-04 request)

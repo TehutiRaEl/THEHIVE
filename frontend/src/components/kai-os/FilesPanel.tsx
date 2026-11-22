@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { API_BASE_URL } from '../../utils/constants';
+import FounderKeyBox from '../FounderKeyBox';
+import { founderAuthHeader, useFounderKey } from '../../utils/founderKey';
 
 interface HiveFile {
   key: string;
@@ -28,6 +30,10 @@ function fmtSize(n: number) {
 export default function FilesPanel() {
   const [state, setState] = useState<FilesState>({ loading: true, available: false, files: [] });
   const [busy, setBusy] = useState<string | null>(null);
+  const [refused, setRefused] = useState(false);
+  const founderKey = useFounderKey();
+  // A newly saved key gets a fresh chance: forget the last refusal.
+  useEffect(() => { setRefused(false); }, [founderKey]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -42,18 +48,24 @@ export default function FilesPanel() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Uploading is founder-only (decision S-5, 2026-11-22): the Worker needs the founder key.
   const upload = async (file: File) => {
     setBusy(`Uploading ${file.name}…`);
     try {
-      const tok = await fetch(`${V11}/auth/token`).then((r) => r.json()).catch(() => null);
       const r = await fetch(`${V11}/files/upload?key=${encodeURIComponent(file.name)}`, {
         method: 'POST',
         headers: {
           'content-type': file.type || 'application/octet-stream',
-          ...(tok?.access_token ? { Authorization: `Bearer ${tok.access_token}` } : {}),
+          ...founderAuthHeader(),
         },
         body: file,
       });
+      if (r.status === 401) {
+        setRefused(true);
+        setBusy('Upload refused: the Hive did not accept the founder key.');
+        return;
+      }
+      setRefused(false);
       const d = await r.json().catch(() => ({}));
       setBusy(r.ok && d.ok ? null : `Upload failed: ${d.detail || d.error || r.status}`);
       if (r.ok && d.ok) await load();
@@ -89,21 +101,30 @@ export default function FilesPanel() {
   return (
     <div className="max-w-2xl space-y-3">
       <div className="flex items-center gap-3">
-        <button
-          onClick={() => inputRef.current?.click()}
-          className="px-3 py-1.5 rounded-lg bg-yale/40 border border-cyan-glow/40 text-cyan-neon text-sm shadow-neon-cyan hover:bg-yale/60"
-        >
-          ⬆ Upload file
-        </button>
-        <input
-          ref={inputRef}
-          type="file"
-          className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ''; }}
-        />
+        {founderKey && !refused ? (
+          <>
+            <button
+              onClick={() => inputRef.current?.click()}
+              className="px-3 py-1.5 rounded-lg bg-yale/40 border border-cyan-glow/40 text-cyan-neon text-sm shadow-neon-cyan hover:bg-yale/60"
+            >
+              ⬆ Upload file
+            </button>
+            <input
+              ref={inputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ''; }}
+            />
+          </>
+        ) : (
+          <span className="text-xs text-slate-500">Uploading is founder-only. Enter the founder key to unlock it.</span>
+        )}
         {busy && <span className="text-xs text-amber-300">{busy}</span>}
         <button onClick={load} className="ml-auto text-xs text-slate-500 hover:text-cyan-glow">↻ refresh</button>
       </div>
+      {(!founderKey || refused) && (
+        <div className="rounded border border-white/10 bg-void-800/60"><FounderKeyBox refused={refused} /></div>
+      )}
 
       {state.files.length === 0 ? (
         <p className="text-slate-500 text-sm">The store is live and empty — upload the first file.</p>
@@ -126,7 +147,7 @@ export default function FilesPanel() {
       )}
 
       <p className="text-slate-600 text-xs leading-relaxed">
-        Uploads are visitor-token gated and capped at 10 MB. Repo-side sources still flow through
+        Uploads are founder-only and capped at 10 MB; files always download, they never open as pages. Repo-side sources still flow through
         <code className="mx-1 text-cyan-glow">SOURCES/</code> + <code className="text-cyan-glow">research-to-dna</code>.
       </p>
     </div>

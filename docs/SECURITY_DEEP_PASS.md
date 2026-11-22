@@ -31,7 +31,8 @@
 | `POST /legal/research` | `visitorSpeedBumpOk` | LLM cost / spam |
 | `POST /automaton/infer` | **founder key (`founderAuthOk`) then `rateLimitOk` (S-2, 2026-11-22)**; was the speed bump only | LLM cost: founder-only and 30/min/IP |
 | `POST /command_text` | **founder key (`founderAuthOk`, S-4, 2026-11-22), then `rateLimitOk` (S1 PR #132)**; was rate limit only | LLM cost: founder-only (executes FQ-Q-011's in-handler lock); the Cloudflare Access app in front is still queued |
-| `POST /files/upload` | `visitorSpeedBumpOk` + R2 bound + 10MB cap | Storage abuse if R2 live |
+| `POST /files/upload` | **founder key (`founderAuthOk`, S-5, 2026-11-22)** + R2 bound + 10MB cap + 9GB store cap; was the speed bump only | Storage abuse: founder-only |
+| `GET /files/get` | public read, but **never served as a page** (S-5): always `attachment`, `application/octet-stream`, `nosniff`, CSP `sandbox` | Stored-XSS on the Command Center's own origin (where the founder key is kept in the browser) |
 | `POST /memory/remember` | **founder key (`founderAuthOk`, S-1, 2026-11-22), then `rateLimitOk` (S1 PR #132)** | Writes to Vectorize if bound; recalled into Kai El's chat, so founder-only |
 | `POST /arena/challenge` | rate limit + `visitorSpeedBumpOk` | Arena spam |
 | `POST /arena/resolve/{id}` | rate limit + `visitorSpeedBumpOk` | Elo/soul mutation |
